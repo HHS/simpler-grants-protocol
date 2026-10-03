@@ -6,6 +6,19 @@ import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import { Paths } from "./paths";
 
+/** Every published JSON Schema, verbatim, in one Ajv instance. */
+const loadJsonSchemas = () => {
+  const ajv = new Ajv2020({ strict: false, validateFormats: false });
+  for (const file of fs.readdirSync(Paths.SCHEMAS_DIR)) {
+    if (!file.endsWith(".yaml")) continue;
+    const schema = yaml.load(
+      fs.readFileSync(path.join(Paths.SCHEMAS_DIR, file), "utf-8"),
+    ) as { $id?: string };
+    ajv.addSchema(schema, schema.$id ?? file);
+  }
+  return ajv;
+};
+
 /**
  * Read shape of ADR 0030 organization relationships on the published
  * OrganizationBase schema.
@@ -20,14 +33,7 @@ import { Paths } from "./paths";
  * same reason as org-patch-data.test.ts.
  */
 describe("OrganizationBase relationships read schema", () => {
-  const ajv = new Ajv2020({ strict: false, validateFormats: false });
-  for (const file of fs.readdirSync(Paths.SCHEMAS_DIR)) {
-    if (!file.endsWith(".yaml")) continue;
-    const schema = yaml.load(
-      fs.readFileSync(path.join(Paths.SCHEMAS_DIR, file), "utf-8"),
-    ) as { $id?: string };
-    ajv.addSchema(schema, schema.$id ?? file);
-  }
+  const ajv = loadJsonSchemas();
   const validate = ajv.getSchema("OrganizationBase.yaml");
 
   const org = { id: "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f", name: "Example" };
@@ -362,5 +368,56 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
   it.each(cases)("%s", (_name, model, payload, valid) => {
     const check = component(model);
     expect(check(payload), JSON.stringify(check.errors)).toBe(valid);
+  });
+
+  // A singular target merges, so `null` deletes one identifier from it. Both
+  // dialects must agree, as must populated and wrong non-null controls.
+  const jsonSchemaPatch = loadJsonSchemas().getSchema("OrgPatchData.yaml")!;
+  const populated = {
+    "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
+    "org:us:uei": { id: "AB0123456789" },
+    "org:xi:duns": { id: "123456789" },
+    systemId: { id },
+    otherIds: { "org:xi:foo": { id: "foo-1" } },
+  };
+  const identifierCases = ["fiscalSponsor", "successor", "duplicateOf"].flatMap(
+    (link): Array<[string, object, boolean]> => {
+      const write = (identifiers: unknown) =>
+        patch({ [link]: { identifiers } });
+      return [
+        ...["org:us:ein", "org:us:uei", "org:xi:duns", "systemId"].map(
+          (member): [string, object, boolean] => [
+            `${link}: delete ${member}`,
+            write({ [member]: null }),
+            true,
+          ],
+        ),
+        [
+          `${link}: delete an otherIds key`,
+          write({ otherIds: { "org:xi:foo": null } }),
+          true,
+        ],
+        [`${link}: populated identifiers`, write(populated), true],
+        [
+          `${link}: an identifier as a string`,
+          write({ "org:us:ein": "123456789" }),
+          false,
+        ],
+        [`${link}: systemId as an array`, write({ systemId: [] }), false],
+        [
+          `${link}: an otherIds entry as a number`,
+          write({ otherIds: { "org:xi:foo": 5 } }),
+          false,
+        ],
+      ];
+    },
+  );
+
+  it.each(identifierCases)("%s", (_name, payload, valid) => {
+    const openApi = component("OrgPatchData");
+    expect(jsonSchemaPatch(payload), "JSON Schema").toBe(valid);
+    expect(openApi(payload), `OpenAPI ${JSON.stringify(openApi.errors)}`).toBe(
+      valid,
+    );
   });
 });

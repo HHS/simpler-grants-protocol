@@ -109,9 +109,39 @@ namespace CommonGrants.Patch {
     /** The target organization's legal name, checked against the target when supplied. */
     name?: string;
 
+    // Mirrors `Patch.OrgIds` member by member rather than spreading it, so each
+    // identifier is also inline and a singular target can delete one with
+    // `null` under OpenAPI 3.0. `org-patch-data.test.ts` fails if it drifts.
     /** Identifiers associated with the target organization, checked against the target when supplied. */
     identifiers?: {
-      ...Patch.OrgIds;
+      /** The organization's Employer Identification Number (EIN), assigned by the IRS. */
+      `org:us:ein`?: {
+        ...Models.OrgIdEin;
+      };
+
+      /** The organization's Unique Entity Identifier (UEI) from SAM.gov. */
+      `org:us:uei`?: {
+        ...Models.OrgIdUei;
+      };
+
+      /** The organization's Data Universal Numbering System (DUNS) number. */
+      `org:xi:duns`?: {
+        ...Models.OrgIdDuns;
+      };
+
+      /** The hosting system's own identifier for this record. */
+      systemId?: {
+        ...Fields.SystemId;
+      };
+
+      /** Additional identifiers keyed by their registry code, for registries the
+       * protocol does not define as a base identifier on the model.
+       */
+      otherIds?: Record<
+        | {
+            ...Fields.Identifier;
+          }
+        | null>;
     };
   }
 

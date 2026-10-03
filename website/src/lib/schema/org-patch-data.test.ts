@@ -421,8 +421,10 @@ describe("OrgPatchData merge-patch schema", () => {
       const items = branches.map((b) => (isObj(b.items) ? b.items : b));
       const inline = items.find((b) => isObj(b.properties));
       if (inline) return inline as Props;
-      const ref = items.find((b) => typeof b.$ref === "string")!.$ref;
-      return patchData.$defs[(ref as string).replace("#/$defs/", "")];
+      const ref = items.find((b) => typeof b.$ref === "string")!.$ref as string;
+      return ref.startsWith("#/$defs/")
+        ? patchData.$defs[ref.replace("#/$defs/", "")]
+        : load(ref);
     };
     const keys = (props: Props) => Object.keys(props.properties).sort();
 
@@ -430,11 +432,37 @@ describe("OrgPatchData merge-patch schema", () => {
     const parents = defOf(relationships.properties.parents);
     expect(keys(relationships)).toEqual(keys(load("OrgRelationships.yaml")));
     expect(keys(parents)).toEqual(keys(load("OrgParents.yaml")));
+
+    // A target's `identifiers` mirrors `Patch.OrgIds` member by member, so it
+    // must match the shared patch identifiers, their members, and the read
+    // identifier names.
+    const sharedIds = defOf(patchData.properties.identifiers);
+    const readIdNames = [
+      ...keys(load("OrgIds.yaml")),
+      ...keys(load("IdentifierCollection.yaml")),
+    ].sort();
+    expect(keys(sharedIds)).toEqual(readIdNames);
+    // `otherIds` is a record, so its member is the record's value schema.
+    const memberOf = (ids: Props, name: string) => {
+      const property = ids.properties[name];
+      if (name !== "otherIds") return defOf(property);
+      const record = [property, ...((property.anyOf as Node[]) ?? [])].find(
+        (b) => isObj(b.unevaluatedProperties),
+      )!;
+      return defOf(record.unevaluatedProperties as Node);
+    };
     for (const target of [
       defOf(relationships.properties.fiscalSponsor),
       defOf(parents.properties.department),
     ]) {
       expect(keys(target)).toEqual(keys(load("OrgRef.yaml")));
+      const ids = defOf(target.properties.identifiers);
+      expect(keys(ids)).toEqual(readIdNames);
+      for (const name of readIdNames) {
+        expect(keys(memberOf(ids, name)), name).toEqual(
+          keys(memberOf(sharedIds, name)),
+        );
+      }
     }
   });
 });
