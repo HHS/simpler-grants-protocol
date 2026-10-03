@@ -4606,14 +4606,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -4655,14 +4655,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
                           nullable: true
+                          pattern: ^[A-HJ-NP-Z0-9]{12}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: AB0123456789
                         allIds:
                           type: array
                           items:
@@ -4704,14 +4704,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.duns'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -4751,14 +4751,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
                           nullable: true
+                          format: uuid
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
                         allIds:
                           type: array
                           items:
@@ -4867,14 +4867,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -4916,14 +4916,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
                           nullable: true
+                          pattern: ^[A-HJ-NP-Z0-9]{12}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: AB0123456789
                         allIds:
                           type: array
                           items:
@@ -4965,14 +4965,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.duns'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -5012,14 +5012,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
                           nullable: true
+                          format: uuid
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
                         allIds:
                           type: array
                           items:
@@ -5128,14 +5128,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -5177,14 +5177,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
                           nullable: true
+                          pattern: ^[A-HJ-NP-Z0-9]{12}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: AB0123456789
                         allIds:
                           type: array
                           items:
@@ -5226,14 +5226,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.duns'
                           nullable: true
+                          pattern: ^[0-9]{9}$
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: '123456789'
                         allIds:
                           type: array
                           items:
@@ -5273,14 +5273,14 @@ components:
                           description: Registry-level facts shared by every record in this registry.
                         id:
                           type: string
-                          allOf:
-                            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
                           nullable: true
+                          format: uuid
                           description: |-
                             The primary identifier string, when the registry has a single canonical value.
 
                             May be omitted for registries with no natural primary; consumers should read
                             `allIds` in that case.
+                          example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
                         allIds:
                           type: array
                           items:
@@ -6259,13 +6259,14 @@ components:
                       description: Link to the catalog entry for this registry.
                   description: Registry-level facts shared by every record in this registry.
                 id:
-                  allOf:
-                    - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+                  type: string
+                  pattern: ^[0-9]{9}$
                   description: |-
                     The primary identifier string, when the registry has a single canonical value.
 
                     May be omitted for registries with no natural primary; consumers should read
                     `allIds` in that case.
+                  example: '123456789'
                 allIds:
                   type: array
                   items:
@@ -6301,13 +6302,14 @@ components:
                       description: Link to the catalog entry for this registry.
                   description: Registry-level facts shared by every record in this registry.
                 id:
-                  allOf:
-                    - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+                  type: string
+                  pattern: ^[A-HJ-NP-Z0-9]{12}$
                   description: |-
                     The primary identifier string, when the registry has a single canonical value.
 
                     May be omitted for registries with no natural primary; consumers should read
                     `allIds` in that case.
+                  example: AB0123456789
                 allIds:
                   type: array
                   items:
@@ -6343,13 +6345,14 @@ components:
                       description: Link to the catalog entry for this registry.
                   description: Registry-level facts shared by every record in this registry.
                 id:
-                  allOf:
-                    - $ref: '#/components/schemas/CommonGrants.Types.duns'
+                  type: string
+                  pattern: ^[0-9]{9}$
                   description: |-
                     The primary identifier string, when the registry has a single canonical value.
 
                     May be omitted for registries with no natural primary; consumers should read
                     `allIds` in that case.
+                  example: '123456789'
                 allIds:
                   type: array
                   items:
@@ -6383,13 +6386,14 @@ components:
                       description: Link to the catalog entry for this registry.
                   description: Registry-level facts shared by every record in this registry.
                 id:
-                  allOf:
-                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  type: string
+                  format: uuid
                   description: |-
                     The primary identifier string, when the registry has a single canonical value.
 
                     May be omitted for registries with no natural primary; consumers should read
                     `allIds` in that case.
+                  example: 30a12e5e-5940-4c08-921c-17a8960fcf4b
                 allIds:
                   type: array
                   items:

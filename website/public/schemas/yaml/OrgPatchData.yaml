@@ -146,8 +146,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: employerTaxId.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -202,8 +205,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: samUEI.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - AB0123456789
+                                    pattern: ^[A-HJ-NP-Z0-9]{12}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -258,8 +264,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: duns.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -313,8 +322,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: uuid.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - 30a12e5e-5940-4c08-921c-17a8960fcf4b
+                                    format: uuid
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -455,8 +467,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: employerTaxId.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -511,8 +526,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: samUEI.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - AB0123456789
+                                    pattern: ^[A-HJ-NP-Z0-9]{12}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -567,8 +585,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: duns.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -622,8 +643,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: uuid.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - 30a12e5e-5940-4c08-921c-17a8960fcf4b
+                                    format: uuid
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -764,8 +788,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: employerTaxId.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -820,8 +847,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: samUEI.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - AB0123456789
+                                    pattern: ^[A-HJ-NP-Z0-9]{12}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -876,8 +906,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: duns.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - "123456789"
+                                    pattern: ^[0-9]{9}$
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -931,8 +964,11 @@ properties:
                                     description: Registry-level facts shared by every record in this registry.
                                   id:
                                     anyOf:
-                                      - $ref: uuid.yaml
+                                      - type: string
                                       - type: "null"
+                                    examples:
+                                      - 30a12e5e-5940-4c08-921c-17a8960fcf4b
+                                    format: uuid
                                     description: |-
                                       The primary identifier string, when the registry has a single canonical value.
 
@@ -1291,7 +1327,10 @@ $defs:
                   not: {}
                 description: Registry-level facts shared by every record in this registry.
               id:
-                $ref: employerTaxId.yaml
+                type: string
+                examples:
+                  - "123456789"
+                pattern: ^[0-9]{9}$
                 description: |-
                   The primary identifier string, when the registry has a single canonical value.
 
@@ -1335,7 +1374,10 @@ $defs:
                   not: {}
                 description: Registry-level facts shared by every record in this registry.
               id:
-                $ref: samUEI.yaml
+                type: string
+                examples:
+                  - AB0123456789
+                pattern: ^[A-HJ-NP-Z0-9]{12}$
                 description: |-
                   The primary identifier string, when the registry has a single canonical value.
 
@@ -1379,7 +1421,10 @@ $defs:
                   not: {}
                 description: Registry-level facts shared by every record in this registry.
               id:
-                $ref: duns.yaml
+                type: string
+                examples:
+                  - "123456789"
+                pattern: ^[0-9]{9}$
                 description: |-
                   The primary identifier string, when the registry has a single canonical value.
 
@@ -1422,7 +1467,10 @@ $defs:
                   not: {}
                 description: Registry-level facts shared by every record in this registry.
               id:
-                $ref: uuid.yaml
+                type: string
+                examples:
+                  - 30a12e5e-5940-4c08-921c-17a8960fcf4b
+                format: uuid
                 description: |-
                   The primary identifier string, when the registry has a single canonical value.
 

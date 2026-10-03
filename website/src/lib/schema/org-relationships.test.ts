@@ -370,8 +370,10 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     expect(check(payload), JSON.stringify(check.errors)).toBe(valid);
   });
 
-  // A singular target merges, so `null` deletes one identifier from it. Both
-  // dialects must agree, as must populated and wrong non-null controls.
+  // A singular target merges, so `null` deletes one identifier, or one
+  // identifier's `id`, from it. Both dialects must agree, as must populated
+  // and wrong non-null controls. A replaced array has nothing to merge into,
+  // so its targets' IDs stay non-null.
   const jsonSchemaPatch = loadJsonSchemas().getSchema("OrgPatchData.yaml")!;
   const populated = {
     "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
@@ -380,18 +382,42 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     systemId: { id },
     otherIds: { "org:xi:foo": { id: "foo-1" } },
   };
+  const scalarMembers = ["org:us:ein", "org:us:uei", "org:xi:duns", "systemId"];
   const identifierCases = ["fiscalSponsor", "successor", "duplicateOf"].flatMap(
     (link): Array<[string, object, boolean]> => {
       const write = (identifiers: unknown) =>
         patch({ [link]: { identifiers } });
       return [
-        ...["org:us:ein", "org:us:uei", "org:xi:duns", "systemId"].map(
-          (member): [string, object, boolean] => [
-            `${link}: delete ${member}`,
-            write({ [member]: null }),
-            true,
-          ],
-        ),
+        ...scalarMembers.map((member): [string, object, boolean] => [
+          `${link}: delete ${member}`,
+          write({ [member]: null }),
+          true,
+        ]),
+        ...scalarMembers.map((member): [string, object, boolean] => [
+          `${link}: delete ${member}'s id`,
+          write({ [member]: { id: null } }),
+          true,
+        ]),
+        [
+          `${link}: an EIN id of eight digits`,
+          write({ "org:us:ein": { id: "12345678" } }),
+          false,
+        ],
+        [
+          `${link}: a lowercase UEI id`,
+          write({ "org:us:uei": { id: "ab0123456789" } }),
+          false,
+        ],
+        [
+          `${link}: a DUNS id with a letter`,
+          write({ "org:xi:duns": { id: "12345678A" } }),
+          false,
+        ],
+        [
+          `${link}: a numeric systemId id`,
+          write({ systemId: { id: 5 } }),
+          false,
+        ],
         [
           `${link}: delete an otherIds key`,
           write({ otherIds: { "org:xi:foo": null } }),
@@ -412,12 +438,65 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
       ];
     },
   );
+  identifierCases.push(
+    [
+      "department: null for a target's id",
+      patch({ parents: { department: [{ id: null }] } }),
+      false,
+    ],
+    ...scalarMembers.map((member): [string, object, boolean] => [
+      `department: null for ${member}'s id`,
+      patch({
+        parents: {
+          department: [{ id, identifiers: { [member]: { id: null } } }],
+        },
+      }),
+      false,
+    ]),
+  );
 
   it.each(identifierCases)("%s", (_name, payload, valid) => {
     const openApi = component("OrgPatchData");
     expect(jsonSchemaPatch(payload), "JSON Schema").toBe(valid);
     expect(openApi(payload), `OpenAPI ${JSON.stringify(openApi.errors)}`).toBe(
       valid,
+    );
+  });
+
+  // OpenAPI 3.0 applies `nullable` only beside a `type`, so a nullable node
+  // that also references a component still rejects `null`. None may be
+  // reachable from the relationship patch shapes, through any component.
+  it("reaches no nullable reference from patch relationships", () => {
+    const sites: string[] = [];
+    const followed = new Set<string>();
+    const walk = (node: unknown, where: string): void => {
+      if (!node || typeof node !== "object") return;
+      const n = node as Record<string, unknown>;
+      const branches = ["allOf", "anyOf", "oneOf"].flatMap(
+        (kw) => (n[kw] as Array<Record<string, unknown>>) ?? [],
+      );
+      if (n.nullable === true && [n, ...branches].some((b) => "$ref" in b))
+        sites.push(where);
+      for (const [key, value] of Object.entries(n)) {
+        if (key !== "$ref") walk(value, `${where}/${key}`);
+        else {
+          const name = String(value).replace("#/components/schemas/", "");
+          if (!followed.has(name)) {
+            followed.add(name);
+            walk(schemas[name], name);
+          }
+        }
+      }
+    };
+    const patchData = schemas["CommonGrants.Models.OrgPatchData"] as {
+      properties: { relationships: object };
+    };
+    walk(patchData.properties.relationships, "relationships");
+
+    expect(sites).toEqual([]);
+    // Guards against a walk that never reaches the replaced-array target.
+    expect(followed).toContain(
+      "CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly",
     );
   });
 });

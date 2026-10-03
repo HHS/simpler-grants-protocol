@@ -111,27 +111,74 @@ namespace CommonGrants.Patch {
 
     // Mirrors `Patch.OrgIds` member by member rather than spreading it, so each
     // identifier is also inline and a singular target can delete one with
-    // `null` under OpenAPI 3.0. `org-patch-data.test.ts` fails if it drifts.
+    // `null` under OpenAPI 3.0. For the same reason, each base identifier's
+    // `id` is a plain string carrying its named scalar's constraints and
+    // example rather than a reference to the scalar.
+    // `org-patch-data.test.ts` fails if either drifts.
     /** Identifiers associated with the target organization, checked against the target when supplied. */
     identifiers?: {
       /** The organization's Employer Identification Number (EIN), assigned by the IRS. */
       `org:us:ein`?: {
-        ...Models.OrgIdEin;
+        ...PickProperties<Models.OrgIdEin, "registry">;
+
+        /** The primary identifier string, when the registry has a single canonical value.
+         *
+         * May be omitted for registries with no natural primary; consumers should read
+         * `allIds` in that case.
+         */
+        @pattern("^[0-9]{9}$")
+        @example("123456789")
+        id?: string;
+
+        ...PickProperties<Models.OrgIdEin, "allIds">;
       };
 
       /** The organization's Unique Entity Identifier (UEI) from SAM.gov. */
       `org:us:uei`?: {
-        ...Models.OrgIdUei;
+        ...PickProperties<Models.OrgIdUei, "registry">;
+
+        /** The primary identifier string, when the registry has a single canonical value.
+         *
+         * May be omitted for registries with no natural primary; consumers should read
+         * `allIds` in that case.
+         */
+        @pattern("^[A-HJ-NP-Z0-9]{12}$")
+        @example("AB0123456789")
+        id?: string;
+
+        ...PickProperties<Models.OrgIdUei, "allIds">;
       };
 
       /** The organization's Data Universal Numbering System (DUNS) number. */
       `org:xi:duns`?: {
-        ...Models.OrgIdDuns;
+        ...PickProperties<Models.OrgIdDuns, "registry">;
+
+        /** The primary identifier string, when the registry has a single canonical value.
+         *
+         * May be omitted for registries with no natural primary; consumers should read
+         * `allIds` in that case.
+         */
+        @pattern("^[0-9]{9}$")
+        @example("123456789")
+        id?: string;
+
+        ...PickProperties<Models.OrgIdDuns, "allIds">;
       };
 
       /** The hosting system's own identifier for this record. */
       systemId?: {
-        ...Fields.SystemId;
+        ...PickProperties<Fields.SystemId, "registry">;
+
+        /** The primary identifier string, when the registry has a single canonical value.
+         *
+         * May be omitted for registries with no natural primary; consumers should read
+         * `allIds` in that case.
+         */
+        @format("uuid")
+        @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
+        id?: string;
+
+        ...PickProperties<Fields.SystemId, "allIds">;
       };
 
       /** Additional identifiers keyed by their registry code, for registries the

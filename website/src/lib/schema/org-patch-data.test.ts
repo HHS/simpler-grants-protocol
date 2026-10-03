@@ -434,8 +434,8 @@ describe("OrgPatchData merge-patch schema", () => {
     expect(keys(parents)).toEqual(keys(load("OrgParents.yaml")));
 
     // A target's `identifiers` mirrors `Patch.OrgIds` member by member, so it
-    // must match the shared patch identifiers, their members, and the read
-    // identifier names.
+    // must match the shared patch identifiers, their members and `id`
+    // constraints, and the read identifier names.
     const sharedIds = defOf(patchData.properties.identifiers);
     const readIdNames = [
       ...keys(load("OrgIds.yaml")),
@@ -451,6 +451,22 @@ describe("OrgPatchData merge-patch schema", () => {
       )!;
       return defOf(record.unevaluatedProperties as Node);
     };
+    // What an `id` accepts besides `null`, with a referenced scalar resolved,
+    // so an inline `id` must carry exactly its named scalar's constraints.
+    const constraintsOf = (property: Node): Node => {
+      const { anyOf, ...outer } = property;
+      const branch = ((anyOf as Node[]) ?? []).find((b) => b.type !== "null");
+      const merged: Node = { ...outer, ...branch };
+      const resolved =
+        typeof merged.$ref === "string"
+          ? { ...merged, ...(load(merged.$ref) as unknown as Node) }
+          : merged;
+      return Object.fromEntries(
+        Object.entries(resolved).filter(
+          ([key]) => !["$ref", "$schema", "$id", "description"].includes(key),
+        ),
+      );
+    };
     for (const target of [
       defOf(relationships.properties.fiscalSponsor),
       defOf(parents.properties.department),
@@ -462,6 +478,10 @@ describe("OrgPatchData merge-patch schema", () => {
         expect(keys(memberOf(ids, name)), name).toEqual(
           keys(memberOf(sharedIds, name)),
         );
+        expect(
+          constraintsOf(memberOf(ids, name).properties.id),
+          `${name}.id`,
+        ).toEqual(constraintsOf(memberOf(sharedIds, name).properties.id));
       }
     }
   });
