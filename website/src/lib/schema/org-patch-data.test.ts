@@ -100,6 +100,170 @@ describe("OrgPatchData merge-patch schema", () => {
     });
   });
 
+  /**
+   * ADR 0030 organization relationships (v0.5). These pin the patch shape
+   * only: arrays replace whole, `null` removes the addressed member, and each
+   * hierarchy kind or extension-map label is addressed on its own. Whether a
+   * target resolves, whether sender metadata contradicts it, and graph
+   * integrity are provider obligations the schema cannot express.
+   */
+  describe("organization relationships (ADR 0030)", () => {
+    const UNIVERSITY = "6f1d2c3b-4a59-4e68-8a7b-9c0d1e2f3a4b";
+    const SCHOOL = "7a2e3d4c-5b6a-4f79-9b8c-0d1e2f3a4b5c";
+    const SPONSOR = "8b3f4e5d-6c7b-4a8a-8c9d-1e2f3a4b5c6d";
+    const accepted: Array<[string, object]> = [
+      [
+        "replaces one hierarchy kind with an ID-only target",
+        { relationships: { parents: { department: [{ id: UNIVERSITY }] } } },
+      ],
+      [
+        "sends optional target metadata for the provider to check",
+        {
+          relationships: {
+            parents: {
+              chapter: [
+                {
+                  id: UNIVERSITY,
+                  name: "Example National Federation",
+                  identifiers: {
+                    "org:us:ein": {
+                      registry: { code: "org:us:ein" },
+                      id: "123456789",
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ],
+      [
+        "lists several targets under one hierarchy kind",
+        {
+          relationships: {
+            parents: { department: [{ id: UNIVERSITY }, { id: SCHOOL }] },
+          },
+        },
+      ],
+      [
+        "sends an empty array for a hierarchy kind",
+        { relationships: { parents: { subsidiary: [] } } },
+      ],
+      [
+        "removes one hierarchy kind with null",
+        { relationships: { parents: { department: null } } },
+      ],
+      ["removes all hierarchy with null", { relationships: { parents: null } }],
+      ["removes all relationships with null", { relationships: null }],
+      [
+        "replaces one custom hierarchy label",
+        {
+          relationships: {
+            parents: { otherParents: { campus: [{ id: UNIVERSITY }] } },
+          },
+        },
+      ],
+      [
+        "deletes one custom hierarchy label with null",
+        { relationships: { parents: { otherParents: { campus: null } } } },
+      ],
+      [
+        "replaces one nonhierarchical label",
+        {
+          relationships: {
+            otherRelationships: { affiliate: [{ id: SPONSOR }] },
+          },
+        },
+      ],
+      [
+        "deletes one nonhierarchical label with null",
+        { relationships: { otherRelationships: { affiliate: null } } },
+      ],
+      [
+        "changes a singular reference by ID only",
+        { relationships: { fiscalSponsor: { id: SPONSOR } } },
+      ],
+      [
+        "patches a hierarchy kind and a different singular link together",
+        {
+          relationships: {
+            parents: { department: [{ id: UNIVERSITY }] },
+            fiscalSponsor: { id: SPONSOR },
+          },
+        },
+      ],
+      ["removes the successor link", { relationships: { successor: null } }],
+      [
+        "removes the duplicateOf link",
+        { relationships: { duplicateOf: null } },
+      ],
+      ["replaces the DBA names", { dbaNames: ["Example Thrift", "Example"] }],
+      ["sends empty DBA names", { dbaNames: [] }],
+      ["removes the DBA names", { dbaNames: null }],
+    ];
+
+    it.each(accepted)("accepts: %s", (_name, patch) => {
+      expect(validate!(patch)).toBe(true);
+    });
+
+    const rejected: Array<[string, object]> = [
+      [
+        "a hierarchy target without an id",
+        {
+          relationships: {
+            parents: { department: [{ name: "Example University" }] },
+          },
+        },
+      ],
+      [
+        "a single object where a hierarchy array is required",
+        { relationships: { parents: { department: { id: UNIVERSITY } } } },
+      ],
+      [
+        "a null element inside a hierarchy array",
+        { relationships: { parents: { department: [null] } } },
+      ],
+      [
+        "an unknown property on a target reference",
+        {
+          relationships: {
+            parents: { department: [{ id: UNIVERSITY, kind: "department" }] },
+          },
+        },
+      ],
+      [
+        "an unknown hierarchy kind outside otherParents",
+        { relationships: { parents: { division: [{ id: UNIVERSITY }] } } },
+      ],
+      [
+        "an unknown relationship outside otherRelationships",
+        { relationships: { member: [{ id: SPONSOR }] } },
+      ],
+      [
+        "an array where the singular fiscalSponsor is required",
+        { relationships: { fiscalSponsor: [{ id: SPONSOR }, { id: SCHOOL }] } },
+      ],
+      [
+        "a single object as a custom hierarchy label's value",
+        {
+          relationships: {
+            parents: { otherParents: { campus: { id: UNIVERSITY } } },
+          },
+        },
+      ],
+      [
+        "null for a singular reference's non-clearable id",
+        { relationships: { duplicateOf: { id: null } } },
+      ],
+      ["a non-string DBA name", { dbaNames: [42] }],
+      ["a single string for DBA names", { dbaNames: "Example Thrift" }],
+    ];
+
+    it.each(rejected)("rejects: %s", (_name, patch) => {
+      expect(validate!(patch)).toBe(false);
+    });
+  });
+
   describe("rejects invalid patches", () => {
     const invalid: Array<[string, object]> = [
       ["unknown top-level property", { bogus: true }],
@@ -238,5 +402,36 @@ describe("OrgPatchData merge-patch schema", () => {
     const writable = base.filter((key) => !readOnly.includes(key));
 
     expect(patch.sort()).toEqual(writable.sort());
+  });
+
+  // `Patch.OrgRelationships`, `Patch.OrgParents`, and `Patch.OrgTargetRef` are
+  // redeclared by hand rather than spread, so a member added to the read
+  // models would otherwise be silently impossible to patch.
+  it("covers every relationship member and target field (drift guard)", () => {
+    type Props = { properties: Record<string, Node> };
+    const load = (name: string) =>
+      yaml.load(
+        fs.readFileSync(path.join(Paths.SCHEMAS_DIR, name), "utf-8"),
+      ) as Props & { $defs: Record<string, Props> };
+    const patchData = load("OrgPatchData.yaml");
+    // Follows a patch property to the local definition it references.
+    const defOf = (property: Node): Props => {
+      const branches = [property, ...((property.anyOf as Node[]) ?? [])];
+      const items = branches.map((b) => (isObj(b.items) ? b.items : b));
+      const ref = items.find((b) => typeof b.$ref === "string")!.$ref;
+      return patchData.$defs[(ref as string).replace("#/$defs/", "")];
+    };
+    const keys = (props: Props) => Object.keys(props.properties).sort();
+
+    const relationships = defOf(patchData.properties.relationships);
+    const parents = defOf(relationships.properties.parents);
+    expect(keys(relationships)).toEqual(keys(load("OrgRelationships.yaml")));
+    expect(keys(parents)).toEqual(keys(load("OrgParents.yaml")));
+    for (const target of [
+      defOf(relationships.properties.fiscalSponsor),
+      defOf(parents.properties.department),
+    ]) {
+      expect(keys(target)).toEqual(keys(load("OrgRef.yaml")));
+    }
   });
 });

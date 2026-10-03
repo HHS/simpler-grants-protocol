@@ -41,6 +41,18 @@ properties:
   socials:
     $ref: OrgSocialLinks.yaml
     description: Collection of the organization's social media and web presence links.
+  dbaNames:
+    anyOf:
+      - type: array
+        items:
+          type: string
+      - type: "null"
+    description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+  relationships:
+    anyOf:
+      - $ref: OrgRelationships.yaml
+      - type: "null"
+    description: The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor.
   customFields:
     $ref: "#/$defs/RecordCustomField"
     description: Custom fields for the organization.

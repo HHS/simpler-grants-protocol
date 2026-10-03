@@ -21,6 +21,13 @@ import "@typespec/versioning";
  * leaf type reached from these mirrors (`Address`, `Phone`, `Identifier`,
  * `CustomField`) needs a mirror of its own if it ever gains `extends`.
  * `website/src/lib/schema/org-patch-data.test.ts` fails if either slips.
+ *
+ * The relationship models are the exception: `OrgTargetRef` is a distinct
+ * writable reference rather than a mirror, because the read `Models.OrgRef`
+ * has a read-only `id` that the merge-patch transformation would drop, and
+ * `OrgParents` and `OrgRelationships` are redeclared to use it. It must not
+ * reuse the name `OrgRef`: the changelog keys models by bare name, so a
+ * v0.5 `Patch.OrgRef` would erase `Models.OrgRef` from earlier versions.
  */
 namespace CommonGrants.Patch {
   /** A collection of identifiers associated with an organization.
@@ -83,6 +90,75 @@ namespace CommonGrants.Patch {
     otherSocials?: Record<url | null>;
   }
 
+  /** A writable reference to a relationship's target organization.
+   *
+   * Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
+   * patch can name the target, and `name` is optional so the target can be
+   * named by ID alone. The provider resolves the target, refreshes its name and
+   * provider-derived identifiers, and rejects an unresolved target or
+   * contradictory metadata the sender supplies.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgTargetRef {
+    /** The target organization's unique identifier. */
+    id: Types.uuid;
+
+    /** The target organization's legal name, checked against the target when supplied. */
+    name?: string;
+
+    /** Identifiers associated with the target organization, checked against the target when supplied. */
+    identifiers?: Patch.OrgIds;
+  }
+
+  /** Organizations that directly contain an organization, grouped by hierarchy kind.
+   *
+   * Each kind holds an array so several targets can share a kind; array order
+   * carries no primary-parent or ranking meaning. Use the most specific known
+   * kind, and do not repeat a target as both `parent` and a more specific kind.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgParents {
+    /** Confirmed containment when no more specific supported kind is known. */
+    parent?: Patch.OrgTargetRef[];
+
+    /** An internal organizational unit within the target, such as a division or school. */
+    department?: Patch.OrgTargetRef[];
+
+    /** A local or regional unit under the target's organizational structure, not merely a member of its network. */
+    chapter?: Patch.OrgTargetRef[];
+
+    /** A separate entity owned or controlled by the target. */
+    subsidiary?: Patch.OrgTargetRef[];
+
+    /** Additional hierarchy kinds, keyed by a documented label that describes containment by the target. */
+    otherParents?: Record<Patch.OrgTargetRef[] | null>;
+  }
+
+  /** An organization's relationships to other organizations.
+   *
+   * Every reference is stated on this organization and points to its target.
+   * Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
+   * succession, and duplicate identity are distinct singular references. A
+   * relationship confers no authority over its target.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgRelationships {
+    /** Organizations that directly contain this organization, grouped by hierarchy kind. */
+    parents?: Patch.OrgParents;
+
+    /** The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship. */
+    fiscalSponsor?: Patch.OrgTargetRef;
+
+    /** A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession. */
+    successor?: Patch.OrgTargetRef;
+
+    /** The canonical record of the same organization, when this record is a duplicate of it. */
+    duplicateOf?: Patch.OrgTargetRef;
+
+    /** Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets. */
+    otherRelationships?: Record<Patch.OrgTargetRef[] | null>;
+  }
+
   /** The writable fields of an organization profile.
    *
    * Spreads `OrganizationBase` without its model-level example, so the
@@ -91,6 +167,8 @@ namespace CommonGrants.Patch {
    * these syncing models are added, so they never coexist with a patch. The
    * sub-model fields are redeclared against the mirrors above so the
    * merge-patch transformation sees flattened models and deletable record keys.
+   * `dbaNames` is redeclared without its read-side `null`, which the
+   * transformation adds back once.
    * This is a compile-time source for `OrgPatchData` and is not emitted as a
    * standalone schema.
    */
@@ -107,6 +185,8 @@ namespace CommonGrants.Patch {
       | "phones"
       | "emails"
       | "socials"
+      | "dbaNames"
+      | "relationships"
       | "customFields"
     >;
 
@@ -127,6 +207,14 @@ namespace CommonGrants.Patch {
 
     /** Collection of the organization's social media and web presence links. */
     socials?: Patch.OrgSocialLinks;
+
+    /** Names the organization currently does business as, alongside its legal `name`. Not a history of former names. */
+    @Versioning.added(CommonGrants.Versions.v0_5)
+    dbaNames?: string[];
+
+    /** The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor. */
+    @Versioning.added(CommonGrants.Versions.v0_5)
+    relationships?: Patch.OrgRelationships;
 
     /** Custom fields for the organization. */
     customFields?: Record<Fields.CustomField | null>;

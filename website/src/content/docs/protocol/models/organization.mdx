@@ -117,7 +117,7 @@ organizationBase:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 5
-      endLine: 47
+      endLine: 55
 orgIds:
   example:
     file:
@@ -128,8 +128,8 @@ orgIds:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 68
-      endLine: 83
+      startLine: 76
+      endLine: 91
 orgIdEin:
   example:
     file:
@@ -140,8 +140,8 @@ orgIdEin:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 53
-      endLine: 56
+      startLine: 61
+      endLine: 64
 orgIdUei:
   example:
     file:
@@ -152,8 +152,8 @@ orgIdUei:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 58
-      endLine: 61
+      startLine: 66
+      endLine: 69
 orgIdDuns:
   example:
     file:
@@ -164,8 +164,8 @@ orgIdDuns:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 63
-      endLine: 66
+      startLine: 71
+      endLine: 74
 orgRef:
   example:
     file:
@@ -176,8 +176,8 @@ orgRef:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 89
-      endLine: 107
+      startLine: 97
+      endLine: 115
 orgRefCollection:
   example:
     file:
@@ -188,8 +188,32 @@ orgRefCollection:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 109
-      endLine: 121
+      startLine: 117
+      endLine: 129
+orgRelationships:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRelationships.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRelationships.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 135
+      endLine: 159
+orgParents:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgParents.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgParents.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 161
+      endLine: 184
 orgSocialLinks:
   example:
     code: |
@@ -211,8 +235,8 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 127
-      endLine: 151
+      startLine: 190
+      endLine: 214
 orgPatchData:
   example:
     file:
@@ -223,8 +247,8 @@ orgPatchData:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization-sync.tsp"
-      startLine: 28
-      endLine: 43
+      startLine: 229
+      endLine: 241
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -237,19 +261,21 @@ An organization that can apply to or host funding opportunities.
 
 ### Table
 
-| Property     | Type                                                                                   | Required | Description                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                        |
-| name         | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.       |
-| orgType      | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
-| identifiers  | [OrgIds](#orgids)                                                                      | No       | Identifiers associated with the organization, keyed by registry code.        |
-| addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | Collection of physical addresses associated with the organization.           |
-| phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | Collection of phone numbers associated with the organization.                |
-| emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | Collection of email addresses associated with the organization.              |
-| mission      | [string](/protocol/types/string#string)                                                | No       | The organization's mission statement.                                        |
-| yearFounded  | [calendarYear](/protocol/types/date#calendaryear)                                      | No       | The calendar year the organization was founded.                              |
-| socials      | [OrgSocialLinks](#orgsociallinks)                                                      | No       | The organization's social media and web presence links.                      |
-| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the organization.                                          |
+| Property      | Type                                                                                   | Required | Description                                                                  |
+| ------------- | -------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| id            | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                        |
+| name          | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.       |
+| orgType       | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
+| identifiers   | [OrgIds](#orgids)                                                                      | No       | Identifiers associated with the organization, keyed by registry code.        |
+| addresses     | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | Collection of physical addresses associated with the organization.           |
+| phones        | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | Collection of phone numbers associated with the organization.                |
+| emails        | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | Collection of email addresses associated with the organization.              |
+| mission       | [string](/protocol/types/string#string)                                                | No       | The organization's mission statement.                                        |
+| yearFounded   | [calendarYear](/protocol/types/date#calendaryear)                                      | No       | The calendar year the organization was founded.                              |
+| socials       | [OrgSocialLinks](#orgsociallinks)                                                      | No       | The organization's social media and web presence links.                      |
+| dbaNames      | [array](/protocol/types/other#array)\<[string](/protocol/types/string#string)\>        | No       | Names the organization currently does business as. Added in v0.5.0.          |
+| relationships | [OrgRelationships](#orgrelationships)                                                  | No       | The organization's relationships to other organizations. Added in v0.5.0.    |
+| customFields  | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the organization.                                          |
 
 ### Formats
 
@@ -392,6 +418,64 @@ A group of organization references, with a primary organization and optional oth
 
 <SchemaChangelog schema="OrgRefCollection" />
 
+## OrgRelationships
+
+An organization's relationships to other organizations, added in v0.5.0 per [ADR 0030](https://github.com/HHS/simpler-grants-protocol/pull/1265) (draft). Every reference is stated on this organization and points to its target, using the existing [OrgRef](#orgref) shape. Containing organizations are grouped by kind under [`parents`](#orgparents). Fiscal sponsorship, succession, and duplicate identity are separate singular references, so an organization can be a department of one organization and fiscally sponsored by another at the same time. A relationship confers no authority over its target. See [Organization relationships](/guides/organization-relationships/) for worked examples.
+
+| Property           | Meaning                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| parents            | Organizations that directly contain this one, grouped by hierarchy kind.                                                           |
+| fiscalSponsor      | The target fiscally sponsors this organization or project. A payee designation alone is not sponsorship.                           |
+| successor          | A different organization replaces this dissolved one. A rename or sponsor change alone is not succession.                          |
+| duplicateOf        | This record duplicates the target, the canonical record of the same organization. Not a replacement organization.                  |
+| otherRelationships | Additional nonhierarchical relationships under a documented label. Must not hold containment, sponsors, successors, or duplicates. |
+
+When a field is absent the publisher did not provide it, an explicit `null` asserts it does not apply ([ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)), and an empty array is a present, empty collection. Whether a target exists, and whether the relationship graph is free of self-links, duplicate edges, and cycles, are checks the providing system performs; the schema validates shape only.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgRelationships.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRelationships.example}
+  jsonSchema={frontmatter.orgRelationships.jsonSchema}
+  typeSpec={frontmatter.orgRelationships.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRelationships" />
+
+## OrgParents
+
+Organizations that directly contain an organization, grouped by hierarchy kind and added in v0.5.0. Each kind holds an array, so several targets can share a kind; array order carries no primary-parent or ranking meaning. Use the most specific known kind, and don't repeat a target as both `parent` and a more specific kind. There is no separate division kind: `department` covers internal units.
+
+| Kind         | Meaning                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| parent       | Confirmed containment when no more specific supported kind is known.                          |
+| department   | An internal organizational unit within the target.                                            |
+| chapter      | A local or regional unit under the target's organizational structure, not merely a member.    |
+| subsidiary   | A separate entity owned or controlled by the target.                                          |
+| otherParents | Additional hierarchy kinds under a documented label that describes containment by the target. |
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgParents.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgParents.example}
+  jsonSchema={frontmatter.orgParents.jsonSchema}
+  typeSpec={frontmatter.orgParents.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgParents" />
+
 ## OrgSocialLinks
 
 A collection of social media and web presence links for an organization.
@@ -423,6 +507,8 @@ A collection of social media and web presence links for an organization.
 ## OrgPatchData
 
 A [JSON Merge Patch](https://www.rfc-editor.org/rfc/rfc7396) body for updating an organization profile, used by the `PATCH /orgs/{orgId}` and `POST /orgs/{orgId}/changes` routes. It is derived from [OrganizationBase](#organizationbase): every field is optional, so a client sends only the fields it wants to change, clearable fields accept `null` to remove them, and read-only fields like `id` are excluded. Nested objects are themselves partial, so `{ "socials": { "website": null } }` clears just the website and leaves the other links untouched. Sent with a `Content-Type` of `application/merge-patch+json`.
+
+From v0.5.0, `relationships` follows the same rules. Each hierarchy kind and each extension-map label is an array that a patch replaces whole, so `{ "relationships": { "parents": { "department": [{ "id": "…" }] } } }` replaces only the departments and leaves every other kind, label, and singular link unchanged. `null` removes the addressed kind, label, or link, and `[]` leaves a present empty collection. A relationship target in a patch is written with a writable `id`, and its `name` and `identifiers` are optional: the provider resolves the target by `id`, refreshes its name and identifiers, and rejects an unresolved target or contradictory metadata the sender supplied. A singular reference such as `fiscalSponsor` is an object, so a patch merges into it; changing only its `id` succeeds once the provider refreshes the metadata kept from the previous target. `dbaNames` is an array and is also replaced whole.
 
 ### Table
 
