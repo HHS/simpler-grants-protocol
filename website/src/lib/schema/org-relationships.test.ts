@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import { Paths } from "./paths";
 
@@ -211,5 +212,155 @@ describe("OrganizationBase relationships read schema", () => {
       const check = ajv.getSchema(schema)!;
       expect(check(payload), JSON.stringify(check.errors)).toBe(true);
     });
+  });
+});
+
+/**
+ * The same null semantics in the published OpenAPI 3.0 document, which is
+ * what an OpenAPI-validating client or server checks. OpenAPI 3.0 has no null
+ * type: `nullable: true` admits null only beside a `type` in the same schema,
+ * so a nullable `$ref` wrapped in `allOf` still rejects null through the
+ * referenced component. Ajv applies `nullable` that way. The OpenAPI
+ * components are not sealed, so unknown-property cases stay with the JSON
+ * Schema checks above.
+ *
+ * Only the components the two models reach are loaded: other components carry
+ * form examples whose repeated `$id` Ajv would treat as conflicting schemas.
+ */
+describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () => {
+  const { schemas } = (
+    yaml.load(
+      fs.readFileSync(
+        path.join(Paths.OPENAPI_DIR, "openapi.0.5.0.yaml"),
+        "utf-8",
+      ),
+    ) as { components: { schemas: Record<string, object> } }
+  ).components;
+  const reached: Record<string, object> = {};
+  const reach = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) {
+      if (key !== "$ref") reach(value);
+      else {
+        const name = String(value).replace("#/components/schemas/", "");
+        if (!(name in reached)) reach((reached[name] = schemas[name]));
+      }
+    }
+  };
+  reach({ $ref: "#/components/schemas/CommonGrants.Models.OrganizationBase" });
+  reach({ $ref: "#/components/schemas/CommonGrants.Models.OrgPatchData" });
+
+  const ajv = new Ajv({
+    strict: false,
+    validateFormats: false,
+    validateSchema: false,
+  });
+  ajv.addSchema({ components: { schemas: reached } }, "openapi");
+  const component = (name: string) =>
+    ajv.getSchema(`openapi#/components/schemas/CommonGrants.Models.${name}`)!;
+
+  const id = "6f1d2c3b-4a59-4e68-8a7b-9c0d1e2f3a4b";
+  const target = { id, name: "Example University" };
+  const read = (relationships: unknown) => ({
+    id: "3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f",
+    name: "Example",
+    relationships,
+  });
+  const patch = (relationships: unknown) => ({ relationships });
+
+  const cases: Array<
+    [string, "OrganizationBase" | "OrgPatchData", object, boolean]
+  > = [
+    ["read: null relationships", "OrganizationBase", read(null), true],
+    [
+      "read: null parents and singular links",
+      "OrganizationBase",
+      read({
+        parents: null,
+        fiscalSponsor: null,
+        successor: null,
+        duplicateOf: null,
+      }),
+      true,
+    ],
+    [
+      "read: a department and a fiscal sponsor",
+      "OrganizationBase",
+      read({ parents: { department: [target] }, fiscalSponsor: target }),
+      true,
+    ],
+    [
+      "read: relationships as a string",
+      "OrganizationBase",
+      read("none"),
+      false,
+    ],
+    [
+      "read: fiscalSponsor as an array",
+      "OrganizationBase",
+      read({ fiscalSponsor: [target] }),
+      false,
+    ],
+    [
+      "read: fiscalSponsor without its name",
+      "OrganizationBase",
+      read({ fiscalSponsor: { id } }),
+      false,
+    ],
+    [
+      "read: department target without its id",
+      "OrganizationBase",
+      read({ parents: { department: [{ name: "Example" }] } }),
+      false,
+    ],
+    ["patch: remove all relationships", "OrgPatchData", patch(null), true],
+    [
+      "patch: remove all hierarchy",
+      "OrgPatchData",
+      patch({ parents: null }),
+      true,
+    ],
+    [
+      "patch: remove every singular link",
+      "OrgPatchData",
+      patch({ fiscalSponsor: null, successor: null, duplicateOf: null }),
+      true,
+    ],
+    [
+      "patch: clear retained singular metadata",
+      "OrgPatchData",
+      patch({ fiscalSponsor: { name: null, identifiers: null } }),
+      true,
+    ],
+    [
+      "patch: ID-only singular and hierarchy targets",
+      "OrgPatchData",
+      patch({ fiscalSponsor: { id }, parents: { department: [{ id }] } }),
+      true,
+    ],
+    ["patch: relationships as a number", "OrgPatchData", patch(5), false],
+    [
+      "patch: fiscalSponsor as an array",
+      "OrgPatchData",
+      patch({ fiscalSponsor: [{ id }] }),
+      false,
+    ],
+    [
+      "patch: null for a singular target's id",
+      "OrgPatchData",
+      patch({ duplicateOf: { id: null } }),
+      false,
+    ],
+    [
+      "patch: hierarchy target without its id",
+      "OrgPatchData",
+      patch({ parents: { department: [{ name: "Example" }] } }),
+      false,
+    ],
+  ];
+
+  it.each(cases)("%s", (_name, model, payload, valid) => {
+    const check = component(model);
+    expect(check(payload), JSON.stringify(check.errors)).toBe(valid);
   });
 });

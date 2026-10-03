@@ -4,22 +4,103 @@ type: object
 properties:
   parents:
     anyOf:
-      - $ref: OrgParents.yaml
+      - type: object
+        properties:
+          parent:
+            anyOf:
+              - type: array
+                items:
+                  $ref: OrgRef.yaml
+              - type: "null"
+            description: Confirmed containment when no more specific supported kind is known.
+          department:
+            anyOf:
+              - type: array
+                items:
+                  $ref: OrgRef.yaml
+              - type: "null"
+            description: An internal organizational unit within the target, such as a division or school.
+          chapter:
+            anyOf:
+              - type: array
+                items:
+                  $ref: OrgRef.yaml
+              - type: "null"
+            description: A local or regional unit under the target's organizational structure, not merely a member of its network.
+          subsidiary:
+            anyOf:
+              - type: array
+                items:
+                  $ref: OrgRef.yaml
+              - type: "null"
+            description: A separate entity owned or controlled by the target.
+          otherParents:
+            anyOf:
+              - $ref: "#/$defs/RecordArrayOrgRef"
+              - type: "null"
+            description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
+        unevaluatedProperties:
+          not: {}
       - type: "null"
     description: Organizations that directly contain this organization, grouped by hierarchy kind.
   fiscalSponsor:
     anyOf:
-      - $ref: OrgRef.yaml
+      - type: object
+        properties:
+          id:
+            $ref: uuid.yaml
+            description: The organization's unique identifier.
+          name:
+            type: string
+            description: The organization's legal name as registered with relevant authorities.
+          identifiers:
+            $ref: OrgIds.yaml
+            description: Identifiers associated with the organization, keyed by registry code.
+        required:
+          - id
+          - name
+        unevaluatedProperties:
+          not: {}
       - type: "null"
     description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
   successor:
     anyOf:
-      - $ref: OrgRef.yaml
+      - type: object
+        properties:
+          id:
+            $ref: uuid.yaml
+            description: The organization's unique identifier.
+          name:
+            type: string
+            description: The organization's legal name as registered with relevant authorities.
+          identifiers:
+            $ref: OrgIds.yaml
+            description: Identifiers associated with the organization, keyed by registry code.
+        required:
+          - id
+          - name
+        unevaluatedProperties:
+          not: {}
       - type: "null"
     description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
   duplicateOf:
     anyOf:
-      - $ref: OrgRef.yaml
+      - type: object
+        properties:
+          id:
+            $ref: uuid.yaml
+            description: The organization's unique identifier.
+          name:
+            type: string
+            description: The organization's legal name as registered with relevant authorities.
+          identifiers:
+            $ref: OrgIds.yaml
+            description: Identifiers associated with the organization, keyed by registry code.
+        required:
+          - id
+          - name
+        unevaluatedProperties:
+          not: {}
       - type: "null"
     description: The canonical record of the same organization, when this record is a duplicate of it.
   otherRelationships:

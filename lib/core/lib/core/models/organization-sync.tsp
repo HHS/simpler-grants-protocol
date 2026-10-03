@@ -27,7 +27,10 @@ import "@typespec/versioning";
  * has a read-only `id` that the merge-patch transformation would drop, and
  * `OrgParents` and `OrgRelationships` are redeclared to use it. It must not
  * reuse the name `OrgRef`: the changelog keys models by bare name, so a
- * v0.5 `Patch.OrgRef` would erase `Models.OrgRef` from earlier versions.
+ * v0.5 `Patch.OrgRef` would erase `Models.OrgRef` from earlier versions. Their
+ * singular object members spread inline for the reason given in
+ * `organization.tsp`: the merge-patch transformation makes them nullable,
+ * and OpenAPI 3.0 cannot make a referenced object nullable.
  */
 namespace CommonGrants.Patch {
   /** A collection of identifiers associated with an organization.
@@ -107,7 +110,9 @@ namespace CommonGrants.Patch {
     name?: string;
 
     /** Identifiers associated with the target organization, checked against the target when supplied. */
-    identifiers?: Patch.OrgIds;
+    identifiers?: {
+      ...Patch.OrgIds;
+    };
   }
 
   /** Organizations that directly contain an organization, grouped by hierarchy kind.
@@ -144,16 +149,24 @@ namespace CommonGrants.Patch {
   @Versioning.added(CommonGrants.Versions.v0_5)
   model OrgRelationships {
     /** Organizations that directly contain this organization, grouped by hierarchy kind. */
-    parents?: Patch.OrgParents;
+    parents?: {
+      ...Patch.OrgParents;
+    };
 
     /** The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship. */
-    fiscalSponsor?: Patch.OrgTargetRef;
+    fiscalSponsor?: {
+      ...Patch.OrgTargetRef;
+    };
 
     /** A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession. */
-    successor?: Patch.OrgTargetRef;
+    successor?: {
+      ...Patch.OrgTargetRef;
+    };
 
     /** The canonical record of the same organization, when this record is a duplicate of it. */
-    duplicateOf?: Patch.OrgTargetRef;
+    duplicateOf?: {
+      ...Patch.OrgTargetRef;
+    };
 
     /** Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets. */
     otherRelationships?: Record<Patch.OrgTargetRef[] | null>;
@@ -214,7 +227,9 @@ namespace CommonGrants.Patch {
 
     /** The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor. */
     @Versioning.added(CommonGrants.Versions.v0_5)
-    relationships?: Patch.OrgRelationships;
+    relationships?: {
+      ...Patch.OrgRelationships;
+    };
 
     /** Custom fields for the organization. */
     customFields?: Record<Fields.CustomField | null>;

@@ -414,10 +414,13 @@ describe("OrgPatchData merge-patch schema", () => {
         fs.readFileSync(path.join(Paths.SCHEMAS_DIR, name), "utf-8"),
       ) as Props & { $defs: Record<string, Props> };
     const patchData = load("OrgPatchData.yaml");
-    // Follows a patch property to the local definition it references.
+    // Follows a patch property to its object schema: inline, or the local
+    // definition it references.
     const defOf = (property: Node): Props => {
       const branches = [property, ...((property.anyOf as Node[]) ?? [])];
       const items = branches.map((b) => (isObj(b.items) ? b.items : b));
+      const inline = items.find((b) => isObj(b.properties));
+      if (inline) return inline as Props;
       const ref = items.find((b) => typeof b.$ref === "string")!.$ref;
       return patchData.$defs[(ref as string).replace("#/$defs/", "")];
     };

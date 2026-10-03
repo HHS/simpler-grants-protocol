@@ -7,6 +7,8 @@ sidebar:
 
 :::caution[Draft for review]
 This page shows the organization relationships proposed in [ADR 0030](https://github.com/HHS/simpler-grants-protocol/pull/1265), which is still under review. The fields are part of protocol v0.5.0, which has not been released, and may change before it is. Every organization, name, and ID on this page is illustrative, not a real record or a classification of a real organization.
+
+The examples are static documentation, checked against the draft schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) only validates a write and echoes the result. It doesn't resolve targets, check sender metadata, or check the relationship graph, so an ID-only relationship write can return a snapshot that isn't a valid organization read.
 :::
 
 An organization can point to other organizations it is related to: the organization that contains it, the one that fiscally sponsors it, the one that replaced it, or the canonical record it duplicates. Each kind of relationship means something different, so each has its own place in [`relationships`](/protocol/models/organization#orgrelationships). Names the organization trades under go in `dbaNames`, not in a relationship.
@@ -286,7 +288,7 @@ Following those edges from record to record walks the hierarchy. With several pa
 
 ## What the schema does not check
 
-The published schema checks shape: which properties exist, which values are arrays, and that every target has an `id`. It cannot check facts about other records. The system that holds the organization is expected to:
+The published schema checks shape: which properties exist, which values are arrays, and that every target in a read, and every target in an array a patch replaces, has an `id`. A singular reference in a patch, such as `fiscalSponsor`, merges into the current one, so it can leave `id` out. The schema cannot check facts about other records. The system that holds the organization is expected to:
 
 - resolve each target, refresh its name and identifiers, and remove stale ones;
 - refresh metadata kept from a previous singular target before validating, so an ID-only change succeeds;

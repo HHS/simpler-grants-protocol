@@ -117,7 +117,7 @@ organizationBase:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 5
-      endLine: 55
+      endLine: 59
 orgIds:
   example:
     file:
@@ -128,8 +128,8 @@ orgIds:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 76
-      endLine: 91
+      startLine: 80
+      endLine: 95
 orgIdEin:
   example:
     file:
@@ -140,8 +140,8 @@ orgIdEin:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 61
-      endLine: 64
+      startLine: 65
+      endLine: 68
 orgIdUei:
   example:
     file:
@@ -152,8 +152,8 @@ orgIdUei:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 66
-      endLine: 69
+      startLine: 70
+      endLine: 73
 orgIdDuns:
   example:
     file:
@@ -164,8 +164,8 @@ orgIdDuns:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 71
-      endLine: 74
+      startLine: 75
+      endLine: 78
 orgRef:
   example:
     file:
@@ -176,8 +176,8 @@ orgRef:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 97
-      endLine: 115
+      startLine: 101
+      endLine: 119
 orgRefCollection:
   example:
     file:
@@ -188,8 +188,8 @@ orgRefCollection:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 117
-      endLine: 129
+      startLine: 121
+      endLine: 133
 orgRelationships:
   example:
     file:
@@ -200,8 +200,8 @@ orgRelationships:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 135
-      endLine: 159
+      startLine: 144
+      endLine: 184
 orgParents:
   example:
     file:
@@ -212,8 +212,8 @@ orgParents:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 161
-      endLine: 184
+      startLine: 186
+      endLine: 209
 orgSocialLinks:
   example:
     code: |
@@ -235,8 +235,8 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 190
-      endLine: 214
+      startLine: 215
+      endLine: 239
 orgPatchData:
   example:
     file:
@@ -247,8 +247,8 @@ orgPatchData:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization-sync.tsp"
-      startLine: 229
-      endLine: 241
+      startLine: 244
+      endLine: 256
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -431,6 +431,8 @@ An organization's relationships to other organizations, added in v0.5.0 per [ADR
 | otherRelationships | Additional nonhierarchical relationships under a documented label. Must not hold containment, sponsors, successors, or duplicates. |
 
 When a field is absent the publisher did not provide it, an explicit `null` asserts it does not apply ([ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)), and an empty array is a present, empty collection. Whether a target exists, and whether the relationship graph is free of self-links, duplicate edges, and cycles, are checks the providing system performs; the schema validates shape only.
+
+The schemas write `relationships`, `parents`, and the singular references as inline objects with the [OrgRelationships](#orgrelationships), [OrgParents](#orgparents), and [OrgRef](#orgref) shapes rather than as references, because OpenAPI 3.0 cannot mark a referenced object as nullable.
 
 ### Table
 

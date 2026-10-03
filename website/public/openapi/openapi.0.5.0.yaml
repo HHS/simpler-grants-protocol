@@ -4574,56 +4574,6 @@ components:
 
         Extends the generic identifier collection with the base identifiers CommonGrants
         defines for organizations. Additional registries can be published under `otherIds`.
-    CommonGrants.Models.OrgParents:
-      type: object
-      properties:
-        parent:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: Confirmed containment when no more specific supported kind is known.
-        department:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: An internal organizational unit within the target, such as a division or school.
-        chapter:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: A local or regional unit under the target's organizational structure, not merely a member of its network.
-        subsidiary:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: A separate entity owned or controlled by the target.
-        otherParents:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
-      description: |-
-        Organizations that directly contain an organization, grouped by hierarchy kind.
-
-        Each kind holds an array so several targets can share a kind; array order
-        carries no primary-parent or ranking meaning. Use the most specific known
-        kind, and do not repeat a target as both `parent` and a more specific kind.
-      example:
-        department:
-          - id: 6f1d2c3b-4a59-4e68-8a7b-9c0d1e2f3a4b
-            name: Example Medical Center
-            identifiers:
-              org:us:ein:
-                registry:
-                  code: org:us:ein
-                id: '123456789'
     CommonGrants.Models.OrgPatchData:
       type: object
       properties:
@@ -4684,8 +4634,213 @@ components:
           description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
         relationships:
           type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgRelationshipsOrCreate'
+          properties:
+            parents:
+              type: object
+              properties:
+                parent:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                  nullable: true
+                  description: Confirmed containment when no more specific supported kind is known.
+                department:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                  nullable: true
+                  description: An internal organizational unit within the target, such as a division or school.
+                chapter:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                  nullable: true
+                  description: A local or regional unit under the target's organizational structure, not merely a member of its network.
+                subsidiary:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                  nullable: true
+                  description: A separate entity owned or controlled by the target.
+                otherParents:
+                  type: object
+                  additionalProperties:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                    nullable: true
+                  nullable: true
+                  description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
+              nullable: true
+              description: Organizations that directly contain this organization, grouped by hierarchy kind.
+            fiscalSponsor:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The target organization's unique identifier.
+                name:
+                  type: string
+                  nullable: true
+                  description: The target organization's legal name, checked against the target when supplied.
+                identifiers:
+                  type: object
+                  properties:
+                    org:us:ein:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
+                      nullable: true
+                      description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                    org:us:uei:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
+                      nullable: true
+                      description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                    org:xi:duns:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
+                      nullable: true
+                      description: The organization's Data Universal Numbering System (DUNS) number.
+                    systemId:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdOrCreate'
+                      nullable: true
+                      description: The hosting system's own identifier for this record.
+                    otherIds:
+                      type: object
+                      additionalProperties:
+                        type: object
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierOrCreate'
+                        nullable: true
+                      nullable: true
+                      description: |-
+                        Additional identifiers keyed by their registry code, for registries the
+                        protocol does not define as a base identifier on the model.
+                  nullable: true
+                  description: Identifiers associated with the target organization, checked against the target when supplied.
+              nullable: true
+              description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
+            successor:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The target organization's unique identifier.
+                name:
+                  type: string
+                  nullable: true
+                  description: The target organization's legal name, checked against the target when supplied.
+                identifiers:
+                  type: object
+                  properties:
+                    org:us:ein:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
+                      nullable: true
+                      description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                    org:us:uei:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
+                      nullable: true
+                      description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                    org:xi:duns:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
+                      nullable: true
+                      description: The organization's Data Universal Numbering System (DUNS) number.
+                    systemId:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdOrCreate'
+                      nullable: true
+                      description: The hosting system's own identifier for this record.
+                    otherIds:
+                      type: object
+                      additionalProperties:
+                        type: object
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierOrCreate'
+                        nullable: true
+                      nullable: true
+                      description: |-
+                        Additional identifiers keyed by their registry code, for registries the
+                        protocol does not define as a base identifier on the model.
+                  nullable: true
+                  description: Identifiers associated with the target organization, checked against the target when supplied.
+              nullable: true
+              description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
+            duplicateOf:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The target organization's unique identifier.
+                name:
+                  type: string
+                  nullable: true
+                  description: The target organization's legal name, checked against the target when supplied.
+                identifiers:
+                  type: object
+                  properties:
+                    org:us:ein:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinOrCreate'
+                      nullable: true
+                      description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                    org:us:uei:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiOrCreate'
+                      nullable: true
+                      description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                    org:xi:duns:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsOrCreate'
+                      nullable: true
+                      description: The organization's Data Universal Numbering System (DUNS) number.
+                    systemId:
+                      type: object
+                      allOf:
+                        - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdOrCreate'
+                      nullable: true
+                      description: The hosting system's own identifier for this record.
+                    otherIds:
+                      type: object
+                      additionalProperties:
+                        type: object
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierOrCreate'
+                        nullable: true
+                      nullable: true
+                      description: |-
+                        Additional identifiers keyed by their registry code, for registries the
+                        protocol does not define as a base identifier on the model.
+                  nullable: true
+                  description: Identifiers associated with the target organization, checked against the target when supplied.
+              nullable: true
+              description: The canonical record of the same organization, when this record is a duplicate of it.
+            otherRelationships:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+                nullable: true
+              nullable: true
+              description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
           nullable: true
           description: The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor.
         customFields:
@@ -5074,61 +5229,6 @@ components:
                 registry:
                   code: org:grants.gov:agency
                 id: HRSA
-    CommonGrants.Models.OrgRelationships:
-      type: object
-      properties:
-        parents:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgParents'
-          nullable: true
-          description: Organizations that directly contain this organization, grouped by hierarchy kind.
-        fiscalSponsor:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
-        successor:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
-        duplicateOf:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: The canonical record of the same organization, when this record is a duplicate of it.
-        otherRelationships:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
-          nullable: true
-          description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
-      description: |-
-        An organization's relationships to other organizations.
-
-        Every reference is stated on this organization and points to its target.
-        Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
-        succession, and duplicate identity are distinct singular references. A
-        relationship confers no authority over its target.
-      example:
-        parents:
-          department:
-            - id: 6f1d2c3b-4a59-4e68-8a7b-9c0d1e2f3a4b
-              name: Example Medical Center
-              identifiers:
-                org:us:ein:
-                  registry:
-                    code: org:us:ein
-                  id: '123456789'
-        fiscalSponsor:
-          id: 8b3f4e5d-6c7b-4a8a-8c9d-1e2f3a4b5c6d
-          name: Example Community Foundation
     CommonGrants.Models.OrgRevision:
       type: object
       required:
@@ -5352,8 +5452,112 @@ components:
           description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
         relationships:
           type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
+          properties:
+            parents:
+              type: object
+              properties:
+                parent:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+                  nullable: true
+                  description: Confirmed containment when no more specific supported kind is known.
+                department:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+                  nullable: true
+                  description: An internal organizational unit within the target, such as a division or school.
+                chapter:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+                  nullable: true
+                  description: A local or regional unit under the target's organizational structure, not merely a member of its network.
+                subsidiary:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+                  nullable: true
+                  description: A separate entity owned or controlled by the target.
+                otherParents:
+                  type: object
+                  additionalProperties:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+                  nullable: true
+                  description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
+              nullable: true
+              description: Organizations that directly contain this organization, grouped by hierarchy kind.
+            fiscalSponsor:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The organization's unique identifier.
+                  readOnly: true
+                name:
+                  type: string
+                  description: The organization's legal name as registered with relevant authorities.
+                identifiers:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
+                  description: Identifiers associated with the organization, keyed by registry code.
+              required:
+                - id
+                - name
+              nullable: true
+              description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
+            successor:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The organization's unique identifier.
+                  readOnly: true
+                name:
+                  type: string
+                  description: The organization's legal name as registered with relevant authorities.
+                identifiers:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
+                  description: Identifiers associated with the organization, keyed by registry code.
+              required:
+                - id
+                - name
+              nullable: true
+              description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
+            duplicateOf:
+              type: object
+              properties:
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: The organization's unique identifier.
+                  readOnly: true
+                name:
+                  type: string
+                  description: The organization's legal name as registered with relevant authorities.
+                identifiers:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
+                  description: Identifiers associated with the organization, keyed by registry code.
+              required:
+                - id
+                - name
+              nullable: true
+              description: The canonical record of the same organization, when this record is a duplicate of it.
+            otherRelationships:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+              nullable: true
+              description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
           nullable: true
           description: The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor.
         customFields:
@@ -5600,125 +5804,6 @@ components:
 
         Extends the generic identifier collection with the base identifiers CommonGrants
         defines for organizations. Additional registries can be published under `otherIds`.
-    CommonGrants.Patch.OrgPatchOrgIdsReplaceOnly:
-      type: object
-      properties:
-        org:us:ein:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinReplaceOnly'
-          description: The organization's Employer Identification Number (EIN), assigned by the IRS.
-        org:us:uei:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiReplaceOnly'
-          description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
-        org:xi:duns:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsReplaceOnly'
-          description: The organization's Data Universal Numbering System (DUNS) number.
-        systemId:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdReplaceOnly'
-          description: The hosting system's own identifier for this record.
-        otherIds:
-          type: object
-          additionalProperties:
-            type: object
-            allOf:
-              - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierReplaceOnly'
-            nullable: true
-          description: |-
-            Additional identifiers keyed by their registry code, for registries the
-            protocol does not define as a base identifier on the model.
-      description: |-
-        A collection of identifiers associated with an organization.
-
-        Extends the generic identifier collection with the base identifiers CommonGrants
-        defines for organizations. Additional registries can be published under `otherIds`.
-    CommonGrants.Patch.OrgPatchOrgParentsOrCreate:
-      type: object
-      properties:
-        parent:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-          nullable: true
-          description: Confirmed containment when no more specific supported kind is known.
-        department:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-          nullable: true
-          description: An internal organizational unit within the target, such as a division or school.
-        chapter:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-          nullable: true
-          description: A local or regional unit under the target's organizational structure, not merely a member of its network.
-        subsidiary:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-          nullable: true
-          description: A separate entity owned or controlled by the target.
-        otherParents:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-            nullable: true
-          nullable: true
-          description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
-      description: |-
-        Organizations that directly contain an organization, grouped by hierarchy kind.
-
-        Each kind holds an array so several targets can share a kind; array order
-        carries no primary-parent or ranking meaning. Use the most specific known
-        kind, and do not repeat a target as both `parent` and a more specific kind.
-    CommonGrants.Patch.OrgPatchOrgRelationshipsOrCreate:
-      type: object
-      properties:
-        parents:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgParentsOrCreate'
-          nullable: true
-          description: Organizations that directly contain this organization, grouped by hierarchy kind.
-        fiscalSponsor:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefOrCreate'
-          nullable: true
-          description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
-        successor:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefOrCreate'
-          nullable: true
-          description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
-        duplicateOf:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefOrCreate'
-          nullable: true
-          description: The canonical record of the same organization, when this record is a duplicate of it.
-        otherRelationships:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
-            nullable: true
-          nullable: true
-          description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
-      description: |-
-        An organization's relationships to other organizations.
-
-        Every reference is stated on this organization and points to its target.
-        Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
-        succession, and duplicate identity are distinct singular references. A
-        relationship confers no authority over its target.
     CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate:
       type: object
       properties:
@@ -5761,31 +5846,6 @@ components:
           nullable: true
           description: Additional social media profiles not covered by the standard fields.
       description: A collection of social media and web presence links for an organization.
-    CommonGrants.Patch.OrgPatchOrgTargetRefOrCreate:
-      type: object
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
-          description: The target organization's unique identifier.
-        name:
-          type: string
-          nullable: true
-          description: The target organization's legal name, checked against the target when supplied.
-        identifiers:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgIdsOrCreate'
-          nullable: true
-          description: Identifiers associated with the target organization, checked against the target when supplied.
-      description: |-
-        A writable reference to a relationship's target organization.
-
-        Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
-        patch can name the target, and `name` is optional so the target can be
-        named by ID alone. The provider resolves the target, refreshes its name and
-        provider-derived identifiers, and rejects an unresolved target or
-        contradictory metadata the sender supplies.
     CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly:
       type: object
       required:
@@ -5799,8 +5859,34 @@ components:
           type: string
           description: The target organization's legal name, checked against the target when supplied.
         identifiers:
-          allOf:
-            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgIdsReplaceOnly'
+          type: object
+          properties:
+            org:us:ein:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdEinReplaceOnly'
+              description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+            org:us:uei:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdUeiReplaceOnly'
+              description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+            org:xi:duns:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgIdDunsReplaceOnly'
+              description: The organization's Data Universal Numbering System (DUNS) number.
+            systemId:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchSystemIdReplaceOnly'
+              description: The hosting system's own identifier for this record.
+            otherIds:
+              type: object
+              additionalProperties:
+                type: object
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Fields.OrgPatchIdentifierReplaceOnly'
+                nullable: true
+              description: |-
+                Additional identifiers keyed by their registry code, for registries the
+                protocol does not define as a base identifier on the model.
           description: Identifiers associated with the target organization, checked against the target when supplied.
       description: |-
         A writable reference to a relationship's target organization.

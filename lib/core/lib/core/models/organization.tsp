@@ -48,7 +48,11 @@ model OrganizationBase {
 
   /** The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor. */
   @Versioning.added(CommonGrants.Versions.v0_5)
-  relationships?: OrgRelationships | null;
+  relationships?:
+    | {
+        ...OrgRelationships;
+      }
+    | null;
 
   /** Custom fields for the organization. */
   customFields?: Record<Fields.CustomField>;
@@ -132,6 +136,11 @@ model OrgRefCollection {
 // Organization relationships
 // #########################################################
 
+// Nullable object members (`relationships`, `parents`, and the singular
+// references) spread their model inline rather than referencing it. OpenAPI 3.0
+// cannot make a `$ref` nullable: `nullable` beside an `allOf` reference does
+// not stop the referenced object from rejecting `null`.
+
 /** An organization's relationships to other organizations.
  *
  * Every reference is stated on this organization and points to its target.
@@ -143,16 +152,32 @@ model OrgRefCollection {
 @Versioning.added(CommonGrants.Versions.v0_5)
 model OrgRelationships {
   /** Organizations that directly contain this organization, grouped by hierarchy kind. */
-  parents?: OrgParents | null;
+  parents?:
+    | {
+        ...OrgParents;
+      }
+    | null;
 
   /** The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship. */
-  fiscalSponsor?: OrgRef | null;
+  fiscalSponsor?:
+    | {
+        ...OrgRef;
+      }
+    | null;
 
   /** A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession. */
-  successor?: OrgRef | null;
+  successor?:
+    | {
+        ...OrgRef;
+      }
+    | null;
 
   /** The canonical record of the same organization, when this record is a duplicate of it. */
-  duplicateOf?: OrgRef | null;
+  duplicateOf?:
+    | {
+        ...OrgRef;
+      }
+    | null;
 
   /** Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets. */
   otherRelationships?: Record<OrgRef[]> | null;

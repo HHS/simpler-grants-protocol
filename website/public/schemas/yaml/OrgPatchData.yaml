@@ -54,7 +54,238 @@ properties:
     description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
   relationships:
     anyOf:
-      - $ref: "#/$defs/OrgPatchOrgRelationshipsOrCreate"
+      - type: object
+        properties:
+          parents:
+            anyOf:
+              - type: object
+                properties:
+                  parent:
+                    anyOf:
+                      - type: array
+                        items:
+                          $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                      - type: "null"
+                    description: Confirmed containment when no more specific supported kind is known.
+                  department:
+                    anyOf:
+                      - type: array
+                        items:
+                          $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                      - type: "null"
+                    description: An internal organizational unit within the target, such as a division or school.
+                  chapter:
+                    anyOf:
+                      - type: array
+                        items:
+                          $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                      - type: "null"
+                    description: A local or regional unit under the target's organizational structure, not merely a member of its network.
+                  subsidiary:
+                    anyOf:
+                      - type: array
+                        items:
+                          $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                      - type: "null"
+                    description: A separate entity owned or controlled by the target.
+                  otherParents:
+                    anyOf:
+                      - type: object
+                        properties: {}
+                        unevaluatedProperties:
+                          anyOf:
+                            - type: array
+                              items:
+                                $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                            - type: "null"
+                      - type: "null"
+                    description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
+                unevaluatedProperties:
+                  not: {}
+              - type: "null"
+            description: Organizations that directly contain this organization, grouped by hierarchy kind.
+          fiscalSponsor:
+            anyOf:
+              - type: object
+                properties:
+                  id:
+                    $ref: uuid.yaml
+                    description: The target organization's unique identifier.
+                  name:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    description: The target organization's legal name, checked against the target when supplied.
+                  identifiers:
+                    anyOf:
+                      - type: object
+                        properties:
+                          org:us:ein:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdEinOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                          org:us:uei:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdUeiOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                          org:xi:duns:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdDunsOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Data Universal Numbering System (DUNS) number.
+                          systemId:
+                            anyOf:
+                              - $ref: OrgPatchSystemIdOrCreate.yaml
+                              - type: "null"
+                            description: The hosting system's own identifier for this record.
+                          otherIds:
+                            anyOf:
+                              - type: object
+                                properties: {}
+                                unevaluatedProperties:
+                                  anyOf:
+                                    - $ref: OrgPatchIdentifierOrCreate.yaml
+                                    - type: "null"
+                              - type: "null"
+                            description: |-
+                              Additional identifiers keyed by their registry code, for registries the
+                              protocol does not define as a base identifier on the model.
+                        unevaluatedProperties:
+                          not: {}
+                      - type: "null"
+                    description: Identifiers associated with the target organization, checked against the target when supplied.
+                unevaluatedProperties:
+                  not: {}
+              - type: "null"
+            description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
+          successor:
+            anyOf:
+              - type: object
+                properties:
+                  id:
+                    $ref: uuid.yaml
+                    description: The target organization's unique identifier.
+                  name:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    description: The target organization's legal name, checked against the target when supplied.
+                  identifiers:
+                    anyOf:
+                      - type: object
+                        properties:
+                          org:us:ein:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdEinOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                          org:us:uei:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdUeiOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                          org:xi:duns:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdDunsOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Data Universal Numbering System (DUNS) number.
+                          systemId:
+                            anyOf:
+                              - $ref: OrgPatchSystemIdOrCreate.yaml
+                              - type: "null"
+                            description: The hosting system's own identifier for this record.
+                          otherIds:
+                            anyOf:
+                              - type: object
+                                properties: {}
+                                unevaluatedProperties:
+                                  anyOf:
+                                    - $ref: OrgPatchIdentifierOrCreate.yaml
+                                    - type: "null"
+                              - type: "null"
+                            description: |-
+                              Additional identifiers keyed by their registry code, for registries the
+                              protocol does not define as a base identifier on the model.
+                        unevaluatedProperties:
+                          not: {}
+                      - type: "null"
+                    description: Identifiers associated with the target organization, checked against the target when supplied.
+                unevaluatedProperties:
+                  not: {}
+              - type: "null"
+            description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
+          duplicateOf:
+            anyOf:
+              - type: object
+                properties:
+                  id:
+                    $ref: uuid.yaml
+                    description: The target organization's unique identifier.
+                  name:
+                    anyOf:
+                      - type: string
+                      - type: "null"
+                    description: The target organization's legal name, checked against the target when supplied.
+                  identifiers:
+                    anyOf:
+                      - type: object
+                        properties:
+                          org:us:ein:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdEinOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+                          org:us:uei:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdUeiOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+                          org:xi:duns:
+                            anyOf:
+                              - $ref: OrgPatchOrgIdDunsOrCreate.yaml
+                              - type: "null"
+                            description: The organization's Data Universal Numbering System (DUNS) number.
+                          systemId:
+                            anyOf:
+                              - $ref: OrgPatchSystemIdOrCreate.yaml
+                              - type: "null"
+                            description: The hosting system's own identifier for this record.
+                          otherIds:
+                            anyOf:
+                              - type: object
+                                properties: {}
+                                unevaluatedProperties:
+                                  anyOf:
+                                    - $ref: OrgPatchIdentifierOrCreate.yaml
+                                    - type: "null"
+                              - type: "null"
+                            description: |-
+                              Additional identifiers keyed by their registry code, for registries the
+                              protocol does not define as a base identifier on the model.
+                        unevaluatedProperties:
+                          not: {}
+                      - type: "null"
+                    description: Identifiers associated with the target organization, checked against the target when supplied.
+                unevaluatedProperties:
+                  not: {}
+              - type: "null"
+            description: The canonical record of the same organization, when this record is a duplicate of it.
+          otherRelationships:
+            anyOf:
+              - type: object
+                properties: {}
+                unevaluatedProperties:
+                  anyOf:
+                    - type: array
+                      items:
+                        $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+                    - type: "null"
+              - type: "null"
+            description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
+        unevaluatedProperties:
+          not: {}
       - type: "null"
     description: The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor.
   customFields:
@@ -271,127 +502,6 @@ $defs:
     unevaluatedProperties:
       not: {}
     description: A collection of social media and web presence links for an organization.
-  OrgPatchOrgRelationshipsOrCreate:
-    type: object
-    properties:
-      parents:
-        anyOf:
-          - $ref: "#/$defs/OrgPatchOrgParentsOrCreate"
-          - type: "null"
-        description: Organizations that directly contain this organization, grouped by hierarchy kind.
-      fiscalSponsor:
-        anyOf:
-          - $ref: "#/$defs/OrgPatchOrgTargetRefOrCreate"
-          - type: "null"
-        description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
-      successor:
-        anyOf:
-          - $ref: "#/$defs/OrgPatchOrgTargetRefOrCreate"
-          - type: "null"
-        description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
-      duplicateOf:
-        anyOf:
-          - $ref: "#/$defs/OrgPatchOrgTargetRefOrCreate"
-          - type: "null"
-        description: The canonical record of the same organization, when this record is a duplicate of it.
-      otherRelationships:
-        anyOf:
-          - type: object
-            properties: {}
-            unevaluatedProperties:
-              anyOf:
-                - type: array
-                  items:
-                    $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-                - type: "null"
-          - type: "null"
-        description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
-    unevaluatedProperties:
-      not: {}
-    description: |-
-      An organization's relationships to other organizations.
-
-      Every reference is stated on this organization and points to its target.
-      Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
-      succession, and duplicate identity are distinct singular references. A
-      relationship confers no authority over its target.
-  OrgPatchOrgParentsOrCreate:
-    type: object
-    properties:
-      parent:
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-          - type: "null"
-        description: Confirmed containment when no more specific supported kind is known.
-      department:
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-          - type: "null"
-        description: An internal organizational unit within the target, such as a division or school.
-      chapter:
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-          - type: "null"
-        description: A local or regional unit under the target's organizational structure, not merely a member of its network.
-      subsidiary:
-        anyOf:
-          - type: array
-            items:
-              $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-          - type: "null"
-        description: A separate entity owned or controlled by the target.
-      otherParents:
-        anyOf:
-          - type: object
-            properties: {}
-            unevaluatedProperties:
-              anyOf:
-                - type: array
-                  items:
-                    $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
-                - type: "null"
-          - type: "null"
-        description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
-    unevaluatedProperties:
-      not: {}
-    description: |-
-      Organizations that directly contain an organization, grouped by hierarchy kind.
-
-      Each kind holds an array so several targets can share a kind; array order
-      carries no primary-parent or ranking meaning. Use the most specific known
-      kind, and do not repeat a target as both `parent` and a more specific kind.
-  OrgPatchOrgTargetRefOrCreate:
-    type: object
-    properties:
-      id:
-        $ref: uuid.yaml
-        description: The target organization's unique identifier.
-      name:
-        anyOf:
-          - type: string
-          - type: "null"
-        description: The target organization's legal name, checked against the target when supplied.
-      identifiers:
-        anyOf:
-          - $ref: "#/$defs/OrgPatchOrgIdsOrCreate"
-          - type: "null"
-        description: Identifiers associated with the target organization, checked against the target when supplied.
-    unevaluatedProperties:
-      not: {}
-    description: |-
-      A writable reference to a relationship's target organization.
-
-      Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
-      patch can name the target, and `name` is optional so the target can be
-      named by ID alone. The provider resolves the target, refreshes its name and
-      provider-derived identifiers, and rejects an unresolved target or
-      contradictory metadata the sender supplies.
   OrgPatchOrgTargetRefReplaceOnly:
     type: object
     properties:
@@ -402,7 +512,32 @@ $defs:
         type: string
         description: The target organization's legal name, checked against the target when supplied.
       identifiers:
-        $ref: "#/$defs/OrgPatchOrgIdsReplaceOnly"
+        type: object
+        properties:
+          org:us:ein:
+            $ref: OrgPatchOrgIdEinReplaceOnly.yaml
+            description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+          org:us:uei:
+            $ref: OrgPatchOrgIdUeiReplaceOnly.yaml
+            description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+          org:xi:duns:
+            $ref: OrgPatchOrgIdDunsReplaceOnly.yaml
+            description: The organization's Data Universal Numbering System (DUNS) number.
+          systemId:
+            $ref: OrgPatchSystemIdReplaceOnly.yaml
+            description: The hosting system's own identifier for this record.
+          otherIds:
+            type: object
+            properties: {}
+            unevaluatedProperties:
+              anyOf:
+                - $ref: OrgPatchIdentifierReplaceOnly.yaml
+                - type: "null"
+            description: |-
+              Additional identifiers keyed by their registry code, for registries the
+              protocol does not define as a base identifier on the model.
+        unevaluatedProperties:
+          not: {}
         description: Identifiers associated with the target organization, checked against the target when supplied.
     required:
       - id
@@ -416,35 +551,3 @@ $defs:
       named by ID alone. The provider resolves the target, refreshes its name and
       provider-derived identifiers, and rejects an unresolved target or
       contradictory metadata the sender supplies.
-  OrgPatchOrgIdsReplaceOnly:
-    type: object
-    properties:
-      org:us:ein:
-        $ref: OrgPatchOrgIdEinReplaceOnly.yaml
-        description: The organization's Employer Identification Number (EIN), assigned by the IRS.
-      org:us:uei:
-        $ref: OrgPatchOrgIdUeiReplaceOnly.yaml
-        description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
-      org:xi:duns:
-        $ref: OrgPatchOrgIdDunsReplaceOnly.yaml
-        description: The organization's Data Universal Numbering System (DUNS) number.
-      systemId:
-        $ref: OrgPatchSystemIdReplaceOnly.yaml
-        description: The hosting system's own identifier for this record.
-      otherIds:
-        type: object
-        properties: {}
-        unevaluatedProperties:
-          anyOf:
-            - $ref: OrgPatchIdentifierReplaceOnly.yaml
-            - type: "null"
-        description: |-
-          Additional identifiers keyed by their registry code, for registries the
-          protocol does not define as a base identifier on the model.
-    unevaluatedProperties:
-      not: {}
-    description: |-
-      A collection of identifiers associated with an organization.
-
-      Extends the generic identifier collection with the base identifiers CommonGrants
-      defines for organizations. Additional registries can be published under `otherIds`.
