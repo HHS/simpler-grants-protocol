@@ -1,121 +1,263 @@
 ---
 title: Organization relationships
-description: ADR documenting the decision to use kind-keyed hierarchy arrays and distinct singular references for organization relationships.
+description: ADR documenting the decision to represent an organization's relationships to other organizations as lists of relationship objects, one per category and direction, plus a list for other connections.
 ---
 
-Organizations need to identify a containing organization without merging the two organizations' identities. They also need to express fiscal sponsorship, trading names, replacement organizations, and duplicate records. A department's parent reference can carry the university's identifiers so downstream systems can match it without interpreting the source system's local ID. [ADR 0023](https://commongrants.org/governance/adr/0023-org-ids/) established that reference content.
+An organization record often needs to point to other organizations: the network a local chapter belongs to, the foundation that fiscally sponsors a project, the organization that carried on its work after a merger, or the record that a duplicate record should give way to. [ADR 0023](https://commongrants.org/governance/adr/0023-org-ids/) decided what a reference to another organization carries: its `id`, `name`, and optional `identifiers`. This decision covers where those references go, how a relationship's type is stated, and what a relationship can say about itself, such as when it started.
 
-This decision weighs a typed hierarchy array's native traversal against kind-keyed collections' direct access and partial updates. An organization can hold several relationship kinds at once, such as a department that is also fiscally sponsored.
+Here is a literacy project that is a chapter of a national network and is fiscally sponsored by a local foundation:
+
+```json
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Riverside Reading Project",
+  "relationships": {
+    "parents": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+          "name": "National Reading Network"
+        },
+        "kind": { "value": "chapter" }
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+          "name": "Riverside Community Foundation"
+        },
+        "kind": { "value": "fiscalSponsor" },
+        "startDate": "2024-07-01",
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+The list name, `parents`, gives the relationship's category and direction: each `org` is above this organization. `kind` optionally narrows that to a subtype. `org` identifies the other organization, while `startDate`, `endDate`, and `status` describe the relationship itself.
 
 ## Decision
 
-We use an optional `relationships` container, with hierarchy grouped into kind-keyed arrays under `relationships.parents`. We keep `fiscalSponsor`, `successor`, and `duplicateOf` as distinct singular references, put current DBA names directly on the organization as a string array, and add no separate division kind because `department` covers internal units.
+We add an optional `relationships` object to `OrganizationBase` with seven optional lists. Every entry in every list is a relationship object with a required `org` and optional `kind`, `startDate`, `endDate`, and `status`. Names the organization currently does business as stay on the organization in an optional `dbaNames` list of strings. They are not relationships or a history of former names.
 
-The deciding preference is **kind-local update isolation**. [ADR 0026](https://commongrants.org/governance/adr/0026-org-profile-syncing/) uses JSON Merge Patch: arrays replace whole, objects merge recursively, omitted members remain unchanged, and `null` removes members. A typed hierarchy array requires a writer changing one kind to preserve and resend all other hierarchy entries. A keyed representation lets that writer replace just the addressed kind. Consumers can normalize buckets locally into labeled edges for traversal; writers cannot obtain kind-local array updates without preserving other entries or changing the patch mechanism.
+| List                 | Category   | Each entry says                                                     | Standard `kind` values                                           |
+| -------------------- | ---------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `parents`            | Hierarchy  | `org` is above this organization                                    | `chapter`, `department`, `branch`, `subsidiary`, `fiscalSponsor` |
+| `children`           | Hierarchy  | `org` is below this organization                                    | Same as `parents`                                                |
+| `succeededBy`        | Succession | `org` carries on all or part of this organization                   | `merger`, `acquisition`, `divestiture`, `split`                  |
+| `succeeds`           | Succession | This organization carries on all or part of `org`                   | Same as `succeededBy`                                            |
+| `recordReplacedBy`   | Record     | `org`'s record should be used instead of this record                | `duplicate`, `merged`                                            |
+| `recordReplaces`     | Record     | This record should be used instead of `org`'s record                | Same as `recordReplacedBy`                                       |
+| `otherRelationships` | Other      | This organization is connected to `org`, possibly with no direction | None                                                             |
 
-A typed array is the strongest alternative: it provides native uniform iteration and inline kind metadata. We give kind-local writes more weight than those benefits.
-
-We choose arrays over keyed singular references to permit same-kind multiplicity without a later value-type change and to replace hierarchy references whole rather than recursively retaining metadata. Kind-local isolation does not distinguish these two keyed options. The cost is array handling even for a single target.
+Every list also accepts a `custom` kind. List order carries no meaning, such as a primary parent.
 
 - **Positive consequences**
-  - Known-kind lookup returns the complete addressed collection directly.
-  - Updating one standard or custom hierarchy kind does not require resending other kinds.
-  - Sponsorship, succession, and duplicate identity remain independently addressable.
-  - Arrays can represent several targets under one hierarchy kind without artificial labels.
+  - A consumer following parents or children reads one list per organization and finds every entry the provider supplied there, whatever subtype each entry uses.
+  - Each named list gives its entries' category and direction, so an entry there with no `kind`, or with a `kind` the consumer doesn't recognize, is still usable. `otherRelationships` entries need neither a direction nor a `kind`.
+  - Dates and status describe the relationship without being mixed into the other organization's identity.
+  - A subtype can repeat, such as the two organizations formed by a split.
+  - A provider can state a relationship from whichever organization's record it maintains.
 - **Negative consequences**
-  - Generic traversal must normalize standard buckets and the custom map.
-  - Custom labels require external documentation rather than carrying inline kind metadata.
-  - Each addressed array still replaces whole, so stale writes within that kind remain possible.
-  - Broader cardinality requires consumers to handle branching and shared ancestors.
-  - Reference coherence and graph integrity require provider checks beyond schema validation.
+  - Under JSON Merge Patch, changing one entry means sending the whole list again. A writer that understands only some entries must still send the rest unchanged, and two writers updating the same list can overwrite each other.
+  - Reading only one subtype means filtering the list.
+  - Each entry nests the reference one level deeper, under `org`.
+  - Because both directions can be stated, two records can disagree. The protocol doesn't require them to match.
+  - Consumers can't assume one parent per subtype or a `kind` on every entry.
 
 ### Criteria
 
-**Required capabilities and boundaries** take precedence over ergonomic preferences:
+**Required capabilities and boundaries** screen out shapes before preferences are weighed:
 
-- Preserve dependent-to-parent direction and the reference's local ID, name, and optional matching identifiers.
-- Keep hierarchy, sponsorship, succession, and duplicate identity distinct.
-- Permit different relationship kinds concurrently, including a structural parent and a different fiscal sponsor.
-- Preserve existing Merge Patch semantics and coherent target identity.
-- Distinguish custom hierarchy kinds from nonhierarchical extensions.
-- Limit this decision to organizations. Opportunities, awards, and `Award.parent` are unchanged. Organization status is handled separately in [PR 1252](https://github.com/HHS/simpler-grants-protocol/pull/1252).
-- Put DBA names on the organization and cover divisions with `department`.
+- Keep the reference content from ADR 0023.
+- Keep hierarchy, succession, and record replacement distinct, with room for other connections.
+- Allow several relationships in a category at once, whether they have different subtypes (a chapter parent and a fiscal sponsor) or the same one (the two organizations formed by a split).
+- Use the existing Merge Patch semantics, with no new patch mechanism.
+- Limit the change to organizations. Opportunities, awards, and `Award.parent` are unchanged, and organization status is handled separately in [PR 1252](https://github.com/HHS/simpler-grants-protocol/pull/1252).
 
-**Weighted preferences** are kind-local updates, direct known-kind access, traversal across unfamiliar kinds, inline custom-kind metadata, and a small public model. They are not equally weighted scores.
+**Preferences**, from most to least weight:
 
-**Same-kind multiplicity** is a deliberate evolution tradeoff, not a demonstrated adopter requirement. We prioritize avoiding a later value-type change over deferring it. Array order carries no primary-parent or ranking meaning.
+1. A consumer can follow the supplied parents or children across mixed subtypes without knowing each level's label. This is the deciding preference.
+2. Facts about a relationship stay separate from facts about the other organization.
+3. A writer can change one category without resending the others.
+4. A writer can change one subtype without resending the others.
+5. A consumer can read one subtype without filtering.
+6. The public model stays small.
 
 ### Options considered
 
-| Option                                         | Result   | Deciding reason                                                                           |
-| ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| Named singular hierarchy fields                | Rejected | One-per-kind limits require a later value-type change for multiplicity.                   |
-| One typed list for every relationship category | Rejected | Loses distinct named singular links and couples all edge updates.                         |
-| Kind-keyed singular hierarchy                  | Rejected | Keeps narrow writes, but limits cardinality and recursively merges references.            |
-| Typed hierarchy array                          | Rejected | Native traversal and inline metadata do not outweigh replacing unrelated kinds on writes. |
-| Kind-keyed hierarchy arrays                    | Selected | Isolates writes by kind while allowing multiplicity and whole-reference replacement.      |
+| Option                                              | Result   | Deciding reason                                                                                                           |
+| --------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Named single references                             | Rejected | One target per field can't hold a split or several parents, and there's no place for dates or status.                     |
+| Parents grouped by kind                             | Rejected | Allows one-kind writes, but a consumer following parents must gather every group.                                         |
+| Lists with `kind` beside the reference's fields     | Rejected | Walks well, but mixes relationship facts into the other organization's fields.                                            |
+| One list for every relationship                     | Rejected | Every change sends every relationship again, and each entry must carry its category, plus its direction where it has one. |
+| Lists by category and direction, with `org` wrapped | Selected | Mixed subtypes read from one list, separate relationship facts, and independent categories.                               |
 
 ### Representation
 
-This is an illustrative read structure, not compiled TypeSpec or a tested payload. `OrgRef` means the existing ID, name, and optional identifiers. Its ID is read-only, so writable relationship targets require a distinct write-reference variant rather than reuse of the read type without changes.
+```tsp
+/** Subtypes of a parent or child relationship */
+enum OrgHierarchyKindOptions {
+  chapter,
+  department,
+  branch,
+  subsidiary,
+  fiscalSponsor,
+  custom,
+}
 
-```text
-Organization additions
-  dbaNames: optional string array
-  relationships: optional OrgRelationships
+/** Subtypes of organizational succession */
+enum OrgSuccessionKindOptions {
+  merger,
+  acquisition,
+  divestiture,
+  split,
+  custom,
+}
 
-OrgRelationships
-  parents: optional OrgParents
-  fiscalSponsor: optional singular OrgRef
-  successor: optional singular OrgRef
-  duplicateOf: optional singular OrgRef
-  otherRelationships: documented nonhierarchical label -> OrgRef array
+/** Subtypes of record replacement */
+enum OrgRecordKindOptions {
+  duplicate,
+  merged,
+  custom,
+}
 
-OrgParents
-  parent: optional OrgRef array
-  department: optional OrgRef array
-  chapter: optional OrgRef array
-  subsidiary: optional OrgRef array
-  otherParents: documented hierarchy label -> OrgRef array
+/** Other relationships define no standard subtypes */
+enum OrgOtherKindOptions {
+  custom,
+}
+
+/** Whether a relationship is in effect, as stated by the provider */
+enum OrgRelationshipStatus {
+  active,
+  inactive,
+}
+
+/** A relationship from this organization to another organization */
+model OrgRelationshipT<TKind> {
+  /** The other organization */
+  org: OrgRef;
+
+  /** The relationship's subtype within the category its list names */
+  kind?: Fields.ExtensibleEnumT<TKind> | null;
+
+  /** When the relationship started */
+  startDate?: Types.isoDate | null;
+
+  /** When the relationship ended */
+  endDate?: Types.isoDate | null;
+
+  /** Whether the relationship is in effect, as stated by the provider */
+  status?: OrgRelationshipStatus | null;
+}
+
+/** An organization's relationships to other organizations */
+model OrgRelationships {
+  /** Organizations above this one, such as a containing organization or a fiscal sponsor */
+  parents?: OrgRelationshipT<OrgHierarchyKindOptions>[] | null;
+
+  /** Organizations below this one, such as its chapters or sponsored projects */
+  children?: OrgRelationshipT<OrgHierarchyKindOptions>[] | null;
+
+  /** Organizations that carry on all or part of this one */
+  succeededBy?: OrgRelationshipT<OrgSuccessionKindOptions>[] | null;
+
+  /** Organizations whose work this one carries on in whole or in part */
+  succeeds?: OrgRelationshipT<OrgSuccessionKindOptions>[] | null;
+
+  /** Records to use instead of this record */
+  recordReplacedBy?: OrgRelationshipT<OrgRecordKindOptions>[] | null;
+
+  /** Records that this record is used instead of */
+  recordReplaces?: OrgRelationshipT<OrgRecordKindOptions>[] | null;
+
+  /** Connections outside the categories above, which need not have a direction */
+  otherRelationships?: OrgRelationshipT<OrgOtherKindOptions>[] | null;
+}
+
+model OrganizationBase {
+  // ...existing fields
+
+  /** Names the organization currently does business as, alongside its legal name */
+  dbaNames?: string[] | null;
+
+  /** The organization's relationships to other organizations */
+  relationships?: OrgRelationships | null;
+}
 ```
 
-Both extension maps are optional. Read schemas must preserve [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)'s absent/null/value distinction. Patch null means removal independently of read null semantics; nullable schema emission has not been verified for this structure.
+`OrgRef` is the existing reference model. As [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/) requires, every optional member accepts `null` on reads; `org` and list entries don't. Model names, and the use of one template for every list, are implementation choices; this ADR decides the wire shape.
 
-### Relationship meanings
+### Relationship objects
 
-Every reference is stated on the source organization and points to its target. Hierarchy labels describe the source's relationship to its direct containing organization:
+- **`org`** is required. On reads it is an `OrgRef`. Because `OrgRef.id` is read-only, the write shape keeps `org.id` writable, and a writer can identify a target by `id` alone.
+- **`kind`** is optional in every list, including `otherRelationships`. It uses the protocol's [extensible enum](/protocol/fields/extensible-enum/): either a standard `value`, or `"value": "custom"` with the subtype in `customValue`. As elsewhere in the protocol, `description` is optional. A custom kind in a named list adds a subtype to that list's category. `otherRelationships` defines no standard values, so a kind stated there is always custom.
+- **`startDate`** and **`endDate`** are optional ISO dates, with the same names and type as `DateRangeEvent`.
+- **`status`** is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates: an entry with a past `endDate` and no `status` hasn't stated a status. The protocol requires no particular combination of dates and status.
 
-- `parent`: confirmed containment when no more specific supported subtype is known. This named fallback preserves the original parent need without forcing a subtype classification. Use the specific kind when known; do not repeat the same link as both generic parent and its subtype.
-- `department`: an internal organizational unit within the target.
-- `chapter`: a local or regional unit under the target's organizational structure, not merely a network member.
-- `subsidiary`: a separate entity owned or controlled by the target. Several ownership interests do not automatically establish several controlling parents.
-- `fiscalSponsor`: the target fiscally sponsors this organization or project. A payee designation alone is insufficient.
-- `successor`: a different organization replaces the dissolved predecessor; both records represent real organizations. Renames and sponsor changes alone do not establish succession.
-- `duplicateOf`: the canonical record represents the same organization, not a replacement entity.
-- `dbaNames`: current trading names, not organization references or former-name history.
+An entry with only `org` is valid in every list.
 
-Custom parent labels must document containment and direction. Nonhierarchical labels belong in `otherRelationships`. Neither extension map may disguise additional fiscal sponsors, successors, or duplicate targets. Name-collision checks alone do not enforce this semantic boundary.
+### Why one list per category and direction
 
-For duplicates, preserve the losing record and its link so an old reference can identify the canonical record. This ADR does not mandate redirects, default listing filters, deletion, or transport behavior. Successors must not receive duplicate treatment.
+The deciding consideration is how consumers follow relationships across levels. Subtypes change from level to level, and providers won't always label the same level the same way. A federal department might contain an agency, which contains a center, which contains a division, while a sibling agency uses institutes, offices, and branches at the same depths. A consumer walking up from a division can't know which label the next level uses, so it reads every parent the record supplies anyway. If parents were grouped by kind, that consumer would have to gather every group, including custom groups it has never seen, and a provider's choice of label would change where a parent appears in the payload. In a single list, the label is a value on the entry, and a provider that is unsure of the subtype can leave it out.
 
-### Updates and reference integrity
+The cost falls on writes. [ADR 0026](https://commongrants.org/governance/adr/0026-org-profile-syncing/) uses JSON Merge Patch, which replaces arrays whole. Grouping by kind would let a writer replace one kind's parents without touching the others; a single list makes the writer send every parent. Updating one kind on its own is a convenience rather than a requirement, since a writer can still make any change by sending the full list.
 
-| Patch input                              | Effect                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `relationships.parents.department` array | Replaces only that kind; omitted kinds and singular links remain unchanged.                |
-| One extension-map label's array          | Replaces only that label's references.                                                     |
-| `[]`                                     | Leaves a present empty collection, not automatically a read-side not-applicable assertion. |
-| `null`                                   | Removes the addressed member.                                                              |
+Separate lists keep categories independent: changing `parents` never touches succession or record entries, and a consumer walking a hierarchy never filters them out.
 
-No append, element merge, or merge-by-ID behavior is introduced.
+`org` wraps the reference instead of placing `kind`, dates, and status beside its fields. The reference describes the other organization; the remaining fields describe the relationship. Keeping them apart means, for example, that a relationship's `status` can't be mistaken for an organization's own status, which is handled separately in [PR 1252](https://github.com/HHS/simpler-grants-protocol/pull/1252).
 
-Singular reference objects still merge recursively. Providers apply the following coherence rules, including when queued proposals are accepted against current state:
+### Hierarchy
 
-1. Resolve a changed target's identity and refresh its name and provider-derived identifiers; remove stale values when unavailable.
-2. Refresh metadata retained from the old target before validation, rather than treating it as contradictory sender input. A resolvable ID-only target change can succeed.
-3. Reject unresolved targets and contradictory metadata explicitly supplied by the sender atomically.
+- `parents` and `children` cover more than containment. `fiscalSponsor` is a hierarchy kind, so one organization can list a chapter parent and a different fiscal sponsor in the same `parents` list. Consumers shouldn't treat every parent as an owner or container.
+- There is no generic `parent` kind. An entry without `kind` already states a parent relationship without a subtype.
+- `department` names an internal unit. This decision doesn't define it to cover every internal level, such as a division, center, agency, or group, and adds no standard `division` or `agency` value. A provider can name those levels with a custom kind or leave `kind` out.
 
-Providers reject self-links and identical edges, check hierarchy cycles across kinds, and check successor and duplicate cycles separately within their known graph. An identical hierarchy edge has the same effective kind and target ID. These are provider obligations, not claims that schemas enforce them or that one provider knows a complete cross-system graph.
+### Succession and record replacement
+
+Succession is about organizations; record replacement is about records in a provider's system. A `merger` in `succeededBy` means organizations combined, while a `merged` entry in `recordReplacedBy` means a provider combined records. A provider's workflow may treat `duplicate` and `merged` records alike; the protocol doesn't require the two to be exclusive. This decision doesn't prescribe how a provider merges, deletes, or redirects records.
+
+### Both directions
+
+Each named category has a list for each direction, and a provider can expose either or both. The protocol doesn't require reverse entries, complete lists, or agreement between the two sides, and it doesn't ask providers to store or maintain a relationship graph. `otherRelationships` is a single list because its connections need not have a direction.
+
+### Updates
+
+[ADR 0026](https://commongrants.org/governance/adr/0026-org-profile-syncing/)'s JSON Merge Patch applies unchanged:
+
+| Patch body                                  | Effect                                                       |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `{ "relationships": { "parents": [...] } }` | Replaces the whole `parents` list; other lists are unchanged |
+| `{ "relationships": { "parents": [] } }`    | Leaves an empty `parents` list; other lists are unchanged    |
+| `{ "relationships": { "parents": null } }`  | Removes `parents`; other lists are unchanged                 |
+| `{ "relationships": null }`                 | Removes every relationship list                              |
+
+There is no append, merge by ID, single-entry change, or automatic reverse entry. To change one entry, a writer sends the full list with whole entries. This patch ends the sponsorship from the opening example and leaves every other list unchanged:
+
+```json
+{
+  "relationships": {
+    "parents": [
+      {
+        "org": { "id": "01912a8b-7c3d-7891-abcd-ef1234567891" },
+        "kind": { "value": "chapter" }
+      },
+      {
+        "org": { "id": "01912a8b-7c3d-7892-abcd-ef1234567892" },
+        "kind": { "value": "fiscalSponsor" },
+        "startDate": "2024-07-01",
+        "endDate": "2026-06-30",
+        "status": "inactive"
+      }
+    ]
+  }
+}
+```
+
+This patch names its targets by `id` alone, which the write shape allows. Reads still return a full `OrgRef` for each `org`. Schema validation only checks shape; it doesn't fill in a target's `name` or identifiers.
+
+Optional read members follow [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/): absent means "not provided" and `null` means "doesn't apply." In a patch, `null` means remove the member, as in JSON Merge Patch, regardless of what `null` means on reads.
 
 ## Evaluation
 
@@ -125,135 +267,312 @@ Providers reject self-links and identical edges, check hierarchy cycles across k
 - ❌ Criterion not met
 - 🟡 Partially met or requires additional handling
 
-Required capabilities screen out incompatible shapes before preferences are weighed. There is no checkmark total or equally weighted score.
+| Criterion                          | Weight     | Named single | Grouped by kind | Kind beside fields | One list | Selected |
+| ---------------------------------- | ---------- | :----------: | :-------------: | :----------------: | :------: | :------: |
+| Distinct categories                | Required   |      ✅      |       ✅        |         ✅         |    🟡    |    ✅    |
+| Several relationships per category | Required   |      ❌      |       ✅        |         ✅         |    ✅    |    ✅    |
+| Existing Merge Patch semantics     | Required   |      ✅      |       ✅        |         ✅         |    ✅    |    ✅    |
+| Follow supplied mixed subtypes     | Deciding   |      🟡      |       🟡        |         ✅         |    🟡    |    ✅    |
+| Relationship facts kept separate   | Preference |      ❌      |       ❌        |         🟡         |    ✅    |    ✅    |
+| Change one category alone          | Preference |      ✅      |       ✅        |         ✅         |    ❌    |    ✅    |
+| Change one subtype alone           | Preference |      ✅      |       ✅        |         ❌         |    ❌    |    ❌    |
+| Read one subtype without filtering | Preference |      ✅      |       ✅        |         ❌         |    ❌    |    ❌    |
+| Small public model                 | Preference |      ✅      |       🟡        |         🟡         |    ✅    |    🟡    |
 
-| Criterion                                        | Weight              | Named singular | All-edge list | Keyed singular | Typed parents | Keyed arrays |
-| ------------------------------------------------ | ------------------- | :------------: | :-----------: | :------------: | :-----------: | :----------: |
-| Distinct named singular links                    | Required            |       ✅       |      ❌       |       ✅       |      ✅       |      ✅      |
-| Existing Merge Patch semantics                   | Required            |       ✅       |      ✅       |       ✅       |      ✅       |      ✅      |
-| Different kinds concurrently                     | Required            |       ✅       |      ✅       |       ✅       |      ✅       |      ✅      |
-| Coherent target identity                         | Required            |       🟡       |      🟡       |       🟡       |      🟡       |      🟡      |
-| Distinguish custom hierarchy from other links    | Required            |       ✅       |      🟡       |       ✅       |      ✅       |      ✅      |
-| Kind-local hierarchy updates                     | Deciding preference |       ✅       |      ❌       |       ✅       |      ❌       |      ✅      |
-| Direct complete known-kind access                | Preference          |       ✅       |      ❌       |       ✅       |      ❌       |      ✅      |
-| Native uniform hierarchy traversal               | Preference          |       ❌       |      🟡       |       ❌       |      ✅       |      ❌      |
-| Inline custom-kind metadata                      | Preference          |       ❌       |      ✅       |       ❌       |      ✅       |      ❌      |
-| Same-kind multiplicity without value-type change | Evolution tradeoff  |       ❌       |      ✅       |       ❌       |      ✅       |      ✅      |
+There is no checkmark total or equally weighted score. Named single references fail a required capability. Among the rest, the selected shape and the kind-beside-fields shape are the only ones that read mixed subtypes from one list, and the selected shape also keeps relationship facts apart from organization facts.
 
-All shapes need provider checks for coherent target identity. The all-edge list also needs category classification and singular-limit enforcement. Keyed shapes require traversal normalization; the all-edge list requires filtering hierarchy from other categories. These handling costs do not make traversal impossible.
-
-### Option 1: Named singular hierarchy fields — Rejected
+### Option 1: Named single references — Rejected
 
 :::note[Bottom line]
-Named singular fields are best if direct access and one-per-kind dominate, but consumers can compromise on generic traversal and future same-kind multiplicity.
-:::
+Named single references are best if:
+
+- we want the smallest model with direct access to each relationship
+- but can compromise on several relationships per category and on relationship dates and status
+  :::
+
+ADR 0023's single `parent`, extended with one field per other relationship:
+
+```json
+{
+  "parent": {
+    "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+    "name": "National Reading Network"
+  },
+  "fiscalSponsor": {
+    "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+    "name": "Riverside Community Foundation"
+  }
+}
+```
 
 - **Pros**
-  - Fit one-per-kind cases and permit small member updates.
-  - Keep the distinct singular links separate.
+  - Smallest model; each relationship is read or written by name.
+  - Fits organizations with at most one relationship of each type.
 - **Cons**
-  - Cannot represent several standard parents of one kind.
-  - Require field-aware traversal and coherence checks for recursive reference merging.
+  - Can't hold two parents, or the two organizations formed by a split, without changing a field's type later.
+  - No place for a relationship's subtype, dates, or status.
+  - A consumer walking upward checks each named field.
 
-### Option 2: One typed list for every category — Rejected
+### Option 2: Parents grouped by kind — Rejected
 
 :::note[Bottom line]
-One list is best if uniform enumeration of every edge dominates, but writers can compromise on update isolation and consumers on named access to singular links.
-:::
+Grouping parents by kind is best if:
+
+- we want writers to replace one kind of parent without resending the others, and consumers to read one kind directly
+- but can compromise on consumers gathering every group to follow parents
+  :::
+
+An earlier draft of this ADR selected this shape: `parents` is an object that maps each kind to a list of references, with custom kinds in an `otherParents` map, and sponsorship, succession, and duplicates as single references:
+
+```json
+{
+  "relationships": {
+    "parents": {
+      "chapter": [
+        {
+          "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+          "name": "National Reading Network"
+        }
+      ],
+      "otherParents": {
+        "region": [
+          {
+            "id": "01912a8b-7c3d-7895-abcd-ef1234567895",
+            "name": "Western Region"
+          }
+        ]
+      }
+    },
+    "fiscalSponsor": {
+      "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+      "name": "Riverside Community Foundation"
+    }
+  }
+}
+```
 
 - **Pros**
-  - Standard and custom edges can share a typed entry shape.
-  - Several same-kind edges are representable.
+  - Replacing one kind's list leaves the other kinds unchanged.
+  - Reading a known kind returns that kind's entries directly.
 - **Cons**
-  - A sponsor edit replaces unrelated hierarchy and identity edges.
-  - Singular limits and category classification need validation.
-  - Does not preserve the required separate named links.
+  - A consumer following parents must gather every standard and custom group, including groups it doesn't recognize.
+  - A provider's choice of label decides where a parent appears, so the same level can land in different places from different providers.
+  - Every parent needs a key, so a parent with no known subtype needs a generic group of its own.
+  - As drafted, values are bare references with no dates or status. Grouping relationship objects instead would fix that, but not the walk.
 
-### Option 3: Keyed singular hierarchy — Rejected
+### Option 3: Lists with `kind` beside the reference's fields — Rejected
 
 :::note[Bottom line]
-Keyed singular values minimize single-target handling and retain kind-local writes, but impose one-per-kind cardinality. We reject that limit in favor of multiplicity without a later value-type change.
-:::
+Putting `kind` beside the reference's fields is best if:
+
+- we want the flattest entries
+- but can compromise on relationship facts sitting beside the other organization's identity
+  :::
+
+The same lists as the selected option, but each entry is the reference itself with relationship fields added:
+
+```json
+{
+  "relationships": {
+    "parents": [
+      {
+        "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+        "name": "National Reading Network",
+        "kind": { "value": "chapter" }
+      },
+      {
+        "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+        "name": "Riverside Community Foundation",
+        "kind": { "value": "fiscalSponsor" },
+        "status": "active"
+      }
+    ]
+  }
+}
+```
 
 - **Pros**
-  - Kind-local access and updates without an array for the single-target case.
-  - A container groups hierarchy without changing its cardinality.
+  - One less level of nesting than the selected option.
+  - Reads mixed subtypes from one list, as the selected option does.
 - **Cons**
-  - A broader same-kind case requires changing the value type.
-  - Traversal requires normalization, and recursive reference merging needs coherence checks.
+  - `status`, dates, and `kind` sit beside the organization's `id`, `name`, and `identifiers`, so `status` reads as if it were the organization's own status.
+  - A field later added to `OrgRef` could collide with a relationship field.
 
-### Option 4: Typed hierarchy array — Rejected
+### Option 4: One list for every relationship — Rejected
 
 :::note[Bottom line]
-A typed hierarchy array provides native uniform traversal and inline kind metadata. We reject its whole-hierarchy write boundary: partial writers must preserve and resend unfamiliar kinds to change one kind.
-:::
+One list is best if:
 
-This is the strongest alternative to keyed arrays. Each entry contains `OrgRef` content and a kind. Standard kinds cover parent, department, chapter, and subsidiary; custom kinds carry documented label metadata. The three distinct singular links remain outside the array.
+- we want a single collection for all relationship entries
+- but can compromise on every change resending every relationship
+  :::
+
+```json
+{
+  "relationships": [
+    {
+      "category": "parent",
+      "org": {
+        "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+        "name": "National Reading Network"
+      },
+      "kind": { "value": "chapter" }
+    },
+    {
+      "category": "succeededBy",
+      "org": {
+        "id": "01912a8b-7c3d-7893-abcd-ef1234567893",
+        "name": "Riverside Reading East"
+      },
+      "kind": { "value": "split" }
+    }
+  ]
+}
+```
 
 - **Pros**
-  - Standard and custom edges share a kind-plus-reference representation.
-  - Hierarchy is immediately iterable without enumerating standard properties.
-  - Broader cardinality is representable without changing the entry type.
+  - Every supplied relationship is in one place.
+  - Smallest container.
 - **Cons**
-  - Changing one kind replaces all parents under Merge Patch.
-  - Known-kind reads must filter for every match rather than return only the first.
-  - Stale writes can overwrite intervening changes to unrelated kinds.
+  - Changing any relationship replaces all of them under Merge Patch, so ending a sponsorship also sends every succession and record entry again.
+  - Each entry must carry its category, plus its direction where it has one, and consumers filter by category before following parents or children.
 
-One-per-kind is a validation question, not something inherently impossible with an array. The emitted schema and provider enforcement still need verification. This option's advantage is native entry uniformity, not exclusive support for traversal or multiplicity.
-
-### Option 5: Kind-keyed arrays — Selected
+### Option 5: Lists by category and direction, with `org` wrapped — Selected
 
 :::note[Bottom line]
-We select keyed arrays for kind-local updates, complete known-kind access, and multiplicity without a value-type change. We accept traversal normalization and separate custom-label documentation.
-:::
+We select lists by category and direction because:
+
+- a consumer follows the supplied parents or children across mixed subtypes from one list, and relationship facts stay separate from organization facts
+- and we accept resending a whole list to change one entry, and filtering to read one subtype
+  :::
+
+The opening example shows mixed parent subtypes. A split lists both resulting organizations in `succeededBy`:
+
+```json
+{
+  "relationships": {
+    "succeededBy": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7893-abcd-ef1234567893",
+          "name": "Riverside Reading East"
+        },
+        "kind": { "value": "split" },
+        "startDate": "2026-01-01"
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7894-abcd-ef1234567894",
+          "name": "Riverside Reading West"
+        },
+        "kind": { "value": "split" },
+        "startDate": "2026-01-01"
+      }
+    ]
+  }
+}
+```
 
 - **Pros**
-  - Direct access returns the complete addressed kind; patches preserve other kinds.
-  - Custom-label updates have the same isolation.
-  - Array replacement replaces hierarchy references whole rather than recursively retaining old metadata.
-  - Broader cardinality does not require a singular-to-array type change.
+  - Each named list holds the supplied relationships of one category and direction, whatever their subtypes; `otherRelationships` holds connections outside those categories.
+  - Categories update independently.
+  - Relationship dates and status have a place that can't be confused with the other organization's fields.
 - **Cons**
-  - Traversal must normalize standard properties and custom-map members.
-  - Custom labels lack inline extensible-enum metadata.
-  - Stale writes within a kind remain possible.
-  - Single-target cases still require array handling; isolation alone does not justify arrays over keyed singular values.
+  - Changing one entry means sending its whole list.
+  - Reading one subtype requires filtering.
+  - Entries nest the reference under `org`.
 
-### Custom-kind representation
+### Direction options
 
-| Representation                                        | Result   | Tradeoff                                                                                       |
-| ----------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
-| Label-to-reference-array map                          | Selected | Per-label replacement and deletion; documentation stays separate.                              |
-| Typed custom list                                     | Rejected | Inline metadata, but all custom entries replace together.                                      |
-| Label-to-group object with description and references | Rejected | Metadata and isolation, but an extra public model without an established inline-metadata need. |
-| Fully dynamic map                                     | Rejected | Uniform standard/custom traversal, but no generated named standard properties.                 |
+| Representation                                                    | Result   | Tradeoff                                                                                        |
+| ----------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| Both directions for each named category                           | Selected | A relationship can be stated on either organization's record; the two sides needn't match.      |
+| One direction only (`parents`, `succeededBy`, `recordReplacedBy`) | Rejected | Smaller, but a provider that records relationships from the other side has nowhere to put them. |
+
+A network can list its chapters without each chapter listing the network:
+
+```json
+{
+  "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+  "name": "National Reading Network",
+  "relationships": {
+    "children": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+          "name": "Riverside Reading Project"
+        },
+        "kind": { "value": "chapter" }
+      }
+    ]
+  }
+}
+```
+
+### Fiscal sponsorship options
+
+| Representation                                                                  | Result   | Tradeoff                                                                                                         |
+| ------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `fiscalSponsor` kind in `parents` and `children`                                | Selected | Sponsors appear in the same walk as other parents; consumers can't assume every parent contains its child.       |
+| Separate sponsorship lists, such as `fiscallySponsoredBy` and `fiscalSponsorOf` | Rejected | Keeps sponsorship apart from structure, but adds a list pair for one subtype that an upward walk must also read. |
+
+The rejected shape would look like this:
+
+```json
+{
+  "relationships": {
+    "parents": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+          "name": "National Reading Network"
+        },
+        "kind": { "value": "chapter" }
+      }
+    ],
+    "fiscallySponsoredBy": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+          "name": "Riverside Community Foundation"
+        }
+      }
+    ]
+  }
+}
+```
 
 ### Operational consequences
 
-Optional additions do not guarantee compatibility with older validators that reject unknown properties or enum values. Versioning and rollback must not silently discard relationship data.
+Optional additions don't guarantee compatibility with older validators that reject unknown properties or enum values. Versioning and rollback must not silently discard relationship data.
 
-Existing OrgSync authorization governs source-record changes; a relationship grants no authority over its target. Preserve ADR 0023's public-identifier boundary and avoid exposing unauthorized target metadata. Existing change-ledger behavior applies. Target resolution and graph checks add provider work; no new transport or remote-resolution service is required.
+Existing OrgSync authorization governs changes to an organization's record; a relationship grants no authority over its target. ADR 0023's boundary of publicly available identifiers still applies, so a provider avoids exposing target details the reader isn't authorized to see. Existing change-ledger behavior applies.
 
 ### Protocol conformance
 
-| Aspect                | Convention                                          | Conforms / Diverges                                    |
-| --------------------- | --------------------------------------------------- | ------------------------------------------------------ |
-| Pagination            | Existing list pagination                            | Unchanged; no new route or pagination fields           |
-| Identifiers           | OrgRef ID, name, optional public identifiers        | Conforms on reads; writable target-ID variant required |
-| Headers               | ADR 0026 authorization and Merge Patch content type | Conforms; existing contract unchanged                  |
-| Field names           | camelCase; `other<Plural>` maps                     | Conforms: `otherParents`, `otherRelationships`         |
-| Response shapes       | Existing OrgSync envelopes and revisions            | Unchanged                                              |
-| Read nullability      | ADR 0024 absent/null/value                          | Conformance required; schema emission unverified       |
-| Parent placement      | ADR 0023 root parent                                | Diverges; partial supersession below                   |
-| Extension cardinality | Existing single-reference extension maps            | Diverges; array-valued exception below                 |
+| Aspect           | Convention                                                      | Conforms / Diverges                              |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------------ |
+| Pagination       | ADR 0011 list pagination                                        | Unchanged; no new route or pagination fields     |
+| Identifiers      | ADR 0023 `OrgRef`: `id`, `name`, optional `identifiers`         | Conforms on reads; writes keep `org.id` writable |
+| Headers          | ADR 0026 authorization and Merge Patch content type             | Conforms; unchanged                              |
+| Field names      | camelCase                                                       | Conforms                                         |
+| Dates            | `startDate` and `endDate` as `isoDate`, as in `DateRangeEvent`  | Conforms; both optional here                     |
+| Subtypes         | Extensible enum `value`, `customValue`, `description`           | Conforms                                         |
+| Status           | Closed enum for a sub-object's lifecycle, as `IdentifierStatus` | Conforms; values `active` and `inactive`         |
+| Response shapes  | Existing OrgSync envelopes and revisions                        | Unchanged                                        |
+| Read nullability | ADR 0024 absent, `null`, or value                               | Conforms                                         |
+| Updates          | ADR 0026 JSON Merge Patch                                       | Conforms; lists replace whole                    |
+| Parent location  | ADR 0023 `parent` on the organization                           | Diverges; see below                              |
+| `other` prefix   | `other<Plural>` maps keyed by label, such as `otherIds`         | Diverges for `otherRelationships`; see below     |
 
-#### Parent placement and partial supersession
+#### Parent location
 
-This decision partially supersedes ADR 0023's root-parent placement, not its reference-content or identifier decisions. It serves vendor engineers who need defined parent meanings and partial writers who must preserve data they do not model. A single root parent with a kind could serve one hierarchy link alongside sponsorship; we group hierarchy for kind-local updates, not because those meanings cannot coexist at the root.
+ADR 0023 decided a single `parent` reference on the organization. This decision moves parents into `relationships.parents`, where each entry wraps the same reference under `org`. A single `parent` holds one target with no subtype or dates: it can't hold a chapter parent and a fiscal sponsor together, or say when a sponsorship ended. The change serves vendor engineers whose organizations have more than one parent, and the consumers who walk those structures.
 
-ADR 0023 carries a partial-supersession notice and shows the new placement in its example. Its other identifier decisions remain in force.
+ADR 0023 now opens with a notice that points here, and its example shows the new location. Its reference content and identifier decisions stay in force. `Award.parent` is a separate award concept and is unchanged.
 
-**Lesson:** a reference's identity content does not determine the number or kinds of structural relationships. Keep identity, hierarchy labels, and cardinality explicit rather than interpreting every relationship as a parent.
+**Lesson:** what a reference carries doesn't settle how many relationships an organization has or what they mean. ADR 0023 decided the first; this ADR decides the second.
 
-#### Array-valued extension exception
+#### `otherRelationships` as a list
 
-We use array-valued maps for relationship extensions rather than the existing single-value extension pattern. This exception serves vendor engineers representing several targets under one documented label. No adopter has shown that need yet; we accept that to avoid a future value-type change. The exception is limited to relationship maps; existing identifier and organization-reference collections remain unchanged.
+Elsewhere, `other<Plural>` members are maps keyed by a label, such as `otherIds` and `otherOrgs`. `otherRelationships` is instead a list of the same relationship objects the named lists use. A map would need a label for every entry, but a subtype is optional here, and an entry with only `org` is valid. Sharing the entry shape also lets one parser handle every list. The exception applies only to `otherRelationships`; existing `other<Plural>` maps are unchanged.

@@ -8,7 +8,7 @@ tableOfContents:
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 :::caution[Partially superseded]
-[ADR 0030: Organization relationships](/governance/adr/0030-org-relationships/) moves an organization's parent reference from the root `parent` field into kind-keyed arrays under `relationships.parents`. The reference content decided here (`id`, `name`, and optional `identifiers`) and all identifier decisions remain in force.
+[ADR 0030: Organization relationships](/governance/adr/0030-org-relationships/) replaces the single `parent` field decided here with a `relationships.parents` list. Each entry in that list holds the parent reference under `org`. The reference content decided here (`id`, `name`, and optional `identifiers`) and all identifier decisions remain in force.
 :::
 
 The `OrganizationBase` model currently hardcodes three U.S. federal identifier fields (`ein`, `uei`, `duns`). As CommonGrants expands to state, local, private, and international contexts, we need an extensible way to map multiple identifiers to a given organization, and ideally reuse the same pattern across other models (`OpportunityBase`, `ApplicationBase`, `AwardBase`).
@@ -32,9 +32,9 @@ The collection looks like this:
   "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
   "name": "Example Nonprofit",
   "relationships": {
-    "parents": {
-      "parent": [
-        {
+    "parents": [
+      {
+        "org": {
           "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
           "name": "Example Parent Foundation",
           "identifiers": {
@@ -47,8 +47,8 @@ The collection looks like this:
             }
           }
         }
-      ]
-    }
+      }
+    ]
   },
   "identifiers": {
     "systemId": {
@@ -97,7 +97,7 @@ At a glance, the key decisions for this identification system are:
 3. **Map key format:** The registry's canonical three-part CommonGrants code, `<schema>:<scope>:<prop>` (`org:us:ein`, `org:us:uei`, `org:xi:duns`), used as both the map key and `registry.code`.
 4. **Identifier metadata structure:** A nested hybrid shape, kept deliberately small on the wire. Registry-level facts live in a nested `registry` object holding the `code` plus an optional `url` linking to the catalog entry. Instance-level facts (`id`, `allIds`) stay at the top level. Every field is optional, so a payload carries only what a given system knows about a record. Richer registry metadata (scope, kind, issuer, human-readable name, lookup template, validation schema, etc.) lives entirely in the external CommonGrants registry catalog reachable through `registry.url`, rather than being duplicated inline on every record.
 5. **Multiple IDs per registry:** `id` for the primary, plus an optional `allIds` array of `{ id, status }` objects covering every known ID for this registry (the primary included), so consumers can do membership checks against `allIds` alone.
-6. **Parent organization:** a parent reference carries `id`, `name`, and optionally an embedded `identifiers` collection; [ADR 0030](/governance/adr/0030-org-relationships/) places it under `relationships.parents`. Parent identifiers do not leak into the child's collection.
+6. **Parent organization:** a parent reference carries `id`, `name`, and optionally an embedded `identifiers` collection; [ADR 0030](/governance/adr/0030-org-relationships/) places it under `org` in a `relationships.parents` entry. Parent identifiers do not leak into the child's collection.
 7. **Registry code format:** A single uniform three-part `<schema>:<scope>:<prop>` code (`org:us:ein`, `org:xi:duns`, `org:grants.gov:system`) minted and owned by CommonGrants for every registry, used as both the map key and `registry.code`. `schema` is the CommonGrants model the identifier applies to (`org`, `opp`, `app`, `awd`), `scope` is the jurisdiction or namespace (`us`, `xi`, `grants.gov`), and `prop` is the identifier property (`ein`, `uei`, or `system` for a platform's own record ID). The equivalent org-id.guide code (when one exists) is recorded as an `orgIdGuide` cross-reference in the catalog, not used as the code itself.
 8. **Registry governance:** CommonGrants maintains a registry catalog that assigns each registry its canonical code, cross-references org-id.guide where applicable, and adds CommonGrants-specific metadata (schema URLs, kind, lookup templates). A documented promotion flow moves a registry from `otherIds` to a base identifier on the relevant model.
 
