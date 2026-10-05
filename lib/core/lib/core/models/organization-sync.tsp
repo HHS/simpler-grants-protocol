@@ -25,12 +25,11 @@ import "@typespec/versioning";
  * The relationship models are the exception: `OrgTargetRef` is a distinct
  * writable reference rather than a mirror, because the read `Models.OrgRef`
  * has a read-only `id` that the merge-patch transformation would drop, and
- * `OrgParents` and `OrgRelationships` are redeclared to use it. It must not
- * reuse the name `OrgRef`: the changelog keys models by bare name, so a
- * v0.5 `Patch.OrgRef` would erase `Models.OrgRef` from earlier versions. Their
- * singular object members spread inline for the reason given in
- * `organization.tsp`: the merge-patch transformation makes them nullable,
- * and OpenAPI 3.0 cannot make a referenced object nullable.
+ * the relationship entries and `OrgRelationships` are redeclared to use it.
+ * It must not reuse the name `OrgRef`: the changelog keys models by bare name,
+ * so a v0.5 `Patch.OrgRef` would erase `Models.OrgRef` from earlier versions.
+ * Every relationship list is an array, so a patch replaces it whole and its
+ * entries are never merged.
  */
 namespace CommonGrants.Patch {
   /** A collection of identifiers associated with an organization.
@@ -93,160 +92,117 @@ namespace CommonGrants.Patch {
     otherSocials?: Record<url | null>;
   }
 
-  /** A writable reference to a relationship's target organization.
+  /** A writable reference to a relationship's other organization.
    *
    * Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
-   * patch can name the target, and `name` is optional so the target can be
-   * named by ID alone. The provider resolves the target, refreshes its name and
-   * provider-derived identifiers, and rejects an unresolved target or
-   * contradictory metadata the sender supplies.
+   * patch can name the other organization, and `name` is optional so it can be
+   * named by `id` alone. Schema validation checks only this shape; it does not
+   * fill in the organization's `name` or `identifiers`.
    */
   @Versioning.added(CommonGrants.Versions.v0_5)
   model OrgTargetRef {
-    /** The target organization's unique identifier. */
+    /** The other organization's unique identifier. */
     id: Types.uuid;
 
-    /** The target organization's legal name, checked against the target when supplied. */
+    /** The other organization's legal name. */
     name?: string;
 
-    // Mirrors `Patch.OrgIds` member by member rather than spreading it, so each
-    // identifier is also inline and a singular target can delete one with
-    // `null` under OpenAPI 3.0. For the same reason, each base identifier's
-    // `id` is a plain string carrying its named scalar's constraints and
-    // example rather than a reference to the scalar.
-    // `org-patch-data.test.ts` fails if either drifts.
-    /** Identifiers associated with the target organization, checked against the target when supplied. */
+    // Spreads each identifier inline rather than referencing `Patch.OrgIds`:
+    // inside a replaced list, a referenced model would be emitted as one more
+    // standalone `OrgPatch*ReplaceOnly` schema.
+    /** Identifiers associated with the other organization, keyed by registry code. */
     identifiers?: {
       /** The organization's Employer Identification Number (EIN), assigned by the IRS. */
       `org:us:ein`?: {
-        ...PickProperties<Models.OrgIdEin, "registry">;
-
-        /** The primary identifier string, when the registry has a single canonical value.
-         *
-         * May be omitted for registries with no natural primary; consumers should read
-         * `allIds` in that case.
-         */
-        @pattern("^[0-9]{9}$")
-        @example("123456789")
-        id?: string;
-
-        ...PickProperties<Models.OrgIdEin, "allIds">;
+        ...Models.OrgIdEin;
       };
 
       /** The organization's Unique Entity Identifier (UEI) from SAM.gov. */
       `org:us:uei`?: {
-        ...PickProperties<Models.OrgIdUei, "registry">;
-
-        /** The primary identifier string, when the registry has a single canonical value.
-         *
-         * May be omitted for registries with no natural primary; consumers should read
-         * `allIds` in that case.
-         */
-        @pattern("^[A-HJ-NP-Z0-9]{12}$")
-        @example("AB0123456789")
-        id?: string;
-
-        ...PickProperties<Models.OrgIdUei, "allIds">;
+        ...Models.OrgIdUei;
       };
 
       /** The organization's Data Universal Numbering System (DUNS) number. */
       `org:xi:duns`?: {
-        ...PickProperties<Models.OrgIdDuns, "registry">;
-
-        /** The primary identifier string, when the registry has a single canonical value.
-         *
-         * May be omitted for registries with no natural primary; consumers should read
-         * `allIds` in that case.
-         */
-        @pattern("^[0-9]{9}$")
-        @example("123456789")
-        id?: string;
-
-        ...PickProperties<Models.OrgIdDuns, "allIds">;
+        ...Models.OrgIdDuns;
       };
 
       /** The hosting system's own identifier for this record. */
       systemId?: {
-        ...PickProperties<Fields.SystemId, "registry">;
-
-        /** The primary identifier string, when the registry has a single canonical value.
-         *
-         * May be omitted for registries with no natural primary; consumers should read
-         * `allIds` in that case.
-         */
-        @format("uuid")
-        @example("30a12e5e-5940-4c08-921c-17a8960fcf4b")
-        id?: string;
-
-        ...PickProperties<Fields.SystemId, "allIds">;
+        ...Fields.SystemId;
       };
 
       /** Additional identifiers keyed by their registry code, for registries the
        * protocol does not define as a base identifier on the model.
        */
-      otherIds?: Record<
-        | {
-            ...Fields.Identifier;
-          }
-        | null>;
+      otherIds?: Record<{
+        ...Fields.Identifier;
+      }>;
     };
   }
 
-  /** Organizations that directly contain an organization, grouped by hierarchy kind.
+  /** A relationship from this organization to another organization, as written.
    *
-   * Each kind holds an array so several targets can share a kind; array order
-   * carries no primary-parent or ranking meaning. Use the most specific known
-   * kind, and do not repeat a target as both `parent` and a more specific kind.
+   * Matches `Models.OrgRelationshipT`, except that `org` is a writable
+   * `Patch.OrgTargetRef`.
+   *
+   * @template Kind The standard subtypes accepted for `kind.value`.
    */
   @Versioning.added(CommonGrants.Versions.v0_5)
-  model OrgParents {
-    /** Confirmed containment when no more specific supported kind is known. */
-    parent?: Patch.OrgTargetRef[];
+  model OrgRelationshipT<Kind> {
+    /** The other organization, which a writer can name by `id` alone. */
+    org: Patch.OrgTargetRef;
 
-    /** An internal organizational unit within the target, such as a division or school. */
-    department?: Patch.OrgTargetRef[];
-
-    /** A local or regional unit under the target's organizational structure, not merely a member of its network. */
-    chapter?: Patch.OrgTargetRef[];
-
-    /** A separate entity owned or controlled by the target. */
-    subsidiary?: Patch.OrgTargetRef[];
-
-    /** Additional hierarchy kinds, keyed by a documented label that describes containment by the target. */
-    otherParents?: Record<Patch.OrgTargetRef[] | null>;
+    ...OmitProperties<Models.OrgRelationshipT<Kind>, "org">;
   }
 
-  /** An organization's relationships to other organizations.
+  /** A parent or child relationship, as written. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgHierarchyRelationship
+    is Patch.OrgRelationshipT<Models.OrgHierarchyKindOptions>;
+
+  /** A succession relationship, as written. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgSuccessionRelationship
+    is Patch.OrgRelationshipT<Models.OrgSuccessionKindOptions>;
+
+  /** A record replacement relationship, as written. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgRecordRelationship
+    is Patch.OrgRelationshipT<Models.OrgRecordKindOptions>;
+
+  /** A relationship outside the named categories, as written. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  model OrgOtherRelationship
+    is Patch.OrgRelationshipT<Models.OrgOtherKindOptions>;
+
+  /** An organization's relationships to other organizations, as written.
    *
-   * Every reference is stated on this organization and points to its target.
-   * Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
-   * succession, and duplicate identity are distinct singular references. A
-   * relationship confers no authority over its target.
+   * Each list is replaced whole by a patch that addresses it; there is no
+   * append or per-entry change.
    */
   @Versioning.added(CommonGrants.Versions.v0_5)
   model OrgRelationships {
-    /** Organizations that directly contain this organization, grouped by hierarchy kind. */
-    parents?: {
-      ...Patch.OrgParents;
-    };
+    /** Organizations above this one, such as a containing organization or a fiscal sponsor. */
+    parents?: Patch.OrgHierarchyRelationship[];
 
-    /** The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship. */
-    fiscalSponsor?: {
-      ...Patch.OrgTargetRef;
-    };
+    /** Organizations below this one, such as its chapters or sponsored projects. */
+    children?: Patch.OrgHierarchyRelationship[];
 
-    /** A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession. */
-    successor?: {
-      ...Patch.OrgTargetRef;
-    };
+    /** Organizations that carry on all or part of this one. */
+    succeededBy?: Patch.OrgSuccessionRelationship[];
 
-    /** The canonical record of the same organization, when this record is a duplicate of it. */
-    duplicateOf?: {
-      ...Patch.OrgTargetRef;
-    };
+    /** Organizations whose work this one carries on in whole or in part. */
+    succeeds?: Patch.OrgSuccessionRelationship[];
 
-    /** Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets. */
-    otherRelationships?: Record<Patch.OrgTargetRef[] | null>;
+    /** Records to use instead of this record. */
+    recordReplacedBy?: Patch.OrgRecordRelationship[];
+
+    /** Records that this record is used instead of. */
+    recordReplaces?: Patch.OrgRecordRelationship[];
+
+    /** Connections outside the categories above, which need not have a direction. */
+    otherRelationships?: Patch.OrgOtherRelationship[];
   }
 
   /** The writable fields of an organization profile.
@@ -302,7 +258,7 @@ namespace CommonGrants.Patch {
     @Versioning.added(CommonGrants.Versions.v0_5)
     dbaNames?: string[];
 
-    /** The organization's relationships to other organizations, such as containing organizations or a fiscal sponsor. */
+    /** The organization's relationships to other organizations. */
     @Versioning.added(CommonGrants.Versions.v0_5)
     relationships?: {
       ...Patch.OrgRelationships;

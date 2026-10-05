@@ -4,137 +4,79 @@ type: object
 properties:
   parents:
     anyOf:
-      - type: object
-        properties:
-          parent:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRef.yaml
-              - type: "null"
-            description: Confirmed containment when no more specific supported kind is known.
-          department:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRef.yaml
-              - type: "null"
-            description: An internal organizational unit within the target, such as a division or school.
-          chapter:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRef.yaml
-              - type: "null"
-            description: A local or regional unit under the target's organizational structure, not merely a member of its network.
-          subsidiary:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRef.yaml
-              - type: "null"
-            description: A separate entity owned or controlled by the target.
-          otherParents:
-            anyOf:
-              - $ref: "#/$defs/RecordArrayOrgRef"
-              - type: "null"
-            description: Additional hierarchy kinds, keyed by a documented label that describes containment by the target.
-        unevaluatedProperties:
-          not: {}
+      - type: array
+        items:
+          $ref: OrgHierarchyRelationship.yaml
       - type: "null"
-    description: Organizations that directly contain this organization, grouped by hierarchy kind.
-  fiscalSponsor:
+    description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+  children:
     anyOf:
-      - type: object
-        properties:
-          id:
-            $ref: uuid.yaml
-            description: The organization's unique identifier.
-          name:
-            type: string
-            description: The organization's legal name as registered with relevant authorities.
-          identifiers:
-            $ref: OrgIds.yaml
-            description: Identifiers associated with the organization, keyed by registry code.
-        required:
-          - id
-          - name
-        unevaluatedProperties:
-          not: {}
+      - type: array
+        items:
+          $ref: OrgHierarchyRelationship.yaml
       - type: "null"
-    description: The organization that fiscally sponsors this organization or project. A payee designation alone does not establish sponsorship.
-  successor:
+    description: Organizations below this one, such as its chapters or sponsored projects.
+  succeededBy:
     anyOf:
-      - type: object
-        properties:
-          id:
-            $ref: uuid.yaml
-            description: The organization's unique identifier.
-          name:
-            type: string
-            description: The organization's legal name as registered with relevant authorities.
-          identifiers:
-            $ref: OrgIds.yaml
-            description: Identifiers associated with the organization, keyed by registry code.
-        required:
-          - id
-          - name
-        unevaluatedProperties:
-          not: {}
+      - type: array
+        items:
+          $ref: OrgSuccessionRelationship.yaml
       - type: "null"
-    description: A different organization that replaces this dissolved organization. A rename or sponsor change alone does not establish succession.
-  duplicateOf:
+    description: Organizations that carry on all or part of this one.
+  succeeds:
     anyOf:
-      - type: object
-        properties:
-          id:
-            $ref: uuid.yaml
-            description: The organization's unique identifier.
-          name:
-            type: string
-            description: The organization's legal name as registered with relevant authorities.
-          identifiers:
-            $ref: OrgIds.yaml
-            description: Identifiers associated with the organization, keyed by registry code.
-        required:
-          - id
-          - name
-        unevaluatedProperties:
-          not: {}
+      - type: array
+        items:
+          $ref: OrgSuccessionRelationship.yaml
       - type: "null"
-    description: The canonical record of the same organization, when this record is a duplicate of it.
+    description: Organizations whose work this one carries on in whole or in part.
+  recordReplacedBy:
+    anyOf:
+      - type: array
+        items:
+          $ref: OrgRecordRelationship.yaml
+      - type: "null"
+    description: Records to use instead of this record.
+  recordReplaces:
+    anyOf:
+      - type: array
+        items:
+          $ref: OrgRecordRelationship.yaml
+      - type: "null"
+    description: Records that this record is used instead of.
   otherRelationships:
     anyOf:
-      - $ref: "#/$defs/RecordArrayOrgRef"
+      - type: array
+        items:
+          $ref: OrgOtherRelationship.yaml
       - type: "null"
-    description: Additional nonhierarchical relationships, keyed by a documented label. Must not hold containment, fiscal sponsors, successors, or duplicate targets.
+    description: Connections outside the categories above, which need not have a direction.
 unevaluatedProperties:
   not: {}
 examples:
   - parents:
-      department:
-        - id: 6f1d2c3b-4a59-4e68-8a7b-9c0d1e2f3a4b
-          name: Example Medical Center
+      - org:
+          id: 01912a8b-7c3d-7891-abcd-ef1234567891
+          name: National Reading Network
+        kind:
+          value: chapter
+      - org:
+          id: 01912a8b-7c3d-7892-abcd-ef1234567892
+          name: Riverside Community Foundation
           identifiers:
             org:us:ein:
               registry:
                 code: org:us:ein
               id: "123456789"
-    fiscalSponsor:
-      id: 8b3f4e5d-6c7b-4a8a-8c9d-1e2f3a4b5c6d
-      name: Example Community Foundation
+        kind:
+          value: fiscalSponsor
+        startDate: 2024-07-01
+        status: active
 description: |-
   An organization's relationships to other organizations.
 
-  Every reference is stated on this organization and points to its target.
-  Hierarchy is grouped by kind under `parents`; fiscal sponsorship,
-  succession, and duplicate identity are distinct singular references. A
-  relationship confers no authority over its target.
-$defs:
-  RecordArrayOrgRef:
-    type: object
-    properties: {}
-    unevaluatedProperties:
-      type: array
-      items:
-        $ref: OrgRef.yaml
+  Each named list holds relationships of one category and direction;
+  `otherRelationships` holds connections outside those categories. Every list
+  is optional, list order carries no meaning, and a provider may state a
+  relationship from either organization's record. A relationship confers no
+  authority over the other organization.

@@ -1,6 +1,6 @@
 ---
 title: Organization relationships
-description: Illustrative examples of how an organization records containing organizations, fiscal sponsors, successors, duplicates, and DBA names in the draft v0.5.0 model.
+description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and DBA names in the draft v0.5.0 model.
 sidebar:
   order: 2
 ---
@@ -8,202 +8,253 @@ sidebar:
 :::caution[Draft for review]
 This page shows the organization relationships proposed in [ADR 0030](https://github.com/HHS/simpler-grants-protocol/pull/1265), which is still under review. The fields are part of protocol v0.5.0, which has not been released, and may change before it is. Every organization, name, and ID on this page is illustrative, not a real record or a classification of a real organization.
 
-The examples are static documentation, checked against the draft schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) only validates a write and echoes the result. It doesn't resolve targets, check sender metadata, or check the relationship graph, so an ID-only relationship write can return a snapshot that isn't a valid organization read.
+The examples are static documentation, checked against the draft schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or fill in the other organization's `name`, so an ID-only relationship write returns a snapshot that isn't a valid organization read.
 :::
 
-An organization can point to other organizations it is related to: the organization that contains it, the one that fiscally sponsors it, the one that replaced it, or the canonical record it duplicates. Each kind of relationship means something different, so each has its own place in [`relationships`](/protocol/models/organization#orgrelationships). Names the organization trades under go in `dbaNames`, not in a relationship.
+An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Names the organization currently does business as go in `dbaNames`, not in a relationship.
 
-| You want to say                                        | Use                                                          |
-| ------------------------------------------------------ | ------------------------------------------------------------ |
-| This organization is part of another one               | `relationships.parents`, under the most specific known kind  |
-| Another organization fiscally sponsors this one        | `relationships.fiscalSponsor`                                |
-| A different organization replaced this dissolved one   | `relationships.successor`                                    |
-| This record is a duplicate of another record           | `relationships.duplicateOf`                                  |
-| Some other documented, nonhierarchical relationship    | `relationships.otherRelationships`, under a documented label |
-| The organization does business under other names today | `dbaNames`                                                   |
+| List                 | Each entry says                                                     | Standard `kind` values                                           |
+| -------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `parents`            | `org` is above this organization                                    | `chapter`, `department`, `branch`, `subsidiary`, `fiscalSponsor` |
+| `children`           | `org` is below this organization                                    | Same as `parents`                                                |
+| `succeededBy`        | `org` carries on all or part of this organization                   | `merger`, `acquisition`, `divestiture`, `split`                  |
+| `succeeds`           | This organization carries on all or part of `org`                   | Same as `succeededBy`                                            |
+| `recordReplacedBy`   | `org`'s record should be used instead of this record                | `duplicate`, `merged`                                            |
+| `recordReplaces`     | This record should be used instead of `org`'s record                | Same as `recordReplacedBy`                                       |
+| `otherRelationships` | This organization is connected to `org`, possibly with no direction | None                                                             |
 
-Every relationship is stated on the organization it describes and points to its target, using the existing [`OrgRef`](/protocol/models/organization#orgref) shape: the target's `id`, `name`, and, optionally, `identifiers` that let another system match it. A relationship gives no authority over its target.
+Every entry has the same shape:
 
-## Containment
+- `org` is required and is an [`OrgRef`](/protocol/models/organization#orgref): the other organization's `id`, `name`, and, optionally, `identifiers` that let another system match it.
+- `kind` is optional. It is an [extensible enum](/protocol/fields/extensible-enum/): a standard `value` for the list, or `"value": "custom"` with the subtype in `customValue`.
+- `startDate` and `endDate` are optional `YYYY-MM-DD` dates.
+- `status` is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates.
 
-Hierarchy kinds sit under `relationships.parents`. Each kind holds an array, and each record names only the organization that _directly_ contains it.
+An entry with only `org` is valid in every list. List order carries no meaning, such as a primary parent. A relationship gives no authority over the other organization.
 
-| Kind           | Meaning                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------ |
-| `parent`       | Confirmed containment when no more specific kind is known.                                 |
-| `department`   | An internal unit within the target. This also covers divisions.                            |
-| `chapter`      | A local or regional unit under the target's organizational structure, not merely a member. |
-| `subsidiary`   | A separate entity owned or controlled by the target.                                       |
-| `otherParents` | Another kind of containment, under a label the publisher documents.                        |
+## Parents and children
 
-### A chain of immediate parents
+The list name gives the category and direction; `kind` narrows it to a subtype. `parents` and `children` cover more than containment: a fiscal sponsor is a parent of kind `fiscalSponsor`, so a project can list a chapter parent and a different sponsor together. Don't treat every parent as an owner or container.
 
-An agency, a sub-agency within it, and an office within that each name only their immediate container. A consumer that wants the full chain follows each reference to the next record. When only containment is known, use `parent` rather than guessing a more specific kind.
-
-```json title="Organization: an office naming its immediate parent"
+```json title="Organization: a chapter that is also fiscally sponsored"
 {
-  "id": "1d2e3f40-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
-  "name": "Example Office of Grant Programs",
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Riverside Reading Project",
   "relationships": {
-    "parents": {
-      "parent": [
-        {
-          "id": "2e3f4051-6b7c-4d8e-9f0a-1b2c3d4e5f60",
-          "name": "Example Institute of Food and Agriculture"
-        }
-      ]
-    }
-  }
-}
-```
-
-```json title="Organization: the sub-agency naming its own parent"
-{
-  "id": "2e3f4051-6b7c-4d8e-9f0a-1b2c3d4e5f60",
-  "name": "Example Institute of Food and Agriculture",
-  "relationships": {
-    "parents": {
-      "parent": [
-        {
-          "id": "3f405162-7c8d-4e9f-8a1b-2c3d4e5f6071",
-          "name": "Example Department of Agriculture"
-        }
-      ]
-    }
-  }
-}
-```
-
-### A chapter compared with a network member
-
-A chapter sits inside the target's organizational structure. An independent organization that belongs to a national network is not a chapter and has no parent; if the publisher wants to record the membership, it can use a documented nonhierarchical label instead.
-
-```json title="Organization: a chapter of a national federation"
-{
-  "id": "40516273-8d9e-4f0a-9b2c-3d4e5f607182",
-  "name": "Example Homebuilders of Riverside County",
-  "relationships": {
-    "parents": {
-      "chapter": [
-        {
-          "id": "51627384-9e0f-4a1b-8c3d-4e5f60718293",
-          "name": "Example Homebuilders International"
-        }
-      ]
-    }
-  }
-}
-```
-
-```json title="Organization: an independent network member with no parent"
-{
-  "id": "62738495-0f1a-4b2c-9d4e-5f60718293a4",
-  "name": "Example Neighborhood Fund",
-  "relationships": {
-    "parents": null,
-    "otherRelationships": {
-      "networkMember": [
-        {
-          "id": "738495a6-1a2b-4c3d-8e5f-60718293a4b5",
-          "name": "Example National Giving Network"
-        }
-      ]
-    }
-  }
-}
-```
-
-Here `"parents": null` asserts that hierarchy does not apply. Leaving `parents` out would instead mean the publisher did not say. `networkMember` is an illustrative label: a publisher that uses a custom label documents what it means.
-
-### Several parents of one kind
-
-An array can hold several targets of the same kind, such as a center run jointly as a department of two institutions. Array order means nothing: the first entry is not a primary parent. This is allowed so that a later need doesn't require changing the field from one reference to a list; no adopter has needed it yet.
-
-```json title="Organization: a joint center with two containing institutions"
-{
-  "id": "8495a6b7-2b3c-4d4e-9f60-718293a4b5c6",
-  "name": "Example Joint Center for Rural Health",
-  "relationships": {
-    "parents": {
-      "department": [
-        {
-          "id": "95a6b7c8-3c4d-4e5f-8071-8293a4b5c6d7",
-          "name": "Example State University"
+    "parents": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+          "name": "National Reading Network"
         },
-        {
-          "id": "a6b7c8d9-4d5e-4f60-9182-93a4b5c6d7e8",
-          "name": "Example Medical College"
-        }
-      ]
-    }
-  }
-}
-```
-
-## Fiscal sponsorship alongside containment
-
-Sponsorship is not containment, so it is recorded separately and can sit alongside a parent. A payee designation alone does not establish sponsorship.
-
-```json title="Organization: a department with a different fiscal sponsor"
-{
-  "id": "b7c8d9e0-5e6f-4a71-8293-a4b5c6d7e8f9",
-  "name": "Example Community Garden Project",
-  "relationships": {
-    "parents": {
-      "department": [
-        {
-          "id": "c8d9e0f1-6f70-4b82-93a4-b5c6d7e8f90a",
-          "name": "Example Parks Conservancy",
+        "kind": { "value": "chapter" }
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7892-abcd-ef1234567892",
+          "name": "Riverside Community Foundation",
           "identifiers": {
             "org:us:ein": {
               "registry": { "code": "org:us:ein" },
               "id": "123456789"
             }
           }
-        }
-      ]
-    },
-    "fiscalSponsor": {
-      "id": "d9e0f102-7081-4c93-a4b5-c6d7e8f90a1b",
-      "name": "Example Community Foundation"
-    }
+        },
+        "kind": { "value": "fiscalSponsor" },
+        "startDate": "2024-07-01",
+        "status": "active"
+      }
+    ]
   }
 }
 ```
 
-The `identifiers` on a reference let another system match the target without knowing this system's IDs.
+A provider can state a relationship from whichever record it maintains. Here the network lists a chapter without the chapter's record listing the network:
 
-## Duplicates and successors
-
-A duplicate and a successor answer different questions. `duplicateOf` says two records describe the _same_ organization and points to the canonical one. `successor` says a _different_ organization replaced one that dissolved; both records describe real organizations.
-
-```json title="Organization: a duplicate record pointing to the canonical record"
+```json title="Organization: a network listing one of its chapters"
 {
-  "id": "e0f10213-8192-4da4-b5c6-d7e8f90a1b2c",
+  "id": "01912a8b-7c3d-7891-abcd-ef1234567891",
+  "name": "National Reading Network",
+  "relationships": {
+    "children": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+          "name": "Riverside Reading Project"
+        },
+        "kind": { "value": "chapter" }
+      }
+    ]
+  }
+}
+```
+
+The protocol doesn't require the reverse entry, complete lists, or agreement between the two records.
+
+### Subtypes the standard values don't name
+
+`department` names an internal unit; it isn't defined to cover every internal level. A provider can name another level with a custom kind, or leave `kind` out when it doesn't know the subtype:
+
+```json title="Organization: a division with a custom kind and a parent with no kind"
+{
+  "id": "01912a8b-7c3d-7896-abcd-ef1234567896",
+  "name": "Example Division of Rural Programs",
+  "relationships": {
+    "parents": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7897-abcd-ef1234567897",
+          "name": "Example Center for Community Health"
+        },
+        "kind": { "value": "custom", "customValue": "division" }
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7898-abcd-ef1234567898",
+          "name": "Example Regional Health Partnership"
+        }
+      }
+    ]
+  }
+}
+```
+
+There is no generic `parent` kind: an entry without `kind` already says the other organization is a parent.
+
+## Succession
+
+Succession is about organizations. A list can hold several entries of the same subtype, such as the two organizations formed by a split:
+
+```json title="Organization: an organization split into two"
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Riverside Reading Project",
+  "relationships": {
+    "succeededBy": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7893-abcd-ef1234567893",
+          "name": "Riverside Reading East"
+        },
+        "kind": { "value": "split" },
+        "startDate": "2026-01-01"
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7894-abcd-ef1234567894",
+          "name": "Riverside Reading West"
+        },
+        "kind": { "value": "split" },
+        "startDate": "2026-01-01"
+      }
+    ]
+  }
+}
+```
+
+```json title="Organization: an organization formed by a merger"
+{
+  "id": "01912a8b-7c3d-7899-abcd-ef1234567899",
+  "name": "Example Reading Partners",
+  "relationships": {
+    "succeeds": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789a-abcd-ef123456789a",
+          "name": "Example Literacy Coalition"
+        },
+        "kind": { "value": "merger" },
+        "startDate": "2025-01-01"
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789b-abcd-ef123456789b",
+          "name": "Example Book Bank"
+        },
+        "kind": { "value": "merger" },
+        "startDate": "2025-01-01"
+      }
+    ]
+  }
+}
+```
+
+A rename is not succession: a renamed organization keeps its record and changes its `name`.
+
+## Record replacement
+
+Record replacement is about records in a provider's system, not organizations. A `merged` entry means a provider combined records, which is different from a `merger` of organizations. A provider's workflow may treat `duplicate` and `merged` alike; they needn't be exclusive. The protocol doesn't prescribe how a provider merges, deletes, or redirects records.
+
+```json title="Organization: a duplicate record pointing to the record to use"
+{
+  "id": "01912a8b-7c3d-789c-abcd-ef123456789c",
   "name": "Example Health Clinic",
   "relationships": {
-    "duplicateOf": {
-      "id": "f1021324-92a3-4eb5-86d7-e8f90a1b2c3d",
-      "name": "Example Health Clinic"
-    }
+    "recordReplacedBy": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789d-abcd-ef123456789d",
+          "name": "Example Health Clinic"
+        },
+        "kind": { "value": "duplicate" }
+      }
+    ]
   }
 }
 ```
 
-```json title="Organization: a dissolved organization pointing to its successor"
+```json title="Organization: a record used instead of two combined records"
 {
-  "id": "02132435-a3b4-4fc6-97e8-f90a1b2c3d4e",
-  "name": "Example Literacy Coalition",
+  "id": "01912a8b-7c3d-789d-abcd-ef123456789d",
+  "name": "Example Health Clinic",
   "relationships": {
-    "successor": {
-      "id": "13243546-b4c5-4ad7-88f9-0a1b2c3d4e5f",
-      "name": "Example Reading Partners"
-    }
+    "recordReplaces": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789c-abcd-ef123456789c",
+          "name": "Example Health Clinic"
+        },
+        "kind": { "value": "duplicate" }
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789e-abcd-ef123456789e",
+          "name": "Example Health Clinic, Inc."
+        },
+        "kind": { "value": "merged" }
+      }
+    ]
   }
 }
 ```
 
-The duplicate record is kept, with its link, so an old reference can still find the canonical record. The protocol doesn't require redirects, hiding duplicates from lists, or deleting them. A rename is not succession: a renamed organization keeps its record and changes its `name`.
+## Other relationships
+
+`otherRelationships` holds connections outside the named categories, which need not have a direction. An entry with only `org` is valid. It defines no standard subtypes, so a stated `kind` is always custom:
+
+```json title="Organization: other connections, one with only org"
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef1234567890",
+  "name": "Riverside Reading Project",
+  "relationships": {
+    "otherRelationships": [
+      {
+        "org": {
+          "id": "01912a8b-7c3d-7895-abcd-ef1234567895",
+          "name": "Riverside Literacy Coalition"
+        }
+      },
+      {
+        "org": {
+          "id": "01912a8b-7c3d-789f-abcd-ef123456789f",
+          "name": "Example County Library"
+        },
+        "kind": { "value": "custom", "customValue": "programPartner" }
+      }
+    ]
+  }
+}
+```
 
 ## DBA names
 
@@ -219,81 +270,87 @@ Names an organization currently does business as are plain strings on the organi
 
 ## Updating relationships
 
-Relationships are updated with the same [JSON Merge Patch](/protocol/models/organization#orgpatchdata) as the rest of the organization profile. Each hierarchy kind and each custom label is an array, and a patch replaces only the array it addresses.
+Relationships are updated with the same [JSON Merge Patch](/protocol/models/organization#orgpatchdata) as the rest of the organization profile. Each list is an array, so a patch replaces the lists it addresses whole and leaves the other lists unchanged. There is no append, merge by ID, single-entry change, or automatic reverse entry: to change one entry, send the full list with whole entries.
 
-```json title="Patch: replace the departments, leaving every other relationship unchanged"
+In a patch, `org` can name the other organization by `id` alone. Reads still return a full `OrgRef`; schema validation only checks shape and doesn't fill in the `name` or `identifiers`.
+
+```json title="Patch: end the fiscal sponsorship, resending the whole parents list"
 {
   "relationships": {
-    "parents": {
-      "department": [{ "id": "95a6b7c8-3c4d-4e5f-8071-8293a4b5c6d7" }]
-    }
+    "parents": [
+      {
+        "org": { "id": "01912a8b-7c3d-7891-abcd-ef1234567891" },
+        "kind": { "value": "chapter" }
+      },
+      {
+        "org": { "id": "01912a8b-7c3d-7892-abcd-ef1234567892" },
+        "kind": { "value": "fiscalSponsor" },
+        "startDate": "2024-07-01",
+        "endDate": "2026-06-30",
+        "status": "inactive"
+      }
+    ]
   }
 }
 ```
 
-```json title="Patch: remove one custom label and record no subsidiaries"
+```json title="Patch: remove one list and leave another empty"
 {
   "relationships": {
-    "parents": { "subsidiary": [] },
-    "otherRelationships": { "networkMember": null }
+    "recordReplacedBy": null,
+    "children": []
   }
 }
 ```
 
-```json title="Patch: change the fiscal sponsor by ID and replace the DBA names"
+```json title="Patch: remove every relationship and replace the DBA names"
 {
-  "relationships": {
-    "fiscalSponsor": { "id": "d9e0f102-7081-4c93-a4b5-c6d7e8f90a1b" }
-  },
+  "relationships": null,
   "dbaNames": ["Riverside Arts"]
 }
 ```
 
-| In a patch                     | Effect                                                                    |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| An array for one kind or label | Replaces that array only. Other kinds, labels, and singular links remain. |
-| `[]`                           | Leaves a present, empty collection.                                       |
-| `null`                         | Removes the addressed kind, label, link, or the whole container.          |
-| An object for a singular link  | Merges into the current reference.                                        |
+| In a patch                 | Effect                                                   |
+| -------------------------- | -------------------------------------------------------- |
+| A list                     | Replaces that whole list. Other lists are unchanged.     |
+| `[]`                       | Leaves a present, empty list. Other lists are unchanged. |
+| `null` for a list          | Removes that list. Other lists are unchanged.            |
+| `null` for `relationships` | Removes every relationship list.                         |
 
-A target in a patch needs only its `id`. If the sender also supplies a `name` or `identifiers`, the provider checks them against the target. There's no append or merge-by-ID: to add a department, send the full department array. Two writers changing the same kind at the same time can still overwrite each other.
+Two writers changing the same list at the same time can overwrite each other.
 
-## Reading every parent
+## Reading parents
 
-Because each kind is its own property, a consumer that wants every containing organization flattens the standard kinds and the custom labels into one list of labeled edges:
+Because each list holds every supplied entry of its category and direction, a consumer reads one list whatever subtypes the entries use, and filters when it wants one subtype:
 
 ```ts
 type OrgRef = { id: string; name: string };
-type Targets = OrgRef[] | null;
-type OrgParents = {
-  parent?: Targets;
-  department?: Targets;
-  chapter?: Targets;
-  subsidiary?: Targets;
-  otherParents?: Record<string, OrgRef[]> | null;
+type Kind = { value: string; customValue?: string; description?: string };
+type Relationship = {
+  org: OrgRef;
+  kind?: Kind | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  status?: "active" | "inactive" | null;
 };
 
-function parentEdges(parents?: OrgParents | null) {
-  const { otherParents, ...standard } = parents ?? {};
-  return [
-    ...Object.entries(standard),
-    ...Object.entries(otherParents ?? {}),
-  ].flatMap(([kind, targets]) =>
-    (targets ?? []).map((target) => ({ kind, target })),
+/** The organizations an entry list points to, whatever their subtypes. */
+function relatedIds(entries?: Relationship[] | null) {
+  return (entries ?? []).map((entry) => entry.org.id);
+}
+
+/** The entries of one standard or custom subtype. */
+function ofKind(entries: Relationship[] | null | undefined, kind: string) {
+  return (entries ?? []).filter(
+    (entry) =>
+      entry.kind?.value === kind ||
+      (entry.kind?.value === "custom" && entry.kind.customValue === kind),
   );
 }
 ```
 
-Following those edges from record to record walks the hierarchy. With several parents allowed, a walk can branch and reach the same ancestor more than once.
+Following `parents` from record to record visits the parents each record supplies. With several parents allowed, a walk can branch and reach the same organization more than once. Because sponsors are parents too, a walk can leave a containment chain, and it only reaches entries the records state.
 
 ## What the schema does not check
 
-The published schema checks shape: which properties exist, which values are arrays, and that every target in a read, and every target in an array a patch replaces, has an `id`. A singular reference in a patch, such as `fiscalSponsor`, merges into the current one, so it can leave `id` out. The schema cannot check facts about other records. The system that holds the organization is expected to:
-
-- resolve each target, refresh its name and identifiers, and remove stale ones;
-- refresh metadata kept from a previous singular target before validating, so an ID-only change succeeds;
-- reject, as a whole, a patch with an unresolved target or contradictory metadata from the sender, including when a queued change is accepted later;
-- reject links to the organization itself and repeated identical links;
-- check for hierarchy cycles across kinds, and for successor and duplicate cycles separately, within the records it knows about.
-
-A system can only check the records it knows about, so these checks don't cover the whole cross-system graph. Some conclusions also can't be drawn from data alone. A missing or unmatched target doesn't show that an organization doesn't exist. A shared name or address doesn't show containment or a duplicate, a payee designation doesn't show sponsorship, and a rename doesn't show succession.
+The published schema checks shape: which lists exist, that every entry has an `org`, that every `org` in a read has an `id` and `name` and every `org` in a patch has an `id`, which `kind` values each list accepts, the date format, and the `status` values. It doesn't fill in an ID-only `org`, and it doesn't check facts about other records: whether the other organization exists, whether a reverse entry exists or agrees, or whether dates and status agree with each other. The protocol leaves those to the systems that hold the records and doesn't ask them to store or maintain a relationship graph.

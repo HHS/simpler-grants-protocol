@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgHierarchyKindOptions.yaml
+type: string
+enum:
+  - chapter
+  - department
+  - branch
+  - subsidiary
+  - fiscalSponsor
+  - custom
+description: |-
+  The standard subtypes of a parent or child relationship:
+  - `chapter`: The child is a chapter of the parent
+  - `department`: The child is an internal unit of the parent
+  - `branch`: The child is a branch of the parent
+  - `subsidiary`: The child is a subsidiary of the parent
+  - `fiscalSponsor`: The parent fiscally sponsors the child
+  - `custom`: Another subtype, named in `customValue`

@@ -1,0 +1,61 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgRecordRelationship.yaml
+type: object
+properties:
+  org:
+    $ref: OrgRef.yaml
+    description: The other organization.
+  kind:
+    anyOf:
+      - type: object
+        properties:
+          value:
+            $ref: OrgRecordKindOptions.yaml
+            description: The selected value, from a predefined set of options
+          customValue:
+            type: string
+            description: A custom value, used when the selected value is the `custom` option
+          description:
+            type: string
+            description: A human-readable description of the value
+        required:
+          - value
+        unevaluatedProperties:
+          not: {}
+      - type: "null"
+    description: The relationship's subtype within the category its list names.
+  startDate:
+    anyOf:
+      - type: string
+        format: date
+      - type: "null"
+    examples:
+      - 2024-07-01
+    description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
+  endDate:
+    anyOf:
+      - type: string
+        format: date
+      - type: "null"
+    examples:
+      - 2026-06-30
+    description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
+  status:
+    anyOf:
+      - type: string
+        const: active
+      - type: string
+        const: inactive
+      - type: "null"
+    description: Whether the relationship is in effect, as stated by the provider.
+required:
+  - org
+unevaluatedProperties:
+  not: {}
+examples:
+  - org:
+      id: 01912a8b-7c3d-7894-abcd-ef1234567894
+      name: Riverside Reading Project
+    kind:
+      value: duplicate
+description: A record replacement relationship.

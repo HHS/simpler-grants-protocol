@@ -200,20 +200,104 @@ orgRelationships:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 144
-      endLine: 184
-orgParents:
+      startLine: 251
+      endLine: 282
+orgHierarchyRelationship:
   example:
     file:
-      path: "website/public/schemas/yaml/OrgParents.yaml"
+      path: "website/public/schemas/yaml/OrgHierarchyRelationship.yaml"
   jsonSchema:
     file:
-      path: "website/public/schemas/yaml/OrgParents.yaml"
+      path: "website/public/schemas/yaml/OrgHierarchyRelationship.yaml"
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 186
-      endLine: 209
+      startLine: 197
+      endLine: 234
+orgSuccessionRelationship:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgSuccessionRelationship.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgSuccessionRelationship.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 236
+      endLine: 239
+orgRecordRelationship:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRecordRelationship.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRecordRelationship.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 241
+      endLine: 244
+orgOtherRelationship:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgOtherRelationship.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgOtherRelationship.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 246
+      endLine: 249
+orgHierarchyKindOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgHierarchyKindOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgHierarchyKindOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 144
+      endLine: 160
+orgSuccessionKindOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgSuccessionKindOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgSuccessionKindOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 162
+      endLine: 176
+orgRecordKindOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgRecordKindOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgRecordKindOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 178
+      endLine: 189
+orgOtherKindOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgOtherKindOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgOtherKindOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 191
+      endLine: 195
 orgSocialLinks:
   example:
     code: |
@@ -235,8 +319,8 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 215
-      endLine: 239
+      startLine: 288
+      endLine: 312
 orgPatchData:
   example:
     file:
@@ -247,8 +331,8 @@ orgPatchData:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization-sync.tsp"
-      startLine: 321
-      endLine: 333
+      startLine: 277
+      endLine: 289
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -420,19 +504,21 @@ A group of organization references, with a primary organization and optional oth
 
 ## OrgRelationships
 
-An organization's relationships to other organizations, added in v0.5.0 per [ADR 0030](https://github.com/HHS/simpler-grants-protocol/pull/1265) (draft). Every reference is stated on this organization and points to its target, using the existing [OrgRef](#orgref) shape. Containing organizations are grouped by kind under [`parents`](#orgparents). Fiscal sponsorship, succession, and duplicate identity are separate singular references, so an organization can be a department of one organization and fiscally sponsored by another at the same time. A relationship confers no authority over its target. See [Organization relationships](/guides/organization-relationships/) for worked examples.
+An organization's relationships to other organizations, added in v0.5.0 per [ADR 0030](https://github.com/HHS/simpler-grants-protocol/pull/1265) (draft). Each named list holds relationships of one category and direction, and `otherRelationships` holds connections outside those categories, which need not have a direction. Every list is optional, list order carries no meaning, and a provider can state a relationship from whichever organization's record it maintains. The protocol doesn't require reverse entries, complete lists, or agreement between the two sides. A relationship confers no authority over the other organization. See [Organization relationships](/guides/organization-relationships/) for worked examples.
 
-| Property           | Meaning                                                                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| parents            | Organizations that directly contain this one, grouped by hierarchy kind.                                                           |
-| fiscalSponsor      | The target fiscally sponsors this organization or project. A payee designation alone is not sponsorship.                           |
-| successor          | A different organization replaces this dissolved one. A rename or sponsor change alone is not succession.                          |
-| duplicateOf        | This record duplicates the target, the canonical record of the same organization. Not a replacement organization.                  |
-| otherRelationships | Additional nonhierarchical relationships under a documented label. Must not hold containment, sponsors, successors, or duplicates. |
+| List               | Entry                                                   | Each entry says                                                     |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------------------------------- |
+| parents            | [OrgHierarchyRelationship](#orghierarchyrelationship)   | `org` is above this organization                                    |
+| children           | [OrgHierarchyRelationship](#orghierarchyrelationship)   | `org` is below this organization                                    |
+| succeededBy        | [OrgSuccessionRelationship](#orgsuccessionrelationship) | `org` carries on all or part of this organization                   |
+| succeeds           | [OrgSuccessionRelationship](#orgsuccessionrelationship) | This organization carries on all or part of `org`                   |
+| recordReplacedBy   | [OrgRecordRelationship](#orgrecordrelationship)         | `org`'s record should be used instead of this record                |
+| recordReplaces     | [OrgRecordRelationship](#orgrecordrelationship)         | This record should be used instead of `org`'s record                |
+| otherRelationships | [OrgOtherRelationship](#orgotherrelationship)           | This organization is connected to `org`, possibly with no direction |
 
-When a field is absent the publisher did not provide it, an explicit `null` asserts it does not apply ([ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)), and an empty array is a present, empty collection. Whether a target exists, and whether the relationship graph is free of self-links, duplicate edges, and cycles, are checks the providing system performs; the schema validates shape only.
+When a list is absent the publisher did not provide it, an explicit `null` asserts it does not apply ([ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/)), and an empty array is a present, empty list. The schema validates shape only: it doesn't check whether the other organization exists or whether two records agree.
 
-The schemas write `relationships`, `parents`, and the singular references as inline objects with the [OrgRelationships](#orgrelationships), [OrgParents](#orgparents), and [OrgRef](#orgref) shapes rather than as references, because OpenAPI 3.0 cannot mark a referenced object as nullable.
+The schemas write `relationships` on [OrganizationBase](#organizationbase), and an entry's `kind`, `startDate`, `endDate`, and `status`, inline rather than as references, because OpenAPI 3.0 cannot mark a reference as nullable. In the OpenAPI 3.0 document, `status` also lists `null` among its `enum` values, since OpenAPI 3.0.3 applies `enum` to `null` as well.
 
 ### Table
 
@@ -450,33 +536,182 @@ The schemas write `relationships`, `parents`, and the singular references as inl
 
 <SchemaChangelog schema="OrgRelationships" />
 
-## OrgParents
+## OrgHierarchyRelationship
 
-Organizations that directly contain an organization, grouped by hierarchy kind and added in v0.5.0. Each kind holds an array, so several targets can share a kind; array order carries no primary-parent or ranking meaning. Use the most specific known kind, and don't repeat a target as both `parent` and a more specific kind. There is no separate division kind: `department` covers internal units.
+A parent or child relationship, added in v0.5.0. Every relationship list uses the same entry shape, defined once as a template; the entries differ only in the standard subtypes `kind` accepts.
 
-| Kind         | Meaning                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| parent       | Confirmed containment when no more specific supported kind is known.                          |
-| department   | An internal organizational unit within the target.                                            |
-| chapter      | A local or regional unit under the target's organizational structure, not merely a member.    |
-| subsidiary   | A separate entity owned or controlled by the target.                                          |
-| otherParents | Additional hierarchy kinds under a documented label that describes containment by the target. |
+- `org` is required and is an [OrgRef](#orgref). In a [patch](#orgpatchdata), `org.id` is writable and `name` is optional, so a writer can name the other organization by `id` alone. Validation doesn't fill in the `name` or `identifiers`.
+- `kind` is optional. It is an [extensible enum](/protocol/fields/extensible-enum/) whose `value` is one of [OrgHierarchyKindOptions](#orghierarchykindoptions), or `custom` with the subtype in `customValue`. `description` is optional.
+- `startDate` and `endDate` are optional `YYYY-MM-DD` dates.
+- `status` is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates, and the protocol requires no particular combination of dates and status.
+
+An entry with only `org` is valid. Parents and children cover more than containment: a fiscal sponsor is a parent of kind `fiscalSponsor`, so not every parent owns or contains its child.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.orgParents.jsonSchema.file.path} />
+<SchemaTable
+  filePath={frontmatter.orgHierarchyRelationship.jsonSchema.file.path}
+/>
 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.orgParents.example}
-  jsonSchema={frontmatter.orgParents.jsonSchema}
-  typeSpec={frontmatter.orgParents.typeSpec}
+  example={frontmatter.orgHierarchyRelationship.example}
+  jsonSchema={frontmatter.orgHierarchyRelationship.jsonSchema}
+  typeSpec={frontmatter.orgHierarchyRelationship.typeSpec}
 />
 
 ### Changelog
 
-<SchemaChangelog schema="OrgParents" />
+<SchemaChangelog schema="OrgHierarchyRelationship" />
+
+## OrgSuccessionRelationship
+
+A succession relationship, added in v0.5.0, with the same shape as [OrgHierarchyRelationship](#orghierarchyrelationship). `kind.value` is one of [OrgSuccessionKindOptions](#orgsuccessionkindoptions) or `custom`. Succession is about organizations; a rename is not succession.
+
+### Table
+
+<SchemaTable
+  filePath={frontmatter.orgSuccessionRelationship.jsonSchema.file.path}
+/>
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgSuccessionRelationship.example}
+  jsonSchema={frontmatter.orgSuccessionRelationship.jsonSchema}
+  typeSpec={frontmatter.orgSuccessionRelationship.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgSuccessionRelationship" />
+
+## OrgRecordRelationship
+
+A record replacement relationship, added in v0.5.0, with the same shape as [OrgHierarchyRelationship](#orghierarchyrelationship). `kind.value` is one of [OrgRecordKindOptions](#orgrecordkindoptions) or `custom`. Record replacement is about records in a provider's system, not organizations; the protocol doesn't prescribe how a provider merges, deletes, or redirects records.
+
+### Table
+
+<SchemaTable
+  filePath={frontmatter.orgRecordRelationship.jsonSchema.file.path}
+/>
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRecordRelationship.example}
+  jsonSchema={frontmatter.orgRecordRelationship.jsonSchema}
+  typeSpec={frontmatter.orgRecordRelationship.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRecordRelationship" />
+
+## OrgOtherRelationship
+
+A relationship outside the named categories, added in v0.5.0, with the same shape as [OrgHierarchyRelationship](#orghierarchyrelationship). It need not have a direction. It defines no standard subtypes, so a stated `kind` is always `custom`, and an entry with only `org` is valid.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgOtherRelationship.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgOtherRelationship.example}
+  jsonSchema={frontmatter.orgOtherRelationship.jsonSchema}
+  typeSpec={frontmatter.orgOtherRelationship.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgOtherRelationship" />
+
+## OrgHierarchyKindOptions
+
+The standard subtypes of a parent or child relationship, added in v0.5.0. `department` names an internal unit; it isn't defined to cover every internal level, such as a division or agency, which a provider can name with a custom kind. There is no generic `parent` value: an entry without `kind` already states a parent or child relationship.
+
+### Table
+
+<SchemaTable
+  filePath={frontmatter.orgHierarchyKindOptions.jsonSchema.file.path}
+/>
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgHierarchyKindOptions.example}
+  jsonSchema={frontmatter.orgHierarchyKindOptions.jsonSchema}
+  typeSpec={frontmatter.orgHierarchyKindOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgHierarchyKindOptions" />
+
+## OrgSuccessionKindOptions
+
+The standard subtypes of organizational succession, added in v0.5.0.
+
+### Table
+
+<SchemaTable
+  filePath={frontmatter.orgSuccessionKindOptions.jsonSchema.file.path}
+/>
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgSuccessionKindOptions.example}
+  jsonSchema={frontmatter.orgSuccessionKindOptions.jsonSchema}
+  typeSpec={frontmatter.orgSuccessionKindOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgSuccessionKindOptions" />
+
+## OrgRecordKindOptions
+
+The standard subtypes of record replacement, added in v0.5.0. A provider's workflow may treat `duplicate` and `merged` alike; they need not be exclusive.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgRecordKindOptions.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgRecordKindOptions.example}
+  jsonSchema={frontmatter.orgRecordKindOptions.jsonSchema}
+  typeSpec={frontmatter.orgRecordKindOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgRecordKindOptions" />
+
+## OrgOtherKindOptions
+
+The subtypes of an [OrgOtherRelationship](#orgotherrelationship), added in v0.5.0. Only `custom` is defined, so a stated subtype is given in `customValue`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgOtherKindOptions.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgOtherKindOptions.example}
+  jsonSchema={frontmatter.orgOtherKindOptions.jsonSchema}
+  typeSpec={frontmatter.orgOtherKindOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgOtherKindOptions" />
 
 ## OrgSocialLinks
 
@@ -510,7 +745,7 @@ A collection of social media and web presence links for an organization.
 
 A [JSON Merge Patch](https://www.rfc-editor.org/rfc/rfc7396) body for updating an organization profile, used by the `PATCH /orgs/{orgId}` and `POST /orgs/{orgId}/changes` routes. It is derived from [OrganizationBase](#organizationbase): every field is optional, so a client sends only the fields it wants to change, clearable fields accept `null` to remove them, and read-only fields like `id` are excluded. Nested objects are themselves partial, so `{ "socials": { "website": null } }` clears just the website and leaves the other links untouched. Sent with a `Content-Type` of `application/merge-patch+json`.
 
-From v0.5.0, `relationships` follows the same rules. Each hierarchy kind and each extension-map label is an array that a patch replaces whole, so `{ "relationships": { "parents": { "department": [{ "id": "…" }] } } }` replaces only the departments and leaves every other kind, label, and singular link unchanged. `null` removes the addressed kind, label, or link, and `[]` leaves a present empty collection. A relationship target in a patch is written with a writable `id`, and its `name` and `identifiers` are optional: the provider resolves the target by `id`, refreshes its name and identifiers, and rejects an unresolved target or contradictory metadata the sender supplied. A singular reference such as `fiscalSponsor` is an object, so a patch merges into it; changing only its `id` succeeds once the provider refreshes the metadata kept from the previous target. `dbaNames` is an array and is also replaced whole.
+From v0.5.0, `relationships` follows the same rules. Each relationship list is an array that a patch replaces whole, so `{ "relationships": { "parents": [...] } }` replaces only `parents` and leaves the other lists unchanged. `null` removes the addressed list, or every list when sent for `relationships`, and `[]` leaves a present, empty list. There is no append, merge by ID, single-entry change, or automatic reverse entry, so a writer changes one entry by sending its whole list with whole entries. In a patch, an entry's `org` has a writable `id` and an optional `name`, so it can name the other organization by `id` alone; validation doesn't fill in the `name` or `identifiers`. `dbaNames` is an array and is also replaced whole.
 
 ### Table
 

@@ -1,9 +1,10 @@
 /**
  * Pins the ADR 0030 organization-relationships slice of #1256: the v0.5.0
  * schemas gain `dbaNames` and `relationships` on `OrganizationBase` and
- * `OrgPatchData`, plus the `OrgRelationships` and `OrgParents` models, while
- * v0.4.0 and earlier are left unchanged. `OrgRef` itself does not change; the
- * writable target reference lives only inside the patch schema.
+ * `OrgPatchData`, plus the relationship lists, entries, and subtype options,
+ * while v0.4.0 and earlier are left unchanged. `OrgRef` itself does not
+ * change; the writable reference to the other organization lives only inside
+ * the patch schema.
  */
 
 import { describe, it, expect } from "vitest";
@@ -50,7 +51,17 @@ describe("organization relationships at v0.5.0 (ADR 0030)", () => {
   });
 
   it("publishes the relationship models only from v0.5.0", () => {
-    for (const schemaName of ["OrgRelationships.yaml", "OrgParents.yaml"]) {
+    for (const schemaName of [
+      "OrgRelationships.yaml",
+      "OrgHierarchyRelationship.yaml",
+      "OrgSuccessionRelationship.yaml",
+      "OrgRecordRelationship.yaml",
+      "OrgOtherRelationship.yaml",
+      "OrgHierarchyKindOptions.yaml",
+      "OrgSuccessionKindOptions.yaml",
+      "OrgRecordKindOptions.yaml",
+      "OrgOtherKindOptions.yaml",
+    ]) {
       expect(
         modelSchema("0.5.0", schemaName),
         `v0.5.0/${schemaName} does not exist`,
