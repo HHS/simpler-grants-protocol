@@ -206,13 +206,13 @@ The cost falls on writes. [ADR 0026](https://commongrants.org/governance/adr/002
 
 Separate lists keep categories independent: changing `parents` never touches succession or record entries, and a consumer walking a hierarchy never filters them out.
 
-`org` wraps the reference instead of placing `kind`, dates, and status beside its fields. The reference describes the other organization; the remaining fields describe the relationship. Keeping them apart means, for example, that a relationship's `status` can't be mistaken for an organization's own status, which is handled separately in [PR 1252](https://github.com/HHS/simpler-grants-protocol/pull/1252).
+`org` wraps the reference instead of placing `kind`, dates, and status beside its fields. The reference describes the other organization; the remaining fields describe the relationship.
 
 ### Hierarchy
 
 - `parents` and `children` cover more than containment. `fiscalSponsor` is a hierarchy kind, so one organization can list a chapter parent and a different fiscal sponsor in the same `parents` list. Consumers shouldn't treat every parent as an owner or container.
 - There is no generic `parent` kind. An entry without `kind` already states a parent relationship without a subtype.
-- `department` names an internal unit. This decision doesn't define it to cover every internal level, such as a division, center, agency, or group, and adds no standard `division` or `agency` value. A provider can name those levels with a custom kind or leave `kind` out.
+- Providers can use a custom kind for other organizational labels, such as division or agency, or omit `kind` when no subtype is known.
 
 ### Succession and record replacement
 
@@ -233,7 +233,7 @@ Each named category has a list for each direction, and a provider can expose eit
 | `{ "relationships": { "parents": null } }`  | Removes `parents`; other lists are unchanged                 |
 | `{ "relationships": null }`                 | Removes every relationship list                              |
 
-There is no append, merge by ID, single-entry change, or automatic reverse entry. To change one entry, a writer sends the full list with whole entries. This patch ends the sponsorship from the opening example and leaves every other list unchanged:
+To change one relationship, a writer sends the full list with that entry updated. This patch ends the sponsorship from the opening example and leaves every other list unchanged:
 
 ```json
 {
