@@ -52,8 +52,8 @@
     "openapi-sampler": "^1.7.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sharp": "^0.35.4",
-    "swagger-ui-dist": "^5.33.0",
+    "sharp": "^0.35.5",
+    "swagger-ui-dist": "^5.33.1",
     "tsx": "^4.23.15",
     "typescript": "catalog:",
     "typespec-versioning-changelog": "workspace:*",
@@ -84,6 +84,6 @@
     "starlight-links-validator": "^0.24.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.136.0"
+    "wrangler": "^4.147.0"
   }
 }
