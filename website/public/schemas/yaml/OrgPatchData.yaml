@@ -5,6 +5,11 @@ properties:
   name:
     type: string
     description: The organization's legal name as registered with relevant authorities.
+  status:
+    anyOf:
+      - $ref: OrgPatchOrgStatusOrCreate.yaml
+      - type: "null"
+    description: Whether the organization exists and operates, or has dissolved or ceased operating.
   mission:
     anyOf:
       - type: string

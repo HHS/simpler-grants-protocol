@@ -15,6 +15,10 @@ organizationBase:
           "code": "UC000000",
           "description": "Nonprofit organization"
         },
+        "status": {
+          "value": "active",
+          "description": "The organization exists and operates"
+        },
         "identifiers": {
           "org:us:ein": {
             "registry": {
@@ -117,7 +121,7 @@ organizationBase:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
       startLine: 5
-      endLine: 47
+      endLine: 51
 orgIds:
   example:
     file:
@@ -128,8 +132,8 @@ orgIds:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 68
-      endLine: 83
+      startLine: 72
+      endLine: 87
 orgIdEin:
   example:
     file:
@@ -140,8 +144,8 @@ orgIdEin:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 53
-      endLine: 56
+      startLine: 57
+      endLine: 60
 orgIdUei:
   example:
     file:
@@ -152,8 +156,8 @@ orgIdUei:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 58
-      endLine: 61
+      startLine: 62
+      endLine: 65
 orgIdDuns:
   example:
     file:
@@ -164,8 +168,8 @@ orgIdDuns:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 63
-      endLine: 66
+      startLine: 67
+      endLine: 70
 orgRef:
   example:
     file:
@@ -176,8 +180,8 @@ orgRef:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 89
-      endLine: 107
+      startLine: 93
+      endLine: 111
 orgRefCollection:
   example:
     file:
@@ -188,8 +192,8 @@ orgRefCollection:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 109
-      endLine: 121
+      startLine: 113
+      endLine: 125
 orgSocialLinks:
   example:
     code: |
@@ -211,8 +215,32 @@ orgSocialLinks:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization.tsp"
-      startLine: 127
-      endLine: 151
+      startLine: 131
+      endLine: 155
+orgStatus:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgStatus.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgStatus.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 173
+      endLine: 178
+orgStatusOptions:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OrgStatusOptions.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OrgStatusOptions.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/organization.tsp"
+      startLine: 161
+      endLine: 171
 orgPatchData:
   example:
     file:
@@ -237,19 +265,20 @@ An organization that can apply to or host funding opportunities.
 
 ### Table
 
-| Property     | Type                                                                                   | Required | Description                                                                  |
-| ------------ | -------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                        |
-| name         | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.       |
-| orgType      | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS). |
-| identifiers  | [OrgIds](#orgids)                                                                      | No       | Identifiers associated with the organization, keyed by registry code.        |
-| addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | Collection of physical addresses associated with the organization.           |
-| phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | Collection of phone numbers associated with the organization.                |
-| emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | Collection of email addresses associated with the organization.              |
-| mission      | [string](/protocol/types/string#string)                                                | No       | The organization's mission statement.                                        |
-| yearFounded  | [calendarYear](/protocol/types/date#calendaryear)                                      | No       | The calendar year the organization was founded.                              |
-| socials      | [OrgSocialLinks](#orgsociallinks)                                                      | No       | The organization's social media and web presence links.                      |
-| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the organization.                                          |
+| Property     | Type                                                                                   | Required | Description                                                                         |
+| ------------ | -------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- |
+| id           | [uuid](/protocol/types/string#uuid)                                                    | Yes      | The organization's unique identifier.                                               |
+| name         | [string](/protocol/types/string#string)                                                | Yes      | The organization's legal name as registered with relevant authorities.              |
+| orgType      | [PCSOrgType](/protocol/fields/pcs#pcsorgtype)                                          | No       | The organization's type within the Philanthropy Classification System (PCS).        |
+| status       | [OrgStatus](#orgstatus)                                                                | No       | Whether the organization exists and operates, or has dissolved or ceased operating. |
+| identifiers  | [OrgIds](#orgids)                                                                      | No       | Identifiers associated with the organization, keyed by registry code.               |
+| addresses    | [AddressCollection](/protocol/fields/address#addresscollection)                        | No       | Collection of physical addresses associated with the organization.                  |
+| phones       | [PhoneCollection](/protocol/fields/phone#phonecollection)                              | No       | Collection of phone numbers associated with the organization.                       |
+| emails       | [EmailCollection](/protocol/fields/email#emailcollection)                              | No       | Collection of email addresses associated with the organization.                     |
+| mission      | [string](/protocol/types/string#string)                                                | No       | The organization's mission statement.                                               |
+| yearFounded  | [calendarYear](/protocol/types/date#calendaryear)                                      | No       | The calendar year the organization was founded.                                     |
+| socials      | [OrgSocialLinks](#orgsociallinks)                                                      | No       | The organization's social media and web presence links.                             |
+| customFields | [Record](/protocol/types/other#record)\<[CustomField](/protocol/fields/custom-field)\> | No       | Custom fields for the organization.                                                 |
 
 ### Formats
 
@@ -419,6 +448,50 @@ A collection of social media and web presence links for an organization.
 ### Changelog
 
 <SchemaChangelog schema="OrgSocialLinks" />
+
+## OrgStatus
+
+The status of an organization:
+
+- `active`: The organization exists and operates.
+- `inactive`: The organization has dissolved or ceased operating. Loss of tax-exempt status alone does not make an organization inactive.
+- `custom`: A status not covered by the other options, described in `customValue`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgStatus.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgStatus.example}
+  jsonSchema={frontmatter.orgStatus.jsonSchema}
+  typeSpec={frontmatter.orgStatus.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgStatus" />
+
+## OrgStatusOptions
+
+The set of values accepted for organization status.
+
+### Table
+
+<SchemaTable filePath={frontmatter.orgStatusOptions.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.orgStatusOptions.example}
+  jsonSchema={frontmatter.orgStatusOptions.jsonSchema}
+  typeSpec={frontmatter.orgStatusOptions.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OrgStatusOptions" />
 
 ## OrgPatchData
 
