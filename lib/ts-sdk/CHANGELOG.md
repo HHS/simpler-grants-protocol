@@ -1,5 +1,13 @@
 # @common-grants/sdk
 
+## [0.8.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.7.2...@common-grants/sdk@0.8.0) (2026-09-24)
+
+
+### Bug Fixes
+
+* **ts-sdk:** catch permissive schema drift and empty parity-test runs ([#1195](https://github.com/HHS/simpler-grants-protocol/issues/1195)) ([f86f8ca](https://github.com/HHS/simpler-grants-protocol/commit/f86f8ca219e3be3f7b3cd14443635841c30614d2))
+* **ts-sdk:** remove the package root entrypoint ([#1232](https://github.com/HHS/simpler-grants-protocol/issues/1232)) ([4d62295](https://github.com/HHS/simpler-grants-protocol/commit/4d62295a261a2e3eb1a05dec3b6b14f9d01b6cb8))
+
 ## [0.7.2](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.7.1...@common-grants/sdk@0.7.2) (2026-08-31)
 
 

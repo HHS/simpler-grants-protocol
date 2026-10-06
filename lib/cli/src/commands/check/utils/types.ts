@@ -48,10 +48,7 @@ export type ErrorSubType =
   | "QUERY_PARAM_CONFLICT";
 
 export type SchemaConflictType =
-  | "TYPE_CONFLICT"
-  | "MISSING_FIELD"
-  | "EXTRA_FIELD"
-  | "ENUM_CONFLICT";
+  "TYPE_CONFLICT" | "MISSING_FIELD" | "EXTRA_FIELD" | "ENUM_CONFLICT";
 
 export interface SchemaConflictError extends BaseError {
   type: "ROUTE_CONFLICT";

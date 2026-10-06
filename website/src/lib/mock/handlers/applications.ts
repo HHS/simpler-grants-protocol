@@ -126,8 +126,7 @@ function arrayFilterValue(
 
 /** Resolves an `appId` path segment to a record, or the response to return. */
 type AppLookup =
-  | { ok: true; application: Application }
-  | { ok: false; response: Response };
+  { ok: true; application: Application } | { ok: false; response: Response };
 
 /** Validates and resolves an `appId`, so every route answers it identically. */
 function lookupApplication(appId: string): AppLookup {

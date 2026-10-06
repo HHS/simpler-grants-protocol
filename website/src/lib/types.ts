@@ -2,12 +2,7 @@ import type { JsonSchema } from "@jsonforms/core";
 import type { VerticalLayout } from "@jsonforms/core";
 
 export type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type FormData = Record<string, JsonValue>;
 
