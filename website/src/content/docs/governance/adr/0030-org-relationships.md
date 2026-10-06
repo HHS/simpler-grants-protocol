@@ -140,54 +140,54 @@ model OrgRelationshipT<TKind> {
   org: OrgRef;
 
   /** The relationship's subtype within the category its list names */
-  kind?: Fields.ExtensibleEnumT<TKind> | null;
+  kind?: Fields.ExtensibleEnumT<TKind>;
 
   /** When the relationship started */
-  startDate?: Types.isoDate | null;
+  startDate?: Types.isoDate;
 
   /** When the relationship ended */
-  endDate?: Types.isoDate | null;
+  endDate?: Types.isoDate;
 
   /** Whether the relationship is in effect, as stated by the provider */
-  status?: OrgRelationshipStatus | null;
+  status?: OrgRelationshipStatus;
 }
 
 /** An organization's relationships to other organizations */
 model OrgRelationships {
   /** Organizations above this one, such as a containing organization or a fiscal sponsor */
-  parents?: OrgRelationshipT<OrgHierarchyKindOptions>[] | null;
+  parents?: OrgRelationshipT<OrgHierarchyKindOptions>[];
 
   /** Organizations below this one, such as its chapters or sponsored projects */
-  children?: OrgRelationshipT<OrgHierarchyKindOptions>[] | null;
+  children?: OrgRelationshipT<OrgHierarchyKindOptions>[];
 
   /** Organizations that carry on all or part of this one */
-  succeededBy?: OrgRelationshipT<OrgSuccessionKindOptions>[] | null;
+  succeededBy?: OrgRelationshipT<OrgSuccessionKindOptions>[];
 
   /** Organizations whose work this one carries on in whole or in part */
-  succeeds?: OrgRelationshipT<OrgSuccessionKindOptions>[] | null;
+  succeeds?: OrgRelationshipT<OrgSuccessionKindOptions>[];
 
   /** Records to use instead of this record */
-  recordReplacedBy?: OrgRelationshipT<OrgRecordKindOptions>[] | null;
+  recordReplacedBy?: OrgRelationshipT<OrgRecordKindOptions>[];
 
   /** Records that this record is used instead of */
-  recordReplaces?: OrgRelationshipT<OrgRecordKindOptions>[] | null;
+  recordReplaces?: OrgRelationshipT<OrgRecordKindOptions>[];
 
   /** Connections outside the categories above, which need not have a direction */
-  otherRelationships?: OrgRelationshipT<OrgOtherKindOptions>[] | null;
+  otherRelationships?: OrgRelationshipT<OrgOtherKindOptions>[];
 }
 
 model OrganizationBase {
   // ...existing fields
 
   /** Names the organization currently does business as, alongside its legal name */
-  dbaNames?: string[] | null;
+  dbaNames?: string[];
 
   /** The organization's relationships to other organizations */
-  relationships?: OrgRelationships | null;
+  relationships?: OrgRelationships;
 }
 ```
 
-`OrgRef` is the existing reference model. As [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/) requires, every optional member accepts `null` on reads; `org` and list entries don't. Model names, and the use of one template for every list, are implementation choices; this ADR decides the wire shape.
+`OrgRef` is the existing reference model. `org` and list entries are required. Every other member is optional and, like most optional fields on existing models, isn't nullable: a reader finds it omitted or with a value, never `null`. Model names, and the use of one template for every list, are implementation choices; this ADR decides the wire shape.
 
 ### Relationship objects
 
@@ -257,7 +257,7 @@ To change one relationship, a writer sends the full list with that entry updated
 
 This patch names its targets by `id` alone, which the write shape allows. Reads still return a full `OrgRef` for each `org`. Schema validation only checks shape; it doesn't fill in a target's `name` or identifiers.
 
-Optional read members follow [ADR 0024](https://commongrants.org/governance/adr/0024-optional-field-nullability/): absent means "not provided" and `null` means "doesn't apply." In a patch, `null` means remove the member, as in JSON Merge Patch, regardless of what `null` means on reads.
+In a patch, `null` removes the addressed member, as in JSON Merge Patch; reads never carry `null`. Because a patch replaces a list whole, an entry in that list leaves out an optional member rather than setting it to `null`.
 
 ## Evaluation
 
@@ -560,7 +560,7 @@ Existing OrgSync authorization governs changes to an organization's record; a re
 | Subtypes         | Extensible enum `value`, `customValue`, `description`           | Conforms                                         |
 | Status           | Closed enum for a sub-object's lifecycle, as `IdentifierStatus` | Conforms; values `active` and `inactive`         |
 | Response shapes  | Existing OrgSync envelopes and revisions                        | Unchanged                                        |
-| Read nullability | ADR 0024 absent, `null`, or value                               | Conforms                                         |
+| Read nullability | Optional fields not nullable, as on most existing models        | Conforms; no member accepts `null` on reads      |
 | Updates          | ADR 0026 JSON Merge Patch                                       | Conforms; lists replace whole                    |
 | Parent location  | ADR 0023 `parent` on the organization                           | Diverges; see below                              |
 | `other` prefix   | `other<Plural>` maps keyed by label, such as `otherIds`         | Diverges for `otherRelationships`; see below     |
