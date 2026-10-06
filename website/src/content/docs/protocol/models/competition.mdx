@@ -8,7 +8,10 @@ competition:
     code: |
       {
         "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
-        "opportunityId": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+        "opportunity": {
+          "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+          "title": "Small business grant program"
+        },
         "title": "Competition 1",
         "description": "Competition 1 description",
         "instructions": "Competition 1 instructions",
@@ -55,7 +58,7 @@ competition:
     file:
       path: "lib/core/lib/core/models/competition.tsp"
       startLine: 3
-      endLine: 44
+      endLine: 49
 competitionStatus:
   example:
     code: |
@@ -70,8 +73,8 @@ competitionStatus:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 50
-      endLine: 53
+      startLine: 55
+      endLine: 58
 competitionStatusOptions:
   example:
     code: '"open"'
@@ -81,8 +84,8 @@ competitionStatusOptions:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 59
-      endLine: 69
+      startLine: 64
+      endLine: 74
 competitionForms:
   example:
     code: |
@@ -101,8 +104,8 @@ competitionForms:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 75
-      endLine: 84
+      startLine: 80
+      endLine: 89
 competitionTimeline:
   example:
     code: |
@@ -132,8 +135,8 @@ competitionTimeline:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 90
-      endLine: 102
+      startLine: 95
+      endLine: 107
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -146,11 +149,17 @@ Base model for a competition.
 
 A competition is an application process for a funding opportunity. It often has a distinct application period and set of application forms.
 
+From v0.5, a competition links to its opportunity with `opportunity`, an [`OppRef`](/protocol/models/opportunity#oppref) carrying the opportunity's `id` and `title`, in place of the bare `opportunityId` used through v0.4. A competition never carries both.
+
+The table and the JSON Schema tab below render the unversioned schema, which combines the fields of every protocol version, so they list both `opportunityId` and `opportunity` as required. It is a reference across versions, not a contract any single version's payload satisfies. To validate a payload, use the schema for its version, linked from each entry in the changelog below.
+
 ### Table
 
 <SchemaTable filePath={frontmatter.competition.jsonSchema.file.path} />
 
 ### Formats
+
+The example shows the v0.5 shape. See [Migrating from v0.4](#migrating-from-v04) for the earlier one.
 
 <SchemaFormatTabs
   example={frontmatter.competition.example}
@@ -161,6 +170,43 @@ A competition is an application process for a funding opportunity. It often has 
 ### Changelog
 
 <SchemaChangelog schema="CompetitionBase" />
+
+### Migrating from v0.4
+
+| Version          | Field           | Type               |
+| ---------------- | --------------- | ------------------ |
+| v0.4 and earlier | `opportunityId` | `uuid`, required   |
+| v0.5             | `opportunity`   | `OppRef`, required |
+
+- **Producers:** replace `opportunityId` with an `opportunity` object. Its `id` is the value you sent as `opportunityId`, and its `title` is the linked opportunity's title, so you need that title at hand when you serialize a competition. `identifiers` is optional.
+- **Consumers:** read the opportunity's id from `opportunity.id`. Its title arrives with it, so displaying the opportunity no longer needs a second request.
+- **Applications are unaffected:** `ApplicationBase` keeps its `competitionId` and `opportunityId` fields.
+- **Forms are unaffected:** forms nested in `forms` keep `name` in v0.5.
+
+v0.4 and earlier:
+
+```json
+{
+  "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+  "opportunityId": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+  "title": "Competition 1"
+}
+```
+
+v0.5:
+
+```json
+{
+  "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+  "opportunity": {
+    "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+    "title": "Small business grant program"
+  },
+  "title": "Competition 1"
+}
+```
+
+Both excerpts omit the other required fields.
 
 ## CompetitionStatus
 

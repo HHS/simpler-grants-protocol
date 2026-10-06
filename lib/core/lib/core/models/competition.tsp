@@ -13,7 +13,12 @@ model CompetitionBase {
   id: Types.uuid;
 
   /** The opportunity id for the competition */
+  @Versioning.removed(CommonGrants.Versions.v0_5)
   opportunityId: Types.uuid;
+
+  /** The opportunity this competition is for */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  opportunity: OppRef;
 
   /** The title of the competition */
   title: string;
@@ -106,9 +111,17 @@ model CompetitionTimeline {
 // #########################################################
 
 namespace Examples.Competition {
+  // Carries both `opportunityId` (through v0.4) and `opportunity` (v0.5),
+  // because `@example` is checked against the unversioned model, which has
+  // both. Each version's OpenAPI document and versioned JSON Schema keep only
+  // the field that version declares.
   const competition = #{
     id: "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
     opportunityId: "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+    opportunity: #{
+      id: "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b",
+      title: "Small business grant program",
+    },
     title: "Competition 1",
     description: "Competition 1 description",
     instructions: "Competition 1 instructions",

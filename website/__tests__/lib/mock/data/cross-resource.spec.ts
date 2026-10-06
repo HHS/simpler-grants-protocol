@@ -22,10 +22,12 @@ import {
   CANONICAL_COMPETITION_ID,
   COMPETITION_FIXTURES,
   getCompetitionById,
+  shapeCompetitionForVersion,
 } from "@/lib/mock/data/competitions";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
+  shapeOpportunityForVersion,
 } from "@/lib/mock/data/fixtures";
 import {
   CANONICAL_FORM_ID,
@@ -249,6 +251,20 @@ describe("competitions reference records that exist", () => {
     }
   });
 
+  it("gives every v0.5 competition its opportunity's real id and title", () => {
+    for (const competition of COMPETITION_FIXTURES) {
+      const { opportunity } = shapeCompetitionForVersion(competition, "0.5.0");
+      const real = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === competition.opportunityId,
+      );
+
+      expect(opportunity?.id).toBe(real?.id);
+      expect(opportunity?.title, `competition ${competition.id}`).toBe(
+        real?.title,
+      );
+    }
+  });
+
   it("embeds only real form fixtures, by identity", () => {
     for (const competition of COMPETITION_FIXTURES) {
       const embedded = Object.values(competition.forms.forms);
@@ -355,6 +371,16 @@ describe("organizations and their changes", () => {
 });
 
 describe("opportunities' nested competition previews", () => {
+  it("gives every v0.5 preview its own opportunity's real id and title", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      const shaped = shapeOpportunityForVersion(opportunity, "0.5.0", "detail");
+      for (const preview of shaped.competitions ?? []) {
+        expect(preview.opportunity?.id).toBe(opportunity.id);
+        expect(preview.opportunity?.title).toBe(opportunity.title);
+      }
+    }
+  });
+
   it("keeps every preview's `opportunityId` pointing back at its own opportunity", () => {
     for (const opportunity of OPPORTUNITY_FIXTURES) {
       for (const preview of opportunity.competitions ?? []) {

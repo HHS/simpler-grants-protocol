@@ -6,13 +6,20 @@
  * `OpportunityDetails` and omits the required `forms` object.
  */
 
-import { OPPORTUNITY_FIXTURES, type CustomField } from "./fixtures";
+import { isAtLeastVersion } from "./availability";
+import {
+  OPPORTUNITY_FIXTURES,
+  withOpportunityRef,
+  type CustomField,
+  type Version,
+} from "./fixtures";
 import {
   FORM_FIXTURES,
   getFormById,
   type FileAttachment,
   type Form,
 } from "./forms";
+import type { OppRef } from "./awards";
 import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
 import type {
   ApplicantType,
@@ -30,7 +37,11 @@ export interface CompetitionForms {
   validation?: { required?: string[] };
 }
 
-/** A competition in its fullest (`Models.CompetitionBase`) shape. */
+/**
+ * A competition in its fullest (`Models.CompetitionBase`) shape, stored with
+ * the v0.2-v0.4 `opportunityId`, which the application fixtures also join on;
+ * `shapeCompetitionForVersion` serves the v0.5 `opportunity` reference.
+ */
 export interface Competition {
   id: string;
   opportunityId: string;
@@ -323,4 +334,30 @@ export const COMPETITION_FIXTURES: readonly Competition[] = Object.freeze<
 /** Looks up a competition fixture by its exact id. */
 export function getCompetitionById(id: string): Competition | undefined {
   return COMPETITION_FIXTURES.find((competition) => competition.id === id);
+}
+
+/** `CompetitionBase.opportunity` replaces `opportunityId` at v0.5. */
+const OPPORTUNITY_REF_VERSION: Version = "0.5.0";
+
+/**
+ * A competition as a given version puts it on the wire: `opportunityId`
+ * through v0.4, an `opportunity` reference from v0.5. Nested forms keep
+ * `name` in every version.
+ */
+export type WireCompetition = Omit<Competition, "opportunityId"> & {
+  opportunityId?: string;
+  opportunity?: OppRef;
+};
+
+/**
+ * Projects a competition onto the shape a version documents. Returns a copy;
+ * the frozen fixtures are untouched.
+ */
+export function shapeCompetitionForVersion(
+  competition: Competition,
+  version: Version,
+): WireCompetition {
+  return isAtLeastVersion(version, OPPORTUNITY_REF_VERSION)
+    ? withOpportunityRef(competition)
+    : { ...competition };
 }

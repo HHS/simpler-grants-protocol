@@ -47,4 +47,4 @@ examples:
       code: opp:us:fon
       url: https://commongrants.org/registries/opp-us-fon
     id: HHS-2026-ACF-OCC-YD-0001
-description: An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency.
+description: An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency.

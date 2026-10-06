@@ -3067,7 +3067,7 @@ components:
       type: object
       required:
         - id
-        - opportunityId
+        - opportunity
         - title
         - status
         - forms
@@ -3078,10 +3078,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: Globally unique id for the competition
-        opportunityId:
+        opportunity:
           allOf:
-            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
-          description: The opportunity id for the competition
+            - $ref: '#/components/schemas/CommonGrants.Models.OppRef'
+          description: The opportunity this competition is for
         title:
           type: string
           description: The title of the competition
@@ -3134,7 +3134,9 @@ components:
         distinct application period and set of application forms.
       example:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-        opportunityId: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b
+        opportunity:
+          id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6b
+          title: Small business grant program
         title: Competition 1
         description: Competition 1 description
         instructions: Competition 1 instructions
@@ -4055,7 +4057,7 @@ components:
               - id
               - status
           description: Every known identifier for this record in this registry, including archived values.
-      description: An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency.
+      description: An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency.
       example:
         registry:
           code: opp:us:fon

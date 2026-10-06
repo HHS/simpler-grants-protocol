@@ -12,7 +12,7 @@ import {
 } from "@/lib/mock/data/competitions";
 import { getCompetition } from "@/lib/mock/handlers/competitions";
 import { RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
-import type { Version } from "@/lib/mock/data/fixtures";
+import { OPPORTUNITY_FIXTURES, type Version } from "@/lib/mock/data/fixtures";
 
 const VERSION: Version = "0.4.0";
 const STATUS_VALUES = ["open", "closed", "custom"];
@@ -109,5 +109,73 @@ describe("GET /v{version}/common-grants/competitions/{compId} (detail)", () => {
     expect(body.status).toBe(404);
     expect(Array.isArray(body.errors)).toBe(true);
     expect(body.errors.some((error) => error.field === "compId")).toBe(true);
+  });
+});
+
+describe("competition detail per protocol version", () => {
+  const canonical = getCompetitionById(CANONICAL_COMPETITION_ID);
+  const opportunity = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.id === canonical?.opportunityId,
+  );
+
+  /** The `data` of a canonical-competition detail response at `version`. */
+  async function detail(version: Version) {
+    const response = getCompetition(CANONICAL_COMPETITION_ID, version);
+    expect(response.status).toBe(200);
+    return ((await response.json()) as { data: Record<string, unknown> }).data;
+  }
+
+  /** The forms nested in a served competition. */
+  function formsOf(data: Record<string, unknown>) {
+    const forms = (data.forms as { forms: Record<string, object> }).forms;
+    expect(Object.keys(forms).length).toBeGreaterThan(0);
+    return Object.values(forms);
+  }
+
+  it("references a real opportunity that has identifiers, or the v0.5 checks prove less", () => {
+    expect(opportunity?.identifiers).toBeDefined();
+  });
+
+  it.each(["0.2.0", "0.3.0", "0.4.0"] as Version[])(
+    "serves opportunityId and named forms at v%s",
+    async (version) => {
+      const data = await detail(version);
+
+      expect(data.opportunityId).toBe(opportunity?.id);
+      expect(data).not.toHaveProperty("opportunity");
+      for (const form of formsOf(data)) {
+        expect(form).toHaveProperty("name");
+        expect(form).not.toHaveProperty("title");
+      }
+    },
+  );
+
+  it("serves a v0.5 opportunity reference read from the real opportunity, in opportunityId's place", async () => {
+    const data = await detail("0.5.0");
+
+    expect(data).not.toHaveProperty("opportunityId");
+    expect(data.opportunity).toEqual({
+      id: opportunity?.id,
+      title: opportunity?.title,
+      identifiers: opportunity?.identifiers,
+    });
+    expect(Object.keys(data)[1]).toBe("opportunity");
+  });
+
+  it("keeps nested forms on name at v0.5", async () => {
+    for (const form of formsOf(await detail("0.5.0"))) {
+      expect(form).toHaveProperty("name");
+      expect(form).not.toHaveProperty("title");
+    }
+  });
+
+  it("leaves the fixtures and each version's output intact across interleaved requests", async () => {
+    const first = await detail("0.4.0");
+    const latest = await detail("0.5.0");
+
+    expect(await detail("0.4.0")).toEqual(first);
+    expect(await detail("0.5.0")).toEqual(latest);
+    expect(canonical?.opportunityId).toBe(opportunity?.id);
+    expect(canonical).not.toHaveProperty("opportunity");
   });
 });

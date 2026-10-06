@@ -16,7 +16,10 @@ import {
   type ResourceName,
 } from "@/lib/mock/data/availability";
 import { AWARD_FIXTURES, shapeAwardForVersion } from "@/lib/mock/data/awards";
-import { COMPETITION_FIXTURES } from "@/lib/mock/data/competitions";
+import {
+  COMPETITION_FIXTURES,
+  shapeCompetitionForVersion,
+} from "@/lib/mock/data/competitions";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
@@ -89,7 +92,10 @@ const RESOURCE_CASES: ResourceCase[] = [
     resource: "competitions",
     label: "competitions",
     schemaFor: () => "CompetitionBase.yaml",
-    recordsFor: () => [...COMPETITION_FIXTURES],
+    recordsFor: (version) =>
+      COMPETITION_FIXTURES.map((competition) =>
+        shapeCompetitionForVersion(competition, version),
+      ),
   },
 ];
 

@@ -417,3 +417,121 @@ describe("Version Generator", () => {
     });
   });
 });
+
+// #############################################################################
+// # Example projection
+// #############################################################################
+
+// Mirrors `CompetitionBase` at v0.5: `parentId` removed and `parent` added in
+// the same version. The emitted (unversioned) example carries both, because
+// TypeSpec checks `@example` against the model with every version's fields.
+describe("Version Generator: examples", () => {
+  const changelog: Changelog = {
+    versions: ["0.1.0", "0.2.0", "0.3.0"],
+    logs: {
+      Contest: {
+        "0.1.0": [
+          {
+            message: "Added `Contest` model",
+            action: Action.Added,
+            targetKind: TargetType.Model,
+            currTargetName: "Contest",
+          },
+        ],
+        "0.2.0": [
+          {
+            message: "Added `note` field",
+            action: Action.Added,
+            targetKind: TargetType.ModelProperty,
+            currTargetName: "note",
+          },
+        ],
+        "0.3.0": [
+          {
+            message: "Removed `parentId` field",
+            action: Action.Removed,
+            targetKind: TargetType.ModelProperty,
+            currTargetName: "parentId",
+          },
+          {
+            message: "Added `parent` field",
+            action: Action.Added,
+            targetKind: TargetType.ModelProperty,
+            currTargetName: "parent",
+          },
+        ],
+      },
+    },
+  };
+  const example = {
+    id: "c1",
+    parentId: "p1",
+    parent: { id: "p1", title: "Parent" },
+    title: "Contest",
+    note: "n",
+  };
+  const schemas = new Map<string, JsonSchema>([
+    [
+      "Contest",
+      {
+        $id: "Contest.yaml",
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          parentId: { type: "string" },
+          parent: { type: "object" },
+          title: { type: "string" },
+          note: { type: "string" },
+        },
+        required: ["id", "parentId", "parent", "title"],
+        examples: [example],
+      } as JsonSchema,
+    ],
+  ]);
+  const exampleAt = (version: string) =>
+    (
+      generateSchemaVersions(version, changelog, schemas).schemas.get(
+        "Contest",
+      ) as JsonSchema & { examples: unknown[] }
+    ).examples[0];
+
+  it("keeps only the removed field before the swap, in key order", () => {
+    expect(Object.keys(exampleAt("0.2.0") as object)).toEqual([
+      "id",
+      "parentId",
+      "title",
+      "note",
+    ]);
+  });
+
+  it("keeps only the added field from the swap on", () => {
+    expect(exampleAt("0.3.0")).toEqual({
+      id: "c1",
+      parent: { id: "p1", title: "Parent" },
+      title: "Contest",
+      note: "n",
+    });
+  });
+
+  it("drops a field from examples of versions before it was added", () => {
+    expect(exampleAt("0.1.0")).toEqual({
+      id: "c1",
+      parentId: "p1",
+      title: "Contest",
+    });
+  });
+
+  it("leaves the source example untouched", () => {
+    for (const version of changelog.versions) exampleAt(version);
+    expect(
+      (schemas.get("Contest") as JsonSchema & { examples: unknown[] })
+        .examples[0],
+    ).toEqual({
+      id: "c1",
+      parentId: "p1",
+      parent: { id: "p1", title: "Parent" },
+      title: "Contest",
+      note: "n",
+    });
+  });
+});

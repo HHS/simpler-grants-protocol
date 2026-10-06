@@ -300,6 +300,18 @@ function generateSchemaForVersion(
     );
   }
 
+  // The emitter writes examples unversioned too, so drop the same fields from
+  // each example's own keys. (A model whose `@example` must name both sides of
+  // a removal plus addition, like `CompetitionBase` at v0.5, relies on this.)
+  const examples = (versionedSchema as { examples?: unknown[] }).examples;
+  for (const example of examples ?? []) {
+    if (example && typeof example === "object") {
+      for (const fieldName of fieldsToRemove) {
+        delete (example as Record<string, unknown>)[fieldName];
+      }
+    }
+  }
+
   // Update $refs to use historical names
   updateRefs(versionedSchema, nameMapping);
 
