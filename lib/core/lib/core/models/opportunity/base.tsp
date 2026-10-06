@@ -83,7 +83,7 @@ model OpportunityBase {
 // Opportunity identifiers
 // ########################################
 
-/** An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency. */
+/** An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency. */
 @example(Examples.Opportunity.fon)
 @Versioning.added(CommonGrants.Versions.v0_5)
 model OppIdFon is Fields.IdentifierT<string, "opp:us:fon">;

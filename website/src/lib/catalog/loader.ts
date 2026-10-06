@@ -133,8 +133,7 @@ export function getArray(key: string): SchemaExtractor<unknown[]> {
 export function getPropertyConst(propName: string): SchemaExtractor<string> {
   return (schema) => {
     const properties = schema.properties as
-      | Record<string, Record<string, unknown>>
-      | undefined;
+      Record<string, Record<string, unknown>> | undefined;
     const value = properties?.[propName]?.const;
     return typeof value === "string" ? value : "";
   };
@@ -151,8 +150,7 @@ export function getPropertyExamples(
 ): SchemaExtractor<unknown[]> {
   return (schema) => {
     const properties = schema.properties as
-      | Record<string, Record<string, unknown>>
-      | undefined;
+      Record<string, Record<string, unknown>> | undefined;
     const examples = properties?.[propName]?.examples;
     return Array.isArray(examples) ? examples : [];
   };

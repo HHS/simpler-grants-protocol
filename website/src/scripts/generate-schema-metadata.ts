@@ -11,13 +11,7 @@ interface SchemaMetadata {
   schemaName: string;
   filePath: string;
   type:
-    | "object"
-    | "enum"
-    | "array"
-    | "string"
-    | "number"
-    | "boolean"
-    | "unknown";
+    "object" | "enum" | "array" | "string" | "number" | "boolean" | "unknown";
   isEnum: boolean;
   isObject: boolean;
   properties?: string[];

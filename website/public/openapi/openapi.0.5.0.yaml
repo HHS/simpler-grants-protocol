@@ -4055,7 +4055,7 @@ components:
               - id
               - status
           description: Every known identifier for this record in this registry, including archived values.
-      description: An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency.
+      description: An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency.
       example:
         registry:
           code: opp:us:fon
