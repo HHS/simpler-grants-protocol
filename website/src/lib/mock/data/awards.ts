@@ -3,11 +3,14 @@
  * built from the other fixture modules, so none can dangle. The canonical
  * record mirrors the documented `AwardBase` example, except its references,
  * which derive from live fixture records on purpose: the example's own ids
- * exist only inside the example. Awards are v0.4-only, so this module has no
- * version shaping.
+ * exist only inside the example. Awards start at v0.4, and the only field that
+ * varies by version is `opportunity.identifiers`, which `OppRef` gained in
+ * v0.5 — see `shapeAwardForVersion`.
  */
 
 import { OPPORTUNITY_FIXTURES, usd } from "./fixtures";
+import type { OppIds, Version } from "./fixtures";
+import { isAtLeastVersion } from "./availability";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
 import { CANONICAL_RECORD_ID } from "./ids";
 import {
@@ -85,6 +88,7 @@ export interface AwdRecipientIndividual {
 export interface OppRef {
   id: string;
   title: string;
+  identifiers?: OppIds;
 }
 
 /** A reference to an application (mirrors `Models.AppRef`). */
@@ -182,7 +186,13 @@ function oppRefFor(index: number): OppRef {
   if (!opportunity) {
     throw new Error(`Award fixture references opportunity index ${index}`);
   }
-  return { id: opportunity.id, title: opportunity.title };
+  return {
+    id: opportunity.id,
+    title: opportunity.title,
+    ...(opportunity.identifiers
+      ? { identifiers: { ...opportunity.identifiers } }
+      : {}),
+  };
 }
 
 /** Builds an `AppRef` from an application index, reading its real title. */
@@ -569,4 +579,27 @@ export function getAwardById(id: string): Award | undefined {
 /** Every award fixture, as a mutable copy the handlers can sort and page. */
 export function allAwards(): Award[] {
   return [...AWARD_FIXTURES];
+}
+
+/**
+ * Projects an award down to what a given protocol version declares. Only
+ * `opportunity.identifiers` varies: `OppRef` gained it in v0.5, so earlier
+ * versions must not carry it. The v0.4 schemas would not catch a leak, because
+ * the conformance validator strips `unevaluatedProperties`, so this shaping is
+ * the guarantee.
+ *
+ * Both the award and its `opportunity` are copied before the delete, leaving
+ * the frozen fixtures untouched.
+ */
+export function shapeAwardForVersion(award: Award, version: Version): Award {
+  if (isAtLeastVersion(version, "0.5.0")) {
+    return award;
+  }
+  if (award.opportunity?.identifiers === undefined) {
+    return award;
+  }
+
+  const opportunity: OppRef = { ...award.opportunity };
+  delete opportunity.identifiers;
+  return { ...award, opportunity };
 }

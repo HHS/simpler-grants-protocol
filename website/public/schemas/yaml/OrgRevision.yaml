@@ -48,6 +48,9 @@ examples:
         class: Organization types
         description: Institutions with the primary purpose of providing in-patient physical and mental health services...
         code: EO000000
+      status:
+        value: active
+        description: The organization exists and operates
       identifiers:
         org:us:ein:
           registry:

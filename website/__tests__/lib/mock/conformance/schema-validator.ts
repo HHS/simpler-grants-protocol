@@ -77,6 +77,26 @@ export function schemaExistsForVersion(
   return existsSync(path.join(VERSIONS_DIR, `v${version}`, schemaName));
 }
 
+/**
+ * Loads one version's copy of a generated schema as a plain document, with no
+ * overlay and no ajv compilation, for specs that assert on the schema itself
+ * rather than validate data against it. Returns `undefined` when that version
+ * does not declare the model.
+ */
+export function loadRawSchema(
+  version: Version,
+  schemaName: string,
+): Record<string, unknown> | undefined {
+  const file = path.join(VERSIONS_DIR, `v${version}`, schemaName);
+  if (!existsSync(file)) {
+    return undefined;
+  }
+  const parsed = yaml.load(readFileSync(file, "utf-8"));
+  return parsed !== null && typeof parsed === "object"
+    ? (parsed as Record<string, unknown>)
+    : undefined;
+}
+
 /** Loads every `*.yaml` in a directory, keyed by file name. */
 function loadSchemaDir(dir: string): Map<string, Record<string, unknown>> {
   const schemas = new Map<string, Record<string, unknown>>();

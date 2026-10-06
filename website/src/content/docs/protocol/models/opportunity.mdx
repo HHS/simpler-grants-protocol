@@ -35,8 +35,8 @@ opportunityDetails:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 100
-      endLine: 105
+      startLine: 133
+      endLine: 138
 oppRef:
   example:
     file:
@@ -47,8 +47,44 @@ oppRef:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
+      startLine: 108
+      endLine: 127
+oppIds:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OppIds.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OppIds.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/opportunity/base.tsp"
+      startLine: 89
+      endLine: 102
+oppIdFon:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OppIdFon.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OppIdFon.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/opportunity/base.tsp"
       startLine: 79
-      endLine: 94
+      endLine: 82
+oppIdAln:
+  example:
+    file:
+      path: "website/public/schemas/yaml/OppIdAln.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/OppIdAln.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/models/opportunity/base.tsp"
+      startLine: 84
+      endLine: 87
 oppStatus:
   example:
     file:
@@ -145,7 +181,7 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## OpportunityBase
 
-A funding opportunity, such as a grant or loan.
+A funding opportunity, such as a grant or loan. It shares its identity fields with [OppRef](#oppref), including the [OppIds](#oppids) collection under `identifiers` added in v0.5.
 
 ### Table
 
@@ -188,7 +224,7 @@ A funding opportunity with additional details, like available competitions.
 
 ## OppRef
 
-A reference to an opportunity, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an opportunity, such as the opportunity an [award](/protocol/models/award) resulted from.
+A reference to an opportunity, previewing the key fields a consumer needs to identify it and look it up or join it to another response. Appears wherever another record points to an opportunity, such as the opportunity an [award](/protocol/models/award) resulted from. Since v0.5 it also carries [OppIds](#oppids) under `identifiers`, so a consumer can match the opportunity on a published registry code rather than the hosting system's own id.
 
 ### Table
 
@@ -205,6 +241,66 @@ A reference to an opportunity, previewing the key fields a consumer needs to ide
 ### Changelog
 
 <SchemaChangelog schema="OppRef" />
+
+## OppIds
+
+A collection of identifiers associated with an opportunity, keyed by registry code. It extends the generic [IdentifierCollection](/protocol/fields/identifier#identifiercollection) with the base identifiers CommonGrants defines for opportunities. Additional registries can be published under `otherIds`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.oppIds.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.oppIds.example}
+  jsonSchema={frontmatter.oppIds.jsonSchema}
+  typeSpec={frontmatter.oppIds.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OppIds" />
+
+## OppIdFon
+
+An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency and published on the notice of funding opportunity. It pins `registry.code` to `opp:us:fon`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.oppIdFon.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.oppIdFon.example}
+  jsonSchema={frontmatter.oppIdFon.jsonSchema}
+  typeSpec={frontmatter.oppIdFon.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OppIdFon" />
+
+## OppIdAln
+
+An opportunity's Assistance Listing Number (ALN), formerly the CFDA number, which ties it to its federal assistance program. It pins `registry.code` to `opp:us:aln`.
+
+### Table
+
+<SchemaTable filePath={frontmatter.oppIdAln.jsonSchema.file.path} />
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.oppIdAln.example}
+  jsonSchema={frontmatter.oppIdAln.jsonSchema}
+  typeSpec={frontmatter.oppIdAln.typeSpec}
+/>
+
+### Changelog
+
+<SchemaChangelog schema="OppIdAln" />
 
 ## OppStatus
 
