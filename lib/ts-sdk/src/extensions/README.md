@@ -547,9 +547,7 @@ const ExtendedOpportunity = withCustomFields(OpportunityBaseSchema, {
 });
 
 const { toCommon } = buildTransforms(
-  {
-    /* toCommonMapping ... */
-  },
+  {/* toCommonMapping ... */},
   {},
   undefined,
   ExtendedOpportunity
@@ -576,9 +574,7 @@ const plugin = definePlugin({
   schemas: {
     Opportunity: {
       sourceSchema: GrantsGovOpportunity,
-      customFields: {
-        /* customFieldSpecs */
-      },
+      customFields: {/* customFieldSpecs */},
       mappings: {
         toCommon: {
           id: { field: "data.opportunity_uuid" },
@@ -617,9 +613,7 @@ const plugin = definePlugin({
   schemas: {
     Opportunity: {
       sourceSchema: GrantsGovOpportunity,
-      customFields: {
-        /* customFieldSpecs */
-      },
+      customFields: {/* customFieldSpecs */},
       toCommon,
       fromCommon,
     },

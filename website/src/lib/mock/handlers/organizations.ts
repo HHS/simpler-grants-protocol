@@ -96,8 +96,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /** Resolves an `orgId` path segment to a record, or the response to return. */
 type OrgLookup =
-  | { ok: true; org: Organization }
-  | { ok: false; response: Response };
+  { ok: true; org: Organization } | { ok: false; response: Response };
 
 /** Validates and resolves an `orgId`, so all six handlers answer identically. */
 function lookupOrg(orgId: string): OrgLookup {

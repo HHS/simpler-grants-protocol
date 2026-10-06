@@ -70,6 +70,13 @@ describe("OrgPatchData merge-patch schema", () => {
       ],
       ["deletes a base identifier", { identifiers: { "org:us:ein": null } }],
       ["clears a whole field", { customFields: null }],
+      ["sets status to active", { status: { value: "active" } }],
+      ["sets status to inactive", { status: { value: "inactive" } }],
+      [
+        "sets a custom status",
+        { status: { value: "custom", customValue: "merging" } },
+      ],
+      ["clears status", { status: null }],
       [
         "applies the documented example",
         {
@@ -321,6 +328,7 @@ describe("OrgPatchData merge-patch schema", () => {
       ["unknown top-level property", { bogus: true }],
       ["null for the non-clearable name field", { name: null }],
       ["wrong type for mission", { mission: 42 }],
+      ["invalid status value", { status: { value: "dissolved" } }],
       [
         "wrong type inside an otherIds entry",
         { identifiers: { otherIds: { "org:xi:foo": { id: 123 } } } },

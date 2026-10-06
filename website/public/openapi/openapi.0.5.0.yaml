@@ -4055,7 +4055,7 @@ components:
               - id
               - status
           description: Every known identifier for this record in this registry, including archived values.
-      description: An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency.
+      description: An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency.
       example:
         registry:
           code: opp:us:fon
@@ -4593,6 +4593,12 @@ components:
         name:
           type: string
           description: The organization's legal name as registered with relevant authorities.
+        status:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgPatchOrgStatusOrCreate'
+          nullable: true
+          description: Whether the organization exists and operates, or has dissolved or ceased operating.
         mission:
           type: string
           nullable: true
@@ -4877,6 +4883,25 @@ components:
           code: org:us:uei
           url: https://commongrants.org/registries/org-us-uei
         id: AB0123456789
+    CommonGrants.Models.OrgPatchOrgStatusOrCreate:
+      type: object
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgStatusOptions'
+          description: The selected value, from a predefined set of options
+        customValue:
+          type: string
+          nullable: true
+          description: A custom value, used when the selected value is the `custom` option
+        description:
+          type: string
+          nullable: true
+          description: A human-readable description of the value
+      description: The status of the organization
+      example:
+        value: active
+        description: The organization exists and operates
     CommonGrants.Models.OrgRecordKindOptions:
       type: string
       enum:
@@ -5123,6 +5148,9 @@ components:
             class: Organization types
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
+          status:
+            value: active
+            description: The organization exists and operates
           identifiers:
             org:us:ein:
               registry:
@@ -5234,6 +5262,36 @@ components:
         linkedin: https://www.linkedin.com/company/example
         otherSocials:
           youtube: https://www.youtube.com/example
+    CommonGrants.Models.OrgStatus:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgStatusOptions'
+          description: The selected value, from a predefined set of options
+        customValue:
+          type: string
+          description: A custom value, used when the selected value is the `custom` option
+        description:
+          type: string
+          description: A human-readable description of the value
+      description: The status of the organization
+      example:
+        value: active
+        description: The organization exists and operates
+    CommonGrants.Models.OrgStatusOptions:
+      type: string
+      enum:
+        - active
+        - inactive
+        - custom
+      description: |-
+        The set of values accepted for organization status:
+        - `active`: The organization exists and operates
+        - `inactive`: The organization has dissolved or ceased operating; loss of tax-exempt status alone does not make an organization inactive
+        - `custom`: A status not covered by the other options, described in `customValue`
     CommonGrants.Models.OrgSuccessionKindOptions:
       type: string
       enum:
@@ -5316,6 +5374,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.PCSOrgType'
           description: The organization's type within the Philanthropy Classification System (PCS).
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgStatus'
+          description: Whether the organization exists and operates, or has dissolved or ceased operating.
         addresses:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Fields.AddressCollection'
@@ -5362,6 +5424,9 @@ components:
           class: Organization types
           description: Institutions with the primary purpose of providing in-patient physical and mental health services...
           code: EO000000
+        status:
+          value: active
+          description: The organization exists and operates
         identifiers:
           org:us:ein:
             registry:

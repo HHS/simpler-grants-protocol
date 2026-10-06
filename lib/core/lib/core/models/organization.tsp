@@ -12,6 +12,10 @@ model OrganizationBase {
   /** The organization's type within the Philanthropy Classification System (PCS). */
   orgType?: Fields.PCSOrgType;
 
+  /** Whether the organization exists and operates, or has dissolved or ceased operating. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  status?: OrgStatus;
+
   /** The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS. */
   @Versioning.removed(CommonGrants.Versions.v0_4)
   ein?: Types.employerTaxId;
@@ -311,6 +315,29 @@ model OrgSocialLinks {
 }
 
 // #########################################################
+// Organization status
+// #########################################################
+
+/** The set of values accepted for organization status:
+ * - `active`: The organization exists and operates
+ * - `inactive`: The organization has dissolved or ceased operating; loss of tax-exempt status alone does not make an organization inactive
+ * - `custom`: A status not covered by the other options, described in `customValue`
+ */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgStatusOptions {
+  active,
+  inactive,
+  custom,
+}
+
+/** The status of the organization */
+@example(Examples.OrgStatus.custom)
+@example(Examples.OrgStatus.inactive)
+@example(Examples.OrgStatus.active)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgStatus is Fields.ExtensibleEnumT<OrgStatusOptions>;
+
+// #########################################################
 // Examples
 // #########################################################
 
@@ -319,6 +346,7 @@ namespace Examples.Organization {
     id: "083b4567-e89d-42c8-a439-6c1234567890",
     name: "Example Organization",
     orgType: Fields.Examples.PCS.orgTypeTerm,
+    status: OrgStatus.active,
     identifiers: #{
       `org:us:ein`: #{
         registry: #{
@@ -350,6 +378,25 @@ namespace Examples.Organization {
     instagram: "https://www.instagram.com/example",
     linkedin: "https://www.linkedin.com/company/example",
     otherSocials: #{ youtube: "https://www.youtube.com/example" },
+  };
+}
+
+/** Examples of the OrgStatus model */
+namespace Examples.OrgStatus {
+  const active = #{
+    value: OrgStatusOptions.active,
+    description: "The organization exists and operates",
+  };
+
+  const inactive = #{
+    value: OrgStatusOptions.inactive,
+    description: "The organization has dissolved or ceased operating",
+  };
+
+  const custom = #{
+    value: OrgStatusOptions.custom,
+    customValue: "merging",
+    description: "The organization is merging into another organization",
   };
 }
 

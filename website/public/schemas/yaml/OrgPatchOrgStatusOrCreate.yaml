@@ -1,0 +1,28 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgPatchOrgStatusOrCreate.yaml
+type: object
+properties:
+  value:
+    $ref: OrgStatusOptions.yaml
+    description: The selected value, from a predefined set of options
+  customValue:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: A custom value, used when the selected value is the `custom` option
+  description:
+    anyOf:
+      - type: string
+      - type: "null"
+    description: A human-readable description of the value
+unevaluatedProperties:
+  not: {}
+examples:
+  - value: active
+    description: The organization exists and operates
+  - value: inactive
+    description: The organization has dissolved or ceased operating
+  - value: custom
+    customValue: merging
+    description: The organization is merging into another organization
+description: The status of the organization
