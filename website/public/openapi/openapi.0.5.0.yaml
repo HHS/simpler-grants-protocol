@@ -4350,27 +4350,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A parent or child relationship.
       example:
@@ -4578,27 +4569,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A relationship outside the named categories, which need not have a direction.
       example:
@@ -4621,6 +4603,12 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
           nullable: true
           description: The calendar year the organization was founded.
+        dbaNames:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
         identifiers:
           type: object
           allOf:
@@ -4657,12 +4645,6 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate'
           nullable: true
           description: Collection of the organization's social media and web presence links.
-        dbaNames:
-          type: array
-          items:
-            type: string
-          nullable: true
-          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
         relationships:
           type: object
           properties:
@@ -4931,27 +4913,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A record replacement relationship.
       example:
@@ -5020,6 +4993,77 @@ components:
                 registry:
                   code: org:grants.gov:agency
                 id: HRSA
+    CommonGrants.Models.OrgRelationshipStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+      description: Whether a relationship is in effect, as stated by the provider.
+    CommonGrants.Models.OrgRelationships:
+      type: object
+      properties:
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
+          description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
+          description: Organizations below this one, such as its chapters or sponsored projects.
+        succeededBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
+          description: Organizations that carry on all or part of this one.
+        succeeds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
+          description: Organizations whose work this one carries on in whole or in part.
+        recordReplacedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
+          description: Records to use instead of this record.
+        recordReplaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
+          description: Records that this record is used instead of.
+        otherRelationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgOtherRelationship'
+          description: Connections outside the categories above, which need not have a direction.
+      description: |-
+        An organization's relationships to other organizations.
+
+        Each named list holds relationships of one category and direction;
+        `otherRelationships` holds connections outside those categories. Every list
+        is optional, list order carries no meaning, and a provider may state a
+        relationship from either organization's record. A relationship confers no
+        authority over the other organization.
+      example:
+        parents:
+          - org:
+              id: 01912a8b-7c3d-7891-abcd-ef1234567891
+              name: National Reading Network
+            kind:
+              value: chapter
+          - org:
+              id: 01912a8b-7c3d-7892-abcd-ef1234567892
+              name: Riverside Community Foundation
+              identifiers:
+                org:us:ein:
+                  registry:
+                    code: org:us:ein
+                  id: '123456789'
+            kind:
+              value: fiscalSponsor
+            startDate: '2024-07-01'
+            status: active
     CommonGrants.Models.OrgRevision:
       type: object
       required:
@@ -5229,27 +5273,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A succession relationship.
       example:
@@ -5308,54 +5343,10 @@ components:
           type: array
           items:
             type: string
-          nullable: true
           description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
         relationships:
-          type: object
-          properties:
-            parents:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
-              nullable: true
-              description: Organizations above this one, such as a containing organization or a fiscal sponsor.
-            children:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
-              nullable: true
-              description: Organizations below this one, such as its chapters or sponsored projects.
-            succeededBy:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
-              nullable: true
-              description: Organizations that carry on all or part of this one.
-            succeeds:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
-              nullable: true
-              description: Organizations whose work this one carries on in whole or in part.
-            recordReplacedBy:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
-              nullable: true
-              description: Records to use instead of this record.
-            recordReplaces:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
-              nullable: true
-              description: Records that this record is used instead of.
-            otherRelationships:
-              type: array
-              items:
-                $ref: '#/components/schemas/CommonGrants.Models.OrgOtherRelationship'
-              nullable: true
-              description: Connections outside the categories above, which need not have a direction.
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
           description: The organization's relationships to other organizations.
         customFields:
           type: object
@@ -5582,27 +5573,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A parent or child relationship, as written.
     CommonGrants.Patch.OrgPatchOrgIdsOrCreate:
@@ -5672,27 +5654,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A relationship outside the named categories, as written.
     CommonGrants.Patch.OrgPatchOrgRecordRelationshipReplaceOnly:
@@ -5719,27 +5692,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A record replacement relationship, as written.
     CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate:
@@ -5808,27 +5772,18 @@ components:
               description: A human-readable description of the value
           required:
             - value
-          nullable: true
           description: The relationship's subtype within the category its list names.
         startDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
-          example: '2024-07-01'
         endDate:
-          type: string
-          format: date
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
           description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
-          example: '2026-06-30'
         status:
-          type: string
-          enum:
-            - active
-            - inactive
-            - null
-          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
           description: Whether the relationship is in effect, as stated by the provider.
       description: A succession relationship, as written.
     CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly:

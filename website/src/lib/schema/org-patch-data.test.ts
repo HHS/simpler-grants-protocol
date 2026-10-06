@@ -183,22 +183,6 @@ describe("OrgPatchData merge-patch schema", () => {
         },
       ],
       [
-        "sends null kind, dates, and status in an entry",
-        {
-          relationships: {
-            parents: [
-              {
-                org: { id: NETWORK },
-                kind: null,
-                startDate: null,
-                endDate: null,
-                status: null,
-              },
-            ],
-          },
-        },
-      ],
-      [
         "replaces two lists together",
         {
           relationships: {
@@ -311,6 +295,18 @@ describe("OrgPatchData merge-patch schema", () => {
           },
         },
       ],
+      // An entry in a replaced list is stored as written, so its optional
+      // members are omitted rather than `null`.
+      ...["kind", "startDate", "endDate", "status"].map(
+        (member): [string, object] => [
+          `a null ${member} in a replaced entry`,
+          {
+            relationships: {
+              parents: [{ org: { id: NETWORK }, [member]: null }],
+            },
+          },
+        ],
+      ),
       ["a non-string DBA name", { dbaNames: [42] }],
       ["a single string for DBA names", { dbaNames: "Example Thrift" }],
     ];

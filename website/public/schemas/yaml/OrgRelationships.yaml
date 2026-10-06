@@ -3,53 +3,39 @@ $id: OrgRelationships.yaml
 type: object
 properties:
   parents:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgHierarchyRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgHierarchyRelationship.yaml
     description: Organizations above this one, such as a containing organization or a fiscal sponsor.
   children:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgHierarchyRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgHierarchyRelationship.yaml
     description: Organizations below this one, such as its chapters or sponsored projects.
   succeededBy:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgSuccessionRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgSuccessionRelationship.yaml
     description: Organizations that carry on all or part of this one.
   succeeds:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgSuccessionRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgSuccessionRelationship.yaml
     description: Organizations whose work this one carries on in whole or in part.
   recordReplacedBy:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgRecordRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgRecordRelationship.yaml
     description: Records to use instead of this record.
   recordReplaces:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgRecordRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgRecordRelationship.yaml
     description: Records that this record is used instead of.
   otherRelationships:
-    anyOf:
-      - type: array
-        items:
-          $ref: OrgOtherRelationship.yaml
-      - type: "null"
+    type: array
+    items:
+      $ref: OrgOtherRelationship.yaml
     description: Connections outside the categories above, which need not have a direction.
 unevaluatedProperties:
   not: {}

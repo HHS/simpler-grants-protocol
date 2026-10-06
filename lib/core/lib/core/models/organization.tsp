@@ -1,4 +1,3 @@
-import "@typespec/openapi";
 import "../fields/index.tsp";
 
 namespace CommonGrants.Models;
@@ -45,15 +44,11 @@ model OrganizationBase {
 
   /** Names the organization currently does business as, alongside its legal `name`. Not a history of former names. */
   @Versioning.added(CommonGrants.Versions.v0_5)
-  dbaNames?: string[] | null;
+  dbaNames?: string[];
 
   /** The organization's relationships to other organizations. */
   @Versioning.added(CommonGrants.Versions.v0_5)
-  relationships?:
-    | {
-        ...OrgRelationships;
-      }
-    | null;
+  relationships?: OrgRelationships;
 
   /** Custom fields for the organization. */
   customFields?: Record<Fields.CustomField>;
@@ -137,17 +132,6 @@ model OrgRefCollection {
 // Organization relationships
 // #########################################################
 
-// OpenAPI 3.0 cannot make a `$ref` nullable: `nullable` beside an `allOf`
-// reference does not stop the referenced schema from rejecting `null`. So the
-// nullable members that would reference a model, scalar, or enum
-// (`relationships`, `kind`, the dates, and `status`) are written inline.
-//
-// `nullable` also leaves `enum` in force, so an OpenAPI 3.0 enum accepts
-// `null` only when `null` is one of its values. The OpenAPI 3.0 emitter leaves
-// it out, so `status` lists its values, `null` included, in an OpenAPI
-// `enum` that replaces the emitted one. JSON Schema is unaffected.
-// `org-relationships.test.ts` fails if either dialect stops accepting `null`.
-
 /** The standard subtypes of a parent or child relationship:
  * - `chapter`: The child is a chapter of the parent
  * - `department`: The child is an internal unit of the parent
@@ -201,6 +185,16 @@ enum OrgOtherKindOptions {
   custom,
 }
 
+/** Whether a relationship is in effect, as stated by the provider. */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgRelationshipStatus {
+  /** The relationship is in effect. */
+  active,
+
+  /** The relationship is no longer in effect. */
+  inactive,
+}
+
 /** A relationship from this organization to another organization.
  *
  * The list holding the entry gives its category and, for the named lists, its
@@ -216,24 +210,21 @@ model OrgRelationshipT<Kind> {
   /** The other organization. */
   org: OrgRef;
 
+  // Spread inline: a reference to the template instance would be emitted as
+  // one more standalone `ExtensibleEnumT{Kind}` schema per category.
   /** The relationship's subtype within the category its list names. */
-  kind?:
-    | {
-        ...Fields.ExtensibleEnumT<Kind>;
-      }
-    | null;
+  kind?: {
+    ...Fields.ExtensibleEnumT<Kind>;
+  };
 
   /** When the relationship started, in ISO 8601 format: YYYY-MM-DD */
-  @example(Types.isoDate.fromISO("2024-07-01"))
-  startDate?: plainDate | null;
+  startDate?: Types.isoDate;
 
   /** When the relationship ended, in ISO 8601 format: YYYY-MM-DD */
-  @example(Types.isoDate.fromISO("2026-06-30"))
-  endDate?: plainDate | null;
+  endDate?: Types.isoDate;
 
   /** Whether the relationship is in effect, as stated by the provider. */
-  @TypeSpec.OpenAPI.extension("enum", #["active", "inactive", null])
-  status?: "active" | "inactive" | null;
+  status?: OrgRelationshipStatus;
 }
 
 /** A parent or child relationship. */
@@ -268,25 +259,25 @@ model OrgOtherRelationship is OrgRelationshipT<OrgOtherKindOptions>;
 @Versioning.added(CommonGrants.Versions.v0_5)
 model OrgRelationships {
   /** Organizations above this one, such as a containing organization or a fiscal sponsor. */
-  parents?: OrgHierarchyRelationship[] | null;
+  parents?: OrgHierarchyRelationship[];
 
   /** Organizations below this one, such as its chapters or sponsored projects. */
-  children?: OrgHierarchyRelationship[] | null;
+  children?: OrgHierarchyRelationship[];
 
   /** Organizations that carry on all or part of this one. */
-  succeededBy?: OrgSuccessionRelationship[] | null;
+  succeededBy?: OrgSuccessionRelationship[];
 
   /** Organizations whose work this one carries on in whole or in part. */
-  succeeds?: OrgSuccessionRelationship[] | null;
+  succeeds?: OrgSuccessionRelationship[];
 
   /** Records to use instead of this record. */
-  recordReplacedBy?: OrgRecordRelationship[] | null;
+  recordReplacedBy?: OrgRecordRelationship[];
 
   /** Records that this record is used instead of. */
-  recordReplaces?: OrgRecordRelationship[] | null;
+  recordReplaces?: OrgRecordRelationship[];
 
   /** Connections outside the categories above, which need not have a direction. */
-  otherRelationships?: OrgOtherRelationship[] | null;
+  otherRelationships?: OrgOtherRelationship[];
 }
 
 // #########################################################
@@ -435,7 +426,7 @@ namespace Examples.OrgRelationships {
     },
     kind: #{ value: OrgHierarchyKindOptions.fiscalSponsor },
     startDate: Types.isoDate.fromISO("2024-07-01"),
-    status: "active",
+    status: OrgRelationshipStatus.active,
   };
 
   const split = #{

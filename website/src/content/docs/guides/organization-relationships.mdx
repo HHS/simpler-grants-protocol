@@ -317,6 +317,8 @@ In a patch, `org` can name the other organization by `id` alone. Reads still ret
 | `null` for a list          | Removes that list. Other lists are unchanged.            |
 | `null` for `relationships` | Removes every relationship list.                         |
 
+Entries in a list are replaced whole, so leave out an entry's optional `kind`, dates, or `status` rather than sending `null`.
+
 Two writers changing the same list at the same time can overwrite each other.
 
 ## Reading parents
@@ -328,19 +330,19 @@ type OrgRef = { id: string; name: string };
 type Kind = { value: string; customValue?: string; description?: string };
 type Relationship = {
   org: OrgRef;
-  kind?: Kind | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  status?: "active" | "inactive" | null;
+  kind?: Kind;
+  startDate?: string;
+  endDate?: string;
+  status?: "active" | "inactive";
 };
 
 /** The organizations an entry list points to, whatever their subtypes. */
-function relatedIds(entries?: Relationship[] | null) {
+function relatedIds(entries?: Relationship[]) {
   return (entries ?? []).map((entry) => entry.org.id);
 }
 
 /** The entries of one standard or custom subtype. */
-function ofKind(entries: Relationship[] | null | undefined, kind: string) {
+function ofKind(entries: Relationship[] | undefined, kind: string) {
   return (entries ?? []).filter(
     (entry) =>
       entry.kind?.value === kind ||

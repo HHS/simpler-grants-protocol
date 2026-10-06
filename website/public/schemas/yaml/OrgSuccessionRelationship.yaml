@@ -6,47 +6,30 @@ properties:
     $ref: OrgRef.yaml
     description: The other organization.
   kind:
-    anyOf:
-      - type: object
-        properties:
-          value:
-            $ref: OrgSuccessionKindOptions.yaml
-            description: The selected value, from a predefined set of options
-          customValue:
-            type: string
-            description: A custom value, used when the selected value is the `custom` option
-          description:
-            type: string
-            description: A human-readable description of the value
-        required:
-          - value
-        unevaluatedProperties:
-          not: {}
-      - type: "null"
+    type: object
+    properties:
+      value:
+        $ref: OrgSuccessionKindOptions.yaml
+        description: The selected value, from a predefined set of options
+      customValue:
+        type: string
+        description: A custom value, used when the selected value is the `custom` option
+      description:
+        type: string
+        description: A human-readable description of the value
+    required:
+      - value
+    unevaluatedProperties:
+      not: {}
     description: The relationship's subtype within the category its list names.
   startDate:
-    anyOf:
-      - type: string
-        format: date
-      - type: "null"
-    examples:
-      - 2024-07-01
+    $ref: isoDate.yaml
     description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
   endDate:
-    anyOf:
-      - type: string
-        format: date
-      - type: "null"
-    examples:
-      - 2026-06-30
+    $ref: isoDate.yaml
     description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
   status:
-    anyOf:
-      - type: string
-        const: active
-      - type: string
-        const: inactive
-      - type: "null"
+    $ref: OrgRelationshipStatus.yaml
     description: Whether the relationship is in effect, as stated by the provider.
 required:
   - org

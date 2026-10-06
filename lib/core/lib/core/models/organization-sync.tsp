@@ -213,8 +213,6 @@ namespace CommonGrants.Patch {
    * these syncing models are added, so they never coexist with a patch. The
    * sub-model fields are redeclared against the mirrors above so the
    * merge-patch transformation sees flattened models and deletable record keys.
-   * `dbaNames` is redeclared without its read-side `null`, which the
-   * transformation adds back once.
    * This is a compile-time source for `OrgPatchData` and is not emitted as a
    * standalone schema.
    */
@@ -231,7 +229,6 @@ namespace CommonGrants.Patch {
       | "phones"
       | "emails"
       | "socials"
-      | "dbaNames"
       | "relationships"
       | "customFields"
     >;
@@ -254,10 +251,8 @@ namespace CommonGrants.Patch {
     /** Collection of the organization's social media and web presence links. */
     socials?: Patch.OrgSocialLinks;
 
-    /** Names the organization currently does business as, alongside its legal `name`. Not a history of former names. */
-    @Versioning.added(CommonGrants.Versions.v0_5)
-    dbaNames?: string[];
-
+    // Spread inline: OpenAPI 3.0 cannot make a referenced object nullable, so
+    // a reference would reject the `null` that removes every list.
     /** The organization's relationships to other organizations. */
     @Versioning.added(CommonGrants.Versions.v0_5)
     relationships?: {

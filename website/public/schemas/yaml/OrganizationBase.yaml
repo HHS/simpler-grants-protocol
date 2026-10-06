@@ -42,68 +42,12 @@ properties:
     $ref: OrgSocialLinks.yaml
     description: Collection of the organization's social media and web presence links.
   dbaNames:
-    anyOf:
-      - type: array
-        items:
-          type: string
-      - type: "null"
+    type: array
+    items:
+      type: string
     description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
   relationships:
-    anyOf:
-      - type: object
-        properties:
-          parents:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgHierarchyRelationship.yaml
-              - type: "null"
-            description: Organizations above this one, such as a containing organization or a fiscal sponsor.
-          children:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgHierarchyRelationship.yaml
-              - type: "null"
-            description: Organizations below this one, such as its chapters or sponsored projects.
-          succeededBy:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgSuccessionRelationship.yaml
-              - type: "null"
-            description: Organizations that carry on all or part of this one.
-          succeeds:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgSuccessionRelationship.yaml
-              - type: "null"
-            description: Organizations whose work this one carries on in whole or in part.
-          recordReplacedBy:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRecordRelationship.yaml
-              - type: "null"
-            description: Records to use instead of this record.
-          recordReplaces:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgRecordRelationship.yaml
-              - type: "null"
-            description: Records that this record is used instead of.
-          otherRelationships:
-            anyOf:
-              - type: array
-                items:
-                  $ref: OrgOtherRelationship.yaml
-              - type: "null"
-            description: Connections outside the categories above, which need not have a direction.
-        unevaluatedProperties:
-          not: {}
-      - type: "null"
+    $ref: OrgRelationships.yaml
     description: The organization's relationships to other organizations.
   customFields:
     $ref: "#/$defs/RecordCustomField"

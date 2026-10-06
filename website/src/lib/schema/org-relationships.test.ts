@@ -62,10 +62,8 @@ const LISTS: Array<[string, string[]]> = [
  * Read shape of ADR 0030 organization relationships on the published
  * OrganizationBase schema.
  *
- * Per ADR 0024 an absent field means "not provided", `null` means "doesn't
- * apply", and a value means "has a value", so every optional member must
- * accept all three while still rejecting wrong non-null values. `org` and
- * list entries are required wherever they appear. These checks establish
+ * Every optional member is omitted or carries a value; none accepts `null`.
+ * `org` and list entries are required wherever they appear. These checks establish
  * shape only; the schema says nothing about whether the other organization
  * exists or whether the two directions agree.
  *
@@ -96,11 +94,7 @@ describe("OrganizationBase relationships read schema", () => {
   });
 
   const accepted: Array<[string, object]> = [
-    ["omits relationships and dbaNames (not provided)", org],
-    [
-      "asserts relationships do not apply",
-      { ...org, relationships: null, dbaNames: null },
-    ],
+    ["omits relationships and dbaNames", org],
     [
       "an entry with only org in every list",
       withRelationships(
@@ -110,12 +104,6 @@ describe("OrganizationBase relationships read schema", () => {
     [
       "empty lists",
       withRelationships(Object.fromEntries(LISTS.map(([list]) => [list, []]))),
-    ],
-    [
-      "every list asserted not to apply",
-      withRelationships(
-        Object.fromEntries(LISTS.map(([list]) => [list, null])),
-      ),
     ],
     ...LISTS.flatMap(([list, kinds]) =>
       kinds.map((kind): [string, object] => [
@@ -202,20 +190,6 @@ describe("OrganizationBase relationships read schema", () => {
       }),
     ],
     [
-      "every optional member of an entry asserted not to apply",
-      withRelationships({
-        parents: [
-          {
-            org: network,
-            kind: null,
-            startDate: null,
-            endDate: null,
-            status: null,
-          },
-        ],
-      }),
-    ],
-    [
       "a past endDate with no status (status is never inferred)",
       withRelationships({
         parents: [entry("fiscalSponsor", { endDate: "2020-01-01" })],
@@ -263,7 +237,10 @@ describe("OrganizationBase relationships read schema", () => {
       "a single entry where a list is required",
       withRelationships({ parents: entry("chapter") }),
     ],
-    ["an entry without org", withRelationships({ parents: [{ kind: null }] })],
+    [
+      "an entry without org",
+      withRelationships({ parents: [{ kind: { value: "chapter" } }] }),
+    ],
     ["a null org", withRelationships({ parents: [{ org: null }] })],
     [
       "an org without its name",
@@ -421,8 +398,8 @@ describe("OrganizationBase relationships read schema", () => {
 });
 
 /**
- * The same null semantics in the published OpenAPI 3.0 document, which is
- * what an OpenAPI-validating client or server checks. OpenAPI 3.0 has no null
+ * The same shapes in the published OpenAPI 3.0 document, which is what an
+ * OpenAPI-validating client or server checks. OpenAPI 3.0 has no null
  * type: `nullable: true` admits null only beside a `type` in the same schema,
  * so a nullable `$ref` wrapped in `allOf` still rejects null through the
  * referenced component. Ajv applies `nullable` that way. The OpenAPI
@@ -477,19 +454,10 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
   const cases: Array<
     [string, "OrganizationBase" | "OrgPatchData", object, boolean]
   > = [
-    ["read: null relationships", "OrganizationBase", read(null), true],
     [
-      "read: every list null",
+      "read: an entry with only org",
       "OrganizationBase",
-      read(Object.fromEntries(LISTS.map(([list]) => [list, null]))),
-      true,
-    ],
-    [
-      "read: an entry with null kind and dates",
-      "OrganizationBase",
-      read({
-        parents: [{ org: target, kind: null, startDate: null, endDate: null }],
-      }),
+      read({ parents: [{ org: target }] }),
       true,
     ],
     [
@@ -544,18 +512,19 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
       read({ parents: [{ org: target, status: "pending" }] }),
       false,
     ],
-    ["patch: remove all relationships", "OrgPatchData", patch(null), true],
     [
-      "patch: remove every list",
-      "OrgPatchData",
-      patch(Object.fromEntries(LISTS.map(([list]) => [list, null]))),
-      true,
-    ],
-    [
-      "patch: an ID-only org with null kind and dates",
+      "patch: an ID-only org with every optional member",
       "OrgPatchData",
       patch({
-        parents: [{ org: { id }, kind: null, startDate: null, endDate: null }],
+        parents: [
+          {
+            org: { id },
+            kind: { value: "fiscalSponsor" },
+            startDate: "2024-07-01",
+            endDate: "2026-06-30",
+            status: "inactive",
+          },
+        ],
       }),
       true,
     ],
@@ -586,21 +555,66 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     ],
   ];
 
-  it.each(cases)("%s", (_name, model, payload, valid) => {
+  // A read never carries `null`. In a patch, `null` removes `relationships`,
+  // one list, or `dbaNames`, as in JSON Merge Patch; an entry in a replaced
+  // list has nothing to merge into, so its optional members are omitted
+  // rather than `null`.
+  const entryMembers = ["kind", "startDate", "endDate", "status"];
+  const nullCases: typeof cases = [
+    ["read: null relationships", "OrganizationBase", read(null), false],
+    [
+      "read: null dbaNames",
+      "OrganizationBase",
+      { ...read({}), dbaNames: null },
+      false,
+    ],
+    ...LISTS.map(([list]): (typeof cases)[number] => [
+      `read: null ${list}`,
+      "OrganizationBase",
+      read({ [list]: null }),
+      false,
+    ]),
+    ...entryMembers.map((member): (typeof cases)[number] => [
+      `read: null ${member} in an entry`,
+      "OrganizationBase",
+      read({ parents: [{ org: target, [member]: null }] }),
+      false,
+    ]),
+    ["patch: remove all relationships", "OrgPatchData", patch(null), true],
+    ["patch: remove dbaNames", "OrgPatchData", { dbaNames: null }, true],
+    ...LISTS.map(([list]): (typeof cases)[number] => [
+      `patch: remove ${list}`,
+      "OrgPatchData",
+      patch({ [list]: null }),
+      true,
+    ]),
+    [
+      "patch: remove every list",
+      "OrgPatchData",
+      patch(Object.fromEntries(LISTS.map(([list]) => [list, null]))),
+      true,
+    ],
+    ...entryMembers.map((member): (typeof cases)[number] => [
+      `patch: null ${member} in a replaced entry`,
+      "OrgPatchData",
+      patch({ parents: [{ org: { id }, [member]: null }] }),
+      false,
+    ]),
+  ];
+
+  it.each([...cases, ...nullCases])("%s", (_name, model, payload, valid) => {
     const check = component(model);
     expect(check(payload), JSON.stringify(check.errors)).toBe(valid);
     const json = jsonSchemas.getSchema(`${model}.yaml`)!;
     expect(json(payload), "JSON Schema agrees").toBe(valid);
   });
 
-  // `status` is `active`, `inactive`, `null`, or absent in every list, in a
-  // read and in an entry of a replaced list, and both dialects agree. OpenAPI
-  // 3.0.3 keeps `enum` in force beside `nullable`, so its enum must list
-  // `null` too; `organization.tsp` supplies it.
+  // `status` is `active`, `inactive`, or absent in every list, in a read and
+  // in an entry of a replaced list, and both dialects agree.
   const statuses: Array<[unknown, boolean]> = [
     ["active", true],
     ["inactive", true],
-    [null, true],
+    [null, false],
     [undefined, true],
     ["pending", false],
     ["Active", false],
