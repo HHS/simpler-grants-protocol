@@ -42,5 +42,6 @@ catalogs:
     vitest: ^4.1.11
 
 overrides:
-  sharp@<0.35.4: '>=0.35.4 <0.36'
+  'postcss-nested@6.2.0>postcss-selector-parser': '7.1.6'
+  sharp@<0.35.5: '>=0.35.5 <0.36'
   yaml@>=2.0.0 <2.8.3: '>=2.8.3 <3'
