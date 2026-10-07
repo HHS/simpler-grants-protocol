@@ -240,4 +240,29 @@ describe("ErrorFormatter", () => {
     expect(formatted).toContain("Request schema conflict");
     expect(formatted).toContain("Issue: Enum value conflict");
   });
+
+  it("should report error and warning counts separately in the summary", () => {
+    errorCollection.addError({
+      type: "MISSING_ROUTE",
+      level: "ERROR",
+      endpoint: "/api/v1/users",
+    });
+    errorCollection.addError({
+      type: "MISSING_ROUTE",
+      level: "WARNING",
+      endpoint: "/api/v1/posts",
+    });
+
+    const lines = errorFormatter.format().split("\n");
+
+    // The summary line must report the 1 error and the 1 warning separately,
+    // rather than collapsing them into a single flat "2 errors" count.
+    // Pinned to the first line: a looser match against the whole output
+    // would also be satisfied by the "(warning)" marker on the posts entry
+    expect(lines[0]).toBe("1 errors, 1 warnings");
+
+    // The WARNING finding must be visibly marked as a warning in the body
+    const postsLine = lines.find(line => line.includes("/api/v1/posts"));
+    expect(postsLine?.toLowerCase()).toContain("warning");
+  });
 });
