@@ -14,3 +14,6 @@ export const RESERVED_MISSING_ID = "00000000-0000-0000-0000-000000000000";
  * fixtures alias one definition rather than repeating the UUID.
  */
 export const DOCUMENTED_EXAMPLE_ID = "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a";
+
+// Award ids live in `award-refs.ts`, beside the title and identifiers that
+// travel with them. Nothing outside the fixture layer needs a bare award id.

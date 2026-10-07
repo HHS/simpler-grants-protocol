@@ -36,7 +36,7 @@ opportunityDetails:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
       startLine: 140
-      endLine: 145
+      endLine: 162
 oppRef:
   example:
     file:
@@ -203,7 +203,9 @@ A funding opportunity, such as a grant or loan. It shares its identity fields wi
 
 ## OpportunityDetails
 
-A funding opportunity with additional details, like available competitions.
+A funding opportunity with additional details, like available competitions. Since v0.5 it also lists the awards the opportunity produced under `awards`, a list of [AwdRef](/protocol/models/award#awdref) entries, so a consumer can see what an opportunity funded without searching awards by `opportunityId`.
+
+An entry is a reference, not the award record: `GET /awards/<id>` is the canonical record only where an implementation serves the award routes, and otherwise the entry's `identifiers`, where the publisher supplies them, are the key for joining the award in another system. A consumer must not assume a reference can be dereferenced through this API. An absent `awards` means the implementation does not publish this link for the record, while an empty array means it does and no awards are known. Entries carry no ordering guarantee.
 
 ### Table
 
