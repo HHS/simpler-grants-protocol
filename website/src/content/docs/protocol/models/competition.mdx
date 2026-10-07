@@ -181,7 +181,7 @@ The example shows the v0.5 shape. See [Migrating from v0.4](#migrating-from-v04)
 - **Producers:** replace `opportunityId` with an `opportunity` object. Its `id` is the value you sent as `opportunityId`, and its `title` is the linked opportunity's title, so you need that title at hand when you serialize a competition. `identifiers` is optional.
 - **Consumers:** read the opportunity's id from `opportunity.id`. Its title arrives with it, so displaying the opportunity no longer needs a second request.
 - **Applications are unaffected:** `ApplicationBase` keeps its `competitionId` and `opportunityId` fields.
-- **Forms are unaffected:** forms nested in `forms` keep `name` in v0.5.
+- **Nested forms change too:** v0.5 replaces each nested form's `name` with `title`. See [migrating forms](/protocol/models/form#migrating-from-v04).
 
 v0.4 and earlier:
 

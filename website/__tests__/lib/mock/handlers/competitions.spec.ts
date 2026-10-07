@@ -162,20 +162,35 @@ describe("competition detail per protocol version", () => {
     expect(Object.keys(data)[1]).toBe("opportunity");
   });
 
-  it("keeps nested forms on name at v0.5", async () => {
-    for (const form of formsOf(await detail("0.5.0"))) {
-      expect(form).toHaveProperty("name");
-      expect(form).not.toHaveProperty("title");
+  it("serves v0.5 nested forms their name as title, keeping keys and opaque content", async () => {
+    const data = await detail("0.5.0");
+    const served = (data.forms as { forms: Record<string, object> }).forms;
+    const stored = canonical!.forms.forms;
+
+    expect(Object.keys(served)).toEqual(Object.keys(stored));
+    for (const [key, form] of Object.entries(stored)) {
+      const { name, ...rest } = structuredClone(form);
+      expect(served[key]).toEqual({ ...rest, title: name });
+      expect(Object.keys(served[key])[1]).toBe("title");
     }
+    expect((data.forms as { validation: unknown }).validation).toEqual(
+      canonical!.forms.validation,
+    );
   });
 
   it("leaves the fixtures and each version's output intact across interleaved requests", async () => {
+    const pristine = structuredClone(canonical);
     const first = await detail("0.4.0");
     const latest = await detail("0.5.0");
 
     expect(await detail("0.4.0")).toEqual(first);
     expect(await detail("0.5.0")).toEqual(latest);
+    expect(canonical).toEqual(pristine);
     expect(canonical?.opportunityId).toBe(opportunity?.id);
     expect(canonical).not.toHaveProperty("opportunity");
+    for (const form of Object.values(canonical!.forms.forms)) {
+      expect(form).toHaveProperty("name");
+      expect(form).not.toHaveProperty("title");
+    }
   });
 });

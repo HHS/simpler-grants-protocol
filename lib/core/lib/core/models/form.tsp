@@ -15,7 +15,12 @@ model FormBase {
   id: Types.uuid;
 
   /** The form's name. */
+  @Versioning.removed(CommonGrants.Versions.v0_5)
   name: string;
+
+  /** The form's title. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  title: string;
 
   /** The form's description. */
   description?: string;
@@ -72,9 +77,14 @@ model FormUISchema {
 // #########################################################
 
 namespace Examples.Form {
+  // Carries both `name` (through v0.4) and `title` (v0.5) with the same value,
+  // because `@example` is checked against the unversioned model, which
+  // requires both. Each version's OpenAPI document and versioned JSON Schema
+  // keep only the field that version declares, in nested examples too.
   const form = #{
     id: "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
     name: "Form A",
+    title: "Form A",
     description: "Form A description",
     instructions: "Form A instructions",
     jsonSchema: formSchema,

@@ -3162,7 +3162,7 @@ components:
           forms:
             formA:
               id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-              name: Form A
+              title: Form A
               description: Form A description
               instructions: Form A instructions
               jsonSchema:
@@ -3218,7 +3218,7 @@ components:
               lastModifiedAt: '2025-01-02T17:30:00'
             formB:
               id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-              name: Form A
+              title: Form A
               description: Form A description
               instructions: Form A instructions
               jsonSchema:
@@ -3297,7 +3297,7 @@ components:
         forms:
           formA:
             id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-            name: Form A
+            title: Form A
             description: Form A description
             instructions: Form A instructions
             jsonSchema:
@@ -3353,7 +3353,7 @@ components:
             lastModifiedAt: '2025-01-02T17:30:00'
           formB:
             id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-            name: Form A
+            title: Form A
             description: Form A description
             instructions: Form A instructions
             jsonSchema:
@@ -3477,7 +3477,7 @@ components:
       type: object
       required:
         - id
-        - name
+        - title
         - createdAt
         - lastModifiedAt
       properties:
@@ -3485,9 +3485,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.uuid'
           description: The form's unique identifier.
-        name:
+        title:
           type: string
-          description: The form's name.
+          description: The form's title.
         description:
           type: string
           description: The form's description.
@@ -3534,7 +3534,7 @@ components:
       description: A form for collecting data from a user.
       example:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
-        name: Form A
+        title: Form A
         description: Form A description
         instructions: Form A instructions
         jsonSchema:

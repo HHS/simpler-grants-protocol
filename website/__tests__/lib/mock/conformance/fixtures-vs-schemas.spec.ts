@@ -27,7 +27,7 @@ import {
   shapeOpportunityForVersion,
   type Version,
 } from "@/lib/mock/data/fixtures";
-import { FORM_FIXTURES } from "@/lib/mock/data/forms";
+import { FORM_FIXTURES, shapeFormForVersion } from "@/lib/mock/data/forms";
 import {
   ORGANIZATION_FIXTURES,
   ORG_REVISION_FIXTURES,
@@ -86,7 +86,8 @@ const RESOURCE_CASES: ResourceCase[] = [
     // `Models.Form` at v0.2.0, renamed to `Models.FormBase` from v0.3.0 on.
     schemaFor: (version) =>
       version === "0.2.0" ? "Form.yaml" : "FormBase.yaml",
-    recordsFor: () => [...FORM_FIXTURES],
+    recordsFor: (version) =>
+      FORM_FIXTURES.map((form) => shapeFormForVersion(form, version)),
   },
   {
     resource: "competitions",

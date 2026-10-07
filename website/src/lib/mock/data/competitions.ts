@@ -16,8 +16,10 @@ import {
 import {
   FORM_FIXTURES,
   getFormById,
+  shapeFormForVersion,
   type FileAttachment,
   type Form,
+  type WireForm,
 } from "./forms";
 import type { OppRef } from "./awards";
 import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
@@ -337,24 +339,37 @@ export function getCompetitionById(id: string): Competition | undefined {
 }
 
 /**
- * A competition as a given version puts it on the wire: `opportunityId`
- * through v0.4, an `opportunity` reference from v0.5. Nested forms keep
- * `name` in every version.
+ * A competition as a given version puts it on the wire: `opportunityId` and
+ * named forms through v0.4, an `opportunity` reference and titled forms from
+ * v0.5.
  */
-export type WireCompetition = Omit<Competition, "opportunityId"> & {
+export type WireCompetition = Omit<Competition, "opportunityId" | "forms"> & {
   opportunityId?: string;
   opportunity?: OppRef;
+  forms: Omit<CompetitionForms, "forms"> & { forms: Record<string, WireForm> };
 };
 
 /**
  * Projects a competition onto the shape a version documents. Returns a copy;
- * the frozen fixtures are untouched.
+ * the frozen fixtures, and the forms they embed, are untouched.
  */
 export function shapeCompetitionForVersion(
   competition: Competition,
   version: Version,
 ): WireCompetition {
-  return isAtLeastVersion(version, "0.5.0")
-    ? withOpportunityRef(competition)
-    : { ...competition };
+  if (!isAtLeastVersion(version, "0.5.0")) {
+    return { ...competition };
+  }
+  return {
+    ...withOpportunityRef(competition),
+    forms: {
+      ...competition.forms,
+      forms: Object.fromEntries(
+        Object.entries(competition.forms.forms).map(([key, form]) => [
+          key,
+          shapeFormForVersion(form, version),
+        ]),
+      ),
+    },
+  };
 }

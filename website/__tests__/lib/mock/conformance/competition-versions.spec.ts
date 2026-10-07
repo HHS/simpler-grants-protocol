@@ -1,9 +1,10 @@
 /**
- * Pins the v0.5 competition change (#1225) in every artifact a consumer reads
- * per version: the OpenAPI documents and the downloadable versioned JSON
- * Schemas. v0.5 replaces `CompetitionBase.opportunityId` with an `opportunity`
- * reference; every earlier version keeps `opportunityId`, examples included.
- * Forms keep `name` in every version, including those nested in competitions.
+ * Pins the v0.5 competition and form changes (#1225) in every artifact a
+ * consumer reads per version: the OpenAPI documents and the downloadable
+ * versioned JSON Schemas. v0.5 replaces `CompetitionBase.opportunityId` with an
+ * `opportunity` reference and `FormBase.name` with `title`; every earlier
+ * version keeps `opportunityId` and `name`, examples included, down to the
+ * forms nested in competitions.
  *
  * Key presence and absence are asserted outright, because the conformance
  * validator strips `unevaluatedProperties` and so would accept a stale key.
@@ -17,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import yaml from "js-yaml";
 import type { Version } from "@/lib/mock/data/fixtures";
+import { resolveSchemaRefs } from "@/lib/schema/ref-resolver";
 import { getValidator } from "./schema-validator";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -47,6 +49,14 @@ const LINK: Record<string, { key: string; stale: string; ref: RegExp }> = {
   "0.3.0": { key: "opportunityId", stale: "opportunity", ref: /uuid/ },
   "0.4.0": { key: "opportunityId", stale: "opportunity", ref: /uuid/ },
   "0.5.0": { key: "opportunity", stale: "opportunityId", ref: /OppRef/ },
+};
+
+/** How each version labels a form. */
+const FORM_KEY: Record<string, { key: string; stale: string }> = {
+  "0.2.0": { key: "name", stale: "title" },
+  "0.3.0": { key: "name", stale: "title" },
+  "0.4.0": { key: "name", stale: "title" },
+  "0.5.0": { key: "title", stale: "name" },
 };
 
 /** The form model was `Form` at v0.2 and `FormBase` from v0.3. */
@@ -104,16 +114,23 @@ function refOf(property: Schema | undefined): string | undefined {
   return property?.$ref ?? property?.allOf?.[0]?.$ref;
 }
 
-/** Asserts every form in a `CompetitionForms` value is named, not titled. */
-function expectNamedForms(competitionForms: unknown) {
+/**
+ * Asserts every form in a `CompetitionForms` value is exactly the version's
+ * direct form example: same keys, in order, and same values, opaque schemas
+ * and mappings included. Core's examples embed that one form.
+ */
+function expectVersionedForms(
+  competitionForms: unknown,
+  formExample: Record<string, unknown>,
+) {
   const forms = Object.values(
     (competitionForms as { forms: Record<string, Record<string, unknown>> })
       .forms,
   );
   expect(forms.length).toBeGreaterThan(0);
   for (const form of forms) {
-    expect(typeof form.name).toBe("string");
-    expect(form).not.toHaveProperty("title");
+    expect(Object.keys(form)).toEqual(Object.keys(formExample));
+    expect(form).toEqual(formExample);
   }
 }
 
@@ -137,6 +154,9 @@ describe("the models' presence per version", () => {
 describe.each(ARTIFACTS)("%s contract", (artifact) => {
   describe.each(VERSIONS)("v%s", (version) => {
     const { key, stale, ref } = LINK[version];
+    const form = FORM_KEY[version];
+    const formExample = () =>
+      exampleOf(requireSchema(artifact, version, formModel(version)));
 
     it(`requires CompetitionBase.${key} and lacks ${stale}`, () => {
       const competition = requireSchema(artifact, version, "CompetitionBase");
@@ -148,15 +168,52 @@ describe.each(ARTIFACTS)("%s contract", (artifact) => {
       expect(refOf(competition.properties?.[key])).toMatch(ref);
     });
 
-    it(`requires ${formModel(version)}.name, not title`, () => {
-      const form = requireSchema(artifact, version, formModel(version));
+    it(`requires ${formModel(version)}.${form.key}, not ${form.stale}`, () => {
+      const schema = requireSchema(artifact, version, formModel(version));
 
-      expect(form.required).toContain("name");
-      expect(form.properties).toHaveProperty("name");
-      expect(form.properties).not.toHaveProperty("title");
+      expect(schema.required).toContain(form.key);
+      expect(schema.properties).toHaveProperty(form.key);
+      expect(schema.required).not.toContain(form.stale);
+      expect(schema.properties).not.toHaveProperty(form.stale);
     });
 
-    it(`gives the CompetitionBase example ${key} alone, with named forms`, () => {
+    it(`gives the ${formModel(version)} example ${form.key} alone`, () => {
+      const example = formExample();
+
+      expect(example[form.key]).toBe("Form A");
+      expect(example).not.toHaveProperty(form.stale);
+      expect(Object.keys(example)).toEqual([
+        "id",
+        form.key,
+        "description",
+        "instructions",
+        "jsonSchema",
+        "uiSchema",
+        "mappingToCommonGrants",
+        "mappingFromCommonGrants",
+        "createdAt",
+        "lastModifiedAt",
+      ]);
+    });
+
+    it("keeps the form example's opaque schemas and mappings whole", () => {
+      const example = formExample();
+      const latest = exampleOf(requireSchema(artifact, "0.5.0", "FormBase"));
+      for (const field of [
+        "jsonSchema",
+        "uiSchema",
+        "mappingToCommonGrants",
+        "mappingFromCommonGrants",
+      ]) {
+        expect(example[field]).toEqual(latest[field]);
+      }
+      // The opaque form schema uses `name` as a field of its own.
+      expect(
+        (example.jsonSchema as { properties: object }).properties,
+      ).toHaveProperty("name");
+    });
+
+    it(`gives the CompetitionBase example ${key} alone, with ${form.key}d forms`, () => {
       const example = exampleOf(
         requireSchema(artifact, version, "CompetitionBase"),
       );
@@ -170,19 +227,14 @@ describe.each(ARTIFACTS)("%s contract", (artifact) => {
       } else {
         expect(example.opportunityId).toMatch(/^[0-9a-f-]{36}$/);
       }
-      expectNamedForms(example.forms);
+      expectVersionedForms(example.forms, formExample());
     });
 
-    it(`gives the CompetitionForms and ${formModel(version)} examples a name`, () => {
-      expectNamedForms(
+    it(`gives the CompetitionForms example ${form.key}d forms`, () => {
+      expectVersionedForms(
         exampleOf(requireSchema(artifact, version, "CompetitionForms")),
+        formExample(),
       );
-
-      const form = exampleOf(
-        requireSchema(artifact, version, formModel(version)),
-      );
-      expect(typeof form.name).toBe("string");
-      expect(form).not.toHaveProperty("title");
     });
 
     it("declares every key its examples use and supplies every required one", () => {
@@ -218,6 +270,86 @@ describe("versioned JSON Schema examples validate against their own version", ()
       });
       const example = exampleOf(requireSchema("jsonSchema", version, name));
       expect(validate(example), `${schemaName}: ${errorText()}`).toBe(true);
+    }
+  });
+});
+
+// The unversioned TypeSpec model declares every version's fields at once, so
+// its JSON Schema requires both `name` and `title`, and Core's source example
+// must supply both with the same value. No single version's payload has both.
+describe("the unversioned FormBase authoring schema", () => {
+  const aggregate = yaml.load(
+    readFileSync(path.join(PUBLIC_DIR, "schemas/yaml/FormBase.yaml"), "utf-8"),
+  ) as Schema;
+
+  it("requires both name and title", () => {
+    expect(aggregate.required).toEqual(
+      expect.arrayContaining(["name", "title"]),
+    );
+  });
+
+  it("gives its example equal name and title values", () => {
+    const example = exampleOf(aggregate);
+    expect(example.name).toBe("Form A");
+    expect(example.title).toBe(example.name);
+  });
+});
+
+// The Form page shows the v0.5 payload in its table and literal example (a
+// file-based example would sample the unversioned schema, which carries both
+// keys), while its JSON Schema tab and download stay the unversioned
+// authoring schema, whose references resolve where it is served.
+describe("the Form docs page", () => {
+  const REPO_ROOT = path.resolve(HERE, "../../../../..");
+  const page = readFileSync(
+    path.join(REPO_ROOT, "website/src/content/docs/protocol/models/form.mdx"),
+    "utf-8",
+  );
+  const { form } = yaml.load(page.split("---")[1]) as {
+    form: {
+      example: { code: string };
+      table: { file: { path: string } };
+      jsonSchema: { file: { path: string } };
+    };
+  };
+  const load = (repoPath: string) =>
+    yaml.load(readFileSync(path.join(REPO_ROOT, repoPath), "utf-8")) as Schema;
+
+  it("shows exactly the v0.5 FormBase example", () => {
+    expect(JSON.parse(form.example.code)).toEqual(
+      exampleOf(requireSchema("jsonSchema", "0.5.0", "FormBase")),
+    );
+  });
+
+  it("renders the table from the v0.5 schema, which requires title alone", () => {
+    expect(page).toContain(
+      "<SchemaTable filePath={frontmatter.form.table.file.path} />",
+    );
+    expect(form.table.file.path).toBe(
+      "website/public/schemas/yaml/versions/v0.5.0/FormBase.yaml",
+    );
+    const table = load(form.table.file.path);
+    expect(table.required).toContain("title");
+    expect(table.required).not.toContain("name");
+  });
+
+  it("keeps the JSON Schema tab on the unversioned authoring schema", () => {
+    expect(form.jsonSchema.file.path).toBe(
+      "website/public/schemas/yaml/FormBase.yaml",
+    );
+    expect(form.jsonSchema.file.path).not.toBe(form.table.file.path);
+    expect(load(form.jsonSchema.file.path).required).toEqual(
+      expect.arrayContaining(["name", "title"]),
+    );
+  });
+
+  it("links only downloads whose references a normal resolver can follow", async () => {
+    for (const download of [
+      form.jsonSchema.file.path,
+      "website/public/openapi/openapi.0.5.0.yaml",
+    ]) {
+      const resolved = await resolveSchemaRefs(path.join(REPO_ROOT, download));
+      expect(resolved, download).toBeTypeOf("object");
     }
   });
 });
