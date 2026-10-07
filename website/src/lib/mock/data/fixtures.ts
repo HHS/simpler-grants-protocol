@@ -6,7 +6,8 @@
 
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
 import type { OppRef } from "./awards";
-import type { Identifier } from "./organizations";
+import type { Identifier, OrgRefCollection } from "./organizations";
+import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
 
 /**
  * Protocol versions the fixture can shape, matching the specs the docs site
@@ -175,6 +176,7 @@ export interface Opportunity {
   id: string;
   title: string;
   identifiers?: OppIds;
+  funders?: OrgRefCollection;
   status: OppStatus;
   description: string;
   funding?: OppFunding;
@@ -290,6 +292,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       "opp:us:fon": fon("SBA-2024-SBG-0001"),
       "opp:us:aln": aln("59.037"),
     },
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: {
       value: "open",
       description: "The opportunity is currently accepting applications",
@@ -499,6 +502,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "1f0a2b3c-4d5e-4f60-8a1b-2c3d4e5f6a7b",
     title: "Rural Broadband Expansion",
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: { value: "forecasted", description: "Anticipated to open in Q3" },
     description:
       "Expanding high-speed broadband access to unserved rural communities.",
@@ -555,6 +559,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "3b4c5d6e-7f80-4192-8c3d-4e5f6a7b8c9d",
     title: "Coastal Resilience Grant",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "closed",
       description: "No longer accepting applications",
@@ -580,6 +585,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "4c5d6e7f-8091-42a3-9d4e-5f6a7b8c9d0e",
     title: "Clean Energy Innovation",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Supporting research and deployment of clean energy technologies.",
@@ -621,6 +627,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "5d6e7f80-91a2-43b4-8e5f-6a7b8c9d0e1f",
     title: "Workforce Apprenticeship Program",
+    funders: orgRefCollection(HRSA_ORG_ID, { passThrough: NSF_ORG_ID }),
     status: {
       value: "closed",
       description: "No longer accepting applications",
@@ -649,6 +656,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "6e7f8091-a2b3-44c5-9f60-7b8c9d0e1f20",
     title: "Community Health Outreach",
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: {
       value: "custom",
       customValue: "under_review",
@@ -678,6 +686,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "7f8091a2-b3c4-45d6-8071-8c9d0e1f2031",
     title: "Arts & Culture Preservation",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "custom",
       customValue: "archived",
@@ -744,6 +753,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     identifiers: {
       "opp:us:aln": aln("93.224"),
     },
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Modernizing facilities and equipment at rural health clinics.",
@@ -811,6 +821,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "b3c4d5e6-f708-491a-95c6-203142536475",
     title: "Digital Literacy for Seniors",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Teaching digital skills to older adults through community programs.",
@@ -1069,6 +1080,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "3b4c5d6e-7f80-4923-8d4e-08192a3b4c5d",
     title: "Civic Tech Fellows",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "custom",
       customValue: "paused",
@@ -1194,14 +1206,15 @@ export function shapeOpportunityForVersion(
     delete shaped.competitions;
   }
 
-  // `OppRef.identifiers` is `@added(v0_5)`. Ordering is compared inline rather
-  // than via `isAtLeastVersion`, because `availability.ts` imports this module
-  // and the reverse import would be a runtime cycle. `awards.ts` has no such
-  // constraint and uses the helper.
+  // `OppRef.identifiers` and `OpportunityBase.funders` are both `@added(v0_5)`.
+  // Ordering is compared inline rather than via `isAtLeastVersion`, because
+  // `availability.ts` imports this module and the reverse import would be a
+  // runtime cycle. `awards.ts` has no such constraint and uses the helper.
   if (
     SUPPORTED_VERSIONS.indexOf(version) < SUPPORTED_VERSIONS.indexOf("0.5.0")
   ) {
     delete shaped.identifiers;
+    delete shaped.funders;
   }
 
   // `CompetitionBase.opportunity` replaces `opportunityId` at v0.5.
