@@ -1,5 +1,12 @@
 # @common-grants/cli
 
+## [0.4.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.4.0...@common-grants/cli@0.4.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **cli:** pass cg check spec when only optional routes are missing ([#1259](https://github.com/HHS/simpler-grants-protocol/issues/1259)) ([4ab46ee](https://github.com/HHS/simpler-grants-protocol/commit/4ab46ee4f8c72a2ed9d289f9737256f5bed52181))
+
 ## [0.4.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.3.9...@common-grants/cli@0.4.0) (2026-08-14)
 
 
