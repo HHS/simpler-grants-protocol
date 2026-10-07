@@ -42,5 +42,9 @@ catalogs:
     vitest: ^4.1.11
 
 overrides:
-  sharp@<0.35.4: '>=0.35.4 <0.36'
-  yaml@>=2.0.0 <2.8.3: '>=2.8.3 <3'
+  # No patched postcss-selector-parser 6.x exists, so this crosses postcss-nested's
+  # ^6 range on purpose. Delete once the lockfile has no postcss-nested 6.2.0.
+  'postcss-nested@6.2.0>postcss-selector-parser': '>=7.1.6 <8'
+  # miniflare (via wrangler) pins sharp exactly, so new sharp advisories land here.
+  # Delete once miniflare's own pin reaches the floor.
+  sharp@<0.35.5: '>=0.35.5 <0.36'
