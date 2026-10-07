@@ -4,24 +4,26 @@
  * `shapeOpportunityForVersion` projects them down per version and variant.
  */
 
-import {
-  ARTS_CULTURE_AWARD_ID,
-  CANONICAL_RECORD_ID,
-  CIVIC_TECH_AWARD_ID,
-  CLEAN_ENERGY_AMENDMENT_AWARD_ID,
-  CLEAN_ENERGY_AWARD_ID,
-  COASTAL_RESILIENCE_AWARD_ID,
-  DIGITAL_LITERACY_AWARD_ID,
-  DOCUMENTED_AWARD_ID,
-  HEALTH_OUTREACH_AWARD_ID,
-  RESERVED_MISSING_ID,
-  RURAL_BROADBAND_AWARD_ID,
-  WORKFORCE_APPRENTICESHIP_AWARD_ID,
-} from "./ids";
+import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
 // Type-only: erased at build time, so this does not close the runtime import
 // cycle that `awards.ts` opens by importing this module.
 import type { AwdRef } from "./awards";
-import { fain } from "./award-identifiers";
+// The award references below are shared with `awards.ts`, which builds each
+// award fixture from the same constant, so a title or identifier cannot drift
+// between an award and the opportunity that lists it.
+import {
+  ARTS_CULTURE_AWARD_REF,
+  CANONICAL_AWARD_REF,
+  CIVIC_TECH_AWARD_REF,
+  CLEAN_ENERGY_AMENDMENT_AWARD_REF,
+  CLEAN_ENERGY_AWARD_REF,
+  COASTAL_RESILIENCE_AWARD_REF,
+  DIGITAL_LITERACY_AWARD_REF,
+  DOCUMENTED_AWARD_REF,
+  HEALTH_OUTREACH_AWARD_REF,
+  RURAL_BROADBAND_AWARD_REF,
+  WORKFORCE_APPRENTICESHIP_AWARD_REF,
+} from "./award-refs";
 import type { Identifier, OrgRefCollection } from "./organizations";
 import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
 
@@ -386,16 +388,10 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         },
       },
     ],
-    awards: [
-      {
-        // The canonical award aliases the shared canonical id, exactly as
-        // `CANONICAL_AWARD_ID` in `awards.ts` does, so this opportunity's
-        // award reference carries the same uuid as the opportunity itself.
-        id: CANONICAL_RECORD_ID,
-        title: "Community Health Center Capital Improvement Grant",
-        identifiers: fain("H80CS00001", "01912a8b-7c3d-7894-abcd-ef1234567890"),
-      },
-    ],
+    // The canonical award aliases the shared canonical id, exactly as
+    // `CANONICAL_AWARD_ID` in `awards.ts` does, so this opportunity's award
+    // reference carries the same uuid as the opportunity itself.
+    awards: [CANONICAL_AWARD_REF],
     // Chosen so this record sorts first under the list endpoint's default
     // `lastModifiedAt desc` ordering.
     createdAt: "2024-01-15T00:00:00Z",
@@ -547,13 +543,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Small telecom providers",
       },
     ],
-    awards: [
-      {
-        id: RURAL_BROADBAND_AWARD_ID,
-        title: "Rural Broadband Expansion Planning Award",
-        identifiers: fain("RUS0000045", "01912a8b-7c3d-7894-abcd-ef1234567893"),
-      },
-    ],
+    awards: [RURAL_BROADBAND_AWARD_REF],
     createdAt: "2025-02-01T00:00:00Z",
     lastModifiedAt: "2025-02-10T00:00:00Z",
   },
@@ -607,16 +597,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     acceptedApplicantTypes: [
       { value: "government_municipal", description: "Coastal municipalities" },
     ],
-    awards: [
-      {
-        id: COASTAL_RESILIENCE_AWARD_ID,
-        title: "Coastal Resilience Planning Award",
-        identifiers: fain(
-          "NOAA0000914",
-          "01912a8b-7c3d-7894-abcd-ef1234567897",
-        ),
-      },
-    ],
+    awards: [COASTAL_RESILIENCE_AWARD_REF],
     createdAt: "2024-06-01T00:00:00Z",
     lastModifiedAt: "2025-01-05T00:00:00Z",
   },
@@ -659,21 +640,8 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-09-30") },
       },
     ],
-    awards: [
-      {
-        id: CLEAN_ENERGY_AWARD_ID,
-        title: "Clean Energy Innovation Demonstration Award",
-        identifiers: fain("DE0000101", "01912a8b-7c3d-7894-abcd-ef1234567892"),
-      },
-      {
-        id: CLEAN_ENERGY_AMENDMENT_AWARD_ID,
-        title: "Clean Energy Innovation Demonstration Award — Amendment 1",
-        identifiers: fain(
-          "DE0000101-A1",
-          "01912a8b-7c3d-7894-abcd-ef1234567895",
-        ),
-      },
-    ],
+    // The base award and its amendment: the one opportunity carrying two.
+    awards: [CLEAN_ENERGY_AWARD_REF, CLEAN_ENERGY_AMENDMENT_AWARD_REF],
     createdAt: "2025-03-01T00:00:00Z",
     lastModifiedAt: "2025-03-12T00:00:00Z",
   },
@@ -703,23 +671,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Workforce development organizations",
       },
     ],
-    awards: [
-      {
-        id: WORKFORCE_APPRENTICESHIP_AWARD_ID,
-        title: "Workforce Apprenticeship Program Award",
-        identifiers: {
-          ...fain("ETA0000318", "01912a8b-7c3d-7894-abcd-ef1234567894"),
-          // A registry the protocol does not define on the model, so it
-          // belongs under `otherIds`.
-          otherIds: {
-            "awd:usaspending:generated": {
-              registry: { code: "awd:usaspending:generated" },
-              id: "ASST_NON_ETA0000318",
-            },
-          },
-        },
-      },
-    ],
+    awards: [WORKFORCE_APPRENTICESHIP_AWARD_REF],
     createdAt: "2024-09-01T00:00:00Z",
     lastModifiedAt: "2025-02-28T00:00:00Z",
   },
@@ -750,13 +702,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Community health non-profits",
       },
     ],
-    awards: [
-      {
-        id: HEALTH_OUTREACH_AWARD_ID,
-        title: "Community Health Outreach Continuation Award",
-        identifiers: fain("H80CS00003", "01912a8b-7c3d-7894-abcd-ef1234567898"),
-      },
-    ],
+    awards: [HEALTH_OUTREACH_AWARD_REF],
     createdAt: "2025-01-10T00:00:00Z",
     lastModifiedAt: "2025-05-16T00:00:00Z",
   },
@@ -786,13 +732,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       { value: "non_profit_with_501c3", description: "Arts non-profits" },
       { value: "individual", description: "Individual artists" },
     ],
-    awards: [
-      {
-        id: ARTS_CULTURE_AWARD_ID,
-        title: "Arts & Culture Preservation Award",
-        identifiers: fain("NEA0000772", "01912a8b-7c3d-7894-abcd-ef1234567896"),
-      },
-    ],
+    awards: [ARTS_CULTURE_AWARD_REF],
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
   },
@@ -868,13 +808,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-12-01") },
       },
     ],
-    awards: [
-      {
-        id: DOCUMENTED_AWARD_ID,
-        title: "Rural Health Clinic Modernization Award",
-        identifiers: fain("H80CS00002", "01912a8b-7c3d-7894-abcd-ef1234567891"),
-      },
-    ],
+    awards: [DOCUMENTED_AWARD_REF],
     createdAt: "2025-04-01T00:00:00Z",
     lastModifiedAt: "2025-04-10T00:00:00Z",
   },
@@ -937,16 +871,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12349),
       programCode: programCode("DIG-LIT"),
     },
-    awards: [
-      {
-        id: DIGITAL_LITERACY_AWARD_ID,
-        title: "Digital Literacy for Seniors Award",
-        identifiers: fain(
-          "IMLS0000205",
-          "01912a8b-7c3d-7894-abcd-ef1234567899",
-        ),
-      },
-    ],
+    awards: [DIGITAL_LITERACY_AWARD_REF],
     createdAt: "2025-02-20T00:00:00Z",
     lastModifiedAt: "2025-02-25T00:00:00Z",
   },
@@ -1211,13 +1136,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Public university partners",
       },
     ],
-    awards: [
-      {
-        id: CIVIC_TECH_AWARD_ID,
-        title: "Civic Tech Fellowship Award — Cohort 4",
-        identifiers: fain("CTF0000104", "01912a8b-7c3d-7894-abcd-ef1234567900"),
-      },
-    ],
+    awards: [CIVIC_TECH_AWARD_REF],
     createdAt: "2025-01-20T00:00:00Z",
     lastModifiedAt: "2025-05-02T00:00:00Z",
   },
