@@ -151,7 +151,7 @@ A competition is an application process for a funding opportunity. It often has 
 
 From v0.5, a competition links to its opportunity with `opportunity`, an [`OppRef`](/protocol/models/opportunity#oppref) carrying the opportunity's `id` and `title`, in place of the bare `opportunityId` used through v0.4. A competition never carries both.
 
-The table and the JSON Schema tab below render the unversioned schema, which combines the fields of every protocol version, so they list both `opportunityId` and `opportunity` as required. It is a reference across versions, not a contract any single version's payload satisfies. To validate a payload, use the schema for its version, linked from each entry in the changelog below.
+The table and the JSON Schema tab below render the unversioned schema, which combines the fields of every protocol version, so they list both `opportunityId` and `opportunity` as required. It is a reference across versions, not a contract any single version's payload satisfies. To validate a payload, use the schema for its version, such as `/schemas/yaml/versions/v0.4.0/CompetitionBase.yaml`.
 
 ### Table
 

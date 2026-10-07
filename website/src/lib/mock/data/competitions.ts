@@ -336,9 +336,6 @@ export function getCompetitionById(id: string): Competition | undefined {
   return COMPETITION_FIXTURES.find((competition) => competition.id === id);
 }
 
-/** `CompetitionBase.opportunity` replaces `opportunityId` at v0.5. */
-const OPPORTUNITY_REF_VERSION: Version = "0.5.0";
-
 /**
  * A competition as a given version puts it on the wire: `opportunityId`
  * through v0.4, an `opportunity` reference from v0.5. Nested forms keep
@@ -357,7 +354,7 @@ export function shapeCompetitionForVersion(
   competition: Competition,
   version: Version,
 ): WireCompetition {
-  return isAtLeastVersion(version, OPPORTUNITY_REF_VERSION)
+  return isAtLeastVersion(version, "0.5.0")
     ? withOpportunityRef(competition)
     : { ...competition };
 }

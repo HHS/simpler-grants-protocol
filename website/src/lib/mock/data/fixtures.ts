@@ -1221,7 +1221,7 @@ export function shapeOpportunityForVersion(
  * Builds the `OppRef` a v0.5 competition carries, reading the real record so
  * the title cannot drift from it.
  */
-function toOppRef(opportunity: Opportunity): OppRef {
+export function toOppRef(opportunity: Opportunity): OppRef {
   return {
     id: opportunity.id,
     title: opportunity.title,

@@ -8,7 +8,7 @@
  * v0.5 — see `shapeAwardForVersion`.
  */
 
-import { OPPORTUNITY_FIXTURES, usd } from "./fixtures";
+import { OPPORTUNITY_FIXTURES, toOppRef, usd } from "./fixtures";
 import type { OppIds, Version } from "./fixtures";
 import { isAtLeastVersion } from "./availability";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
@@ -186,13 +186,7 @@ function oppRefFor(index: number): OppRef {
   if (!opportunity) {
     throw new Error(`Award fixture references opportunity index ${index}`);
   }
-  return {
-    id: opportunity.id,
-    title: opportunity.title,
-    ...(opportunity.identifiers
-      ? { identifiers: { ...opportunity.identifiers } }
-      : {}),
-  };
+  return toOppRef(opportunity);
 }
 
 /** Builds an `AppRef` from an application index, reading its real title. */
