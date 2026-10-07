@@ -37,8 +37,8 @@ If the routes match, check whether the status codes are compatible between the b
 
 ### Check mime types
 
-- **Case 1:** [Extra mime types](#mimetype-case-1-extra-mime-type) -> Ignore
-- **Case 2:** [Missing mime types](#mimetype-case-2-missing-mime-type) -> Error
+- **Case 1:** [Extra mime types](#mimetype-case-1-extra-mimetype) -> Ignore
+- **Case 2:** [Missing mime types](#mimetype-case-2-mimetype-missing) -> Error
 - **Case 3:** Matching mime types -> [Check schemas](#check-schemas)
 
 ### Check schemas
