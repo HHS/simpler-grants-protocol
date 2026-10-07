@@ -350,7 +350,6 @@ interface SchemaNode {
   properties?: Record<string, SchemaNode>;
   items?: SchemaNode;
   unevaluatedProperties?: SchemaNode | boolean;
-  additionalProperties?: SchemaNode | boolean;
 }
 
 const DEFS_REF_PREFIX = "#/$defs/";
@@ -415,9 +414,7 @@ function projectValue(
 
   const recordValues = isSchemaNode(schema.unevaluatedProperties)
     ? schema.unevaluatedProperties
-    : isSchemaNode(schema.additionalProperties)
-      ? schema.additionalProperties
-      : undefined;
+    : undefined;
   for (const [key, child] of Object.entries(value)) {
     const childSchema =
       schema.properties && Object.hasOwn(schema.properties, key)
