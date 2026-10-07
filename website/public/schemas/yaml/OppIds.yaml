@@ -4,7 +4,7 @@ type: object
 properties:
   opp:us:fon:
     $ref: OppIdFon.yaml
-    description: The opportunity's Federal Opportunity Number (FON).
+    description: The opportunity's Funding Opportunity Number (FON).
   opp:us:aln:
     $ref: OppIdAln.yaml
     description: The opportunity's Assistance Listing Number (ALN).

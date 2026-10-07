@@ -286,7 +286,7 @@ describe("shapeOpportunityForVersion", () => {
   // rather than with a TypeError inside the shaper.
   beforeAll(() => {
     expect(
-      fundedRecord!,
+      fundedRecord,
       "no opportunity fixture carries funders",
     ).toBeDefined();
   });

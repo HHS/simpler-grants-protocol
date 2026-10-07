@@ -59,6 +59,7 @@ model OpportunityBase {
   funding?: OppFunding;
 
   /** Organization(s) offering the funding for this opportunity */
+  @example(Examples.OrgRef.funders)
   @Versioning.added(CommonGrants.Versions.v0_5)
   funders?: OrgRefCollection;
 
@@ -101,7 +102,7 @@ model OppIdAln is Fields.IdentifierT<string, "opp:us:aln">;
 @example(Examples.Opportunity.identifiers)
 @Versioning.added(CommonGrants.Versions.v0_5)
 model OppIds extends Fields.IdentifierCollection {
-  /** The opportunity's Federal Opportunity Number (FON). */
+  /** The opportunity's Funding Opportunity Number (FON). */
   `opp:us:fon`?: OppIdFon;
 
   /** The opportunity's Assistance Listing Number (ALN). */
