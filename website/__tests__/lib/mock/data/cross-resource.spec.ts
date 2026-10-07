@@ -213,6 +213,39 @@ describe("awards reference records that exist", () => {
         ).toBeDefined();
       }
     }
+
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const id of orgRefIds(opportunity.funders)) {
+        expect(
+          getOrganizationById(id),
+          `opportunity ${opportunity.id} references organization ${id}`,
+        ).toBeDefined();
+      }
+    }
+  });
+
+  it("agrees with the opportunity it references on the primary funder", () => {
+    const withFunders = AWARD_FIXTURES.filter((award) => {
+      if (!award.opportunity) return false;
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      );
+      return opportunity?.funders !== undefined;
+    });
+
+    // Meaningless without at least one such award to check.
+    expect(withFunders.length).toBeGreaterThan(0);
+
+    for (const award of withFunders) {
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+
+      expect(
+        award.funders?.primary.id,
+        `award ${award.id} references opportunity ${opportunity.id}`,
+      ).toBe(opportunity.funders!.primary.id);
+    }
   });
 
   it("points every `parent` award at a real award, with its real title", () => {

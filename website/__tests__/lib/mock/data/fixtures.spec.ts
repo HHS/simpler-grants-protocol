@@ -162,6 +162,20 @@ describe("OPPORTUNITY_FIXTURES", () => {
       }
     }
   });
+
+  // #1220-T4: pins the funders shapes the 0.5.0 mock must demonstrate.
+  it("demonstrates a funders collection with only a primary, and at least one with otherOrgs populated", () => {
+    const withOnlyPrimary = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.funders !== undefined && opp.funders.otherOrgs === undefined,
+    );
+    expect(withOnlyPrimary.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => Object.keys(opp.funders?.otherOrgs ?? {}).length > 0,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("shapeOpportunityForVersion", () => {
@@ -260,6 +274,46 @@ describe("shapeOpportunityForVersion", () => {
 
       expect(list).not.toHaveProperty("identifiers");
       expect(detail).not.toHaveProperty("identifiers");
+    }
+  });
+
+  // #1220-T4: v0.5.0 adds `OpportunityBase.funders`; earlier versions predate it.
+  const fundedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.funders !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      fundedRecord,
+      "no opportunity fixture carries funders",
+    ).toBeDefined();
+  });
+
+  it("keeps funders for v0.5.0 detail and list records", () => {
+    const list = shapeOpportunityForVersion(fundedRecord!, "0.5.0", "list");
+    const detail = shapeOpportunityForVersion(fundedRecord!, "0.5.0", "detail");
+
+    expect(list.funders).toEqual(fundedRecord!.funders);
+    expect(detail.funders).toEqual(fundedRecord!.funders);
+  });
+
+  it("strips funders for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(fundedRecord!, version, "list");
+      const detail = shapeOpportunityForVersion(
+        fundedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("funders");
+      expect(detail).not.toHaveProperty("funders");
     }
   });
 });

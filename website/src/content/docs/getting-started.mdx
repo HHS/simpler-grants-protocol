@@ -328,25 +328,25 @@ using CommonGrants.Fields;
 
 namespace Quickstart.Models;
 
-model Agency extends CustomField {
-  name: "Agency";
-  type: CustomFieldType.string;
+model ProgramArea extends CustomField {
+  name: "programArea";
+  fieldType: CustomFieldType.string;
   value: string;
-  description: "The agency managing the funding opportunity.";
+  description: "Primary focus area of the grant program.";
 }
 
 // Create a custom Opportunity type using the template
 model CustomOpportunity extends OpportunityBase {
   @example(#{
-    agency: #{
-      name: "Agency",
-      type: CustomFieldType.string,
-      value: "Department of Energy",
-      description: "The agency managing the funding opportunity.",
+    programArea: #{
+      name: "programArea",
+      fieldType: CustomFieldType.string,
+      value: "Healthcare Innovation",
+      description: "Primary focus area of the grant program.",
     },
   })
   customFields: {
-    agency: Agency;
+    programArea: ProgramArea;
   };
 }
 ```
@@ -375,22 +375,22 @@ There's a lot happening here, so let's break it down section by section.
 4. Define a custom field by extending the `CustomField` model.
 
    ```tsp
-   model Agency extends CustomField {
-     name: "Agency";
-     type: CustomFieldType.string;
+   model ProgramArea extends CustomField {
+     name: "programArea";
+     fieldType: CustomFieldType.string;
      value: string;
-     description: "The agency managing the funding opportunity.";
+     description: "Primary focus area of the grant program.";
    }
    ```
 
-   The `Agency` model defines literal values for the field's `name`, `type`, and `description` metadata properties, and requires the `value` property to be a string.
+   The `ProgramArea` model defines literal values for the field's `name`, `fieldType`, and `description` metadata properties, and requires the `value` property to be a string.
 
 5. Extend the `OpportunityBase` model to include this custom field.
    ```tsp
    model CustomOpportunity extends Models.OpportunityBase {
      // Example omitted for brevity
      customFields: {
-       agency: Agency;
+       programArea: ProgramArea;
      };
    }
    ```
@@ -399,16 +399,16 @@ There's a lot happening here, so let's break it down section by section.
    model CustomOpportunity extends Opportunity.OpportunityBase {
     @example(
         #{
-            agency: #{
-                name: "Agency",
-                type: Fields.CustomFieldType.string,
-                value: "Department of Energy",
-                description: "The agency managing the funding opportunity."
+            programArea: #{
+                name: "programArea",
+                fieldType: Fields.CustomFieldType.string,
+                value: "Healthcare Innovation",
+                description: "Primary focus area of the grant program."
             }
         }
     )
     customFields: {
-        agency: Agency;
+        programArea: ProgramArea;
         };
    }
    ```
@@ -498,7 +498,7 @@ cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 
 This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
 
-Specifically look for the `agency` field in the `customFields` property of the `Opportunity` model at `http://localhost:3000/#/Opportunities/Routes_read`. It should look something like this:
+Specifically look for the `programArea` field in the `customFields` property of the `Opportunity` model at `http://localhost:3000/#/Opportunities/Routes_read`. It should look something like this:
 
 ![Screenshot of a custom field in OpenAPI docs](../../assets/custom-fields-screenshot.png)
 

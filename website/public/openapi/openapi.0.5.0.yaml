@@ -4055,7 +4055,7 @@ components:
               - id
               - status
           description: Every known identifier for this record in this registry, including archived values.
-      description: An opportunity's Federal Opportunity Number (FON), assigned by the awarding agency.
+      description: An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency.
       example:
         registry:
           code: opp:us:fon
@@ -4067,7 +4067,7 @@ components:
         opp:us:fon:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppIdFon'
-          description: The opportunity's Federal Opportunity Number (FON).
+          description: The opportunity's Funding Opportunity Number (FON).
         opp:us:aln:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppIdAln'
@@ -4269,6 +4269,20 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'
           description: Details about the funding available
+        funders:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRefCollection'
+          description: Organization(s) offering the funding for this opportunity
+          example:
+            primary:
+              id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+              name: Health Resources and Services Administration
+              identifiers:
+                otherIds:
+                  org:grants.gov:agency:
+                    registry:
+                      code: org:grants.gov:agency
+                    id: HRSA
         keyDates:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppTimeline'
