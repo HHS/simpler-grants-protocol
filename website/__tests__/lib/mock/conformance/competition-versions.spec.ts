@@ -299,7 +299,7 @@ describe("the unversioned FormBase authoring schema", () => {
 // file-based example would sample the unversioned schema, which carries both
 // keys), while its JSON Schema tab and download stay the unversioned
 // authoring schema, whose references resolve where it is served.
-describe("the Form docs page", () => {
+describe("the Form and Competition docs pages", () => {
   const REPO_ROOT = path.resolve(HERE, "../../../../..");
   const page = readFileSync(
     path.join(REPO_ROOT, "website/src/content/docs/protocol/models/form.mdx"),
@@ -331,6 +331,28 @@ describe("the Form docs page", () => {
     const table = load(form.table.file.path);
     expect(table.required).toContain("title");
     expect(table.required).not.toContain("name");
+  });
+
+  it("renders the Competition table from the v0.5 schema, which requires opportunity alone", () => {
+    const competitionPage = readFileSync(
+      path.join(
+        REPO_ROOT,
+        "website/src/content/docs/protocol/models/competition.mdx",
+      ),
+      "utf-8",
+    );
+    const { competition } = yaml.load(competitionPage.split("---")[1]) as {
+      competition: { table: { file: { path: string } } };
+    };
+    expect(competitionPage).toContain(
+      "<SchemaTable filePath={frontmatter.competition.table.file.path} />",
+    );
+    expect(competition.table.file.path).toBe(
+      "website/public/schemas/yaml/versions/v0.5.0/CompetitionBase.yaml",
+    );
+    const table = load(competition.table.file.path);
+    expect(table.required).toContain("opportunity");
+    expect(table.required).not.toContain("opportunityId");
   });
 
   it("keeps the JSON Schema tab on the unversioned authoring schema", () => {
