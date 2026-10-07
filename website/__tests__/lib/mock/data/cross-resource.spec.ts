@@ -446,6 +446,19 @@ describe("opportunities' nested award references", () => {
       ).toContain(award.id);
     }
   });
+
+  it("lists each award at most once on an opportunity", () => {
+    // The checks above pass a fixture that declares the same award twice,
+    // since every entry still resolves and the award is still listed.
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      const referencedIds = (opportunity.awards ?? []).map((entry) => entry.id);
+
+      expect(
+        new Set(referencedIds).size,
+        `opportunity ${opportunity.id} lists an award more than once`,
+      ).toBe(referencedIds.length);
+    }
+  });
 });
 
 describe("the Types.uuid prefill invariant", () => {

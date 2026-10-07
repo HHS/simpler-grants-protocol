@@ -1102,6 +1102,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12350),
       programCode: programCode("VET-BIZ"),
     },
+    // Demonstrates the documented empty-array case: the link is published and
+    // no awards are known yet, which is distinct from `awards` being absent
+    // (the implementation does not publish the link for the record). No award
+    // fixture references this opportunity, so the empty array is truthful.
+    awards: [],
     createdAt: "2024-10-01T00:00:00Z",
     lastModifiedAt: "2025-02-01T00:00:00Z",
   },
