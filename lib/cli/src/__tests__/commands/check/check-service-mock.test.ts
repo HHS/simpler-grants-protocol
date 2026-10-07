@@ -581,5 +581,76 @@ describe("DefaultCheckService", () => {
       expect(error.message).toContain("Spec validation failed:");
       expect(error.message).toContain("Status code missing");
     });
+
+    it("should still reject when a warning is mixed with an unleveled finding", async () => {
+      // The blocking rule is "every finding that is not a WARNING blocks",
+      // not "no WARNINGs present". This pins the distinction: a run that
+      // mixes a missing optional route (WARNING) with a missing status code
+      // (no level) must still reject, so the warning cannot mask the error.
+      const baseDoc: OpenAPIV3.Document = {
+        openapi: "3.0.0",
+        info: { title: "Base", version: "1.0.0" },
+        paths: {
+          "/common-grants/opportunities": {
+            get: {
+              responses: {
+                "200": { description: "OK" },
+                "404": { description: "Not Found" },
+              },
+            },
+          },
+          "/common-grants/reviews": {
+            get: {
+              tags: ["optional"],
+              responses: { "200": { description: "OK" } },
+            },
+          },
+        },
+      };
+
+      const implDoc: OpenAPIV3.Document = {
+        openapi: "3.0.0",
+        info: { title: "Impl", version: "1.0.0" },
+        paths: {
+          "/common-grants/opportunities": {
+            get: {
+              responses: {
+                "200": { description: "OK" },
+              },
+            },
+          },
+        },
+      };
+
+      // Arrange - Mock file system operations
+      (fs.existsSync as Mock).mockReturnValue(true);
+      (fs.readFileSync as Mock).mockImplementation((filePath: string) => {
+        if (filePath === "spec.yaml") {
+          return "impl yaml content";
+        } else if (filePath.includes("openapi.1.0.0.yaml")) {
+          return "base yaml content";
+        } else {
+          return "default content";
+        }
+      });
+      (yaml.load as Mock).mockImplementation((content: string) => {
+        if (content === "impl yaml content") {
+          return implDoc;
+        } else {
+          return baseDoc;
+        }
+      });
+
+      // Act & Assert
+      const error = await service.checkSpec("spec.yaml", { base: "base.yaml" }).catch(e => e);
+
+      expect(error.message).toContain("Spec validation failed:");
+      expect(error.message).toContain("Status code missing");
+      // The warning is still reported, and still marked, alongside the blocker
+      const reviewsLine = error.message
+        .split("\n")
+        .find((line: string) => line.includes("/common-grants/reviews"));
+      expect(reviewsLine).toContain("(warning)");
+    });
   });
 });

@@ -253,16 +253,16 @@ describe("ErrorFormatter", () => {
       endpoint: "/api/v1/posts",
     });
 
-    const formatted = errorFormatter.format();
+    const lines = errorFormatter.format().split("\n");
 
-    // The summary must distinguish the 1 error from the 1 warning,
-    // rather than collapsing them into a single flat "2 errors" count
-    expect(formatted).toMatch(/1[^\n]*error/i);
-    expect(formatted).toMatch(/1[^\n]*warning/i);
-    expect(formatted).not.toContain("2 errors");
+    // The summary line must report the 1 error and the 1 warning separately,
+    // rather than collapsing them into a single flat "2 errors" count.
+    // Pinned to the first line: a looser match against the whole output
+    // would also be satisfied by the "(warning)" marker on the posts entry
+    expect(lines[0]).toBe("1 errors, 1 warnings");
 
     // The WARNING finding must be visibly marked as a warning in the body
-    const postsLine = formatted.split("\n").find(line => line.includes("/api/v1/posts"));
+    const postsLine = lines.find(line => line.includes("/api/v1/posts"));
     expect(postsLine?.toLowerCase()).toContain("warning");
   });
 });
