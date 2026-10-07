@@ -176,6 +176,18 @@ describe("OPPORTUNITY_FIXTURES", () => {
       ),
     ).toBe(true);
   });
+
+  // #1221-T3: pins the awards the 0.5.0 mock must demonstrate.
+  it("demonstrates an opportunity with awards, including one with two entries", () => {
+    const withAwards = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.awards !== undefined,
+    );
+    expect(withAwards.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some((opp) => (opp.awards?.length ?? 0) >= 2),
+    ).toBe(true);
+  });
 });
 
 describe("shapeOpportunityForVersion", () => {
@@ -341,6 +353,54 @@ describe("shapeOpportunityForVersion", () => {
 
       expect(list).not.toHaveProperty("funders");
       expect(detail).not.toHaveProperty("funders");
+    }
+  });
+
+  // #1221-T3: v0.5.0 adds `OpportunityDetails.awards`; earlier versions predate it.
+  const awardedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.awards !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      awardedRecord!,
+      "no opportunity fixture carries awards",
+    ).toBeDefined();
+  });
+
+  it("keeps awards for v0.5.0 detail records", () => {
+    const detail = shapeOpportunityForVersion(
+      awardedRecord!,
+      "0.5.0",
+      "detail",
+    );
+
+    expect(detail.awards).toEqual(awardedRecord!.awards);
+  });
+
+  it("strips awards from the v0.5.0 list variant", () => {
+    const list = shapeOpportunityForVersion(awardedRecord!, "0.5.0", "list");
+
+    expect(list).not.toHaveProperty("awards");
+  });
+
+  it("strips awards for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(awardedRecord!, version, "list");
+      const detail = shapeOpportunityForVersion(
+        awardedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("awards");
+      expect(detail).not.toHaveProperty("awards");
     }
   });
 });

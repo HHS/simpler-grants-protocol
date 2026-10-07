@@ -426,6 +426,67 @@ describe("opportunities' nested competition previews", () => {
   });
 });
 
+describe("opportunities' nested award references", () => {
+  it("resolves every nested award reference to a real award that points back at the opportunity", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const entry of opportunity.awards ?? []) {
+        const award = getAwardById(entry.id);
+
+        expect(
+          award,
+          `award ${entry.id} referenced by opportunity ${opportunity.id}`,
+        ).toBeDefined();
+        expect(award!.opportunity?.id).toBe(opportunity.id);
+      }
+    }
+  });
+
+  it("copies the referenced award's title and identifiers onto the reference, verbatim", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const entry of opportunity.awards ?? []) {
+        const award = getAwardById(entry.id)!;
+
+        expect(entry.title).toBe(award.title);
+        // Awards without identifiers must not have any invented for the
+        // opportunity's reference either.
+        expect(entry.identifiers).toEqual(award.identifiers);
+      }
+    }
+  });
+
+  it("lists every award that references an opportunity on that opportunity", () => {
+    const withOpportunity = AWARD_FIXTURES.filter((award) => award.opportunity);
+
+    // Meaningless without at least one such award to check.
+    expect(withOpportunity.length).toBeGreaterThan(0);
+
+    for (const award of withOpportunity) {
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+      const referencedIds = (opportunity.awards ?? []).map((entry) => entry.id);
+
+      expect(
+        referencedIds,
+        `opportunity ${opportunity.id} is missing a back-reference to award ${award.id}`,
+      ).toContain(award.id);
+    }
+  });
+
+  it("lists each award at most once on an opportunity", () => {
+    // The checks above pass a fixture that declares the same award twice,
+    // since every entry still resolves and the award is still listed.
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      const referencedIds = (opportunity.awards ?? []).map((entry) => entry.id);
+
+      expect(
+        new Set(referencedIds).size,
+        `opportunity ${opportunity.id} lists an award more than once`,
+      ).toBe(referencedIds.length);
+    }
+  });
+});
+
 describe("the Types.uuid prefill invariant", () => {
   // Swagger UI pre-fills every path box from the single `Types.uuid` example,
   // so every detail route's first Execute sends the same uuid. It must not 404.

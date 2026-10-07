@@ -12,6 +12,19 @@ import { OPPORTUNITY_FIXTURES, toOppRef, usd } from "./fixtures";
 import type { OppIds, Version } from "./fixtures";
 import { isAtLeastVersion } from "./availability";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
+import {
+  ARTS_CULTURE_AWARD_REF,
+  CANONICAL_AWARD_REF,
+  CIVIC_TECH_AWARD_REF,
+  CLEAN_ENERGY_AMENDMENT_AWARD_REF,
+  CLEAN_ENERGY_AWARD_REF,
+  COASTAL_RESILIENCE_AWARD_REF,
+  DIGITAL_LITERACY_AWARD_REF,
+  DOCUMENTED_AWARD_REF,
+  HEALTH_OUTREACH_AWARD_REF,
+  RURAL_BROADBAND_AWARD_REF,
+  WORKFORCE_APPRENTICESHIP_AWARD_REF,
+} from "./award-refs";
 import { CANONICAL_RECORD_ID } from "./ids";
 import {
   CASCADE_WORKFORCE_ORG_ID,
@@ -128,8 +141,14 @@ export interface Award {
 /** The id Swagger UI pre-fills into the `awdId` box (see `./ids`). */
 export const CANONICAL_AWARD_ID = CANONICAL_RECORD_ID;
 
-/** The id published on the `Models.AwardBase` example itself. */
-export const DOCUMENTED_AWARD_ID = "01912a8b-7c3d-7894-abcd-ef1234567890";
+/**
+ * The id published on the `Models.AwardBase` example itself. It travels with
+ * the rest of the reference in `./award-refs`, so the opportunity fixtures can
+ * point at this award without importing this module, and is re-exported here
+ * so each resource module still exposes its own `DOCUMENTED_*_ID` (the
+ * `forms.ts` and `competitions.ts` pattern).
+ */
+export const DOCUMENTED_AWARD_ID = DOCUMENTED_AWARD_REF.id;
 
 /**
  * Organization ids referenced below, aliased for readability at the call
@@ -166,20 +185,6 @@ function performedOver(startDate: string, endDate: string): DateRangeEvent {
   };
 }
 
-/** Builds a FAIN identifier collection, FAIN on its base (top-level) key. */
-function fain(value: string, systemId: string): AwdIds {
-  return {
-    systemId: { registry: { code: "awd:grants.gov:system" }, id: systemId },
-    "awd:us:fain": {
-      registry: {
-        code: "awd:us:fain",
-        url: "https://commongrants.org/registries/awd-us-fain",
-      },
-      id: value,
-    },
-  };
-}
-
 /** Builds an `OppRef` from an opportunity index, reading the real record. */
 function oppRefFor(index: number): OppRef {
   const opportunity = OPPORTUNITY_FIXTURES[index];
@@ -206,9 +211,7 @@ function appRefFor(index: number): AppRef {
 export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   // ---- The canonical record: the spec's documented AwardBase example ----
   {
-    id: CANONICAL_AWARD_ID,
-    title: "Community Health Center Capital Improvement Grant",
-    identifiers: fain("H80CS00001", "01912a8b-7c3d-7894-abcd-ef1234567890"),
+    ...CANONICAL_AWARD_REF,
     description:
       "Supports facility upgrades at federally qualified health centers.",
     status: {
@@ -242,9 +245,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
 
   // ---- The id published on the AwardBase example ----
   {
-    id: DOCUMENTED_AWARD_ID,
-    title: "Rural Health Clinic Modernization Award",
-    identifiers: fain("H80CS00002", "01912a8b-7c3d-7894-abcd-ef1234567891"),
+    ...DOCUMENTED_AWARD_REF,
     description:
       "Funds diagnostic equipment replacement at three critical access hospitals.",
     status: {
@@ -271,9 +272,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
-    title: "Clean Energy Innovation Demonstration Award",
-    identifiers: fain("DE0000101", "01912a8b-7c3d-7894-abcd-ef1234567892"),
+    ...CLEAN_ENERGY_AWARD_REF,
     description:
       "Supports a pilot-scale demonstration of a long-duration storage system.",
     status: {
@@ -307,9 +306,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "bb2c3d4e-5f60-4172-8b8c-9d0e1f203143",
-    title: "Rural Broadband Expansion Planning Award",
-    identifiers: fain("RUS0000045", "01912a8b-7c3d-7894-abcd-ef1234567893"),
+    ...RURAL_BROADBAND_AWARD_REF,
     description:
       "Funds a feasibility study and network design for four rural counties.",
     status: {
@@ -334,19 +331,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "cc3d4e5f-6071-4283-8c9d-0e1f20314254",
-    title: "Workforce Apprenticeship Program Award",
-    identifiers: {
-      ...fain("ETA0000318", "01912a8b-7c3d-7894-abcd-ef1234567894"),
-      // A registry the protocol does not define on the model, so it belongs
-      // under `otherIds`.
-      otherIds: {
-        "awd:usaspending:generated": {
-          registry: { code: "awd:usaspending:generated" },
-          id: "ASST_NON_ETA0000318",
-        },
-      },
-    },
+    ...WORKFORCE_APPRENTICESHIP_AWARD_REF,
     description:
       "Supports 120 building-trades apprenticeships across three counties.",
     status: {
@@ -371,9 +356,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "dd4e5f60-7182-4394-8d0e-1f2031425365",
-    title: "Clean Energy Innovation Demonstration Award — Amendment 1",
-    identifiers: fain("DE0000101-A1", "01912a8b-7c3d-7894-abcd-ef1234567895"),
+    ...CLEAN_ENERGY_AMENDMENT_AWARD_REF,
     description:
       "Adds scope for grid-interconnection studies to the base demonstration award.",
     status: {
@@ -392,20 +375,15 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
     opportunity: oppRefFor(7),
     funders: orgRefCollection(NSF),
     recipientOrganizations: orgRefCollection(COASTAL_RESEARCH),
-    // The parent is the base award above; title and identifiers must match it.
-    parent: {
-      id: "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
-      title: "Clean Energy Innovation Demonstration Award",
-      identifiers: fain("DE0000101", "01912a8b-7c3d-7894-abcd-ef1234567892"),
-    },
+    // The parent is the base award above, pointing at the same reference it
+    // is built from, so the two cannot disagree.
+    parent: CLEAN_ENERGY_AWARD_REF,
     createdAt: "2026-06-20T00:00:00Z",
     lastModifiedAt: "2026-06-21T00:00:00Z",
   },
 
   {
-    id: "ee5f6071-8293-44a5-8e1f-2031425364a5",
-    title: "Arts & Culture Preservation Award",
-    identifiers: fain("NEA0000772", "01912a8b-7c3d-7894-abcd-ef1234567896"),
+    ...ARTS_CULTURE_AWARD_REF,
     description:
       "Supports the cataloguing and digitization of a regional folk-arts archive.",
     status: {
@@ -432,9 +410,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "ff607182-93a4-45b6-8f20-31425364a5b6",
-    title: "Coastal Resilience Planning Award",
-    identifiers: fain("NOAA0000914", "01912a8b-7c3d-7894-abcd-ef1234567897"),
+    ...COASTAL_RESILIENCE_AWARD_REF,
     description:
       "Funds shoreline vulnerability mapping for twelve coastal municipalities.",
     status: {
@@ -456,9 +432,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "01718293-a4b5-46c7-9031-425364a5b6c7",
-    title: "Community Health Outreach Continuation Award",
-    identifiers: fain("H80CS00003", "01912a8b-7c3d-7894-abcd-ef1234567898"),
+    ...HEALTH_OUTREACH_AWARD_REF,
     description:
       "Continuation funding for mobile health outreach in three rural counties.",
     status: {
@@ -493,9 +467,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   {
     // The one award to a person: it carries `recipientIndividual` instead of
     // `recipientOrganizations` on purpose.
-    id: "23293a4b-c6d7-48e9-9253-64a5b6c7d8e9",
-    title: "Civic Tech Fellowship Award — Cohort 4",
-    identifiers: fain("CTF0000104", "01912a8b-7c3d-7894-abcd-ef1234567900"),
+    ...CIVIC_TECH_AWARD_REF,
     description:
       "Twelve-month fellowship supporting a technologist embedded in a county benefits office.",
     status: {
@@ -537,9 +509,7 @@ export const AWARD_FIXTURES: readonly Award[] = Object.freeze<Award[]>([
   },
 
   {
-    id: "1218293a-b5c6-47d8-9142-5364a5b6c7d8",
-    title: "Digital Literacy for Seniors Award",
-    identifiers: fain("IMLS0000205", "01912a8b-7c3d-7894-abcd-ef1234567899"),
+    ...DIGITAL_LITERACY_AWARD_REF,
     description:
       "Funds device-lending and tutoring programs at eleven public libraries.",
     status: {

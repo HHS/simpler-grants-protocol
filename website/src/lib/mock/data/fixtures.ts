@@ -5,7 +5,25 @@
  */
 
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
-import type { OppRef } from "./awards";
+// Type-only: erased at build time, so this does not close the runtime import
+// cycle that `awards.ts` opens by importing this module.
+import type { AwdRef, OppRef } from "./awards";
+// The award references below are shared with `awards.ts`, which builds each
+// award fixture from the same constant, so a title or identifier cannot drift
+// between an award and the opportunity that lists it.
+import {
+  ARTS_CULTURE_AWARD_REF,
+  CANONICAL_AWARD_REF,
+  CIVIC_TECH_AWARD_REF,
+  CLEAN_ENERGY_AMENDMENT_AWARD_REF,
+  CLEAN_ENERGY_AWARD_REF,
+  COASTAL_RESILIENCE_AWARD_REF,
+  DIGITAL_LITERACY_AWARD_REF,
+  DOCUMENTED_AWARD_REF,
+  HEALTH_OUTREACH_AWARD_REF,
+  RURAL_BROADBAND_AWARD_REF,
+  WORKFORCE_APPRENTICESHIP_AWARD_REF,
+} from "./award-refs";
 import type { Identifier, OrgRefCollection } from "./organizations";
 import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
 
@@ -185,6 +203,12 @@ export interface Opportunity {
   source?: string;
   customFields?: Record<string, CustomField>;
   competitions?: Competition[];
+  /**
+   * Awards that resulted from this opportunity, as references (added v0.5).
+   * Detail-only, like `competitions`: `shapeOpportunityForVersion` strips it
+   * from the list variant and from every version below 0.5.0.
+   */
+  awards?: AwdRef[];
   createdAt: string;
   lastModifiedAt: string;
 }
@@ -375,6 +399,10 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         },
       },
     ],
+    // The canonical award aliases the shared canonical id, exactly as
+    // `CANONICAL_AWARD_ID` in `awards.ts` does, so this opportunity's award
+    // reference carries the same uuid as the opportunity itself.
+    awards: [CANONICAL_AWARD_REF],
     // Chosen so this record sorts first under the list endpoint's default
     // `lastModifiedAt desc` ordering.
     createdAt: "2024-01-15T00:00:00Z",
@@ -526,6 +554,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Small telecom providers",
       },
     ],
+    awards: [RURAL_BROADBAND_AWARD_REF],
     createdAt: "2025-02-01T00:00:00Z",
     lastModifiedAt: "2025-02-10T00:00:00Z",
   },
@@ -579,6 +608,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     acceptedApplicantTypes: [
       { value: "government_municipal", description: "Coastal municipalities" },
     ],
+    awards: [COASTAL_RESILIENCE_AWARD_REF],
     createdAt: "2024-06-01T00:00:00Z",
     lastModifiedAt: "2025-01-05T00:00:00Z",
   },
@@ -621,6 +651,8 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-09-30") },
       },
     ],
+    // The base award and its amendment: the one opportunity carrying two.
+    awards: [CLEAN_ENERGY_AWARD_REF, CLEAN_ENERGY_AMENDMENT_AWARD_REF],
     createdAt: "2025-03-01T00:00:00Z",
     lastModifiedAt: "2025-03-12T00:00:00Z",
   },
@@ -650,6 +682,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Workforce development organizations",
       },
     ],
+    awards: [WORKFORCE_APPRENTICESHIP_AWARD_REF],
     createdAt: "2024-09-01T00:00:00Z",
     lastModifiedAt: "2025-02-28T00:00:00Z",
   },
@@ -680,6 +713,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Community health non-profits",
       },
     ],
+    awards: [HEALTH_OUTREACH_AWARD_REF],
     createdAt: "2025-01-10T00:00:00Z",
     lastModifiedAt: "2025-05-16T00:00:00Z",
   },
@@ -709,6 +743,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       { value: "non_profit_with_501c3", description: "Arts non-profits" },
       { value: "individual", description: "Individual artists" },
     ],
+    awards: [ARTS_CULTURE_AWARD_REF],
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
   },
@@ -784,6 +819,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-12-01") },
       },
     ],
+    awards: [DOCUMENTED_AWARD_REF],
     createdAt: "2025-04-01T00:00:00Z",
     lastModifiedAt: "2025-04-10T00:00:00Z",
   },
@@ -846,6 +882,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12349),
       programCode: programCode("DIG-LIT"),
     },
+    awards: [DIGITAL_LITERACY_AWARD_REF],
     createdAt: "2025-02-20T00:00:00Z",
     lastModifiedAt: "2025-02-25T00:00:00Z",
   },
@@ -1001,6 +1038,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12350),
       programCode: programCode("VET-BIZ"),
     },
+    // Demonstrates the documented empty-array case: the link is published and
+    // no awards are known yet, which is distinct from `awards` being absent
+    // (the implementation does not publish the link for the record). No award
+    // fixture references this opportunity, so the empty array is truthful.
+    awards: [],
     createdAt: "2024-10-01T00:00:00Z",
     lastModifiedAt: "2025-02-01T00:00:00Z",
   },
@@ -1105,6 +1147,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Public university partners",
       },
     ],
+    awards: [CIVIC_TECH_AWARD_REF],
     createdAt: "2025-01-20T00:00:00Z",
     lastModifiedAt: "2025-05-02T00:00:00Z",
   },
@@ -1195,9 +1238,11 @@ export function shapeOpportunityForVersion(
 ): WireOpportunity {
   const shaped: WireOpportunity = { ...opp };
 
-  // `competitions` only exists on the detail (OpportunityDetails) shape.
+  // `competitions` and `awards` only exist on the detail
+  // (OpportunityDetails) shape.
   if (variant === "list") {
     delete shaped.competitions;
+    delete shaped.awards;
   }
 
   // v0.1 predates both `acceptedApplicantTypes` and `OpportunityDetails`.
@@ -1206,7 +1251,8 @@ export function shapeOpportunityForVersion(
     delete shaped.competitions;
   }
 
-  // `OppRef.identifiers` and `OpportunityBase.funders` are both `@added(v0_5)`.
+  // `OppRef.identifiers`, `OpportunityBase.funders`, and
+  // `OpportunityDetails.awards` are all `@added(v0_5)`.
   // Ordering is compared inline rather than via `isAtLeastVersion`, because
   // `availability.ts` imports this module and the reverse import would be a
   // runtime cycle. `awards.ts` has no such constraint and uses the helper.
@@ -1215,6 +1261,7 @@ export function shapeOpportunityForVersion(
   ) {
     delete shaped.identifiers;
     delete shaped.funders;
+    delete shaped.awards;
   }
 
   // `CompetitionBase.opportunity` replaces `opportunityId` at v0.5.
