@@ -343,10 +343,27 @@ describe("the Form docs page", () => {
     );
   });
 
-  it("links only downloads whose references a normal resolver can follow", async () => {
+  /** The served file a model page tells readers to validate payloads with. */
+  const validationTarget = (model: string) => {
+    const text = readFileSync(
+      path.join(
+        REPO_ROOT,
+        `website/src/content/docs/protocol/models/${model}.mdx`,
+      ),
+      "utf-8",
+    );
+    const target = text.match(
+      /To validate a payload, use [^`]*`(\/[^`]+)`/,
+    )?.[1];
+    expect(target, `${model}.mdx names no validation target`).toBeDefined();
+    return path.join("website/public", target!);
+  };
+
+  it("links and recommends only files a normal resolver can follow", async () => {
     for (const download of [
       form.jsonSchema.file.path,
-      "website/public/openapi/openapi.0.5.0.yaml",
+      validationTarget("form"),
+      validationTarget("competition"),
     ]) {
       const resolved = await resolveSchemaRefs(path.join(REPO_ROOT, download));
       expect(resolved, download).toBeTypeOf("object");
