@@ -114,7 +114,7 @@ Guidance for implementers and consumers moving between protocol versions. Each e
 
 #### v0.5.0
 
-As of September 29, 2026, v0.5.0 introduces no breaking changes, for consumers of the award routes or otherwise. Every change that has landed is additive and optional:
+As of September 29, 2026, v0.5.0 introduces no breaking changes to the award schemas, or to any other schema. Every change that has landed is additive and optional. There is one tooling consequence for award consumers, covered under the CLI notes below:
 
 - `OppRef` gains an optional `identifiers` collection, so the `opportunity` reference carried by `AwardBase` can publish registry-scoped identifiers such as `opp:us:fon` (Federal Opportunity Number) and `opp:us:aln` (Assistance Listing Number) alongside the opportunity's `id` and `title`.
 - `OpportunityDetails` gains an optional `awards` array of `AwdRef`, publishing the opportunity-to-award link in the reverse direction.
@@ -127,7 +127,7 @@ The three award routes move from experimental to optional in v0.5.0. This oblige
 Two notes for anyone validating an implementation with the CommonGrants CLI:
 
 - Route status is an OpenAPI tag, and tags are not versioned, so the v0.4.0 OpenAPI document published on this site also labels the award routes optional. The copy of the v0.4.0 spec bundled with the CommonGrants CLI is unchanged and still labels them experimental, so `cg check spec --protocol-version 0.4.0` behaves as it did before.
-- `cg check spec` classifies a missing optional route as a warning internally, but it prints that route alongside errors under `Routes missing`, counts it in the reported error total, and fails the run. This only arises when the base spec being validated against labels the award routes optional, which is true of the v0.5.0 and v0.4.0 documents published on this site. The v0.4.0 spec bundled with the CLI still labels them experimental, so `cg check spec --protocol-version 0.4.0` is unaffected and is the workaround until a fix ships.
+- `cg check spec` classifies a missing optional route as a warning. CLI releases before [#1259](https://github.com/HHS/simpler-grants-protocol/pull/1259) still count that warning in the reported error total and fail the run. From the first `@common-grants/cli` release that includes #1259, a run whose only findings are warnings prints them, marks each one `(warning)`, and passes. This only arises when the base spec being validated against labels the award routes optional, which is true of the v0.5.0 and v0.4.0 documents published on this site. On a CLI release without the fix, `cg check spec --protocol-version 0.4.0` is the workaround, because the v0.4.0 spec bundled with the CLI still labels the award routes experimental. That bundled spec is a generated artifact, so the workaround holds only until the CLI reships it.
 
 ### Schemas
 
