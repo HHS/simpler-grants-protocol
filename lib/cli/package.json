@@ -90,7 +90,7 @@
     "eslint-plugin-prettier": "catalog:",
     "prettier": "catalog:",
     "prettier-linter-helpers": "^1.0.1",
-    "supertest": "^7.3.0",
+    "supertest": "^7.3.1",
     "ts-node": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
