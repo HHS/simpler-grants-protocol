@@ -1,6 +1,7 @@
 import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
+import "../organization.tsp";
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
@@ -23,15 +24,17 @@ using Types;
  * using CommonGrants.Fields;
  * using CommonGrants.Models;
  *
- * model Agency extends CustomField {
+ * model ProgramArea extends CustomField {
+ *   name: "programArea";
+ *
  *   fieldType: CustomFieldType.string;
  *
- *   @example("Department of Transportation")
+ *   @example("Healthcare Innovation")
  *   value: string;
  * }
  *
  * model NewFields extends CustomFieldMap {
- *   agency: Agency;
+ *   programArea: ProgramArea;
  * }
  *
  * model CustomOpportunity extends OpportunityBase {
@@ -54,6 +57,11 @@ model OpportunityBase {
 
   /** Details about the funding available */
   funding?: OppFunding;
+
+  /** Organization(s) offering the funding for this opportunity */
+  @example(Examples.OrgRef.funders)
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  funders?: OrgRefCollection;
 
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates?: OppTimeline;
@@ -94,7 +102,7 @@ model OppIdAln is Fields.IdentifierT<string, "opp:us:aln">;
 @example(Examples.Opportunity.identifiers)
 @Versioning.added(CommonGrants.Versions.v0_5)
 model OppIds extends Fields.IdentifierCollection {
-  /** The opportunity's Federal Opportunity Number (FON). */
+  /** The opportunity's Funding Opportunity Number (FON). */
   `opp:us:fon`?: OppIdFon;
 
   /** The opportunity's Assistance Listing Number (ALN). */
@@ -135,6 +143,23 @@ model OppRef {
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
   competitions?: CompetitionBase[];
+
+  /** Awards that resulted from this opportunity, as references.
+   *
+   * Each entry references an award that resulted from this opportunity; the
+   * award's `opportunity.id`, when it is published, is this record's `id`.
+   * An entry is a reference, not the award record: `GET /awards/<id>` is the
+   * canonical record only where an implementation serves the award routes,
+   * and otherwise the entry's `identifiers`, where the publisher supplies
+   * them, are the key for joining the award in another system. A consumer
+   * must not assume a reference can be dereferenced through this API.
+   *
+   * Absent means the implementation does not publish this link for the
+   * record, and an empty array means the link is published and no awards are
+   * known. Entries carry no ordering guarantee.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  awards?: AwdRef[];
 }
 
 // ########################################

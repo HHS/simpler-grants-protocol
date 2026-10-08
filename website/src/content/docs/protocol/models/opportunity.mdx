@@ -13,8 +13,8 @@ opportunityBase:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 42
-      endLine: 73
+      startLine: 45
+      endLine: 80
   python:
     file:
       path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_base.py"
@@ -23,8 +23,8 @@ opportunityBase:
   typescript:
     file:
       path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 119
-      endLine: 148
+      startLine: 115
+      endLine: 162
 opportunityDetails:
   example:
     file:
@@ -35,8 +35,8 @@ opportunityDetails:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 133
-      endLine: 138
+      startLine: 140
+      endLine: 162
 oppRef:
   example:
     file:
@@ -47,8 +47,8 @@ oppRef:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 108
-      endLine: 127
+      startLine: 115
+      endLine: 134
 oppIds:
   example:
     file:
@@ -59,8 +59,8 @@ oppIds:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 89
-      endLine: 102
+      startLine: 96
+      endLine: 109
 oppIdFon:
   example:
     file:
@@ -71,8 +71,8 @@ oppIdFon:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 79
-      endLine: 82
+      startLine: 86
+      endLine: 89
 oppIdAln:
   example:
     file:
@@ -83,8 +83,8 @@ oppIdAln:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 84
-      endLine: 87
+      startLine: 91
+      endLine: 94
 oppStatus:
   example:
     file:
@@ -181,7 +181,7 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 ## OpportunityBase
 
-A funding opportunity, such as a grant or loan. It shares its identity fields with [OppRef](#oppref), including the [OppIds](#oppids) collection under `identifiers` added in v0.5.
+A funding opportunity, such as a grant or loan. It shares its identity fields with [OppRef](#oppref), including the [OppIds](#oppids) collection under `identifiers` added in v0.5. Since v0.5 it also records who is offering the money under `funders`, an [OrgRefCollection](/protocol/models/organization#orgrefcollection), which replaces the deprecated [`agency` custom field](/custom-fields/agency/) for opportunities.
 
 ### Table
 
@@ -203,7 +203,9 @@ A funding opportunity, such as a grant or loan. It shares its identity fields wi
 
 ## OpportunityDetails
 
-A funding opportunity with additional details, like available competitions.
+A funding opportunity with additional details, like available competitions. Since v0.5 it also lists the awards the opportunity produced under `awards`, a list of [AwdRef](/protocol/models/award#awdref) entries, so a consumer can see what an opportunity funded without searching awards by `opportunityId`.
+
+An entry is a reference, not the award record: `GET /awards/<id>` is the canonical record only where an implementation serves the award routes, and otherwise the entry's `identifiers`, where the publisher supplies them, are the key for joining the award in another system. A consumer must not assume a reference can be dereferenced through this API. An absent `awards` means the implementation does not publish this link for the record, while an empty array means it does and no awards are known. Entries carry no ordering guarantee.
 
 ### Table
 

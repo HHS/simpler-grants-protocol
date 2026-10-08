@@ -108,6 +108,27 @@ The CommonGrants protocol follows the `Major.Minor.Patch` versioning scheme, whe
 Because experimental routes and operations are considered unstable, breaking changes can be made to these routes and operations without incrementing the `Major` version.
 :::
 
+### Migration notes
+
+Guidance for implementers and consumers moving between protocol versions. Each entry is written as its changes land and is reviewed again before the version is published.
+
+#### v0.5.0
+
+As of September 29, 2026, v0.5.0 introduces no breaking changes to the award schemas, or to any other schema. Every change that has landed is additive and optional. There is one tooling consequence for award consumers, covered under the CLI notes below:
+
+- `OppRef` gains an optional `identifiers` collection, so the `opportunity` reference carried by `AwardBase` can publish registry-scoped identifiers such as `opp:us:fon` (Federal Opportunity Number) and `opp:us:aln` (Assistance Listing Number) alongside the opportunity's `id` and `title`.
+- `OpportunityDetails` gains an optional `awards` array of `AwdRef`, publishing the opportunity-to-award link in the reverse direction.
+- `OpportunityBase` gains optional `identifiers` and `funders` collections, which an award consumer encounters when it reads the opportunity that an award points at.
+
+Further v0.5.0 changes are still in progress, tracked in issues [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192), [#1223](https://github.com/HHS/simpler-grants-protocol/issues/1223), [#1224](https://github.com/HHS/simpler-grants-protocol/issues/1224), and [#1225](https://github.com/HHS/simpler-grants-protocol/issues/1225), and may add to this list. This section is re-verified against them before v0.5.0 is published, as part of issue [#1235](https://github.com/HHS/simpler-grants-protocol/issues/1235).
+
+The three award routes move from experimental to optional in v0.5.0. This obliges no implementation to serve them, since optional routes MAY be omitted and the set of required routes is unchanged. It does change their stability guarantee: a breaking change to an award route now requires incrementing the `Major` version under the rules above, instead of being exempt the way changes to experimental routes are.
+
+Two notes for anyone validating an implementation with the CommonGrants CLI:
+
+- Route status is an OpenAPI tag, and tags are not versioned, so the v0.4.0 OpenAPI document published on this site also labels the award routes optional. The copy of the v0.4.0 spec bundled with the CommonGrants CLI is unchanged and still labels them experimental, so `cg check spec --protocol-version 0.4.0` behaves as it did before.
+- `cg check spec` classifies a missing optional route as a warning. CLI releases before [#1259](https://github.com/HHS/simpler-grants-protocol/pull/1259) still count that warning in the reported error total and fail the run. From the first `@common-grants/cli` release that includes #1259, a run whose only findings are warnings prints them, marks each one `(warning)`, and passes. This only arises when the base spec being validated against labels the award routes optional, which is true of the v0.5.0 and v0.4.0 documents published on this site. On a CLI release without the fix, `cg check spec --protocol-version 0.4.0` is the workaround, because the v0.4.0 spec bundled with the CLI still labels the award routes experimental. That bundled spec is a generated artifact, so the workaround holds only until the CLI reships it.
+
 ### Schemas
 
 The CommonGrants protocol defines the following schemas that are used to represent data in CommonGrants APIs. The schemas are loosely organized into the following categories:
@@ -257,6 +278,27 @@ While omitted for brevity in the following table, all protocol-defined routes MU
 | `GET /opportunities`         | Required | Get a paginated list of opportunities sorted by `lastModifiedAt` |
 | `GET /opportunities/{oppId}` | Required | View details about a specific opportunity                        |
 | `POST /opportunities/search` | Optional | Search and filter funding opportunities                          |
+
+#### Award routes
+
+| Route                 | Status   | Description                                               |
+| --------------------- | -------- | --------------------------------------------------------- |
+| `GET /awards`         | Optional | Get a paginated list of awards sorted by `lastModifiedAt` |
+| `GET /awards/{awdId}` | Optional | View details about a specific award                       |
+| `POST /awards/search` | Optional | Search and filter awards                                  |
+
+The award routes were experimental in v0.4.0 and are optional as of v0.5.0, which means a CommonGrants API MAY implement them. They are optional rather than required because an implementation that publishes funding opportunities does not necessarily hold award data, and making the routes required would render those implementations non-compliant. Because they are no longer experimental, breaking changes to these routes now follow the versioning rules in [Versions](#versions) rather than the exemption that applies to experimental routes. See the [v0.5.0 migration notes](#v050) for what the change means when validating an implementation against a v0.4.0 base spec.
+
+#### Organization routes
+
+| Route                                  | Status       | Description                                                |
+| -------------------------------------- | ------------ | ---------------------------------------------------------- |
+| `GET /orgs`                            | Experimental | Get a paginated list of organization profiles              |
+| `GET /orgs/{orgId}`                    | Experimental | View a specific organization profile                       |
+| `PATCH /orgs/{orgId}`                  | Experimental | Update an organization profile                             |
+| `POST /orgs/{orgId}/changes`           | Experimental | Submit a change to an organization profile                 |
+| `GET /orgs/{orgId}/changes`            | Experimental | Get a paginated list of changes to an organization profile |
+| `GET /orgs/{orgId}/changes/{changeId}` | Experimental | View a specific change to an organization profile          |
 
 #### Competition routes
 
