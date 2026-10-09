@@ -38,7 +38,7 @@ The list name, `parents`, gives the relationship's category and direction: each 
 
 ## Decision
 
-We add an optional `relationships` object to `OrganizationBase` with seven optional lists. Every entry in every list is a relationship object with a required `org` and optional `kind`, `startDate`, `endDate`, and `status`. Other names the same organization goes by, such as a trading name or a short form of its legal name, stay on the organization in an optional `aliases` list of non-empty, unique strings. They are not relationships or a history of former names, and a name that has its own trading-name record, linked with the `dba` kind below, isn't also listed there.
+We add an optional `relationships` object to `OrganizationBase` with seven optional lists. Every entry in every list is a relationship object with a required `org` and optional `kind`, `startDate`, `endDate`, and `status`. Other names the same organization goes by, such as a trading name or a short form of its legal name, stay on the organization in an optional `aliases` list of non-empty, unique strings, using a new public v0.5 scalar, `Types.nonEmptyString`. They are not relationships or a history of former names. A name that has its own live trading-name record linked to this organization by a `dba` entry in either record, `parents` on the trading-name record or `children` on this one, shouldn't also be listed in `aliases`, so readers don't count it twice. A name can go in `aliases` when no live `dba` record for it remains, for example when that record was replaced, as a `duplicate` or `merged` record, by the legal entity's own record. The schema doesn't check this.
 
 | List                 | Category   | Each entry says                                                     | Standard `kind` values                                                  |
 | -------------------- | ---------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -64,6 +64,7 @@ Every list also accepts a `custom` kind. List order carries no meaning, such as 
   - Each entry nests the reference one level deeper, under `org`.
   - Because both directions can be stated, two records can disagree. The protocol doesn't require them to match.
   - Consumers can't assume one parent per subtype or a `kind` on every entry.
+  - A target must already exist in the receiver. Identifiers sent with a target don't resolve it; only its `id` does.
 
 ### Criteria
 
@@ -180,7 +181,7 @@ model OrgRelationships {
 model OrganizationBase {
   // ...existing fields
 
-  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names */
+  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. A name with its own live `dba` record shouldn't also be listed here */
   @uniqueItems
   aliases?: nonEmptyString[];
 
@@ -191,11 +192,11 @@ model OrganizationBase {
 
 `OrgRef` is the existing reference model. `org` and list entries are required. Every other member is optional and, like most optional fields on existing models, isn't nullable: a reader finds it omitted or with a value, never `null`. Model names, and the use of one template for every list, are implementation choices; this ADR decides the wire shape.
 
-`OrgRef.name` is reworded to "The name this organization is known by; for a legal entity, its legal name," because a trading-name record's name isn't a legal name. It stays a required string.
+`OrgRef.name` is reworded to "The name this organization is known by; for a legal entity, its legal name," because a trading-name record's name isn't a legal name. It stays a required string. The rewording also reaches `OrganizationBase.name` and appears in the published v0.4.0 docs; it changes only the description.
 
 ### Relationship objects
 
-- **`org`** is required. On reads it is an `OrgRef`. Because `OrgRef.id` is read-only, the write shape keeps `org.id` writable, and a writer can identify a target by `id` alone. The receiver rejects an `id` it doesn't recognize. A target's `name` and `identifiers` are optional on writes and ignored if supplied: the receiver fills them in from its own record on reads and revision snapshots. They stay accepted, rather than read-only, so a writer can resend entries copied from a read.
+- **`org`** is required. On reads it is an `OrgRef`. Because `OrgRef.id` is read-only, the write shape keeps `org.id` writable, and a writer can identify a target by `id` alone. The receiver rejects an `id` it doesn't recognize. A target's `name` and `identifiers` are optional on writes and ignored if supplied: the receiver fills them in from its own record on reads and revision snapshots. They stay accepted, rather than read-only, so a writer can resend entries copied from a read. An `OrgRevision`'s `patch` is recorded as received, so a target `name` or `identifiers` there isn't authoritative; reads and the revision's `snapshot` carry the filled-in values.
 - **`kind`** is optional in every list, including `otherRelationships`. It uses the protocol's [extensible enum](/protocol/fields/extensible-enum/): either a standard `value`, or `"value": "custom"` with the subtype in `customValue`. As elsewhere in the protocol, `description` is optional. A custom kind in a named list adds a subtype to that list's category. `otherRelationships` defines no standard values, so a kind stated there is always custom.
 - **`startDate`** and **`endDate`** are optional ISO dates, with the same names and type as `DateRangeEvent`.
 - **`status`** is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates: an entry with a past `endDate` and no `status` hasn't stated a status. The protocol requires no particular combination of dates and status.
@@ -217,7 +218,7 @@ Separate lists keep categories independent: changing `parents` never touches suc
 - `parents` and `children` cover more than containment. `fiscalSponsor` is a hierarchy kind, so one organization can list a chapter parent and a different fiscal sponsor in the same `parents` list. Consumers shouldn't treat every parent as an owner or container.
 - There is no generic `parent` kind. An entry without `kind` already states a parent relationship without a subtype.
 - Providers can use a custom kind for other organizational labels, such as division or agency, or omit `kind` when no subtype is known.
-- `dba` is for systems that keep a separate record for each trading name. In `parents`, it means this record is a name the referenced legal entity does business under; in `children`, that the referenced record is a trading-name record of this one. Most systems don't keep such records and list the names in the legal entity's `aliases` instead. A name with its own `dba` record shouldn't also be listed in the legal entity's `aliases`, so readers don't count it twice; the schema doesn't check this. A trading-name record retired as a duplicate through `recordReplacedBy` isn't a live trading-name record, so its name can go in `aliases`.
+- `dba` is for systems that keep a separate record for each trading name. In `parents`, it means this record is a name the referenced legal entity does business under; in `children`, that the referenced record is a trading-name record of this one. Most systems don't keep such records and list the names in the legal entity's `aliases` instead. A name that has its own live trading-name record linked to this organization by a `dba` entry in either record, `parents` on the trading-name record or `children` on this one, shouldn't also be listed in `aliases`, so readers don't count it twice. A name can go in `aliases` when no live `dba` record for it remains, for example when that record was replaced, as a `duplicate` or `merged` record, by the legal entity's own record. The schema doesn't check this.
 
 ### Succession and record replacement
 
