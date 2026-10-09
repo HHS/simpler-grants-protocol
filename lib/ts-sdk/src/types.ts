@@ -18,8 +18,16 @@ import {
   MoneySchema,
   CustomFieldSchema,
   SystemMetadataSchema,
+  NameSchema,
   EventTypeEnum,
   CustomFieldTypeEnum,
+  // Identifiers
+  IdentifierSchema,
+  SystemIdSchema,
+  IdentifierCollectionSchema,
+  IdentifierStatusEnum,
+  // References
+  AppRefSchema,
   // Filters
   DefaultFilterSchema,
   StringComparisonFilterSchema,
@@ -71,6 +79,22 @@ export type Money = z.infer<typeof MoneySchema>;
 export type CustomField = z.infer<typeof CustomFieldSchema>;
 export type CustomFieldType = z.infer<typeof CustomFieldTypeEnum>;
 export type SystemMetadata = z.infer<typeof SystemMetadataSchema>;
+export type Name = z.infer<typeof NameSchema>;
+
+// ############################################################################
+// Identifier types
+// ############################################################################
+
+export type Identifier = z.infer<typeof IdentifierSchema>;
+export type SystemId = z.infer<typeof SystemIdSchema>;
+export type IdentifierCollection = z.infer<typeof IdentifierCollectionSchema>;
+export type IdentifierStatus = z.infer<typeof IdentifierStatusEnum>;
+
+// ############################################################################
+// Reference types
+// ############################################################################
+
+export type AppRef = z.infer<typeof AppRefSchema>;
 
 // ############################################################################
 // Filter types

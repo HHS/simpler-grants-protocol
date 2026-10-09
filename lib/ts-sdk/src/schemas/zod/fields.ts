@@ -118,6 +118,29 @@ export const CustomFieldSchema = z.object({
 });
 
 // ############################################################################
+// Name schema
+// ############################################################################
+
+export const NameSchema = z
+  .object({
+    /** Honorific prefix (e.g., Mr., Mrs., Dr., Prof.) */
+    prefix: z.string().optional(),
+
+    /** The person's first or given name */
+    firstName: z.string(),
+
+    /** The person's middle name or names */
+    middleName: z.string().optional(),
+
+    /** The person's last name or family name */
+    lastName: z.string(),
+
+    /** Name suffix (e.g., Jr., Sr., III, Ph.D.) */
+    suffix: z.string().optional(),
+  })
+  .strict();
+
+// ############################################################################
 // SystemMetadata schema
 // ############################################################################
 

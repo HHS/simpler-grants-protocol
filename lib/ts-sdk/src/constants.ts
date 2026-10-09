@@ -20,6 +20,7 @@ import {
   StringOperatorsEnum,
   RangeOperatorsEnum,
   AllOperatorsEnum,
+  IdentifierStatusEnum,
 } from "./schemas";
 
 // ############################################################################
@@ -37,6 +38,12 @@ export const OppSortBy: typeof OppSortByEnum.enum = OppSortByEnum.enum;
 
 export const EventType: typeof EventTypeEnum.enum = EventTypeEnum.enum;
 export const CustomFieldType: typeof CustomFieldTypeEnum.enum = CustomFieldTypeEnum.enum;
+
+// ############################################################################
+// Identifier enum constants
+// ############################################################################
+
+export const IdentifierStatus: typeof IdentifierStatusEnum.enum = IdentifierStatusEnum.enum;
 
 // ############################################################################
 // Filter operator enum constants
