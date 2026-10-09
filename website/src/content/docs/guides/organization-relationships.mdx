@@ -1,6 +1,6 @@
 ---
 title: Organization relationships
-description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and aliases in the draft v0.5.0 model.
+description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and aliases in the unreleased v0.5.0 model.
 sidebar:
   order: 2
 ---
@@ -8,7 +8,7 @@ sidebar:
 :::caution[Not yet released]
 This page shows the organization relationships decided in [ADR 0030](https://commongrants.org/governance/adr/0030-org-relationships/). The fields are part of protocol v0.5.0, which has not been released, and may change before it is. Every organization, name, and ID on this page is illustrative, not a real record or a classification of a real organization.
 
-The examples are static documentation, checked against the draft schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or fill in the other organization's `name`, so an ID-only relationship write returns a snapshot that isn't a valid organization read.
+The examples are static documentation, checked against the unreleased schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or model the receiver filling in targets: it echoes any `name` or `identifiers` sent with a target, accepts a target `id` it has no record for, and returns an ID-only relationship write as a snapshot that isn't a valid organization read.
 :::
 
 An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Other names the organization goes by go in `aliases`, not in a relationship.
@@ -25,7 +25,7 @@ An organization can point to other organizations it is related to: the network i
 
 Every entry has the same shape:
 
-- `org` is required and is an [`OrgRef`](/protocol/models/organization#orgref): the other organization's `id`, `name`, and, optionally, `identifiers` that let another system match it. A writer names it by `id`; see [Updating relationships](#updating-relationships).
+- `org` is required and is an [`OrgRef`](/protocol/models/organization#orgref): the other organization's `id`, `name`, and optional `identifiers`. A writer identifies the target by `id`, and the target must already exist in the receiver. Identifiers sent with a target are informational; the receiver fills in the target's `name` and `identifiers` from its own record. See [Updating relationships](#updating-relationships).
 - `kind` is optional. It is an [extensible enum](/protocol/fields/extensible-enum/): a standard `value` for the list, or `"value": "custom"` with the subtype in `customValue`.
 - `startDate` and `endDate` are optional `YYYY-MM-DD` dates.
 - `status` is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates.
@@ -143,7 +143,7 @@ Some systems, such as grants management systems that track each name a grantee t
 }
 ```
 
-In `children`, a `dba` entry means the referenced record is a trading-name record of this organization. Most systems don't keep a record per trading name; they list the names in the legal entity's [`aliases`](#aliases) instead. Use a `dba` record only when the trading name has a record of its own.
+In `children`, a `dba` entry means the referenced record is a trading-name record of this organization. Most systems don't keep a record per trading name; they list the names in the legal entity's [`aliases`](#aliases) instead. Use a `dba` record only when the trading name has a record of its own, and don't also list that name in `aliases`; see [Aliases](#aliases).
 
 ## Succession
 
@@ -284,7 +284,7 @@ Record replacement is about records in a provider's system, not organizations. A
 
 `aliases` lists other names the same organization goes by, such as a trading name or a short form of its legal name, as plain strings on the organization itself. They are not separate organizations, and they are not a history of former names. Each alias is a non-empty string, and the list has no repeats.
 
-Don't list a name in `aliases` when it has its own [trading-name record](#trading-name-records) pointing at this organization with a `dba` kind, so a reader doesn't count the same name twice. The schema doesn't check this. A trading-name record that was retired as a duplicate, with a `recordReplacedBy` entry of kind `duplicate`, isn't a live trading-name record, so its name can go in `aliases`.
+Don't list a name in `aliases` that has its own live [trading-name record](#trading-name-records) linked to this organization by a `dba` entry in either record, `parents` on the trading-name record or `children` on this one, so a reader doesn't count the same name twice. A name can go in `aliases` when no live `dba` record for it remains, for example when that record was replaced, as a `duplicate` or `merged` record, by the legal entity's own record. The schema doesn't check this.
 
 ```json title="Organization: one organization known by several names"
 {
@@ -298,7 +298,7 @@ Don't list a name in `aliases` when it has its own [trading-name record](#tradin
 
 Relationships are updated with the same [JSON Merge Patch](/protocol/models/organization#orgpatchdata) as the rest of the organization profile. Each list is an array, so a patch replaces the lists it addresses whole and leaves the other lists unchanged. There is no append, merge by ID, single-entry change, or automatic reverse entry: to change one entry, send the full list with whole entries.
 
-In a patch, `org` names the other organization by `id`. The receiver rejects an `id` it doesn't recognize. It ignores any `name` or `identifiers` sent with the `id` and fills both in from its own record, so reads and revision snapshots return a full `OrgRef`. A writer can send `id` alone, or resend entries copied from a read without removing their names. Schema validation only checks shape; it doesn't look up or fill in the target.
+In a patch, `org` names the other organization by `id`. The receiver rejects an `id` it doesn't recognize. It ignores any `name` or `identifiers` sent with the `id` and fills both in from its own record, so reads and revision snapshots return a full `OrgRef`. A revision's `patch` is recorded as received, so a target `name` or `identifiers` there isn't authoritative; the read and the revision's `snapshot` carry the filled-in values. A writer can send `id` alone, or resend entries copied from a read without removing their names. Schema validation only checks shape; it doesn't look up or fill in the target.
 
 ```json title="Patch: end the fiscal sponsorship, resending the whole parents list"
 {

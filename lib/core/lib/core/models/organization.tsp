@@ -46,7 +46,7 @@ model OrganizationBase {
   /** Collection of the organization's social media and web presence links. */
   socials?: OrgSocialLinks;
 
-  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name here that has its own trading-name record pointing at this organization with a `dba` kind. */
+  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide. */
   @Versioning.added(CommonGrants.Versions.v0_5)
   @TypeSpec.JsonSchema.uniqueItems
   aliases?: Types.nonEmptyString[];

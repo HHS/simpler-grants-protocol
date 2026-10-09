@@ -4649,7 +4649,7 @@ components:
             $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
           nullable: true
           uniqueItems: true
-          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name here that has its own trading-name record pointing at this organization with a `dba` kind.
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
         identifiers:
           type: object
           allOf:
@@ -5441,7 +5441,7 @@ components:
           items:
             $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
           uniqueItems: true
-          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name here that has its own trading-name record pointing at this organization with a `dba` kind.
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
         relationships:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
