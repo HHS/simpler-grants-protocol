@@ -579,3 +579,118 @@ describe("wire representation", () => {
     expect(result.validated).toBe(SAMPLE_SIZE + 2);
   });
 });
+
+// #########################################################
+// Object policy preservation
+//
+// The harness forces `.strict()` on the root Zod object before comparing,
+// which overrides a caller's `.catchall()` even when the protocol schema
+// itself describes an open record. `preserveObjectPolicy` lets a caller opt
+// out of that override so an intentionally open Zod schema is compared as
+// given.
+// #########################################################
+
+describe("object policy preservation", () => {
+  // Protocol side: an open record — a required string property plus any
+  // number of additional numeric properties.
+  const openRecAjv = createAjvFromDefs(
+    {
+      OpenRec: {
+        $id: "OpenRec.yaml",
+        type: "object",
+        properties: { a: { type: "string" } },
+        required: ["a"],
+        unevaluatedProperties: { type: "number" },
+      },
+    },
+    "synthetic:object-policy"
+  );
+
+  // Protocol side: a sealed object nested inside a sealed object. Both levels
+  // reject unevaluated properties, so closure has to hold through composition,
+  // not just at the root.
+  const nestedAjv = createAjvFromDefs(
+    {
+      Nested: {
+        $id: "Nested.yaml",
+        type: "object",
+        properties: {
+          outer: {
+            type: "object",
+            properties: { inner: { type: "string" } },
+            required: ["inner"],
+            unevaluatedProperties: { not: {} },
+          },
+        },
+        required: ["outer"],
+        unevaluatedProperties: { not: {} },
+      },
+    },
+    "synthetic:object-policy"
+  );
+
+  it("should preserve a root-level catchall when preserveObjectPolicy is true", async () => {
+    const openZod = z.object({ a: z.string() }).catchall(z.number());
+
+    const result = await checkZodMatchesJsonSchema(openZod, "OpenRec.yaml", {
+      ajv: openRecAjv,
+      cases: [{ label: "extra numeric key", value: { a: "x", extra: 5 } }],
+      preserveObjectPolicy: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.mismatches).toEqual([]);
+  });
+
+  it("should still force root strict by default, overriding the catchall", async () => {
+    // The flip side of the test above: with the default policy, the forced
+    // `.strict()` strips the catchall, so the Zod schema rejects the extra key
+    // the protocol accepts. This is the behavior existing callers rely on.
+    const openZod = z.object({ a: z.string() }).catchall(z.number());
+
+    const result = await checkZodMatchesJsonSchema(openZod, "OpenRec.yaml", {
+      ajv: openRecAjv,
+      cases: [{ label: "extra numeric key", value: { a: "x", extra: 5 } }],
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.mismatches).toHaveLength(1);
+    expect(result.mismatches[0].source).toBe("extra numeric key");
+    expect(result.mismatches[0].jsonSchemaValid).toBe(true);
+    expect(result.mismatches[0].zodValid).toBe(false);
+  });
+
+  it("should reject a catchall value the open record forbids", async () => {
+    // The record is open but typed: an extra key whose value is a string, not a
+    // number, is rejected by both validators, so they agree.
+    const openZod = z.object({ a: z.string() }).catchall(z.number());
+
+    const result = await checkZodMatchesJsonSchema(openZod, "OpenRec.yaml", {
+      ajv: openRecAjv,
+      cases: [
+        { label: "extra numeric key", value: { a: "x", extra: 5 } },
+        { label: "extra string key", value: { a: "x", extra: "nope" } },
+      ],
+      preserveObjectPolicy: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.successCount).toBe(SAMPLE_SIZE + 2);
+  });
+
+  it("should reject a nested extra key through composed closure", async () => {
+    const sealedZod = z.object({ outer: z.object({ inner: z.string() }).strict() }).strict();
+
+    const result = await checkZodMatchesJsonSchema(sealedZod, "Nested.yaml", {
+      ajv: nestedAjv,
+      cases: [
+        { label: "clean nested object", value: { outer: { inner: "x" } } },
+        { label: "extra key on nested object", value: { outer: { inner: "x", extra: "y" } } },
+      ],
+      preserveObjectPolicy: true,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.successCount).toBe(SAMPLE_SIZE + 2);
+  });
+});
