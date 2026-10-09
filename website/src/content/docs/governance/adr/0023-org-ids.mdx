@@ -9,6 +9,8 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 :::caution[Partially superseded]
 [ADR 0030: Organization relationships](/governance/adr/0030-org-relationships/) replaces the single `parent` field decided here with a `relationships.parents` list. Each entry in that list holds the parent reference under `org`. The reference content decided here (`id`, `name`, and optional `identifiers`) and all identifier decisions remain in force.
+
+As of October 2026, ADR 0030 also rewords `OrgRef.name` to "The name this organization is known by; for a legal entity, its legal name," so that it fits a record for a trading name.
 :::
 
 The `OrganizationBase` model currently hardcodes three U.S. federal identifier fields (`ein`, `uei`, `duns`). As CommonGrants expands to state, local, private, and international contexts, we need an extensible way to map multiple identifiers to a given organization, and ideally reuse the same pattern across other models (`OpportunityBase`, `ApplicationBase`, `AwardBase`).
