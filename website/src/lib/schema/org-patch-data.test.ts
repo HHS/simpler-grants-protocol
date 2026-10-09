@@ -200,9 +200,9 @@ describe("OrgPatchData merge-patch schema", () => {
           },
         },
       ],
-      ["replaces the DBA names", { dbaNames: ["Example Thrift", "Example"] }],
-      ["sends empty DBA names", { dbaNames: [] }],
-      ["removes the DBA names", { dbaNames: null }],
+      ["replaces the aliases", { aliases: ["Agile Six", "Agile6"] }],
+      ["sends empty aliases", { aliases: [] }],
+      ["removes the aliases", { aliases: null }],
     ];
 
     it.each(accepted)("accepts: %s", (_name, patch) => {
@@ -314,8 +314,12 @@ describe("OrgPatchData merge-patch schema", () => {
           },
         ],
       ),
-      ["a non-string DBA name", { dbaNames: [42] }],
-      ["a single string for DBA names", { dbaNames: "Example Thrift" }],
+      ["a non-string alias", { aliases: [42] }],
+      ["a single string for aliases", { aliases: "Agile Six" }],
+      ["an empty alias", { aliases: [""] }],
+      ["a repeated alias", { aliases: ["Agile Six", "Agile Six"] }],
+      ["a null alias", { aliases: [null] }],
+      ["the old dbaNames member", { dbaNames: ["Agile Six"] }],
     ];
 
     it.each(rejected)("rejects: %s", (_name, patch) => {

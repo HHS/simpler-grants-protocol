@@ -45,6 +45,7 @@ const HIERARCHY_KINDS = [
   "branch",
   "subsidiary",
   "fiscalSponsor",
+  "dba",
 ];
 const SUCCESSION_KINDS = ["merger", "acquisition", "divestiture", "split"];
 const RECORD_KINDS = ["duplicate", "merged"];
@@ -94,7 +95,7 @@ describe("OrganizationBase relationships read schema", () => {
   });
 
   const accepted: Array<[string, object]> = [
-    ["omits relationships and dbaNames", org],
+    ["omits relationships and aliases", org],
     [
       "an entry with only org in every list",
       withRelationships(
@@ -221,8 +222,8 @@ describe("OrganizationBase relationships read schema", () => {
         ],
       }),
     ],
-    ["lists current DBA names", { ...org, dbaNames: ["Example Thrift"] }],
-    ["lists no DBA names", { ...org, dbaNames: [] }],
+    ["lists aliases", { ...org, aliases: ["Example Thrift", "Example"] }],
+    ["lists no aliases", { ...org, aliases: [] }],
   ];
 
   it.each(accepted)("accepts: %s", (_name, payload) => {
@@ -329,8 +330,11 @@ describe("OrganizationBase relationships read schema", () => {
       "a numeric startDate",
       withRelationships({ parents: [entry("chapter", { startDate: 2024 })] }),
     ],
-    ["DBA names as a string", { ...org, dbaNames: "Example Thrift" }],
-    ["a null DBA name", { ...org, dbaNames: [null] }],
+    ["aliases as a string", { ...org, aliases: "Example Thrift" }],
+    ["a null alias", { ...org, aliases: [null] }],
+    ["an empty alias", { ...org, aliases: [""] }],
+    ["a repeated alias", { ...org, aliases: ["Example", "Example"] }],
+    ["the old dbaNames member", { ...org, dbaNames: ["Example Thrift"] }],
   ];
 
   it.each(rejected)("rejects: %s", (_name, payload) => {
@@ -383,7 +387,7 @@ describe("OrganizationBase relationships read schema", () => {
 
     it("finds every titled example", () => {
       expect(blocks.filter(([kind]) => kind === "Organization")).toHaveLength(
-        9,
+        10,
       );
       expect(blocks.filter(([kind]) => kind === "Patch")).toHaveLength(3);
     });
@@ -556,16 +560,16 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
   ];
 
   // A read never carries `null`. In a patch, `null` removes `relationships`,
-  // one list, or `dbaNames`, as in JSON Merge Patch; an entry in a replaced
+  // one list, or `aliases`, as in JSON Merge Patch; an entry in a replaced
   // list has nothing to merge into, so its optional members are omitted
   // rather than `null`.
   const entryMembers = ["kind", "startDate", "endDate", "status"];
   const nullCases: typeof cases = [
     ["read: null relationships", "OrganizationBase", read(null), false],
     [
-      "read: null dbaNames",
+      "read: null aliases",
       "OrganizationBase",
-      { ...read({}), dbaNames: null },
+      { ...read({}), aliases: null },
       false,
     ],
     ...LISTS.map(([list]): (typeof cases)[number] => [
@@ -581,7 +585,7 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
       false,
     ]),
     ["patch: remove all relationships", "OrgPatchData", patch(null), true],
-    ["patch: remove dbaNames", "OrgPatchData", { dbaNames: null }, true],
+    ["patch: remove aliases", "OrgPatchData", { aliases: null }, true],
     ...LISTS.map(([list]): (typeof cases)[number] => [
       `patch: remove ${list}`,
       "OrgPatchData",
@@ -653,9 +657,11 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     );
   });
 
-  // An entry in a replaced list has nothing to merge into, so its org's
-  // identifiers are stored as written: no `null` member or `id`, and the
-  // same constraints as a read. Both dialects must agree.
+  // An entry in a replaced list has nothing to merge into, so its own
+  // members are stored as written; the target's `name` and `identifiers` are
+  // replaced by the receiver. The written identifiers still take no `null`
+  // member or `id` and have the same constraints as a read. Both dialects
+  // must agree.
   const populated = {
     "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
     "org:us:uei": { id: "AB0123456789" },
@@ -755,6 +761,103 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     expect(followed).toContain("CommonGrants.Models.OrgHierarchyRelationship");
     expect(followed).toContain(
       "CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly",
+    );
+  });
+});
+
+/**
+ * Write -> read -> revision round trip for a relationship target.
+ *
+ * A patch names a target by `id` alone, but a read and an `OrgRevision`
+ * snapshot need the target's `name`. Schema validation can't bridge that, so
+ * the receiver must fill the target in from its own record. These tests show
+ * that the schemas require that fill, and that what a receiver returns after
+ * it, including entries a writer copies back into a patch, validates.
+ */
+describe("relationship target round trip", () => {
+  const ajv = loadJsonSchemas();
+  const patchSchema = ajv.getSchema("OrgPatchData.yaml")!;
+  const readSchema = ajv.getSchema("OrganizationBase.yaml")!;
+  const revisionSchema = ajv.getSchema("OrgRevision.yaml")!;
+
+  const LEGAL = "01912a8b-7c3d-7890-abcd-ef12345678a0";
+  const TRADING = "01912a8b-7c3d-7890-abcd-ef12345678a1";
+  const idOnly = { org: { id: LEGAL }, kind: { value: "dba" } };
+  /** The same entry as a receiver returns it, with the target filled in. */
+  const filled = {
+    org: {
+      id: LEGAL,
+      name: "Example Holdings, Inc.",
+      identifiers: {
+        "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
+        "org:us:uei": { id: "AB0123456789" },
+        otherIds: { "org:xi:foo": { id: "foo-1" } },
+      },
+    },
+    kind: { value: "dba" },
+  };
+  const patch = { relationships: { parents: [idOnly] } };
+  const tradingRecord = (entry: object) => ({
+    id: TRADING,
+    name: "Example Coffee",
+    relationships: { parents: [entry] },
+  });
+  const revision = (snapshot: object) => ({
+    id: "01912a8b-7c3d-7890-abcd-ef12345678a2",
+    status: { value: "accepted" },
+    patch,
+    snapshot,
+    createdAt: "2026-10-01T12:00:00Z",
+    lastModifiedAt: "2026-10-01T12:00:00Z",
+  });
+
+  it("accepts an id-only target in a patch", () => {
+    expect(patchSchema(patch), JSON.stringify(patchSchema.errors)).toBe(true);
+  });
+
+  it("requires a fill: the entry read back unfilled is not a valid read", () => {
+    expect(readSchema(tradingRecord(idOnly))).toBe(false);
+  });
+
+  it("requires a fill: an unfilled snapshot is not a valid revision", () => {
+    expect(revisionSchema(revision(tradingRecord(idOnly)))).toBe(false);
+  });
+
+  it("accepts the filled entry as a read and as a revision snapshot", () => {
+    expect(
+      readSchema(tradingRecord(filled)),
+      JSON.stringify(readSchema.errors),
+    ).toBe(true);
+    expect(
+      revisionSchema(revision(tradingRecord(filled))),
+      JSON.stringify(revisionSchema.errors),
+    ).toBe(true);
+  });
+
+  it("accepts a filled entry, with full identifiers, copied verbatim into a patch", () => {
+    expect(
+      patchSchema({ relationships: { parents: [filled] } }),
+      JSON.stringify(patchSchema.errors),
+    ).toBe(true);
+  });
+
+  it("documents the target's name and identifiers as ignored in the write schema", () => {
+    const target = (
+      yaml.load(
+        fs.readFileSync(
+          path.join(Paths.SCHEMAS_DIR, "OrgPatchData.yaml"),
+          "utf-8",
+        ),
+      ) as {
+        $defs: Record<
+          string,
+          { properties: Record<string, { description: string }> }
+        >;
+      }
+    ).$defs.OrgPatchOrgTargetRefReplaceOnly;
+    expect(target.properties.name.description).toMatch(/Ignored if supplied/);
+    expect(target.properties.identifiers.description).toMatch(
+      /Ignored if supplied/,
     );
   });
 });

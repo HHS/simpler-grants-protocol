@@ -46,9 +46,10 @@ model OrganizationBase {
   /** Collection of the organization's social media and web presence links. */
   socials?: OrgSocialLinks;
 
-  /** Names the organization currently does business as, alongside its legal `name`. Not a history of former names. */
+  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide. */
   @Versioning.added(CommonGrants.Versions.v0_5)
-  dbaNames?: string[];
+  @TypeSpec.JsonSchema.uniqueItems
+  aliases?: Types.nonEmptyString[];
 
   /** The organization's relationships to other organizations. */
   @Versioning.added(CommonGrants.Versions.v0_5)
@@ -110,7 +111,7 @@ model OrgRef {
   @visibility(Lifecycle.Read)
   id: Types.uuid;
 
-  /** The organization's legal name as registered with relevant authorities. */
+  /** The name this organization is known by; for a legal entity, its legal name. */
   name: string;
 
   /** Identifiers associated with the organization, keyed by registry code. */
@@ -142,6 +143,7 @@ model OrgRefCollection {
  * - `branch`: The child is a branch of the parent
  * - `subsidiary`: The child is a subsidiary of the parent
  * - `fiscalSponsor`: The parent fiscally sponsors the child
+ * - `dba`: The child is a record for a name the parent, a legal entity, does business under
  * - `custom`: Another subtype, named in `customValue`
  */
 @Versioning.added(CommonGrants.Versions.v0_5)
@@ -151,6 +153,7 @@ enum OrgHierarchyKindOptions {
   branch,
   subsidiary,
   fiscalSponsor,
+  dba,
   custom,
 }
 

@@ -5,6 +5,7 @@ import {
   extractFromSchema,
   getString,
   getStringArray,
+  getObject,
   getPropertyConst,
   getPropertyExamples,
 } from "../catalog";
@@ -15,6 +16,7 @@ import type {
   CustomFieldIndexEntry,
   CustomFieldMap,
   CustomFieldSchemaData,
+  DeprecationNotice,
   FilterOptions,
 } from "./types";
 
@@ -45,6 +47,21 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
 }
 
 /**
+ * Reads the `x-deprecated` notice from a schema, if it declares a complete
+ * one. Returns undefined for a schema without the extension, and for a
+ * malformed notice, so a half-written notice never reaches the page.
+ */
+function extractDeprecation(
+  schema: Record<string, unknown>,
+): DeprecationNotice | undefined {
+  const { note, href } = getObject("x-deprecated")(schema);
+
+  return typeof note === "string" && typeof href === "string"
+    ? { note, href }
+    : undefined;
+}
+
+/**
  * Extracts custom field data from a JSON schema.
  *
  * Custom field schemas store name, description, and fieldType as `const`
@@ -54,6 +71,8 @@ function loadSchema(schemaName: string): Record<string, unknown> | null {
 function extractSchemaData(
   schema: Record<string, unknown>,
 ): CustomFieldSchemaData {
+  const deprecated = extractDeprecation(schema);
+
   return {
     ...extractFromSchema(schema, {
       name: getPropertyConst("name"),
@@ -65,6 +84,7 @@ function extractSchemaData(
       validFor: getStringArray("x-valid-schemas"),
       author: getString("x-author"),
     }),
+    ...(deprecated && { deprecated }),
     rawSchema: schema,
   };
 }

@@ -4,7 +4,7 @@ type: object
 properties:
   name:
     type: string
-    description: The organization's legal name as registered with relevant authorities.
+    description: The name this organization is known by; for a legal entity, its legal name.
   status:
     anyOf:
       - $ref: OrgPatchOrgStatusOrCreate.yaml
@@ -20,13 +20,14 @@ properties:
       - $ref: calendarYear.yaml
       - type: "null"
     description: The calendar year the organization was founded.
-  dbaNames:
+  aliases:
     anyOf:
       - type: array
         items:
-          type: string
+          $ref: nonEmptyString.yaml
       - type: "null"
-    description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+    uniqueItems: true
+    description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
   identifiers:
     anyOf:
       - $ref: "#/$defs/OrgPatchOrgIdsOrCreate"
@@ -484,7 +485,7 @@ $defs:
         description: The other organization's unique identifier.
       name:
         type: string
-        description: The other organization's legal name.
+        description: "The other organization's name. Ignored if supplied: the receiver fills it in from its own record."
       identifiers:
         type: object
         properties:
@@ -713,7 +714,7 @@ $defs:
               protocol does not define as a base identifier on the model.
         unevaluatedProperties:
           not: {}
-        description: Identifiers associated with the other organization, keyed by registry code.
+        description: "Identifiers associated with the other organization, keyed by registry code. Ignored if supplied: the receiver fills them in from its own record."
     required:
       - id
     unevaluatedProperties:
@@ -722,6 +723,11 @@ $defs:
       A writable reference to a relationship's other organization.
 
       Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
-      patch can name the other organization, and `name` is optional so it can be
-      named by `id` alone. Schema validation checks only this shape; it does not
-      fill in the organization's `name` or `identifiers`.
+      patch can name the other organization, and the rest is optional so it can
+      be named by `id` alone. The receiver identifies the target by `id` and
+      rejects an `id` it doesn't recognize. It ignores a supplied `name` and
+      `identifiers` and fills both in from its own record on reads and revision
+      snapshots. They stay accepted, rather than read-only, so a writer can
+      resend entries copied from a read: read-only members would be dropped
+      from this closed schema, which would then reject them. Schema validation
+      checks only this shape; it does not look up or fill in the target.

@@ -356,7 +356,7 @@ paths:
                 description: A 200 response with a paginated list of typed items
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/awards/search:
     post:
       operationId: Awards_search
@@ -407,7 +407,7 @@ paths:
                 description: A paginated list of typed items with a typed filter
       tags:
         - Awards
-        - experimental
+        - optional
       requestBody:
         required: true
         content:
@@ -472,7 +472,7 @@ paths:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/competitions/{compId}:
     get:
       operationId: Competitions_read
@@ -4067,7 +4067,7 @@ components:
         opp:us:fon:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppIdFon'
-          description: The opportunity's Federal Opportunity Number (FON).
+          description: The opportunity's Funding Opportunity Number (FON).
         opp:us:aln:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppIdAln'
@@ -4269,6 +4269,20 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppFunding'
           description: Details about the funding available
+        funders:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRefCollection'
+          description: Organization(s) offering the funding for this opportunity
+          example:
+            primary:
+              id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+              name: Health Resources and Services Administration
+              identifiers:
+                otherIds:
+                  org:grants.gov:agency:
+                    registry:
+                      code: org:grants.gov:agency
+                    id: HRSA
         keyDates:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OppTimeline'
@@ -4306,6 +4320,24 @@ components:
           items:
             $ref: '#/components/schemas/CommonGrants.Models.CompetitionBase'
           description: The competitions associated with the opportunity
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.AwdRef'
+          description: |-
+            Awards that resulted from this opportunity, as references.
+
+            Each entry references an award that resulted from this opportunity; the
+            award's `opportunity.id`, when it is published, is this record's `id`.
+            An entry is a reference, not the award record: `GET /awards/<id>` is the
+            canonical record only where an implementation serves the award routes,
+            and otherwise the entry's `identifiers`, where the publisher supplies
+            them, are the key for joining the award in another system. A consumer
+            must not assume a reference can be dereferenced through this API.
+
+            Absent means the implementation does not publish this link for the
+            record, and an empty array means the link is published and no awards are
+            known. Entries carry no ordering guarantee.
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
       description: A funding opportunity with additional details, like available competitions.
@@ -4317,6 +4349,7 @@ components:
         - branch
         - subsidiary
         - fiscalSponsor
+        - dba
         - custom
       description: |-
         The standard subtypes of a parent or child relationship:
@@ -4325,6 +4358,7 @@ components:
         - `branch`: The child is a branch of the parent
         - `subsidiary`: The child is a subsidiary of the parent
         - `fiscalSponsor`: The parent fiscally sponsors the child
+        - `dba`: The child is a record for a name the parent, a legal entity, does business under
         - `custom`: Another subtype, named in `customValue`
     CommonGrants.Models.OrgHierarchyRelationship:
       type: object
@@ -4592,7 +4626,7 @@ components:
       properties:
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         status:
           type: object
           allOf:
@@ -4609,12 +4643,13 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
           nullable: true
           description: The calendar year the organization was founded.
-        dbaNames:
+        aliases:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
           nullable: true
-          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
         identifiers:
           type: object
           allOf:
@@ -4971,7 +5006,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
@@ -5365,7 +5400,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
@@ -5401,11 +5436,12 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgSocialLinks'
           description: Collection of the organization's social media and web presence links.
-        dbaNames:
+        aliases:
           type: array
           items:
-            type: string
-          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
         relationships:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
@@ -5862,7 +5898,7 @@ components:
           description: The other organization's unique identifier.
         name:
           type: string
-          description: The other organization's legal name.
+          description: "The other organization's name. Ignored if supplied: the receiver fills it in from its own record."
         identifiers:
           type: object
           properties:
@@ -6074,14 +6110,19 @@ components:
               description: |-
                 Additional identifiers keyed by their registry code, for registries the
                 protocol does not define as a base identifier on the model.
-          description: Identifiers associated with the other organization, keyed by registry code.
+          description: 'Identifiers associated with the other organization, keyed by registry code. Ignored if supplied: the receiver fills them in from its own record.'
       description: |-
         A writable reference to a relationship's other organization.
 
         Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
-        patch can name the other organization, and `name` is optional so it can be
-        named by `id` alone. Schema validation checks only this shape; it does not
-        fill in the organization's `name` or `identifiers`.
+        patch can name the other organization, and the rest is optional so it can
+        be named by `id` alone. The receiver identifies the target by `id` and
+        rejects an `id` it doesn't recognize. It ignores a supplied `name` and
+        `identifiers` and fills both in from its own record on reads and revision
+        snapshots. They stay accepted, rather than read-only, so a writer can
+        resend entries copied from a read: read-only members would be dropped
+        from this closed schema, which would then reject them. Schema validation
+        checks only this shape; it does not look up or fill in the target.
     CommonGrants.Patch.OrgPatchPCSOrgTypeOrCreate:
       type: object
       properties:
@@ -6368,6 +6409,11 @@ components:
       format: time
       description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
       example: '17:00:00'
+    CommonGrants.Types.nonEmptyString:
+      type: string
+      minLength: 1
+      description: A string with at least one character
+      example: Example
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$
