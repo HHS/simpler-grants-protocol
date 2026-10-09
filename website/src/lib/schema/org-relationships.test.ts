@@ -45,6 +45,7 @@ const HIERARCHY_KINDS = [
   "branch",
   "subsidiary",
   "fiscalSponsor",
+  "dba",
 ];
 const SUCCESSION_KINDS = ["merger", "acquisition", "divestiture", "split"];
 const RECORD_KINDS = ["duplicate", "merged"];

@@ -4349,6 +4349,7 @@ components:
         - branch
         - subsidiary
         - fiscalSponsor
+        - dba
         - custom
       description: |-
         The standard subtypes of a parent or child relationship:
@@ -4357,6 +4358,7 @@ components:
         - `branch`: The child is a branch of the parent
         - `subsidiary`: The child is a subsidiary of the parent
         - `fiscalSponsor`: The parent fiscally sponsors the child
+        - `dba`: The child is a record for a name the parent, a legal entity, does business under
         - `custom`: Another subtype, named in `customValue`
     CommonGrants.Models.OrgHierarchyRelationship:
       type: object

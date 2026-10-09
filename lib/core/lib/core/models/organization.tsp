@@ -142,6 +142,7 @@ model OrgRefCollection {
  * - `branch`: The child is a branch of the parent
  * - `subsidiary`: The child is a subsidiary of the parent
  * - `fiscalSponsor`: The parent fiscally sponsors the child
+ * - `dba`: The child is a record for a name the parent, a legal entity, does business under
  * - `custom`: Another subtype, named in `customValue`
  */
 @Versioning.added(CommonGrants.Versions.v0_5)
@@ -151,6 +152,7 @@ enum OrgHierarchyKindOptions {
   branch,
   subsidiary,
   fiscalSponsor,
+  dba,
   custom,
 }
 
