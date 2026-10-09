@@ -13,19 +13,19 @@ The examples are static documentation, checked against the draft schemas. The mo
 
 An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Other names the organization goes by go in `aliases`, not in a relationship.
 
-| List                 | Each entry says                                                     | Standard `kind` values                                           |
-| -------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `parents`            | `org` is above this organization                                    | `chapter`, `department`, `branch`, `subsidiary`, `fiscalSponsor` |
-| `children`           | `org` is below this organization                                    | Same as `parents`                                                |
-| `succeededBy`        | `org` carries on all or part of this organization                   | `merger`, `acquisition`, `divestiture`, `split`                  |
-| `succeeds`           | This organization carries on all or part of `org`                   | Same as `succeededBy`                                            |
-| `recordReplacedBy`   | `org`'s record should be used instead of this record                | `duplicate`, `merged`                                            |
-| `recordReplaces`     | This record should be used instead of `org`'s record                | Same as `recordReplacedBy`                                       |
-| `otherRelationships` | This organization is connected to `org`, possibly with no direction | None                                                             |
+| List                 | Each entry says                                                     | Standard `kind` values                                                  |
+| -------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `parents`            | `org` is above this organization                                    | `chapter`, `department`, `branch`, `subsidiary`, `fiscalSponsor`, `dba` |
+| `children`           | `org` is below this organization                                    | Same as `parents`                                                       |
+| `succeededBy`        | `org` carries on all or part of this organization                   | `merger`, `acquisition`, `divestiture`, `split`                         |
+| `succeeds`           | This organization carries on all or part of `org`                   | Same as `succeededBy`                                                   |
+| `recordReplacedBy`   | `org`'s record should be used instead of this record                | `duplicate`, `merged`                                                   |
+| `recordReplaces`     | This record should be used instead of `org`'s record                | Same as `recordReplacedBy`                                              |
+| `otherRelationships` | This organization is connected to `org`, possibly with no direction | None                                                                    |
 
 Every entry has the same shape:
 
-- `org` is required and is an [`OrgRef`](/protocol/models/organization#orgref): the other organization's `id`, `name`, and, optionally, `identifiers` that let another system match it.
+- `org` is required and is an [`OrgRef`](/protocol/models/organization#orgref): the other organization's `id`, `name`, and, optionally, `identifiers` that let another system match it. A writer names it by `id`; see [Updating relationships](#updating-relationships).
 - `kind` is optional. It is an [extensible enum](/protocol/fields/extensible-enum/): a standard `value` for the list, or `"value": "custom"` with the subtype in `customValue`.
 - `startDate` and `endDate` are optional `YYYY-MM-DD` dates.
 - `status` is optional and is `active` or `inactive`. It describes the relationship, not either organization. It has no default and isn't derived from the dates.
@@ -120,6 +120,30 @@ The protocol doesn't require the reverse entry, complete lists, or agreement bet
 ```
 
 There is no generic `parent` kind: an entry without `kind` already says the other organization is a parent.
+
+### Trading-name records
+
+Some systems, such as grants management systems that track each name a grantee trades under, keep a separate record for each trading name. That record points up at the legal entity it belongs to with a `dba` entry in `parents`, meaning this record is a name the referenced legal entity does business under. Its `name` is the trading name. Here the alliance's gallery has a record of its own:
+
+```json title="Organization: a trading-name record pointing at its legal entity"
+{
+  "id": "01912a8b-7c3d-7890-abcd-ef12345678a1",
+  "name": "The Gallery on Main",
+  "relationships": {
+    "parents": [
+      {
+        "org": {
+          "id": "24354657-c5d6-4be8-99a0-1b2c3d4e5f60",
+          "name": "Example Riverside Arts Alliance, Inc."
+        },
+        "kind": { "value": "dba" }
+      }
+    ]
+  }
+}
+```
+
+In `children`, a `dba` entry means the referenced record is a trading-name record of this organization. Most systems don't keep a record per trading name; they list the names in the legal entity's [`aliases`](#aliases) instead. Use a `dba` record only when the trading name has a record of its own.
 
 ## Succession
 
@@ -260,11 +284,13 @@ Record replacement is about records in a provider's system, not organizations. A
 
 `aliases` lists other names the same organization goes by, such as a trading name or a short form of its legal name, as plain strings on the organization itself. They are not separate organizations, and they are not a history of former names. Each alias is a non-empty string, and the list has no repeats.
 
+Don't list a name in `aliases` when it has its own [trading-name record](#trading-name-records) pointing at this organization with a `dba` kind, so a reader doesn't count the same name twice. The schema doesn't check this. A trading-name record that was retired as a duplicate, with a `recordReplacedBy` entry of kind `duplicate`, isn't a live trading-name record, so its name can go in `aliases`.
+
 ```json title="Organization: one organization known by several names"
 {
   "id": "24354657-c5d6-4be8-99a0-1b2c3d4e5f60",
   "name": "Example Riverside Arts Alliance, Inc.",
-  "aliases": ["Riverside Arts", "The Gallery on Main", "RAA"]
+  "aliases": ["Riverside Arts", "RAA"]
 }
 ```
 
@@ -272,7 +298,7 @@ Record replacement is about records in a provider's system, not organizations. A
 
 Relationships are updated with the same [JSON Merge Patch](/protocol/models/organization#orgpatchdata) as the rest of the organization profile. Each list is an array, so a patch replaces the lists it addresses whole and leaves the other lists unchanged. There is no append, merge by ID, single-entry change, or automatic reverse entry: to change one entry, send the full list with whole entries.
 
-In a patch, `org` can name the other organization by `id` alone. Reads still return a full `OrgRef`; schema validation only checks shape and doesn't fill in the `name` or `identifiers`.
+In a patch, `org` names the other organization by `id`. The receiver rejects an `id` it doesn't recognize. It ignores any `name` or `identifiers` sent with the `id` and fills both in from its own record, so reads and revision snapshots return a full `OrgRef`. A writer can send `id` alone, or resend entries copied from a read without removing their names. Schema validation only checks shape; it doesn't look up or fill in the target.
 
 ```json title="Patch: end the fiscal sponsorship, resending the whole parents list"
 {
@@ -355,4 +381,4 @@ Following `parents` from record to record visits the parents each record supplie
 
 ## What the schema does not check
 
-The published schema checks shape: which lists exist, that every entry has an `org`, that every `org` in a read has an `id` and `name` and every `org` in a patch has an `id`, which `kind` values each list accepts, the date format, and the `status` values. It doesn't fill in an ID-only `org`, and it doesn't check facts about other records: whether the other organization exists, whether a reverse entry exists or agrees, or whether dates and status agree with each other. The protocol leaves those to the systems that hold the records and doesn't ask them to store or maintain a relationship graph.
+The published schema checks shape: which lists exist, that every entry has an `org`, that every `org` in a read has an `id` and `name` and every `org` in a patch has an `id`, which `kind` values each list accepts, the date format, and the `status` values. It doesn't fill in an ID-only `org`, which the receiver does, and it doesn't check facts about other records: whether the other organization exists, whether a reverse entry exists or agrees, or whether dates and status agree with each other. The protocol leaves those to the systems that hold the records and doesn't ask them to store or maintain a relationship graph.

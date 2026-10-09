@@ -387,7 +387,7 @@ describe("OrganizationBase relationships read schema", () => {
 
     it("finds every titled example", () => {
       expect(blocks.filter(([kind]) => kind === "Organization")).toHaveLength(
-        9,
+        10,
       );
       expect(blocks.filter(([kind]) => kind === "Patch")).toHaveLength(3);
     });
