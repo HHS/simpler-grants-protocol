@@ -762,3 +762,147 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     );
   });
 });
+
+/**
+ * Write -> read -> revision round trip for a relationship target.
+ *
+ * A patch names a target by `id` alone, but a read and an `OrgRevision`
+ * snapshot need the target's `name`. Schema validation can't bridge that, so
+ * the receiver must: it rejects an `id` it doesn't recognize, ignores a
+ * supplied `name` and `identifiers`, and fills both in from its own record.
+ * `fillTargets` stands in for that receiver; these tests pin that the schemas
+ * need it, and that its output is a valid read and snapshot.
+ */
+describe("relationship target round trip", () => {
+  const ajv = loadJsonSchemas();
+  const patchSchema = ajv.getSchema("OrgPatchData.yaml")!;
+  const readSchema = ajv.getSchema("OrganizationBase.yaml")!;
+  const revisionSchema = ajv.getSchema("OrgRevision.yaml")!;
+
+  const LEGAL = "01912a8b-7c3d-7890-abcd-ef12345678a0";
+  const TRADING = "01912a8b-7c3d-7890-abcd-ef12345678a1";
+  /** The receiver's own records, keyed by `id`. */
+  const records: Record<string, { name: string; identifiers?: object }> = {
+    [LEGAL]: {
+      name: "Example Holdings, Inc.",
+      identifiers: {
+        "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
+      },
+    },
+  };
+
+  type Entry = { org: { id: string; name?: string }; [key: string]: unknown };
+  type Lists = Record<string, Entry[]>;
+
+  /** What a receiver does with a written list: look up each target by `id`. */
+  const fillTargets = (lists: Lists): Lists =>
+    Object.fromEntries(
+      Object.entries(lists).map(([list, entries]) => [
+        list,
+        entries.map((entry) => {
+          const record = records[entry.org.id];
+          if (!record) throw new Error(`unknown target ${entry.org.id}`);
+          return { ...entry, org: { id: entry.org.id, ...record } };
+        }),
+      ]),
+    );
+
+  const written: Lists = {
+    parents: [{ org: { id: LEGAL }, kind: { value: "dba" } }],
+  };
+  const patch = { relationships: written };
+  const tradingRecord = (relationships: Lists) => ({
+    id: TRADING,
+    name: "Example Coffee",
+    relationships,
+  });
+  const revision = (snapshot: object) => ({
+    id: "01912a8b-7c3d-7890-abcd-ef12345678a2",
+    status: { value: "accepted" },
+    patch,
+    snapshot,
+    createdAt: "2026-10-01T12:00:00Z",
+    lastModifiedAt: "2026-10-01T12:00:00Z",
+  });
+
+  it("(a) accepts an id-only target in a patch", () => {
+    expect(patchSchema(patch), JSON.stringify(patchSchema.errors)).toBe(true);
+  });
+
+  it("(b) rejects the same entry read back without the target's name", () => {
+    expect(readSchema(tradingRecord(written))).toBe(false);
+    expect(revisionSchema(revision(tradingRecord(written)))).toBe(false);
+  });
+
+  it("(c) accepts the entry once the receiver fills in the target", () => {
+    const filled = tradingRecord(fillTargets(written));
+    expect(filled.relationships.parents[0].org).toEqual({
+      id: LEGAL,
+      ...records[LEGAL],
+    });
+    expect(readSchema(filled), JSON.stringify(readSchema.errors)).toBe(true);
+    expect(
+      revisionSchema(revision(filled)),
+      JSON.stringify(revisionSchema.errors),
+    ).toBe(true);
+  });
+
+  it("(d) accepts a supplied name and identifiers, which the receiver replaces", () => {
+    const supplied: Lists = {
+      parents: [
+        {
+          org: {
+            id: LEGAL,
+            name: "Wrong Name LLC",
+            identifiers: {
+              "org:us:ein": {
+                registry: { code: "org:us:ein" },
+                id: "987654321",
+              },
+            },
+          } as Entry["org"],
+          kind: { value: "dba" },
+        },
+      ],
+    };
+    expect(
+      patchSchema({ relationships: supplied }),
+      JSON.stringify(patchSchema.errors),
+    ).toBe(true);
+    expect(fillTargets(supplied)).toEqual(fillTargets(written));
+  });
+
+  it("(d) accepts entries copied verbatim from a read back into a patch", () => {
+    const read = tradingRecord(fillTargets(written));
+    expect(
+      patchSchema({ relationships: read.relationships }),
+      JSON.stringify(patchSchema.errors),
+    ).toBe(true);
+  });
+
+  it("documents the target's name and identifiers as ignored in the write schema", () => {
+    const target = (
+      yaml.load(
+        fs.readFileSync(
+          path.join(Paths.SCHEMAS_DIR, "OrgPatchData.yaml"),
+          "utf-8",
+        ),
+      ) as {
+        $defs: Record<
+          string,
+          { properties: Record<string, { description: string }> }
+        >;
+      }
+    ).$defs.OrgPatchOrgTargetRefReplaceOnly;
+    expect(target.properties.name.description).toMatch(/Ignored if supplied/);
+    expect(target.properties.identifiers.description).toMatch(
+      /Ignored if supplied/,
+    );
+  });
+
+  it("models the receiver rejecting a target id it doesn't recognize", () => {
+    const unknown: Lists = { parents: [{ org: { id: TRADING } }] };
+    expect(patchSchema({ relationships: unknown })).toBe(true);
+    expect(() => fillTargets(unknown)).toThrow(/unknown target/);
+  });
+});
