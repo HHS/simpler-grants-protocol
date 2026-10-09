@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgRecordKindOptions.yaml
+type: string
+enum:
+  - duplicate
+  - merged
+  - custom
+description: |-
+  The standard subtypes of record replacement. A provider's workflow may
+  treat them alike; they need not be exclusive.
+  - `duplicate`: The records duplicate each other
+  - `merged`: The provider combined the records
+  - `custom`: Another subtype, named in `customValue`

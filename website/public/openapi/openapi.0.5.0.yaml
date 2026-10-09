@@ -356,7 +356,7 @@ paths:
                 description: A 200 response with a paginated list of typed items
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/awards/search:
     post:
       operationId: Awards_search
@@ -407,7 +407,7 @@ paths:
                 description: A paginated list of typed items with a typed filter
       tags:
         - Awards
-        - experimental
+        - optional
       requestBody:
         required: true
         content:
@@ -472,7 +472,7 @@ paths:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
       tags:
         - Awards
-        - experimental
+        - optional
   /common-grants/competitions/{compId}:
     get:
       operationId: Competitions_read
@@ -4343,6 +4343,76 @@ components:
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Models.OpportunityBase'
       description: A funding opportunity with additional details, like available competitions.
+    CommonGrants.Models.OrgHierarchyKindOptions:
+      type: string
+      enum:
+        - chapter
+        - department
+        - branch
+        - subsidiary
+        - fiscalSponsor
+        - dba
+        - custom
+      description: |-
+        The standard subtypes of a parent or child relationship:
+        - `chapter`: The child is a chapter of the parent
+        - `department`: The child is an internal unit of the parent
+        - `branch`: The child is a branch of the parent
+        - `subsidiary`: The child is a subsidiary of the parent
+        - `fiscalSponsor`: The parent fiscally sponsors the child
+        - `dba`: The child is a record for a name the parent, a legal entity, does business under
+        - `custom`: Another subtype, named in `customValue`
+    CommonGrants.Models.OrgHierarchyRelationship:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: The other organization.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A parent or child relationship.
+      example:
+        org:
+          id: 01912a8b-7c3d-7892-abcd-ef1234567892
+          name: Riverside Community Foundation
+          identifiers:
+            org:us:ein:
+              registry:
+                code: org:us:ein
+              id: '123456789'
+        kind:
+          value: fiscalSponsor
+        startDate: '2024-07-01'
+        status: active
     CommonGrants.Models.OrgIdDuns:
       type: object
       properties:
@@ -4506,12 +4576,59 @@ components:
 
         Extends the generic identifier collection with the base identifiers CommonGrants
         defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Models.OrgOtherKindOptions:
+      type: string
+      enum:
+        - custom
+      description: Other relationships define no standard subtypes, so a stated subtype is `custom`.
+    CommonGrants.Models.OrgOtherRelationship:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: The other organization.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgOtherKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A relationship outside the named categories, which need not have a direction.
+      example:
+        org:
+          id: 01912a8b-7c3d-7895-abcd-ef1234567895
+          name: Riverside Literacy Coalition
     CommonGrants.Models.OrgPatchData:
       type: object
       properties:
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         status:
           type: object
           allOf:
@@ -4528,6 +4645,13 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
           nullable: true
           description: The calendar year the organization was founded.
+        aliases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
+          nullable: true
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
         identifiers:
           type: object
           allOf:
@@ -4564,6 +4688,53 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate'
           nullable: true
           description: Collection of the organization's social media and web presence links.
+        relationships:
+          type: object
+          properties:
+            parents:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgHierarchyRelationshipReplaceOnly'
+              nullable: true
+              description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+            children:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgHierarchyRelationshipReplaceOnly'
+              nullable: true
+              description: Organizations below this one, such as its chapters or sponsored projects.
+            succeededBy:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgSuccessionRelationshipReplaceOnly'
+              nullable: true
+              description: Organizations that carry on all or part of this one.
+            succeeds:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgSuccessionRelationshipReplaceOnly'
+              nullable: true
+              description: Organizations whose work this one carries on in whole or in part.
+            recordReplacedBy:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgRecordRelationshipReplaceOnly'
+              nullable: true
+              description: Records to use instead of this record.
+            recordReplaces:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgRecordRelationshipReplaceOnly'
+              nullable: true
+              description: Records that this record is used instead of.
+            otherRelationships:
+              type: array
+              items:
+                $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgOtherRelationshipReplaceOnly'
+              nullable: true
+              description: Connections outside the categories above, which need not have a direction.
+          nullable: true
+          description: The organization's relationships to other organizations.
         customFields:
           type: object
           additionalProperties:
@@ -4768,6 +4939,62 @@ components:
       example:
         value: active
         description: The organization exists and operates
+    CommonGrants.Models.OrgRecordKindOptions:
+      type: string
+      enum:
+        - duplicate
+        - merged
+        - custom
+      description: |-
+        The standard subtypes of record replacement. A provider's workflow may
+        treat them alike; they need not be exclusive.
+        - `duplicate`: The records duplicate each other
+        - `merged`: The provider combined the records
+        - `custom`: Another subtype, named in `customValue`
+    CommonGrants.Models.OrgRecordRelationship:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: The other organization.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgRecordKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A record replacement relationship.
+      example:
+        org:
+          id: 01912a8b-7c3d-7894-abcd-ef1234567894
+          name: Riverside Reading Project
+        kind:
+          value: duplicate
     CommonGrants.Models.OrgRef:
       type: object
       required:
@@ -4781,7 +5008,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
@@ -4828,6 +5055,77 @@ components:
                 registry:
                   code: org:grants.gov:agency
                 id: HRSA
+    CommonGrants.Models.OrgRelationshipStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+      description: Whether a relationship is in effect, as stated by the provider.
+    CommonGrants.Models.OrgRelationships:
+      type: object
+      properties:
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
+          description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyRelationship'
+          description: Organizations below this one, such as its chapters or sponsored projects.
+        succeededBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
+          description: Organizations that carry on all or part of this one.
+        succeeds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionRelationship'
+          description: Organizations whose work this one carries on in whole or in part.
+        recordReplacedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
+          description: Records to use instead of this record.
+        recordReplaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgRecordRelationship'
+          description: Records that this record is used instead of.
+        otherRelationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Models.OrgOtherRelationship'
+          description: Connections outside the categories above, which need not have a direction.
+      description: |-
+        An organization's relationships to other organizations.
+
+        Each named list holds relationships of one category and direction;
+        `otherRelationships` holds connections outside those categories. Every list
+        is optional, list order carries no meaning, and a provider may state a
+        relationship from either organization's record. A relationship confers no
+        authority over the other organization.
+      example:
+        parents:
+          - org:
+              id: 01912a8b-7c3d-7891-abcd-ef1234567891
+              name: National Reading Network
+            kind:
+              value: chapter
+          - org:
+              id: 01912a8b-7c3d-7892-abcd-ef1234567892
+              name: Riverside Community Foundation
+              identifiers:
+                org:us:ein:
+                  registry:
+                    code: org:us:ein
+                  id: '123456789'
+            kind:
+              value: fiscalSponsor
+            startDate: '2024-07-01'
+            status: active
     CommonGrants.Models.OrgRevision:
       type: object
       required:
@@ -5031,6 +5329,66 @@ components:
         - `active`: The organization exists and operates
         - `inactive`: The organization has dissolved or ceased operating; loss of tax-exempt status alone does not make an organization inactive
         - `custom`: A status not covered by the other options, described in `customValue`
+    CommonGrants.Models.OrgSuccessionKindOptions:
+      type: string
+      enum:
+        - merger
+        - acquisition
+        - divestiture
+        - split
+        - custom
+      description: |-
+        The standard subtypes of organizational succession:
+        - `merger`: Succession through a merger
+        - `acquisition`: Succession through an acquisition
+        - `divestiture`: Succession through a divestiture
+        - `split`: Succession through a split into several organizations
+        - `custom`: Another subtype, named in `customValue`
+    CommonGrants.Models.OrgSuccessionRelationship:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRef'
+          description: The other organization.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A succession relationship.
+      example:
+        org:
+          id: 01912a8b-7c3d-7893-abcd-ef1234567893
+          name: Riverside Reading East
+        kind:
+          value: split
+        startDate: '2026-01-01'
     CommonGrants.Models.OrganizationBase:
       type: object
       required:
@@ -5044,7 +5402,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
@@ -5080,6 +5438,16 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgSocialLinks'
           description: Collection of the organization's social media and web presence links.
+        aliases:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
+        relationships:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
+          description: The organization's relationships to other organizations.
         customFields:
           type: object
           additionalProperties:
@@ -5284,6 +5652,44 @@ components:
           nullable: true
           description: Additional email addresses keyed by a descriptive label (e.g., "work", "personal", "support").
       description: A collection of email addresses.
+    CommonGrants.Patch.OrgPatchOrgHierarchyRelationshipReplaceOnly:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+          description: The other organization, which a writer can name by `id` alone.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgHierarchyKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A parent or child relationship, as written.
     CommonGrants.Patch.OrgPatchOrgIdsOrCreate:
       type: object
       properties:
@@ -5327,6 +5733,82 @@ components:
 
         Extends the generic identifier collection with the base identifiers CommonGrants
         defines for organizations. Additional registries can be published under `otherIds`.
+    CommonGrants.Patch.OrgPatchOrgOtherRelationshipReplaceOnly:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+          description: The other organization, which a writer can name by `id` alone.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgOtherKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A relationship outside the named categories, as written.
+    CommonGrants.Patch.OrgPatchOrgRecordRelationshipReplaceOnly:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+          description: The other organization, which a writer can name by `id` alone.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgRecordKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A record replacement relationship, as written.
     CommonGrants.Patch.OrgPatchOrgSocialLinksOrCreate:
       type: object
       properties:
@@ -5369,6 +5851,280 @@ components:
           nullable: true
           description: Additional social media profiles not covered by the standard fields.
       description: A collection of social media and web presence links for an organization.
+    CommonGrants.Patch.OrgPatchOrgSuccessionRelationshipReplaceOnly:
+      type: object
+      required:
+        - org
+      properties:
+        org:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly'
+          description: The other organization, which a writer can name by `id` alone.
+        kind:
+          type: object
+          properties:
+            value:
+              allOf:
+                - $ref: '#/components/schemas/CommonGrants.Models.OrgSuccessionKindOptions'
+              description: The selected value, from a predefined set of options
+            customValue:
+              type: string
+              description: A custom value, used when the selected value is the `custom` option
+            description:
+              type: string
+              description: A human-readable description of the value
+          required:
+            - value
+          description: The relationship's subtype within the category its list names.
+        startDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship started, in ISO 8601 format: YYYY-MM-DD'
+        endDate:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.isoDate'
+          description: 'When the relationship ended, in ISO 8601 format: YYYY-MM-DD'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationshipStatus'
+          description: Whether the relationship is in effect, as stated by the provider.
+      description: A succession relationship, as written.
+    CommonGrants.Patch.OrgPatchOrgTargetRefReplaceOnly:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+          description: The other organization's unique identifier.
+        name:
+          type: string
+          description: "The other organization's name. Ignored if supplied: the receiver fills it in from its own record."
+        identifiers:
+          type: object
+          properties:
+            org:us:ein:
+              type: object
+              properties:
+                registry:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      enum:
+                        - org:us:ein
+                      description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                    url:
+                      type: string
+                      format: uri
+                      description: Link to the catalog entry for this registry.
+                  description: Registry-level facts shared by every record in this registry.
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+                  description: |-
+                    The primary identifier string, when the registry has a single canonical value.
+
+                    May be omitted for registries with no natural primary; consumers should read
+                    `allIds` in that case.
+                allIds:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Types.employerTaxId'
+                        description: The identifier string.
+                      status:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                        description: Whether the identifier is currently valid or retired.
+                    required:
+                      - id
+                      - status
+                  description: Every known identifier for this record in this registry, including archived values.
+              description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+            org:us:uei:
+              type: object
+              properties:
+                registry:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      enum:
+                        - org:us:uei
+                      description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                    url:
+                      type: string
+                      format: uri
+                      description: Link to the catalog entry for this registry.
+                  description: Registry-level facts shared by every record in this registry.
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+                  description: |-
+                    The primary identifier string, when the registry has a single canonical value.
+
+                    May be omitted for registries with no natural primary; consumers should read
+                    `allIds` in that case.
+                allIds:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Types.samUEI'
+                        description: The identifier string.
+                      status:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                        description: Whether the identifier is currently valid or retired.
+                    required:
+                      - id
+                      - status
+                  description: Every known identifier for this record in this registry, including archived values.
+              description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+            org:xi:duns:
+              type: object
+              properties:
+                registry:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      enum:
+                        - org:xi:duns
+                      description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                    url:
+                      type: string
+                      format: uri
+                      description: Link to the catalog entry for this registry.
+                  description: Registry-level facts shared by every record in this registry.
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.duns'
+                  description: |-
+                    The primary identifier string, when the registry has a single canonical value.
+
+                    May be omitted for registries with no natural primary; consumers should read
+                    `allIds` in that case.
+                allIds:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Types.duns'
+                        description: The identifier string.
+                      status:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                        description: Whether the identifier is currently valid or retired.
+                    required:
+                      - id
+                      - status
+                  description: Every known identifier for this record in this registry, including archived values.
+              description: The organization's Data Universal Numbering System (DUNS) number.
+            systemId:
+              type: object
+              properties:
+                registry:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                    url:
+                      type: string
+                      format: uri
+                      description: Link to the catalog entry for this registry.
+                  description: Registry-level facts shared by every record in this registry.
+                id:
+                  allOf:
+                    - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                  description: |-
+                    The primary identifier string, when the registry has a single canonical value.
+
+                    May be omitted for registries with no natural primary; consumers should read
+                    `allIds` in that case.
+                allIds:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Types.uuid'
+                        description: The identifier string.
+                      status:
+                        allOf:
+                          - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                        description: Whether the identifier is currently valid or retired.
+                    required:
+                      - id
+                      - status
+                  description: Every known identifier for this record in this registry, including archived values.
+              description: The hosting system's own identifier for this record.
+            otherIds:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  registry:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                      url:
+                        type: string
+                        format: uri
+                        description: Link to the catalog entry for this registry.
+                    description: Registry-level facts shared by every record in this registry.
+                  id:
+                    type: string
+                    description: |-
+                      The primary identifier string, when the registry has a single canonical value.
+
+                      May be omitted for registries with no natural primary; consumers should read
+                      `allIds` in that case.
+                  allIds:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The identifier string.
+                        status:
+                          allOf:
+                            - $ref: '#/components/schemas/CommonGrants.Fields.IdentifierStatus'
+                          description: Whether the identifier is currently valid or retired.
+                      required:
+                        - id
+                        - status
+                    description: Every known identifier for this record in this registry, including archived values.
+              description: |-
+                Additional identifiers keyed by their registry code, for registries the
+                protocol does not define as a base identifier on the model.
+          description: 'Identifiers associated with the other organization, keyed by registry code. Ignored if supplied: the receiver fills them in from its own record.'
+      description: |-
+        A writable reference to a relationship's other organization.
+
+        Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
+        patch can name the other organization, and the rest is optional so it can
+        be named by `id` alone. The receiver identifies the target by `id` and
+        rejects an `id` it doesn't recognize. It ignores a supplied `name` and
+        `identifiers` and fills both in from its own record on reads and revision
+        snapshots. They stay accepted, rather than read-only, so a writer can
+        resend entries copied from a read: read-only members would be dropped
+        from this closed schema, which would then reject them. Schema validation
+        checks only this shape; it does not look up or fill in the target.
     CommonGrants.Patch.OrgPatchPCSOrgTypeOrCreate:
       type: object
       properties:
@@ -5655,6 +6411,11 @@ components:
       format: time
       description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
       example: '17:00:00'
+    CommonGrants.Types.nonEmptyString:
+      type: string
+      minLength: 1
+      description: A string with at least one character
+      example: Example
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$

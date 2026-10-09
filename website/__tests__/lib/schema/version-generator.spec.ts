@@ -270,6 +270,70 @@ describe("Version Generator", () => {
       expect(formBaseV3?.properties).toHaveProperty("name");
       expect(formBaseV3?.properties).toHaveProperty("description");
     });
+
+    it("should drop local $defs reachable only from fields added later", () => {
+      // The emitter writes non-file models (such as merge-patch variants) as
+      // local `$defs`, so a field added later can bring definitions that must
+      // not linger, unreferenced, in earlier versions.
+      const profile = {
+        $id: "Profile.yaml",
+        type: "object",
+        properties: {
+          owner: { $ref: "#/$defs/Owner" },
+          links: {
+            anyOf: [{ $ref: "#/$defs/LinkGroup" }, { type: "null" }],
+          },
+        },
+        $defs: {
+          Owner: { type: "object" },
+          LinkGroup: {
+            type: "object",
+            properties: {
+              items: { type: "array", items: { $ref: "#/$defs/Link" } },
+            },
+          },
+          Link: {
+            type: "object",
+            properties: { next: { $ref: "#/$defs/Link" } },
+          },
+        },
+      } as JsonSchema;
+      const profileLog: Changelog = {
+        versions: ["0.1.0", "0.2.0"],
+        logs: {
+          Profile: {
+            "0.1.0": [
+              {
+                message: "Added `Profile` model",
+                action: Action.Added,
+                targetKind: TargetType.Model,
+                currTargetName: "Profile",
+              },
+            ],
+            "0.2.0": [
+              {
+                message: "Added `links` field",
+                action: Action.Added,
+                targetKind: TargetType.ModelProperty,
+                currTargetName: "links",
+              },
+            ],
+          },
+        },
+      };
+      const only = new Map([["Profile", profile]]);
+      const defsIn = (version: string) =>
+        Object.keys(
+          (
+            generateSchemaVersions(version, profileLog, only).schemas.get(
+              "Profile",
+            ) as { $defs?: object }
+          ).$defs ?? {},
+        ).sort();
+
+      expect(defsIn("0.1.0")).toEqual(["Owner"]);
+      expect(defsIn("0.2.0")).toEqual(["Link", "LinkGroup", "Owner"]);
+    });
   });
 
   // #############################################################################

@@ -281,6 +281,10 @@ function generateSchemaForVersion(
     );
   }
 
+  if (fieldsToRemove.size > 0) {
+    pruneUnreachableDefs(versionedSchema);
+  }
+
   // The emitter writes examples unversioned too, so drop the same fields from
   // each example, and every other model's absent fields from the values it
   // nests. (A model whose `@example` must name both sides of a removal plus
@@ -294,6 +298,41 @@ function generateSchemaForVersion(
   updateRefs(versionedSchema, nameMapping);
 
   return versionedSchema;
+}
+
+/**
+ * Drop local `$defs` entries no longer referenced once later fields are
+ * removed. The emitter writes non-file models (such as merge-patch variants)
+ * as local `$defs`, so a field added in a later version can bring definitions
+ * that would otherwise linger, unreferenced, in earlier versions.
+ */
+function pruneUnreachableDefs(schema: JsonSchema): void {
+  const defs = (schema as { $defs?: Record<string, unknown> }).$defs;
+  if (!defs) return;
+
+  const reached = new Set<string>();
+  const visit = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "$ref" && typeof value === "string") {
+        const name = value.match(/^#\/\$defs\/([^/]+)/)?.[1];
+        if (name && name in defs && !reached.has(name)) {
+          reached.add(name);
+          visit(defs[name]);
+        }
+      } else if (node !== schema || key !== "$defs") {
+        visit(value);
+      }
+    }
+  };
+  visit(schema);
+
+  for (const name of Object.keys(defs)) {
+    if (!reached.has(name)) delete defs[name];
+  }
+  if (Object.keys(defs).length === 0) {
+    delete (schema as { $defs?: unknown }).$defs;
+  }
 }
 
 // #############################################################################
