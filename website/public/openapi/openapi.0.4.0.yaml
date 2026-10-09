@@ -4346,7 +4346,7 @@ components:
       properties:
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         mission:
           type: string
           nullable: true
@@ -4591,7 +4591,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'
@@ -4821,7 +4821,7 @@ components:
           readOnly: true
         name:
           type: string
-          description: The organization's legal name as registered with relevant authorities.
+          description: The name this organization is known by; for a legal entity, its legal name.
         identifiers:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgIds'

@@ -111,7 +111,7 @@ model OrgRef {
   @visibility(Lifecycle.Read)
   id: Types.uuid;
 
-  /** The organization's legal name as registered with relevant authorities. */
+  /** The name this organization is known by; for a legal entity, its legal name. */
   name: string;
 
   /** Identifiers associated with the organization, keyed by registry code. */

@@ -4,7 +4,7 @@ type: object
 properties:
   name:
     type: string
-    description: The organization's legal name as registered with relevant authorities.
+    description: The name this organization is known by; for a legal entity, its legal name.
   status:
     anyOf:
       - $ref: OrgPatchOrgStatusOrCreate.yaml
