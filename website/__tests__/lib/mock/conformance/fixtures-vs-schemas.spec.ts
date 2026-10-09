@@ -16,7 +16,10 @@ import {
   type ResourceName,
 } from "@/lib/mock/data/availability";
 import { AWARD_FIXTURES, shapeAwardForVersion } from "@/lib/mock/data/awards";
-import { COMPETITION_FIXTURES } from "@/lib/mock/data/competitions";
+import {
+  COMPETITION_FIXTURES,
+  shapeCompetitionForVersion,
+} from "@/lib/mock/data/competitions";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
@@ -24,7 +27,7 @@ import {
   shapeOpportunityForVersion,
   type Version,
 } from "@/lib/mock/data/fixtures";
-import { FORM_FIXTURES } from "@/lib/mock/data/forms";
+import { FORM_FIXTURES, shapeFormForVersion } from "@/lib/mock/data/forms";
 import {
   ORGANIZATION_FIXTURES,
   ORG_REVISION_FIXTURES,
@@ -83,13 +86,17 @@ const RESOURCE_CASES: ResourceCase[] = [
     // `Models.Form` at v0.2.0, renamed to `Models.FormBase` from v0.3.0 on.
     schemaFor: (version) =>
       version === "0.2.0" ? "Form.yaml" : "FormBase.yaml",
-    recordsFor: () => [...FORM_FIXTURES],
+    recordsFor: (version) =>
+      FORM_FIXTURES.map((form) => shapeFormForVersion(form, version)),
   },
   {
     resource: "competitions",
     label: "competitions",
     schemaFor: () => "CompetitionBase.yaml",
-    recordsFor: () => [...COMPETITION_FIXTURES],
+    recordsFor: (version) =>
+      COMPETITION_FIXTURES.map((competition) =>
+        shapeCompetitionForVersion(competition, version),
+      ),
   },
 ];
 
