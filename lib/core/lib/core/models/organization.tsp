@@ -46,6 +46,15 @@ model OrganizationBase {
   /** Collection of the organization's social media and web presence links. */
   socials?: OrgSocialLinks;
 
+  /** Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  @TypeSpec.JsonSchema.uniqueItems
+  aliases?: Types.nonEmptyString[];
+
+  /** The organization's relationships to other organizations. */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  relationships?: OrgRelationships;
+
   /** Custom fields for the organization. */
   customFields?: Record<Fields.CustomField>;
 }
@@ -102,7 +111,7 @@ model OrgRef {
   @visibility(Lifecycle.Read)
   id: Types.uuid;
 
-  /** The organization's legal name as registered with relevant authorities. */
+  /** The name this organization is known by; for a legal entity, its legal name. */
   name: string;
 
   /** Identifiers associated with the organization, keyed by registry code. */
@@ -122,6 +131,160 @@ model OrgRefCollection {
 
   /** Other organizations in the collection, keyed by an implementation-defined role. */
   otherOrgs?: Record<OrgRef>;
+}
+
+// #########################################################
+// Organization relationships
+// #########################################################
+
+/** The standard subtypes of a parent or child relationship:
+ * - `chapter`: The child is a chapter of the parent
+ * - `department`: The child is an internal unit of the parent
+ * - `branch`: The child is a branch of the parent
+ * - `subsidiary`: The child is a subsidiary of the parent
+ * - `fiscalSponsor`: The parent fiscally sponsors the child
+ * - `dba`: The child is a record for a name the parent, a legal entity, does business under
+ * - `custom`: Another subtype, named in `customValue`
+ */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgHierarchyKindOptions {
+  chapter,
+  department,
+  branch,
+  subsidiary,
+  fiscalSponsor,
+  dba,
+  custom,
+}
+
+/** The standard subtypes of organizational succession:
+ * - `merger`: Succession through a merger
+ * - `acquisition`: Succession through an acquisition
+ * - `divestiture`: Succession through a divestiture
+ * - `split`: Succession through a split into several organizations
+ * - `custom`: Another subtype, named in `customValue`
+ */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgSuccessionKindOptions {
+  merger,
+  acquisition,
+  divestiture,
+  split,
+  custom,
+}
+
+/** The standard subtypes of record replacement. A provider's workflow may
+ * treat them alike; they need not be exclusive.
+ * - `duplicate`: The records duplicate each other
+ * - `merged`: The provider combined the records
+ * - `custom`: Another subtype, named in `customValue`
+ */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgRecordKindOptions {
+  duplicate,
+  merged,
+  custom,
+}
+
+/** Other relationships define no standard subtypes, so a stated subtype is `custom`. */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgOtherKindOptions {
+  custom,
+}
+
+/** Whether a relationship is in effect, as stated by the provider. */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgRelationshipStatus {
+  /** The relationship is in effect. */
+  active,
+
+  /** The relationship is no longer in effect. */
+  inactive,
+}
+
+/** A relationship from this organization to another organization.
+ *
+ * The list holding the entry gives its category and, for the named lists, its
+ * direction; `kind` optionally narrows that to a subtype. `org` identifies
+ * the other organization, while the remaining fields describe the
+ * relationship itself. `status` is only what the provider states: it has no
+ * default and is not derived from the dates.
+ *
+ * @template Kind The standard subtypes accepted for `kind.value`.
+ */
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgRelationshipT<Kind> {
+  /** The other organization. */
+  org: OrgRef;
+
+  // Spread inline: a reference to the template instance would be emitted as
+  // one more standalone `ExtensibleEnumT{Kind}` schema per category.
+  /** The relationship's subtype within the category its list names. */
+  kind?: {
+    ...Fields.ExtensibleEnumT<Kind>;
+  };
+
+  /** When the relationship started, in ISO 8601 format: YYYY-MM-DD */
+  startDate?: Types.isoDate;
+
+  /** When the relationship ended, in ISO 8601 format: YYYY-MM-DD */
+  endDate?: Types.isoDate;
+
+  /** Whether the relationship is in effect, as stated by the provider. */
+  status?: OrgRelationshipStatus;
+}
+
+/** A parent or child relationship. */
+@example(Examples.OrgRelationships.sponsor)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgHierarchyRelationship is OrgRelationshipT<OrgHierarchyKindOptions>;
+
+/** A succession relationship. */
+@example(Examples.OrgRelationships.split)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgSuccessionRelationship is OrgRelationshipT<OrgSuccessionKindOptions>;
+
+/** A record replacement relationship. */
+@example(Examples.OrgRelationships.duplicate)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgRecordRelationship is OrgRelationshipT<OrgRecordKindOptions>;
+
+/** A relationship outside the named categories, which need not have a direction. */
+@example(Examples.OrgRelationships.connection)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgOtherRelationship is OrgRelationshipT<OrgOtherKindOptions>;
+
+/** An organization's relationships to other organizations.
+ *
+ * Each named list holds relationships of one category and direction;
+ * `otherRelationships` holds connections outside those categories. Every list
+ * is optional, list order carries no meaning, and a provider may state a
+ * relationship from either organization's record. A relationship confers no
+ * authority over the other organization.
+ */
+@example(Examples.OrgRelationships.sponsoredChapter)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OrgRelationships {
+  /** Organizations above this one, such as a containing organization or a fiscal sponsor. */
+  parents?: OrgHierarchyRelationship[];
+
+  /** Organizations below this one, such as its chapters or sponsored projects. */
+  children?: OrgHierarchyRelationship[];
+
+  /** Organizations that carry on all or part of this one. */
+  succeededBy?: OrgSuccessionRelationship[];
+
+  /** Organizations whose work this one carries on in whole or in part. */
+  succeeds?: OrgSuccessionRelationship[];
+
+  /** Records to use instead of this record. */
+  recordReplacedBy?: OrgRecordRelationship[];
+
+  /** Records that this record is used instead of. */
+  recordReplaces?: OrgRecordRelationship[];
+
+  /** Connections outside the categories above, which need not have a direction. */
+  otherRelationships?: OrgOtherRelationship[];
 }
 
 // #########################################################
@@ -291,4 +454,54 @@ namespace Examples.OrgRef {
   const funders = #{ primary: funder };
 
   const recipients = #{ primary: recipient };
+}
+
+/** Illustrative examples of organization relationships, not real records. */
+namespace Examples.OrgRelationships {
+  const chapter = #{
+    org: #{
+      id: "01912a8b-7c3d-7891-abcd-ef1234567891",
+      name: "National Reading Network",
+    },
+    kind: #{ value: OrgHierarchyKindOptions.chapter },
+  };
+
+  const sponsor = #{
+    org: #{
+      id: "01912a8b-7c3d-7892-abcd-ef1234567892",
+      name: "Riverside Community Foundation",
+      identifiers: #{
+        `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+      },
+    },
+    kind: #{ value: OrgHierarchyKindOptions.fiscalSponsor },
+    startDate: Types.isoDate.fromISO("2024-07-01"),
+    status: OrgRelationshipStatus.active,
+  };
+
+  const split = #{
+    org: #{
+      id: "01912a8b-7c3d-7893-abcd-ef1234567893",
+      name: "Riverside Reading East",
+    },
+    kind: #{ value: OrgSuccessionKindOptions.split },
+    startDate: Types.isoDate.fromISO("2026-01-01"),
+  };
+
+  const duplicate = #{
+    org: #{
+      id: "01912a8b-7c3d-7894-abcd-ef1234567894",
+      name: "Riverside Reading Project",
+    },
+    kind: #{ value: OrgRecordKindOptions.duplicate },
+  };
+
+  const connection = #{
+    org: #{
+      id: "01912a8b-7c3d-7895-abcd-ef1234567895",
+      name: "Riverside Literacy Coalition",
+    },
+  };
+
+  const sponsoredChapter = #{ parents: #[chapter, sponsor] };
 }
