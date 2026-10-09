@@ -27,17 +27,21 @@ The SDK is published as native ESM. Relative imports in TypeScript source use `.
 the emitted files work directly in Node.js. `tsconfig.build.json` limits package output to `src`;
 tests and examples are type-checked but are not compiled into the npm artifact.
 
-The package integration tests create consumers outside the pnpm workspace, install a packed
-tarball, and verify native Node.js imports, strict TypeScript declaration resolution, and archive
-contents. Run them with the rest of the suite after building the TypeSpec fixtures:
+The package check creates a consumer outside the pnpm workspace, installs a packed tarball, and
+verifies native Node.js imports, strict TypeScript declaration resolution, and archive contents. It
+runs separately from the unit suite through its own command so ordinary `pnpm run test` does not
+perform a registry install:
 
 ```bash
-pnpm run build
-pnpm run test
+pnpm run test:package
 ```
 
-`pnpm run ci` is the authoritative CI command. It runs formatting, lint, type checks, the ESM build,
-coverage (including package integration tests), and the offline transforms example.
+`test:package` packs the SDK (building it through the `prepare` lifecycle), then installs the
+tarball with npm. That install resolves the SDK's runtime dependencies from the registry, so it
+needs network access; the subsequent runtime probes make no network requests.
+
+`pnpm run ci` is the authoritative CI command and runs in dependency order: the ESM build, lint and
+format and type checks, coverage, the offline transforms example, and finally the package check.
 
 ## Runbooks
 
