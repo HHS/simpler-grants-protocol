@@ -657,9 +657,11 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
     );
   });
 
-  // An entry in a replaced list has nothing to merge into, so its org's
-  // identifiers are stored as written: no `null` member or `id`, and the
-  // same constraints as a read. Both dialects must agree.
+  // An entry in a replaced list has nothing to merge into, so its own
+  // members are stored as written; the target's `name` and `identifiers` are
+  // replaced by the receiver. The written identifiers still take no `null`
+  // member or `id` and have the same constraints as a read. Both dialects
+  // must agree.
   const populated = {
     "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
     "org:us:uei": { id: "AB0123456789" },
@@ -768,10 +770,9 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
  *
  * A patch names a target by `id` alone, but a read and an `OrgRevision`
  * snapshot need the target's `name`. Schema validation can't bridge that, so
- * the receiver must: it rejects an `id` it doesn't recognize, ignores a
- * supplied `name` and `identifiers`, and fills both in from its own record.
- * `fillTargets` stands in for that receiver; these tests pin that the schemas
- * need it, and that its output is a valid read and snapshot.
+ * the receiver must fill the target in from its own record. These tests show
+ * that the schemas require that fill, and that what a receiver returns after
+ * it, including entries a writer copies back into a patch, validates.
  */
 describe("relationship target round trip", () => {
   const ajv = loadJsonSchemas();
@@ -781,40 +782,25 @@ describe("relationship target round trip", () => {
 
   const LEGAL = "01912a8b-7c3d-7890-abcd-ef12345678a0";
   const TRADING = "01912a8b-7c3d-7890-abcd-ef12345678a1";
-  /** The receiver's own records, keyed by `id`. */
-  const records: Record<string, { name: string; identifiers?: object }> = {
-    [LEGAL]: {
+  const idOnly = { org: { id: LEGAL }, kind: { value: "dba" } };
+  /** The same entry as a receiver returns it, with the target filled in. */
+  const filled = {
+    org: {
+      id: LEGAL,
       name: "Example Holdings, Inc.",
       identifiers: {
         "org:us:ein": { registry: { code: "org:us:ein" }, id: "123456789" },
+        "org:us:uei": { id: "AB0123456789" },
+        otherIds: { "org:xi:foo": { id: "foo-1" } },
       },
     },
+    kind: { value: "dba" },
   };
-
-  type Entry = { org: { id: string; name?: string }; [key: string]: unknown };
-  type Lists = Record<string, Entry[]>;
-
-  /** What a receiver does with a written list: look up each target by `id`. */
-  const fillTargets = (lists: Lists): Lists =>
-    Object.fromEntries(
-      Object.entries(lists).map(([list, entries]) => [
-        list,
-        entries.map((entry) => {
-          const record = records[entry.org.id];
-          if (!record) throw new Error(`unknown target ${entry.org.id}`);
-          return { ...entry, org: { id: entry.org.id, ...record } };
-        }),
-      ]),
-    );
-
-  const written: Lists = {
-    parents: [{ org: { id: LEGAL }, kind: { value: "dba" } }],
-  };
-  const patch = { relationships: written };
-  const tradingRecord = (relationships: Lists) => ({
+  const patch = { relationships: { parents: [idOnly] } };
+  const tradingRecord = (entry: object) => ({
     id: TRADING,
     name: "Example Coffee",
-    relationships,
+    relationships: { parents: [entry] },
   });
   const revision = (snapshot: object) => ({
     id: "01912a8b-7c3d-7890-abcd-ef12345678a2",
@@ -825,57 +811,32 @@ describe("relationship target round trip", () => {
     lastModifiedAt: "2026-10-01T12:00:00Z",
   });
 
-  it("(a) accepts an id-only target in a patch", () => {
+  it("accepts an id-only target in a patch", () => {
     expect(patchSchema(patch), JSON.stringify(patchSchema.errors)).toBe(true);
   });
 
-  it("(b) rejects the same entry read back without the target's name", () => {
-    expect(readSchema(tradingRecord(written))).toBe(false);
-    expect(revisionSchema(revision(tradingRecord(written)))).toBe(false);
+  it("requires a fill: the entry read back unfilled is not a valid read", () => {
+    expect(readSchema(tradingRecord(idOnly))).toBe(false);
   });
 
-  it("(c) accepts the entry once the receiver fills in the target", () => {
-    const filled = tradingRecord(fillTargets(written));
-    expect(filled.relationships.parents[0].org).toEqual({
-      id: LEGAL,
-      ...records[LEGAL],
-    });
-    expect(readSchema(filled), JSON.stringify(readSchema.errors)).toBe(true);
+  it("requires a fill: an unfilled snapshot is not a valid revision", () => {
+    expect(revisionSchema(revision(tradingRecord(idOnly)))).toBe(false);
+  });
+
+  it("accepts the filled entry as a read and as a revision snapshot", () => {
     expect(
-      revisionSchema(revision(filled)),
+      readSchema(tradingRecord(filled)),
+      JSON.stringify(readSchema.errors),
+    ).toBe(true);
+    expect(
+      revisionSchema(revision(tradingRecord(filled))),
       JSON.stringify(revisionSchema.errors),
     ).toBe(true);
   });
 
-  it("(d) accepts a supplied name and identifiers, which the receiver replaces", () => {
-    const supplied: Lists = {
-      parents: [
-        {
-          org: {
-            id: LEGAL,
-            name: "Wrong Name LLC",
-            identifiers: {
-              "org:us:ein": {
-                registry: { code: "org:us:ein" },
-                id: "987654321",
-              },
-            },
-          } as Entry["org"],
-          kind: { value: "dba" },
-        },
-      ],
-    };
+  it("accepts a filled entry, with full identifiers, copied verbatim into a patch", () => {
     expect(
-      patchSchema({ relationships: supplied }),
-      JSON.stringify(patchSchema.errors),
-    ).toBe(true);
-    expect(fillTargets(supplied)).toEqual(fillTargets(written));
-  });
-
-  it("(d) accepts entries copied verbatim from a read back into a patch", () => {
-    const read = tradingRecord(fillTargets(written));
-    expect(
-      patchSchema({ relationships: read.relationships }),
+      patchSchema({ relationships: { parents: [filled] } }),
       JSON.stringify(patchSchema.errors),
     ).toBe(true);
   });
@@ -898,11 +859,5 @@ describe("relationship target round trip", () => {
     expect(target.properties.identifiers.description).toMatch(
       /Ignored if supplied/,
     );
-  });
-
-  it("models the receiver rejecting a target id it doesn't recognize", () => {
-    const unknown: Lists = { parents: [{ org: { id: TRADING } }] };
-    expect(patchSchema({ relationships: unknown })).toBe(true);
-    expect(() => fillTargets(unknown)).toThrow(/unknown target/);
   });
 });
