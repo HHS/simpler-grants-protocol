@@ -95,7 +95,7 @@ describe("OrganizationBase relationships read schema", () => {
   });
 
   const accepted: Array<[string, object]> = [
-    ["omits relationships and dbaNames", org],
+    ["omits relationships and aliases", org],
     [
       "an entry with only org in every list",
       withRelationships(
@@ -222,8 +222,8 @@ describe("OrganizationBase relationships read schema", () => {
         ],
       }),
     ],
-    ["lists current DBA names", { ...org, dbaNames: ["Example Thrift"] }],
-    ["lists no DBA names", { ...org, dbaNames: [] }],
+    ["lists aliases", { ...org, aliases: ["Example Thrift", "Example"] }],
+    ["lists no aliases", { ...org, aliases: [] }],
   ];
 
   it.each(accepted)("accepts: %s", (_name, payload) => {
@@ -330,8 +330,11 @@ describe("OrganizationBase relationships read schema", () => {
       "a numeric startDate",
       withRelationships({ parents: [entry("chapter", { startDate: 2024 })] }),
     ],
-    ["DBA names as a string", { ...org, dbaNames: "Example Thrift" }],
-    ["a null DBA name", { ...org, dbaNames: [null] }],
+    ["aliases as a string", { ...org, aliases: "Example Thrift" }],
+    ["a null alias", { ...org, aliases: [null] }],
+    ["an empty alias", { ...org, aliases: [""] }],
+    ["a repeated alias", { ...org, aliases: ["Example", "Example"] }],
+    ["the old dbaNames member", { ...org, dbaNames: ["Example Thrift"] }],
   ];
 
   it.each(rejected)("rejects: %s", (_name, payload) => {
@@ -557,16 +560,16 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
   ];
 
   // A read never carries `null`. In a patch, `null` removes `relationships`,
-  // one list, or `dbaNames`, as in JSON Merge Patch; an entry in a replaced
+  // one list, or `aliases`, as in JSON Merge Patch; an entry in a replaced
   // list has nothing to merge into, so its optional members are omitted
   // rather than `null`.
   const entryMembers = ["kind", "startDate", "endDate", "status"];
   const nullCases: typeof cases = [
     ["read: null relationships", "OrganizationBase", read(null), false],
     [
-      "read: null dbaNames",
+      "read: null aliases",
       "OrganizationBase",
-      { ...read({}), dbaNames: null },
+      { ...read({}), aliases: null },
       false,
     ],
     ...LISTS.map(([list]): (typeof cases)[number] => [
@@ -582,7 +585,7 @@ describe("OrganizationBase and OrgPatchData relationships in OpenAPI 3.0", () =>
       false,
     ]),
     ["patch: remove all relationships", "OrgPatchData", patch(null), true],
-    ["patch: remove dbaNames", "OrgPatchData", { dbaNames: null }, true],
+    ["patch: remove aliases", "OrgPatchData", { aliases: null }, true],
     ...LISTS.map(([list]): (typeof cases)[number] => [
       `patch: remove ${list}`,
       "OrgPatchData",

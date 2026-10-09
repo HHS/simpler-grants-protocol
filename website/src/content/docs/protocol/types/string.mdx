@@ -87,6 +87,18 @@ duns:
       path: "lib/core/lib/core/types.tsp"
       startLine: 52
       endLine: 56
+nonEmptyString:
+  example:
+    file:
+      path: "website/public/schemas/yaml/nonEmptyString.yaml"
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/nonEmptyString.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/types.tsp"
+      startLine: 64
+      endLine: 68
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -158,4 +170,14 @@ A Data Universal Numbering System (DUNS) number.
   example={frontmatter.duns.example}
   jsonSchema={frontmatter.duns.jsonSchema}
   typeSpec={frontmatter.duns.typeSpec}
+/>
+
+## nonEmptyString
+
+A string with at least one character, added in v0.5.0. Used for an organization's [`aliases`](/protocol/models/organization#organizationbase).
+
+<SchemaFormatTabs
+  example={frontmatter.nonEmptyString.example}
+  jsonSchema={frontmatter.nonEmptyString.jsonSchema}
+  typeSpec={frontmatter.nonEmptyString.typeSpec}
 />

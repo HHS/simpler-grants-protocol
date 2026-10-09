@@ -1,6 +1,6 @@
 ---
 title: Organization relationships
-description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and DBA names in the draft v0.5.0 model.
+description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and aliases in the draft v0.5.0 model.
 sidebar:
   order: 2
 ---
@@ -11,7 +11,7 @@ This page shows the organization relationships proposed in [ADR 0030](https://gi
 The examples are static documentation, checked against the draft schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or fill in the other organization's `name`, so an ID-only relationship write returns a snapshot that isn't a valid organization read.
 :::
 
-An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Names the organization currently does business as go in `dbaNames`, not in a relationship.
+An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Other names the organization goes by go in `aliases`, not in a relationship.
 
 | List                 | Each entry says                                                     | Standard `kind` values                                           |
 | -------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -256,15 +256,15 @@ Record replacement is about records in a provider's system, not organizations. A
 }
 ```
 
-## DBA names
+## Aliases
 
-Names an organization currently does business as are plain strings on the organization itself. They are not separate organizations, and they are not a history of former names.
+`aliases` lists other names the same organization goes by, such as a trading name or a short form of its legal name, as plain strings on the organization itself. They are not separate organizations, and they are not a history of former names. Each alias is a non-empty string, and the list has no repeats.
 
-```json title="Organization: one organization trading under two names"
+```json title="Organization: one organization known by several names"
 {
   "id": "24354657-c5d6-4be8-99a0-1b2c3d4e5f60",
   "name": "Example Riverside Arts Alliance, Inc.",
-  "dbaNames": ["Riverside Arts", "The Gallery on Main"]
+  "aliases": ["Riverside Arts", "The Gallery on Main", "RAA"]
 }
 ```
 
@@ -303,10 +303,10 @@ In a patch, `org` can name the other organization by `id` alone. Reads still ret
 }
 ```
 
-```json title="Patch: remove every relationship and replace the DBA names"
+```json title="Patch: remove every relationship and replace the aliases"
 {
   "relationships": null,
-  "dbaNames": ["Riverside Arts"]
+  "aliases": ["Riverside Arts"]
 }
 ```
 

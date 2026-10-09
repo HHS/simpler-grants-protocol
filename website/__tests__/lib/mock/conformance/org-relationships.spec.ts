@@ -1,6 +1,6 @@
 /**
  * Pins the ADR 0030 organization-relationships slice of #1256: the v0.5.0
- * schemas gain `dbaNames` and `relationships` on `OrganizationBase` and
+ * schemas gain `aliases` and `relationships` on `OrganizationBase` and
  * `OrgPatchData`, plus the relationship lists, entries, and subtype options,
  * while v0.4.0 and earlier are left unchanged. `OrgRef` itself does not
  * change; the writable reference to the other organization lives only inside
@@ -42,7 +42,7 @@ function modelSchema(
   return loadRawSchema(version, schemaName) as ModelSchema | undefined;
 }
 
-const ADDED = ["dbaNames", "relationships"];
+const ADDED = ["aliases", "relationships"];
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_VERSIONS_DIR = path.resolve(
@@ -53,9 +53,10 @@ const OPENAPI_DIR = path.resolve(HERE, "../../../../public/openapi");
 
 const OLDER_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
 
-/** Names of the v0.5 relationship models, including `Patch.OrgTargetRef`. */
+/** Names of the v0.5 relationship models, including `Patch.OrgTargetRef`,
+ * and the `nonEmptyString` scalar that `aliases` items use. */
 const RELATIONSHIP_MODEL =
-  /OrgTargetRef|OrgRelationship|Org(Hierarchy|Succession|Record|Other)(Relationship|Kind)/;
+  /OrgTargetRef|OrgRelationship|Org(Hierarchy|Succession|Record|Other)(Relationship|Kind)|nonEmptyString/;
 
 /** Collects every `example` and `examples` value anywhere in a document. */
 function collectExamples(node: unknown, found: unknown[] = []): unknown[] {
@@ -70,7 +71,7 @@ function collectExamples(node: unknown, found: unknown[] = []): unknown[] {
   return found;
 }
 
-/** Whether `dbaNames` or `relationships` appears as a key at any depth. */
+/** Whether `aliases` or `relationships` appears as a key at any depth. */
 function hasAddedKey(node: unknown): boolean {
   if (Array.isArray(node)) return node.some(hasAddedKey);
   if (node === null || typeof node !== "object") return false;
@@ -100,7 +101,7 @@ function loadYaml(file: string): unknown {
 }
 
 describe("organization relationships at v0.5.0 (ADR 0030)", () => {
-  it("adds optional dbaNames and relationships to OrganizationBase and OrgPatchData", () => {
+  it("adds optional aliases and relationships to OrganizationBase and OrgPatchData", () => {
     for (const schemaName of ["OrganizationBase.yaml", "OrgPatchData.yaml"]) {
       const schema = modelSchema("0.5.0", schemaName);
       expect(schema, `v0.5.0/${schemaName} does not exist`).toBeDefined();
@@ -174,7 +175,7 @@ describe("organization relationships at v0.5.0 (ADR 0030)", () => {
         const schema = loadYaml(path.join(dir, file));
         expect(
           hasAddedKey(collectExamples(schema)),
-          `v${version}/${file} has an example with dbaNames or relationships`,
+          `v${version}/${file} has an example with aliases or relationships`,
         ).toBe(false);
         expect(
           collectDefsAndRefs(schema).filter((name) =>
@@ -194,7 +195,7 @@ describe("organization relationships at v0.5.0 (ADR 0030)", () => {
       ) as { components?: { schemas?: Record<string, unknown> } };
       expect(
         hasAddedKey(collectExamples(document)),
-        `openapi.${version}.yaml has an example with dbaNames or relationships`,
+        `openapi.${version}.yaml has an example with aliases or relationships`,
       ).toBe(false);
       expect(
         [
@@ -203,6 +204,23 @@ describe("organization relationships at v0.5.0 (ADR 0030)", () => {
         ].filter((name) => RELATIONSHIP_MODEL.test(name)),
         `openapi.${version}.yaml declares or references a v0.5 relationship model`,
       ).toEqual([]);
+    },
+  );
+
+  it.each([...OLDER_VERSIONS, "0.5.0"])(
+    "has no dbaNames, the pre-rename name of aliases, in any v%s artifact",
+    (version) => {
+      const dir = path.join(SCHEMA_VERSIONS_DIR, `v${version}`);
+      const texts = [
+        ...readdirSync(dir)
+          .filter((file) => file.endsWith(".yaml"))
+          .map((file) => readFileSync(path.join(dir, file), "utf-8")),
+        readFileSync(
+          path.join(OPENAPI_DIR, `openapi.${version}.yaml`),
+          "utf-8",
+        ),
+      ];
+      expect(texts.filter((text) => text.includes("dbaNames"))).toEqual([]);
     },
   );
 

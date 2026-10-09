@@ -4643,12 +4643,13 @@ components:
             - $ref: '#/components/schemas/CommonGrants.Types.calendarYear'
           nullable: true
           description: The calendar year the organization was founded.
-        dbaNames:
+        aliases:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
           nullable: true
-          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name here that has its own trading-name record pointing at this organization with a `dba` kind.
         identifiers:
           type: object
           allOf:
@@ -5435,11 +5436,12 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgSocialLinks'
           description: Collection of the organization's social media and web presence links.
-        dbaNames:
+        aliases:
           type: array
           items:
-            type: string
-          description: Names the organization currently does business as, alongside its legal `name`. Not a history of former names.
+            $ref: '#/components/schemas/CommonGrants.Types.nonEmptyString'
+          uniqueItems: true
+          description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name here that has its own trading-name record pointing at this organization with a `dba` kind.
         relationships:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.OrgRelationships'
@@ -6402,6 +6404,11 @@ components:
       format: time
       description: A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss
       example: '17:00:00'
+    CommonGrants.Types.nonEmptyString:
+      type: string
+      minLength: 1
+      description: A string with at least one character
+      example: Example
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$
