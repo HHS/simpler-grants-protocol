@@ -21,6 +21,10 @@ import {
   NameSchema,
   EventTypeEnum,
   CustomFieldTypeEnum,
+  // Scalar types
+  EmployerTaxIdSchema,
+  SamUeiSchema,
+  DunsSchema,
   // Identifiers
   IdentifierSchema,
   SystemIdSchema,
@@ -28,6 +32,12 @@ import {
   IdentifierStatusEnum,
   // References
   AppRefSchema,
+  OrgIdEinSchema,
+  OrgIdUeiSchema,
+  OrgIdDunsSchema,
+  OrgIdsSchema,
+  OrgRefSchema,
+  OrgRefCollectionSchema,
   // Filters
   DefaultFilterSchema,
   StringComparisonFilterSchema,
@@ -82,6 +92,14 @@ export type SystemMetadata = z.infer<typeof SystemMetadataSchema>;
 export type Name = z.infer<typeof NameSchema>;
 
 // ############################################################################
+// Scalar types
+// ############################################################################
+
+export type EmployerTaxId = z.infer<typeof EmployerTaxIdSchema>;
+export type SamUei = z.infer<typeof SamUeiSchema>;
+export type Duns = z.infer<typeof DunsSchema>;
+
+// ############################################################################
 // Identifier types
 // ############################################################################
 
@@ -89,12 +107,18 @@ export type Identifier = z.infer<typeof IdentifierSchema>;
 export type SystemId = z.infer<typeof SystemIdSchema>;
 export type IdentifierCollection = z.infer<typeof IdentifierCollectionSchema>;
 export type IdentifierStatus = z.infer<typeof IdentifierStatusEnum>;
+export type OrgIdEin = z.infer<typeof OrgIdEinSchema>;
+export type OrgIdUei = z.infer<typeof OrgIdUeiSchema>;
+export type OrgIdDuns = z.infer<typeof OrgIdDunsSchema>;
+export type OrgIds = z.infer<typeof OrgIdsSchema>;
 
 // ############################################################################
 // Reference types
 // ############################################################################
 
 export type AppRef = z.infer<typeof AppRefSchema>;
+export type OrgRef = z.infer<typeof OrgRefSchema>;
+export type OrgRefCollection = z.infer<typeof OrgRefCollectionSchema>;
 
 // ############################################################################
 // Filter types
