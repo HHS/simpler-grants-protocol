@@ -38,6 +38,10 @@ import {
   OrgIdsSchema,
   OrgRefSchema,
   OrgRefCollectionSchema,
+  OppIdFonSchema,
+  OppIdAlnSchema,
+  OppIdsSchema,
+  OppRefSchema,
   // Filters
   DefaultFilterSchema,
   StringComparisonFilterSchema,
@@ -111,6 +115,9 @@ export type OrgIdEin = z.infer<typeof OrgIdEinSchema>;
 export type OrgIdUei = z.infer<typeof OrgIdUeiSchema>;
 export type OrgIdDuns = z.infer<typeof OrgIdDunsSchema>;
 export type OrgIds = z.infer<typeof OrgIdsSchema>;
+export type OppIdFon = z.infer<typeof OppIdFonSchema>;
+export type OppIdAln = z.infer<typeof OppIdAlnSchema>;
+export type OppIds = z.infer<typeof OppIdsSchema>;
 
 // ############################################################################
 // Reference types
@@ -119,6 +126,7 @@ export type OrgIds = z.infer<typeof OrgIdsSchema>;
 export type AppRef = z.infer<typeof AppRefSchema>;
 export type OrgRef = z.infer<typeof OrgRefSchema>;
 export type OrgRefCollection = z.infer<typeof OrgRefCollectionSchema>;
+export type OppRef = z.infer<typeof OppRefSchema>;
 
 // ############################################################################
 // Filter types

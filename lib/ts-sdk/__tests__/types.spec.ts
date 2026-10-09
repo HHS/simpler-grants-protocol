@@ -391,6 +391,31 @@ describe("Identifier types", () => {
     };
     expect(identifiers["org:us:ein"]?.id).toBe("123456789");
   });
+
+  it("should instantiate OppIdFon correctly", () => {
+    const identifier: Types.OppIdFon = {
+      registry: { code: "opp:us:fon" },
+      id: "FON-0001",
+    };
+    expect(identifier.registry?.code).toBe("opp:us:fon");
+  });
+
+  it("should instantiate OppIdAln correctly", () => {
+    const identifier: Types.OppIdAln = {
+      registry: { code: "opp:us:aln" },
+      id: "93.123",
+    };
+    expect(identifier.registry?.code).toBe("opp:us:aln");
+  });
+
+  it("should instantiate OppIds correctly", () => {
+    const identifiers: Types.OppIds = {
+      systemId: { id: "123e4567-e89b-12d3-a456-426614174000" },
+      "opp:us:fon": { id: "FON-0001" },
+      otherIds: { custom: { id: "custom-id" } },
+    };
+    expect(identifiers["opp:us:fon"]?.id).toBe("FON-0001");
+  });
 });
 
 // ############################################################################
@@ -430,5 +455,14 @@ describe("Reference types", () => {
       },
     };
     expect(collection.otherOrgs?.funder.name).toBe("Funder");
+  });
+
+  it("should instantiate OppRef correctly", () => {
+    const oppRef: Types.OppRef = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Example Opportunity",
+      identifiers: { "opp:us:fon": { id: "FON-0001" } },
+    };
+    expect(oppRef.identifiers?.["opp:us:fon"]?.id).toBe("FON-0001");
   });
 });

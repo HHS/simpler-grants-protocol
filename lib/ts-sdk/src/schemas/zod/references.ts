@@ -76,3 +76,37 @@ export const OrgRefCollectionSchema = z
     otherOrgs: z.record(z.string(), OrgRefSchema).optional(),
   })
   .strict();
+
+// ############################################################################
+// Opportunity identifier schemas
+// ############################################################################
+
+/** An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency. */
+export const OppIdFonSchema = createIdentifierSchema(z.string(), z.literal("opp:us:fon"));
+
+/** An opportunity's Assistance Listing Number (ALN), formerly the CFDA number. */
+export const OppIdAlnSchema = createIdentifierSchema(z.string(), z.literal("opp:us:aln"));
+
+/** Identifiers associated with an opportunity, keyed by registry code. */
+export const OppIdsSchema = IdentifierCollectionSchema.extend({
+  "opp:us:fon": OppIdFonSchema.optional(),
+  "opp:us:aln": OppIdAlnSchema.optional(),
+}).strict();
+
+// ############################################################################
+// Opportunity reference schemas
+// ############################################################################
+
+/** A reference to an opportunity, previewing the key fields a consumer needs to identify it and look it up or join it to another response. */
+export const OppRefSchema = z
+  .object({
+    /** The opportunity's unique identifier. */
+    id: UuidSchema,
+
+    /** The title or name of the funding opportunity. */
+    title: z.string(),
+
+    /** Identifiers associated with the opportunity, keyed by registry code. */
+    identifiers: OppIdsSchema.optional(),
+  })
+  .strict();

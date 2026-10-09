@@ -8,6 +8,10 @@ import {
   OrgIdsSchema,
   OrgRefSchema,
   OrgRefCollectionSchema,
+  OppIdFonSchema,
+  OppIdAlnSchema,
+  OppIdsSchema,
+  OppRefSchema,
 } from "@/schemas";
 import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test";
 
@@ -309,5 +313,145 @@ describe("OrgRefCollection Schema", () => {
     expect(collectionResult.validated).toBe(
       collectionResult.generationAttempted + collectionResult.boundaryCases
     );
+  });
+});
+
+// ############################################################################
+// Opportunity identifier schemas
+// ############################################################################
+
+describe("OppIdFon Schema", () => {
+  it("should match OppIdFon.yaml", async () => {
+    const cases: BoundaryCase[] = [
+      { label: "omitted registry code remains valid", value: { registry: {}, id: "FON-0001" } },
+      {
+        label: "wrong registry code is rejected",
+        value: { registry: { code: "opp:us:aln" }, id: "FON-0001" },
+      },
+      {
+        label: "registry is sealed",
+        value: { registry: { code: "opp:us:fon", unexpected: true }, id: "FON-0001" },
+      },
+      { label: "outer object is sealed", value: { id: "FON-0001", unexpected: true } },
+      {
+        label: "history entry missing status is rejected",
+        value: { allIds: [{ id: "FON-0001" }] },
+      },
+      {
+        label: "history entry is sealed",
+        value: { allIds: [{ id: "FON-0001", status: "active", unexpected: true }] },
+      },
+    ];
+    await expectZodMatchesJsonSchema(OppIdFonSchema, "OppIdFon.yaml", cases, 0, true);
+  });
+});
+
+describe("OppIdAln Schema", () => {
+  it("should match OppIdAln.yaml", async () => {
+    const cases: BoundaryCase[] = [
+      { label: "omitted registry code remains valid", value: { registry: {}, id: "93.123" } },
+      {
+        label: "wrong registry code is rejected",
+        value: { registry: { code: "opp:us:fon" }, id: "93.123" },
+      },
+      {
+        label: "registry is sealed",
+        value: { registry: { code: "opp:us:aln", unexpected: true }, id: "93.123" },
+      },
+      { label: "outer object is sealed", value: { id: "93.123", unexpected: true } },
+      {
+        label: "history entry missing status is rejected",
+        value: { allIds: [{ id: "93.123" }] },
+      },
+      {
+        label: "history entry is sealed",
+        value: { allIds: [{ id: "93.123", status: "active", unexpected: true }] },
+      },
+    ];
+    await expectZodMatchesJsonSchema(OppIdAlnSchema, "OppIdAln.yaml", cases, 0, true);
+  });
+});
+
+describe("OppIds Schema", () => {
+  it("should preserve inherited and specialized identifiers together", () => {
+    const value = {
+      systemId: { id: VALID_UUID },
+      otherIds: { custom: { id: "custom-id" } },
+      "opp:us:fon": {
+        registry: { code: "opp:us:fon" },
+        id: "FON-0001",
+        allIds: [{ id: "FON-0000", status: "archived" }],
+      },
+      "opp:us:aln": { registry: {}, id: "93.123" },
+    };
+
+    expect(OppIdsSchema.parse(value)).toEqual(value);
+  });
+
+  it("should match OppIds.yaml", async () => {
+    const cases: BoundaryCase[] = [
+      { label: "unknown top-level key is rejected", value: { unexpected: true } },
+      { label: "null specialized identifier is rejected", value: { "opp:us:fon": null } },
+      {
+        label: "valid specialized history is accepted",
+        value: {
+          "opp:us:aln": {
+            allIds: [{ id: "93.123", status: "archived" }],
+          },
+        },
+      },
+      {
+        label: "specialized identifier nested in OppIds is sealed",
+        value: {
+          "opp:us:fon": {
+            id: "FON-0001",
+            registry: { code: "opp:us:fon", unexpected: true },
+          },
+        },
+      },
+    ];
+    await expectZodMatchesJsonSchema(OppIdsSchema, "OppIds.yaml", cases, 0, true);
+  });
+});
+
+// ############################################################################
+// Opportunity reference schemas
+// ############################################################################
+
+describe("OppRef Schema", () => {
+  it("should match OppRef.yaml", async () => {
+    const cases: BoundaryCase[] = [
+      {
+        label: "unknown top-level key is rejected",
+        value: { id: VALID_UUID, title: "Example Opportunity", unexpected: true },
+      },
+      {
+        label: "null identifiers are rejected",
+        value: { id: VALID_UUID, title: "Example Opportunity", identifiers: null },
+      },
+      {
+        label: "valid nested history is accepted",
+        value: {
+          id: VALID_UUID,
+          title: "Example Opportunity",
+          identifiers: {
+            "opp:us:aln": {
+              allIds: [{ id: "93.123", status: "archived" }],
+            },
+          },
+        },
+      },
+      {
+        label: "identifiers nested in OppRef enforce specialized closure",
+        value: {
+          id: VALID_UUID,
+          title: "Example Opportunity",
+          identifiers: {
+            "opp:us:fon": { id: "FON-0001", unexpected: true },
+          },
+        },
+      },
+    ];
+    await expectZodMatchesJsonSchema(OppRefSchema, "OppRef.yaml", cases, 0, true);
   });
 });
