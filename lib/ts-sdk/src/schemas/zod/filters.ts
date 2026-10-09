@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 import { z } from "zod";
-import { MoneySchema } from "./fields";
+import { MoneySchema } from "./fields.js";
 
 // ############################################################################
 // Filter operators

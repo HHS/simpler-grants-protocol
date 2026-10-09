@@ -20,7 +20,7 @@ import {
   StringOperatorsEnum,
   RangeOperatorsEnum,
   AllOperatorsEnum,
-} from "./schemas";
+} from "./schemas/index.js";
 
 // ############################################################################
 // Model enum constants

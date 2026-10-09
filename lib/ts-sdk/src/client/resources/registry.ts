@@ -4,8 +4,8 @@
  * typed slots (grep `resource-slot` for the full set).
  */
 
-import { Opportunities } from "./opportunities";
-import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types";
+import { Opportunities } from "./opportunities.js";
+import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types.js";
 
 interface ResourceRegistryEntry {
   resourceClass: typeof Opportunities;

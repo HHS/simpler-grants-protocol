@@ -21,7 +21,7 @@
  */
 
 import { z } from "zod";
-import { DefaultFilterSchema } from "../schemas/zod/filters";
+import { DefaultFilterSchema } from "../schemas/zod/filters.js";
 import {
   BooleanComparisonFilterSchema,
   DateComparisonFilterSchema,
@@ -33,8 +33,8 @@ import {
   NumberRangeFilterSchema,
   StringArrayFilterSchema,
   StringComparisonFilterSchema,
-} from "../schemas/zod/filters";
-import { OppDefaultFiltersSchema, OppFiltersSchema } from "../schemas/zod/models";
+} from "../schemas/zod/filters.js";
+import { OppDefaultFiltersSchema, OppFiltersSchema } from "../schemas/zod/models.js";
 import type {
   CustomFilterSpec,
   CustomFilterType,
@@ -42,8 +42,8 @@ import type {
   ResourceName,
   RouteDeclarations,
   RouteMethod,
-} from "./types";
-import { FilterError } from "./types";
+} from "./types.js";
+import { FilterError } from "./types.js";
 
 // ############################################################################
 // Public — filter-type schema map

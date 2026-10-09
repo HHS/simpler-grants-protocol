@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { BatchParseError, parseBatch } from "../../src/client/results";
+import { BatchParseError, parseBatch } from "../../src/client/results.js";
 
 const rowSchema = z.object({ id: z.string(), amount: z.number() });
 const good = { id: "a", amount: 1 };

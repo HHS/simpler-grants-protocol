@@ -8,8 +8,8 @@
  */
 
 import { z } from "zod";
-import type { CustomField, CustomFieldType } from "../types";
-import { OpportunityBaseSchema } from "../schemas/zod/models";
+import type { CustomField, CustomFieldType } from "../types.js";
+import { OpportunityBaseSchema } from "../schemas/zod/models.js";
 
 // ############################################################################
 // Public type - CustomFieldSpec

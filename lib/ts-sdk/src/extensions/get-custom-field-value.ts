@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import type { ExtensibleObject } from "./types";
+import type { ExtensibleObject } from "./types.js";
 
 // ############################################################################
 // Public function - getCustomFieldValue()

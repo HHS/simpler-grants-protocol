@@ -8,8 +8,8 @@
  */
 
 import { z } from "zod";
-import { PaginatedResultsInfoSchema } from "./pagination";
-import { SortedResultsInfoSchema } from "./sorting";
+import { PaginatedResultsInfoSchema } from "./pagination.js";
+import { SortedResultsInfoSchema } from "./sorting.js";
 
 // ############################################################################
 // Base Success Response

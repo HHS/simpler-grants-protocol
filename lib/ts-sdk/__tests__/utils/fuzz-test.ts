@@ -1,6 +1,6 @@
 import { ZodType } from "zod";
-import type Ajv2020 from "ajv/dist/2020";
-import { ajv as defaultAjv, validate as validateWithAjv } from "./ajv-validator";
+import type { Ajv2020 } from "ajv/dist/2020.js";
+import { ajv as defaultAjv, validate as validateWithAjv } from "./ajv-validator.js";
 import { generate } from "json-schema-faker";
 
 /** Number of test samples to generate for each schema validation. */

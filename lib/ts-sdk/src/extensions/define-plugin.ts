@@ -14,15 +14,15 @@ import type {
   PluginMeta,
   PluginRoutes,
   TransformResult,
-} from "./types";
-import { EXTENSIBLE_SCHEMA_MAP, TransformError } from "./types";
-import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields";
-import { buildTransforms } from "./transforms";
-import { validateRoutes } from "./custom-filters";
-import { buildClientForPlugin } from "../client/resources/builder";
-import type { BuiltClient } from "../client/resources/builder";
-import type { ClientConfig } from "../client/config";
-import type { AuthMethod } from "../client/auth";
+} from "./types.js";
+import { EXTENSIBLE_SCHEMA_MAP, TransformError } from "./types.js";
+import { withCustomFields, type WithCustomFieldsResult } from "./with-custom-fields.js";
+import { buildTransforms } from "./transforms.js";
+import { validateRoutes } from "./custom-filters.js";
+import { buildClientForPlugin } from "../client/resources/builder.js";
+import type { BuiltClient } from "../client/resources/builder.js";
+import type { ClientConfig } from "../client/config.js";
+import type { AuthMethod } from "../client/auth.js";
 
 // ############################################################################
 // Public types - PluginSchemasInput, DefinePluginOptions, Plugin

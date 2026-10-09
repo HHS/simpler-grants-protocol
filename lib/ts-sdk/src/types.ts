@@ -56,7 +56,7 @@ import {
   PaginatedBodyParamsSchema,
   PaginatedResultsInfoSchema,
   SortedResultsInfoSchema,
-} from "./schemas";
+} from "./schemas/index.js";
 
 // ############################################################################
 // Field types

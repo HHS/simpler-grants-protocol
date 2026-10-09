@@ -4,7 +4,7 @@
  * Run with: pnpm example:list
  */
 
-import { Client, Auth } from "../src/client";
+import { Client, Auth } from "../src/client/index.js";
 
 const baseUrl = process.env.CG_BASE_URL ?? "http://localhost:8000";
 const apiKey = process.env.CG_API_KEY ?? "<your-api-key>";

@@ -31,11 +31,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build library
-        run: pnpm --filter @common-grants/sdk run build
-
-      - name: Run checks
-        run: pnpm --filter @common-grants/sdk run checks
-
-      - name: Run tests
-        run: pnpm --filter @common-grants/sdk run test:coverage
+      - name: Run SDK CI
+        run: pnpm --filter @common-grants/sdk run ci

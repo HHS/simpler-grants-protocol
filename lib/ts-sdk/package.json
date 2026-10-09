@@ -6,6 +6,7 @@
   },
   "license": "CC0-1.0",
   "description": "The CommonGrants protocol TypeScript SDK",
+  "type": "module",
   "exports": {
     "./client": {
       "types": "./dist/src/client/index.d.ts",
@@ -53,9 +54,11 @@
     "opportunities"
   ],
   "scripts": {
-    "build": "tsc && pnpm typespec",
-    "prepare": "tsc",
+    "clean": "node --input-type=module -e \"import{rmSync}from'node:fs';rmSync('dist',{recursive:true,force:true})\"",
+    "build": "pnpm run clean && tsc -p tsconfig.build.json && pnpm typespec",
+    "prepare": "pnpm run clean && tsc -p tsconfig.build.json",
     "test": "vitest run",
+    "test:package": "node scripts/smoke-package.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .ts --fix",
@@ -64,7 +67,7 @@
     "check:format": "prettier --check .",
     "check:types": "tsc --noEmit",
     "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
-    "ci": "pnpm run checks && pnpm run build && pnpm run test && pnpm run example:transforms",
+    "ci": "pnpm run checks && pnpm run build && pnpm run test:coverage && pnpm run example:transforms",
     "audit": "pnpm audit",
     "typespec": "tsp compile lib/main.tsp",
     "example:list": "tsx examples/list-opportunities.ts",
@@ -82,7 +85,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@common-grants/cg-grants-gov": "^0.2.0",
+    "@common-grants/cg-grants-gov": "^0.3.1",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/js-yaml": "^4.0.9",

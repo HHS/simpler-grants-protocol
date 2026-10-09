@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { UTCDateTimeSchema } from "../../src/schemas/zod/types";
-import { createAjvFromDefs } from "./ajv-validator";
-import { checkZodMatchesJsonSchema, SAMPLE_SIZE } from "./fuzz-test";
+import { UTCDateTimeSchema } from "../../src/schemas/zod/types.js";
+import { createAjvFromDefs } from "./ajv-validator.js";
+import { checkZodMatchesJsonSchema, SAMPLE_SIZE } from "./fuzz-test.js";
 
 describe("Fuzz Testing Helper", () => {
   // #########################################################

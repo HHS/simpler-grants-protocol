@@ -5,14 +5,14 @@
  */
 
 import { z } from "zod";
-import { Client } from "../client";
-import { Opportunities } from "./opportunities";
-import { RESOURCE_REGISTRY } from "./registry";
-import type { PluginRoutes, ResourceName } from "../../extensions/types";
-import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin";
-import type { ClientConfig } from "../config";
-import type { AuthMethod } from "../auth";
-import type { OpportunityBase } from "../../types";
+import { Client } from "../client.js";
+import { Opportunities } from "./opportunities.js";
+import { RESOURCE_REGISTRY } from "./registry.js";
+import type { PluginRoutes, ResourceName } from "../../extensions/types.js";
+import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin.js";
+import type { ClientConfig } from "../config.js";
+import type { AuthMethod } from "../auth.js";
+import type { OpportunityBase } from "../../types.js";
 
 /** Item type projected from the plugin's compiled schema for a model. */
 type ResolvedItemType<T extends PluginSchemasInput> = z.infer<

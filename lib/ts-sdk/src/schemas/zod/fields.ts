@@ -5,7 +5,7 @@
  */
 
 import { z } from "zod";
-import { UTCDateTimeSchema, ISODateSchema, ISOTimeSchema, DecimalStringSchema } from "./types";
+import { UTCDateTimeSchema, ISODateSchema, ISOTimeSchema, DecimalStringSchema } from "./types.js";
 
 // ############################################################################
 // Event schemas

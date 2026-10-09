@@ -2,12 +2,12 @@
  * Main HTTP client for the CommonGrants API.
  */
 
-import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config";
-import { Auth, buildAuthHeaders, type AuthMethod } from "./auth";
-import { Opportunities } from "./resources/opportunities";
-import { EXTENSIBLE_SCHEMA_MAP } from "../extensions/types";
-import { parseBatch, type OnParseError, type ParseFailure } from "./results";
-import type { Paginated } from "../types";
+import { type ClientConfig, type ResolvedConfig, resolveConfig } from "./config.js";
+import { Auth, buildAuthHeaders, type AuthMethod } from "./auth.js";
+import { Opportunities } from "./resources/opportunities.js";
+import { EXTENSIBLE_SCHEMA_MAP } from "../extensions/types.js";
+import { parseBatch, type OnParseError, type ParseFailure } from "./results.js";
+import type { Paginated } from "../types.js";
 import type { z } from "zod";
 
 // =============================================================================

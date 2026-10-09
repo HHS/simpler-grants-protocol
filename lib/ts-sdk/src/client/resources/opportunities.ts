@@ -3,23 +3,28 @@
  */
 
 import { z } from "zod";
-import type { Client, FetchManyOptions } from "../client";
-import type { OpportunityBase, OppStatusOptions, OppFilters, OppSearchRequest } from "../../types";
+import type { Client, FetchManyOptions } from "../client.js";
+import type {
+  OpportunityBase,
+  OppStatusOptions,
+  OppFilters,
+  OppSearchRequest,
+} from "../../types.js";
 import {
   OkSchema,
   PaginatedSchema,
   FilteredSchema,
   OpportunityBaseSchema,
   OppFiltersSchema,
-} from "../../schemas";
-import { ArrayOperator } from "../../constants";
-import { classifyFilters, validateRoutes } from "../../extensions/custom-filters";
-import type { CustomFilterInput } from "../../extensions/custom-filters";
-import { FilterError } from "../../extensions/types";
-import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
-import { parseBatch } from "../results";
-import type { ListResult, OnParseError, SearchResult } from "../results";
-import { Resource } from "./base";
+} from "../../schemas/index.js";
+import { ArrayOperator } from "../../constants.js";
+import { classifyFilters, validateRoutes } from "../../extensions/custom-filters.js";
+import type { CustomFilterInput } from "../../extensions/custom-filters.js";
+import { FilterError } from "../../extensions/types.js";
+import type { CustomFilterType, PluginRoutes } from "../../extensions/types.js";
+import { parseBatch } from "../results.js";
+import type { ListResult, OnParseError, SearchResult } from "../results.js";
+import { Resource } from "./base.js";
 
 // =============================================================================
 // Schema type constraint
