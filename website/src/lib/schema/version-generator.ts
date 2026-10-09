@@ -421,7 +421,7 @@ function projectModel(
  * record's own keys stay untouched. Anything else, untyped values included,
  * passes through whole.
  *
- * ponytail: `anyOf`/`oneOf`/`allOf` are not followed, so a model reached only
+ * NOTE: `anyOf`/`oneOf`/`allOf` are not followed, so a model reached only
  * through one keeps every version's fields in nested examples. Follow them
  * when an example needs it.
  */

@@ -295,6 +295,24 @@ describe("the unversioned FormBase authoring schema", () => {
   });
 });
 
+// Likewise, Core's competition example must point `opportunityId` and
+// `opportunity.id` at the same record.
+describe("the unversioned CompetitionBase authoring schema", () => {
+  const aggregate = yaml.load(
+    readFileSync(
+      path.join(PUBLIC_DIR, "schemas/yaml/CompetitionBase.yaml"),
+      "utf-8",
+    ),
+  ) as Schema;
+
+  it("gives its example matching opportunityId and opportunity.id", () => {
+    const example = exampleOf(aggregate);
+    const opportunity = example.opportunity as { id: string };
+    expect(example.opportunityId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(opportunity.id).toBe(example.opportunityId);
+  });
+});
+
 // The Form page shows the v0.5 payload in its table and literal example (a
 // file-based example would sample the unversioned schema, which carries both
 // keys), while its JSON Schema tab and download stay the unversioned
