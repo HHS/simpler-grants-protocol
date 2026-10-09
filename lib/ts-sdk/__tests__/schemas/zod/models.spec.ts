@@ -243,6 +243,8 @@ describe("OpportunityBase Schema", () => {
             ["source", { source: null }],
             ["customFields", { customFields: null }],
             ["acceptedApplicantTypes", { acceptedApplicantTypes: null }],
+            ["identifiers", { identifiers: null }],
+            ["funders", { funders: null }],
           ] as const
         ).map(([field, override]) => ({
           label: `${field} explicitly null (SDK nullish, protocol optional but not nullable)`,
@@ -250,15 +252,47 @@ describe("OpportunityBase Schema", () => {
           expect: "divergent" as const,
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
         })),
+
+        // `identifiers` is any object on the SDK side until the Zod identifier
+        // models land (#1244), while the protocol seals `OppIds` to its base
+        // registries plus `systemId` and `otherIds`. Non-objects still agree.
+        {
+          label: "identifiers is not an object",
+          value: { ...valid, identifiers: "not an object" },
+        },
+        {
+          label:
+            "identifiers with an unregistered top-level key (SDK any object, protocol sealed OppIds)",
+          value: { ...valid, identifiers: { "opp:made:up": { id: "x" } } },
+          expect: "divergent" as const,
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
+        },
+
+        // `funders` is any object on the SDK side until the Zod organization
+        // models land (#1156), while the protocol requires `OrgRefCollection` to
+        // carry a `primary` property. Non-objects still agree.
+        {
+          label: "funders is not an object",
+          value: { ...valid, funders: "not an object" },
+        },
+        {
+          label: "funders without primary (SDK any object, protocol requires primary)",
+          value: { ...valid, funders: { otherOrgs: {} } },
+          expect: "divergent" as const,
+          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
+        },
       ],
-      5
+      9
     );
 
     // Not full parity: every optional field on this model still accepts null
-    // where the protocol does not. Stated here so a green test does not read as
-    // agreement.
+    // where the protocol does not, and `identifiers` is unmodeled. Stated here
+    // so a green test does not read as agreement.
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
-      new Set(["https://github.com/HHS/simpler-grants-protocol/issues/1192"])
+      new Set([
+        "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+        "https://github.com/HHS/simpler-grants-protocol/issues/1244",
+      ])
     );
   });
 

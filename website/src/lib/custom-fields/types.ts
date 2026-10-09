@@ -14,6 +14,18 @@ export interface CustomFieldIndexEntry {
 }
 
 /**
+ * A documentation-level deprecation notice, read from a schema's
+ * `x-deprecated` extension. Prose only: it carries no catalog status and
+ * does not affect filtering, validation, or the field's `x-valid-schemas`.
+ */
+export interface DeprecationNotice {
+  /** Why the field is deprecated and what replaces it, as plain text (not markdown) */
+  note: string;
+  /** Link to the migration guidance */
+  href: string;
+}
+
+/**
  * Data extracted from the JSON schema (emitted from TypeSpec).
  */
 export interface CustomFieldSchemaData {
@@ -35,6 +47,8 @@ export interface CustomFieldSchemaData {
   validFor: string[];
   /** Author (x-author) */
   author: string;
+  /** Deprecation notice (x-deprecated), absent unless the schema declares one */
+  deprecated?: DeprecationNotice;
 }
 
 /**

@@ -43,10 +43,17 @@ export function generateSchemaVersions(
   // Build a map of current name -> historical name for this version
   const nameMapping = buildNameMapping(version, changelog);
 
+  // The fields each model (by current name) lacks in this version, which
+  // examples must also lack wherever the model appears in them
+  const absentFields = new Map(
+    Object.entries(changelog.logs).map(([name, logs]) => [
+      name,
+      getAbsentFields(logs, version),
+    ]),
+  );
+
   // Process each schema
   for (const [currentName, currentSchema] of schemas) {
-    const schemaLogs = changelog.logs[currentName];
-
     // Determine if this schema exists in the target version
     const existence = getSchemaExistence(currentName, version, changelog);
 
@@ -61,8 +68,7 @@ export function generateSchemaVersions(
     const versionedSchema = generateSchemaForVersion(
       currentSchema,
       currentName,
-      version,
-      schemaLogs,
+      { schemas, absentFields },
       nameMapping,
     );
 
@@ -245,8 +251,7 @@ export function getSchemaNameInVersion(
 function generateSchemaForVersion(
   currentSchema: JsonSchema,
   currentName: string,
-  targetVersion: string,
-  schemaLogs: { [version: string]: ChangeRecord[] } | undefined,
+  context: ProjectionContext,
   nameMapping: Map<string, string>,
 ): JsonSchema {
   // Deep clone the schema
@@ -260,31 +265,7 @@ function generateSchemaForVersion(
     versionedSchema.$id = `${nameInVersion}.yaml`;
   }
 
-  // Determine which fields don't exist in the target version. The JSON Schema
-  // emitter ignores @typespec/versioning and emits a union of every field across
-  // all versions (see microsoft/typespec#2051, tracked here in HHS #370), so we
-  // reconstruct each version from the changelog: drop fields added after the
-  // target version, and drop fields removed at or before it.
-  const fieldsToRemove = new Set<string>();
-
-  if (schemaLogs) {
-    for (const version of Object.keys(schemaLogs).sort()) {
-      const changes = schemaLogs[version];
-      const isAfterTarget = compareVersions(version, targetVersion) > 0;
-      const isAtOrBeforeTarget = compareVersions(version, targetVersion) <= 0;
-      for (const change of changes) {
-        if (change.targetKind !== TargetType.ModelProperty) {
-          continue;
-        }
-        if (isAfterTarget && change.action === Action.Added) {
-          fieldsToRemove.add(change.currTargetName || "");
-        }
-        if (isAtOrBeforeTarget && change.action === Action.Removed) {
-          fieldsToRemove.add(change.currTargetName || "");
-        }
-      }
-    }
-  }
+  const fieldsToRemove = context.absentFields.get(currentName) ?? new Set();
 
   // Remove fields that didn't exist in this version
   if (versionedSchema.properties) {
@@ -300,10 +281,190 @@ function generateSchemaForVersion(
     );
   }
 
+  if (fieldsToRemove.size > 0) {
+    pruneUnreachableDefs(versionedSchema);
+  }
+
+  // The emitter writes examples unversioned too, so drop the same fields from
+  // each example, and every other model's absent fields from the values it
+  // nests. (A model whose `@example` must name both sides of a removal plus
+  // addition, like `CompetitionBase` or `FormBase` at v0.5, relies on this.)
+  const examples = (versionedSchema as { examples?: unknown[] }).examples;
+  for (const example of examples ?? []) {
+    projectModel(example, currentName, context);
+  }
+
   // Update $refs to use historical names
   updateRefs(versionedSchema, nameMapping);
 
   return versionedSchema;
+}
+
+/**
+ * Drop local `$defs` entries no longer referenced once later fields are
+ * removed. The emitter writes non-file models (such as merge-patch variants)
+ * as local `$defs`, so a field added in a later version can bring definitions
+ * that would otherwise linger, unreferenced, in earlier versions.
+ */
+function pruneUnreachableDefs(schema: JsonSchema): void {
+  const defs = (schema as { $defs?: Record<string, unknown> }).$defs;
+  if (!defs) return;
+
+  const reached = new Set<string>();
+  const visit = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "$ref" && typeof value === "string") {
+        const name = value.match(/^#\/\$defs\/([^/]+)/)?.[1];
+        if (name && name in defs && !reached.has(name)) {
+          reached.add(name);
+          visit(defs[name]);
+        }
+      } else if (node !== schema || key !== "$defs") {
+        visit(value);
+      }
+    }
+  };
+  visit(schema);
+
+  for (const name of Object.keys(defs)) {
+    if (!reached.has(name)) delete defs[name];
+  }
+  if (Object.keys(defs).length === 0) {
+    delete (schema as { $defs?: unknown }).$defs;
+  }
+}
+
+// #############################################################################
+// # Get absent fields
+// #############################################################################
+
+/**
+ * The fields a model lacks in a version. The JSON Schema emitter ignores
+ * @typespec/versioning and emits a union of every field across all versions
+ * (see microsoft/typespec#2051, tracked here in HHS #370), so we reconstruct
+ * each version from the changelog: fields added after the target version, and
+ * fields removed at or before it.
+ */
+function getAbsentFields(
+  schemaLogs: { [version: string]: ChangeRecord[] },
+  targetVersion: string,
+): Set<string> {
+  const absent = new Set<string>();
+
+  for (const version of Object.keys(schemaLogs).sort()) {
+    const isAfterTarget = compareVersions(version, targetVersion) > 0;
+    for (const change of schemaLogs[version]) {
+      if (change.targetKind !== TargetType.ModelProperty) {
+        continue;
+      }
+      if (isAfterTarget && change.action === Action.Added) {
+        absent.add(change.currTargetName || "");
+      }
+      if (!isAfterTarget && change.action === Action.Removed) {
+        absent.add(change.currTargetName || "");
+      }
+    }
+  }
+
+  return absent;
+}
+
+// #############################################################################
+// # Project examples
+// #############################################################################
+
+/** What projecting an example onto a version needs to know. */
+interface ProjectionContext {
+  /** Every current schema, by current name. */
+  schemas: Map<string, JsonSchema>;
+  /** The fields each model (by current name) lacks in the target version. */
+  absentFields: Map<string, Set<string>>;
+}
+
+/** The parts of an emitted schema that say what an example value holds. */
+interface SchemaNode {
+  $ref?: string;
+  $defs?: Record<string, SchemaNode>;
+  properties?: Record<string, SchemaNode>;
+  items?: SchemaNode;
+  unevaluatedProperties?: SchemaNode | boolean;
+}
+
+const DEFS_REF_PREFIX = "#/$defs/";
+
+/**
+ * Projects an example value of a model (by current name) onto the target
+ * version in place: drops the model's absent fields, then projects the
+ * values of the fields that remain.
+ */
+function projectModel(
+  value: unknown,
+  modelName: string,
+  context: ProjectionContext,
+): void {
+  const schema = context.schemas.get(modelName) as SchemaNode | undefined;
+  if (!schema || typeof value !== "object" || value === null) return;
+
+  if (!Array.isArray(value)) {
+    for (const field of context.absentFields.get(modelName) ?? []) {
+      delete (value as Record<string, unknown>)[field];
+    }
+  }
+  projectValue(value, schema, schema, context);
+}
+
+/**
+ * Projects the models nested in an example value, which `schema` (a node of
+ * the emitted document `doc`) describes. Follows `$ref`s to other schema files
+ * and to `$defs`, declared properties, array items, and record values, so a
+ * record's own keys stay untouched. Anything else, untyped values included,
+ * passes through whole.
+ *
+ * NOTE: `anyOf`/`oneOf`/`allOf` are not followed, so a model reached only
+ * through one keeps every version's fields in nested examples. Follow them
+ * when an example needs it.
+ */
+function projectValue(
+  value: unknown,
+  schema: SchemaNode,
+  doc: SchemaNode,
+  context: ProjectionContext,
+): void {
+  if (typeof value !== "object" || value === null) return;
+
+  const ref = schema.$ref;
+  if (ref !== undefined) {
+    if (ref.startsWith(DEFS_REF_PREFIX)) {
+      const def = doc.$defs?.[ref.slice(DEFS_REF_PREFIX.length)];
+      if (def) projectValue(value, def, doc, context);
+    } else if (ref.endsWith(".yaml")) {
+      projectModel(value, ref.slice(0, -".yaml".length), context);
+    }
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    if (isSchemaNode(schema.items)) {
+      for (const item of value) projectValue(item, schema.items, doc, context);
+    }
+    return;
+  }
+
+  const recordValues = isSchemaNode(schema.unevaluatedProperties)
+    ? schema.unevaluatedProperties
+    : undefined;
+  for (const [key, child] of Object.entries(value)) {
+    const childSchema =
+      schema.properties && Object.hasOwn(schema.properties, key)
+        ? schema.properties[key]
+        : recordValues;
+    if (childSchema) projectValue(child, childSchema, doc, context);
+  }
+}
+
+function isSchemaNode(node: unknown): node is SchemaNode {
+  return typeof node === "object" && node !== null && !Array.isArray(node);
 }
 
 // #############################################################################

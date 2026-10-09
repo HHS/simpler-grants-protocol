@@ -29,6 +29,8 @@ import {
   writeFormResponse,
   readFormResponse,
 } from "@/lib/mock/handlers/applications";
+import { getCompetition } from "@/lib/mock/handlers/competitions";
+import { getForm } from "@/lib/mock/handlers/forms";
 
 const VERSION: Version = "0.4.0";
 
@@ -669,6 +671,32 @@ describe("GET /v{version}/common-grants/applications/{appId}/forms/{formId} (rea
   });
 });
 
+describe("form answers across the v0.5 form title", () => {
+  /** The canonical application's answer to the canonical form at `version`. */
+  async function answerAt(version: Version) {
+    const response = readFormResponse(
+      CANONICAL_APPLICATION_ID,
+      CANONICAL_FORM_ID,
+      version,
+    );
+    expect(response.status).toBe(200);
+    return ((await response.json()) as { data: Record<string, unknown> }).data;
+  }
+
+  // The canned answer is chosen by the stored form's `name`; serving forms
+  // with `title` at v0.5 must neither rename nor empty it.
+  it("keeps the canned answer after forms and competitions are served at v0.5", async () => {
+    const before = await answerAt("0.4.0");
+    expect(Object.keys(before.response as object).length).toBeGreaterThan(0);
+
+    await getForm(CANONICAL_FORM_ID, "0.5.0").json();
+    await getCompetition(CANONICAL_COMPETITION_ID, "0.5.0").json();
+
+    expect(await answerAt("0.5.0")).toEqual(before);
+    expect(await answerAt("0.4.0")).toEqual(before);
+  });
+});
+
 describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (write)", () => {
   it("echoes the submitted response body under data.response, with formId/applicationId set from the path", async () => {
     const responseBody = {
@@ -842,6 +870,7 @@ describe("per-version application response shape", () => {
     "0.2.0": "name",
     "0.3.0": "name",
     "0.4.0": "title",
+    "0.5.0": "title",
   };
 
   /** Versions whose `ApplicationBase` declares `opportunityId`. */
@@ -850,10 +879,11 @@ describe("per-version application response shape", () => {
     "0.2.0": false,
     "0.3.0": true,
     "0.4.0": true,
+    "0.5.0": true,
   };
 
   /** The applications routes start at v0.2; v0.1 never reaches a handler. */
-  const SERVED: Version[] = ["0.2.0", "0.3.0", "0.4.0"];
+  const SERVED: Version[] = ["0.2.0", "0.3.0", "0.4.0", "0.5.0"];
 
   it.each(SERVED)(
     "names the title field as v%s documents it, on the detail route",

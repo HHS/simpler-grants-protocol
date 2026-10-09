@@ -1,0 +1,68 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgRelationships.yaml
+type: object
+properties:
+  parents:
+    type: array
+    items:
+      $ref: OrgHierarchyRelationship.yaml
+    description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+  children:
+    type: array
+    items:
+      $ref: OrgHierarchyRelationship.yaml
+    description: Organizations below this one, such as its chapters or sponsored projects.
+  succeededBy:
+    type: array
+    items:
+      $ref: OrgSuccessionRelationship.yaml
+    description: Organizations that carry on all or part of this one.
+  succeeds:
+    type: array
+    items:
+      $ref: OrgSuccessionRelationship.yaml
+    description: Organizations whose work this one carries on in whole or in part.
+  recordReplacedBy:
+    type: array
+    items:
+      $ref: OrgRecordRelationship.yaml
+    description: Records to use instead of this record.
+  recordReplaces:
+    type: array
+    items:
+      $ref: OrgRecordRelationship.yaml
+    description: Records that this record is used instead of.
+  otherRelationships:
+    type: array
+    items:
+      $ref: OrgOtherRelationship.yaml
+    description: Connections outside the categories above, which need not have a direction.
+unevaluatedProperties:
+  not: {}
+examples:
+  - parents:
+      - org:
+          id: 01912a8b-7c3d-7891-abcd-ef1234567891
+          name: National Reading Network
+        kind:
+          value: chapter
+      - org:
+          id: 01912a8b-7c3d-7892-abcd-ef1234567892
+          name: Riverside Community Foundation
+          identifiers:
+            org:us:ein:
+              registry:
+                code: org:us:ein
+              id: "123456789"
+        kind:
+          value: fiscalSponsor
+        startDate: 2024-07-01
+        status: active
+description: |-
+  An organization's relationships to other organizations.
+
+  Each named list holds relationships of one category and direction;
+  `otherRelationships` holds connections outside those categories. Every list
+  is optional, list order carries no meaning, and a provider may state a
+  relationship from either organization's record. A relationship confers no
+  authority over the other organization.

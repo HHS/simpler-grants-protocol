@@ -5,13 +5,42 @@
  */
 
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
+// Type-only: erased at build time, so this does not close the runtime import
+// cycle that `awards.ts` opens by importing this module.
+import type { AwdRef, OppRef } from "./awards";
+// The award references below are shared with `awards.ts`, which builds each
+// award fixture from the same constant, so a title or identifier cannot drift
+// between an award and the opportunity that lists it.
+import {
+  ARTS_CULTURE_AWARD_REF,
+  CANONICAL_AWARD_REF,
+  CIVIC_TECH_AWARD_REF,
+  CLEAN_ENERGY_AMENDMENT_AWARD_REF,
+  CLEAN_ENERGY_AWARD_REF,
+  COASTAL_RESILIENCE_AWARD_REF,
+  DIGITAL_LITERACY_AWARD_REF,
+  DOCUMENTED_AWARD_REF,
+  HEALTH_OUTREACH_AWARD_REF,
+  RURAL_BROADBAND_AWARD_REF,
+  WORKFORCE_APPRENTICESHIP_AWARD_REF,
+} from "./award-refs";
+import type { Identifier, OrgRefCollection } from "./organizations";
+import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
 
 /**
  * Protocol versions the fixture can shape, matching the specs the docs site
  * publishes. v0.4.0 left the opportunity models untouched, so it shapes
- * identically to v0.3.0.
+ * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which
+ * `shapeOpportunityForVersion` strips for every earlier version, and replaces
+ * each nested competition's `opportunityId` with an `opportunity` reference.
  */
-export const SUPPORTED_VERSIONS = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"] as const;
+export const SUPPORTED_VERSIONS = [
+  "0.1.0",
+  "0.2.0",
+  "0.3.0",
+  "0.4.0",
+  "0.5.0",
+] as const;
 
 /** A protocol version the opportunity handlers can shape responses for. */
 export type Version = (typeof SUPPORTED_VERSIONS)[number];
@@ -127,6 +156,7 @@ export interface CompetitionTimeline {
 /**
  * A trimmed competition (mirrors `Models.CompetitionBase`, added v0.2). The
  * full model requires a `forms` object; the mock omits it deliberately.
+ * Stored with the v0.2-v0.4 `opportunityId`; see `WireCompetitionPreview`.
  */
 export interface Competition {
   id: string;
@@ -137,10 +167,34 @@ export interface Competition {
   keyDates?: CompetitionTimeline;
 }
 
+/**
+ * A nested competition as a version serves it: v0.5 replaces `opportunityId`
+ * with an `opportunity` reference.
+ */
+export type WireCompetitionPreview = Omit<Competition, "opportunityId"> & {
+  opportunityId?: string;
+  opportunity?: OppRef;
+};
+
 /** A funding opportunity in its fullest (v0.3+, detail) shape. */
+/**
+ * Identifiers for an opportunity (mirrors `Models.OppIds`). `opp:us:fon` and
+ * `opp:us:aln` are base identifiers with their own top-level keys, never filed
+ * under `otherIds`, which is only for registries the protocol does not define
+ * on the model.
+ */
+export interface OppIds {
+  systemId?: Identifier;
+  "opp:us:fon"?: Identifier;
+  "opp:us:aln"?: Identifier;
+  otherIds?: Record<string, Identifier>;
+}
+
 export interface Opportunity {
   id: string;
   title: string;
+  identifiers?: OppIds;
+  funders?: OrgRefCollection;
   status: OppStatus;
   description: string;
   funding?: OppFunding;
@@ -149,6 +203,12 @@ export interface Opportunity {
   source?: string;
   customFields?: Record<string, CustomField>;
   competitions?: Competition[];
+  /**
+   * Awards that resulted from this opportunity, as references (added v0.5).
+   * Detail-only, like `competitions`: `shapeOpportunityForVersion` strips it
+   * from the list variant and from every version below 0.5.0.
+   */
+  awards?: AwdRef[];
   createdAt: string;
   lastModifiedAt: string;
 }
@@ -213,6 +273,36 @@ export const RESERVED_MISSING_OPPORTUNITY_ID = RESERVED_MISSING_ID;
  * docs' example page size of 20. The canonical record must carry the newest
  * `lastModifiedAt` so it sorts first under the default ordering.
  */
+/** Builds a Federal Opportunity Number entry. */
+function fon(value: string): Identifier {
+  return {
+    registry: {
+      code: "opp:us:fon",
+      url: "https://commongrants.org/registries/opp-us-fon",
+    },
+    id: value,
+  };
+}
+
+/** Builds an Assistance Listing Number entry. */
+function aln(value: string): Identifier {
+  return {
+    registry: {
+      code: "opp:us:aln",
+      url: "https://commongrants.org/registries/opp-us-aln",
+    },
+    id: value,
+  };
+}
+
+/** Builds the hosting system's own identifier for an opportunity. */
+function oppSystemId(value: string): Identifier {
+  return {
+    registry: { code: "opp:grants.gov:system" },
+    id: value,
+  };
+}
+
 export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   // ---- The spec's own documented example (see CANONICAL_OPPORTUNITY_ID) ----
   {
@@ -221,6 +311,12 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     // published example is the point.
     id: CANONICAL_OPPORTUNITY_ID,
     title: "Small business grant program",
+    identifiers: {
+      systemId: oppSystemId(CANONICAL_OPPORTUNITY_ID),
+      "opp:us:fon": fon("SBA-2024-SBG-0001"),
+      "opp:us:aln": aln("59.037"),
+    },
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: {
       value: "open",
       description: "The opportunity is currently accepting applications",
@@ -303,6 +399,10 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         },
       },
     ],
+    // The canonical award aliases the shared canonical id, exactly as
+    // `CANONICAL_AWARD_ID` in `awards.ts` does, so this opportunity's award
+    // reference carries the same uuid as the opportunity itself.
+    awards: [CANONICAL_AWARD_REF],
     // Chosen so this record sorts first under the list endpoint's default
     // `lastModifiedAt desc` ordering.
     createdAt: "2024-01-15T00:00:00Z",
@@ -312,6 +412,18 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "573525f2-8e15-4405-83fb-e6523511d893",
     title: "STEM Education Grant Program",
+    identifiers: {
+      "opp:us:fon": fon("ED-GRANTS-2024-STEM-001"),
+      "opp:us:aln": aln("84.215"),
+      otherIds: {
+        // Grants.gov's own numeric opportunity id, distinct from the FON and
+        // not a registry the protocol defines as a base identifier.
+        "opp:grants.gov:oppId": {
+          registry: { code: "opp:grants.gov:oppId" },
+          id: "356789",
+        },
+      },
+    },
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "A grant program focused on improving STEM education in under-resourced schools.",
@@ -418,6 +530,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "1f0a2b3c-4d5e-4f60-8a1b-2c3d4e5f6a7b",
     title: "Rural Broadband Expansion",
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: { value: "forecasted", description: "Anticipated to open in Q3" },
     description:
       "Expanding high-speed broadband access to unserved rural communities.",
@@ -441,6 +554,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Small telecom providers",
       },
     ],
+    awards: [RURAL_BROADBAND_AWARD_REF],
     createdAt: "2025-02-01T00:00:00Z",
     lastModifiedAt: "2025-02-10T00:00:00Z",
   },
@@ -474,6 +588,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "3b4c5d6e-7f80-4192-8c3d-4e5f6a7b8c9d",
     title: "Coastal Resilience Grant",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "closed",
       description: "No longer accepting applications",
@@ -493,12 +608,14 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
     acceptedApplicantTypes: [
       { value: "government_municipal", description: "Coastal municipalities" },
     ],
+    awards: [COASTAL_RESILIENCE_AWARD_REF],
     createdAt: "2024-06-01T00:00:00Z",
     lastModifiedAt: "2025-01-05T00:00:00Z",
   },
   {
     id: "4c5d6e7f-8091-42a3-9d4e-5f6a7b8c9d0e",
     title: "Clean Energy Innovation",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Supporting research and deployment of clean energy technologies.",
@@ -534,12 +651,15 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-09-30") },
       },
     ],
+    // The base award and its amendment: the one opportunity carrying two.
+    awards: [CLEAN_ENERGY_AWARD_REF, CLEAN_ENERGY_AMENDMENT_AWARD_REF],
     createdAt: "2025-03-01T00:00:00Z",
     lastModifiedAt: "2025-03-12T00:00:00Z",
   },
   {
     id: "5d6e7f80-91a2-43b4-8e5f-6a7b8c9d0e1f",
     title: "Workforce Apprenticeship Program",
+    funders: orgRefCollection(HRSA_ORG_ID, { passThrough: NSF_ORG_ID }),
     status: {
       value: "closed",
       description: "No longer accepting applications",
@@ -562,12 +682,14 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Workforce development organizations",
       },
     ],
+    awards: [WORKFORCE_APPRENTICESHIP_AWARD_REF],
     createdAt: "2024-09-01T00:00:00Z",
     lastModifiedAt: "2025-02-28T00:00:00Z",
   },
   {
     id: "6e7f8091-a2b3-44c5-9f60-7b8c9d0e1f20",
     title: "Community Health Outreach",
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: {
       value: "custom",
       customValue: "under_review",
@@ -591,12 +713,14 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Community health non-profits",
       },
     ],
+    awards: [HEALTH_OUTREACH_AWARD_REF],
     createdAt: "2025-01-10T00:00:00Z",
     lastModifiedAt: "2025-05-16T00:00:00Z",
   },
   {
     id: "7f8091a2-b3c4-45d6-8071-8c9d0e1f2031",
     title: "Arts & Culture Preservation",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "custom",
       customValue: "archived",
@@ -619,6 +743,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       { value: "non_profit_with_501c3", description: "Arts non-profits" },
       { value: "individual", description: "Individual artists" },
     ],
+    awards: [ARTS_CULTURE_AWARD_REF],
     createdAt: "2024-04-01T00:00:00Z",
     lastModifiedAt: "2024-11-01T00:00:00Z",
   },
@@ -660,6 +785,10 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "91a2b3c4-d5e6-47f8-93a4-0e1f20314253",
     title: "Rural Health Clinic Modernization",
+    identifiers: {
+      "opp:us:aln": aln("93.224"),
+    },
+    funders: orgRefCollection(HRSA_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Modernizing facilities and equipment at rural health clinics.",
@@ -690,6 +819,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         keyDates: { closeDate: closeOn("2025-12-01") },
       },
     ],
+    awards: [DOCUMENTED_AWARD_REF],
     createdAt: "2025-04-01T00:00:00Z",
     lastModifiedAt: "2025-04-10T00:00:00Z",
   },
@@ -727,6 +857,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "b3c4d5e6-f708-491a-95c6-203142536475",
     title: "Digital Literacy for Seniors",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: { value: "open", description: "Currently accepting applications" },
     description:
       "Teaching digital skills to older adults through community programs.",
@@ -751,6 +882,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12349),
       programCode: programCode("DIG-LIT"),
     },
+    awards: [DIGITAL_LITERACY_AWARD_REF],
     createdAt: "2025-02-20T00:00:00Z",
     lastModifiedAt: "2025-02-25T00:00:00Z",
   },
@@ -906,6 +1038,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
       legacyId: legacyId(12350),
       programCode: programCode("VET-BIZ"),
     },
+    // Demonstrates the documented empty-array case: the link is published and
+    // no awards are known yet, which is distinct from `awards` being absent
+    // (the implementation does not publish the link for the record). No award
+    // fixture references this opportunity, so the empty array is truthful.
+    awards: [],
     createdAt: "2024-10-01T00:00:00Z",
     lastModifiedAt: "2025-02-01T00:00:00Z",
   },
@@ -985,6 +1122,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   {
     id: "3b4c5d6e-7f80-4923-8d4e-08192a3b4c5d",
     title: "Civic Tech Fellows",
+    funders: orgRefCollection(NSF_ORG_ID),
     status: {
       value: "custom",
       customValue: "paused",
@@ -1009,6 +1147,7 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
         description: "Public university partners",
       },
     ],
+    awards: [CIVIC_TECH_AWARD_REF],
     createdAt: "2025-01-20T00:00:00Z",
     lastModifiedAt: "2025-05-02T00:00:00Z",
   },
@@ -1083,6 +1222,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   },
 ]);
 
+/** An opportunity as a version serves it (see `WireCompetitionPreview`). */
+export type WireOpportunity = Omit<Opportunity, "competitions"> & {
+  competitions?: WireCompetitionPreview[];
+};
+
 /**
  * Projects a record down to the shape a given version + variant should emit.
  * Returns a shallow copy; the original is untouched.
@@ -1091,12 +1235,14 @@ export function shapeOpportunityForVersion(
   opp: Opportunity,
   version: Version,
   variant: ShapeVariant = "list",
-): Opportunity {
-  const shaped: Opportunity = { ...opp };
+): WireOpportunity {
+  const shaped: WireOpportunity = { ...opp };
 
-  // `competitions` only exists on the detail (OpportunityDetails) shape.
+  // `competitions` and `awards` only exist on the detail
+  // (OpportunityDetails) shape.
   if (variant === "list") {
     delete shaped.competitions;
+    delete shaped.awards;
   }
 
   // v0.1 predates both `acceptedApplicantTypes` and `OpportunityDetails`.
@@ -1105,7 +1251,67 @@ export function shapeOpportunityForVersion(
     delete shaped.competitions;
   }
 
+  // `OppRef.identifiers`, `OpportunityBase.funders`, and
+  // `OpportunityDetails.awards` are all `@added(v0_5)`.
+  // Ordering is compared inline rather than via `isAtLeastVersion`, because
+  // `availability.ts` imports this module and the reverse import would be a
+  // runtime cycle. `awards.ts` has no such constraint and uses the helper.
+  if (
+    SUPPORTED_VERSIONS.indexOf(version) < SUPPORTED_VERSIONS.indexOf("0.5.0")
+  ) {
+    delete shaped.identifiers;
+    delete shaped.funders;
+    delete shaped.awards;
+  }
+
+  // `CompetitionBase.opportunity` replaces `opportunityId` at v0.5.
+  if (
+    shaped.competitions &&
+    SUPPORTED_VERSIONS.indexOf(version) >= SUPPORTED_VERSIONS.indexOf("0.5.0")
+  ) {
+    shaped.competitions = shaped.competitions.map((preview) =>
+      withOpportunityRef(preview),
+    );
+  }
+
   return shaped;
+}
+
+/**
+ * Builds the `OppRef` a v0.5 competition carries, reading the real record so
+ * the title cannot drift from it.
+ */
+export function toOppRef(opportunity: Opportunity): OppRef {
+  return {
+    id: opportunity.id,
+    title: opportunity.title,
+    ...(opportunity.identifiers
+      ? { identifiers: { ...opportunity.identifiers } }
+      : {}),
+  };
+}
+
+/**
+ * Replaces a competition's `opportunityId` with an `opportunity` reference to
+ * the same record, in the same key position. Throws on an unknown id, which
+ * would be a dangling fixture reference.
+ */
+export function withOpportunityRef<T extends { opportunityId?: string }>(
+  competition: T,
+): Omit<T, "opportunityId"> & { opportunity: OppRef } {
+  const opportunity = getById(competition.opportunityId ?? "");
+  if (!opportunity) {
+    throw new Error(
+      `Competition references unknown opportunity ${competition.opportunityId}`,
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(competition).map(([key, value]) =>
+      key === "opportunityId"
+        ? ["opportunity", toOppRef(opportunity)]
+        : [key, value],
+    ),
+  ) as Omit<T, "opportunityId"> & { opportunity: OppRef };
 }
 
 /**
@@ -1119,7 +1325,7 @@ export function getById(id: string): Opportunity | undefined {
 }
 
 /** Returns every fixture projected to the list (OpportunityBase) shape for a version. */
-export function allForVersion(version: Version): Opportunity[] {
+export function allForVersion(version: Version): WireOpportunity[] {
   return OPPORTUNITY_FIXTURES.map((opp) =>
     shapeOpportunityForVersion(opp, version, "list"),
   );

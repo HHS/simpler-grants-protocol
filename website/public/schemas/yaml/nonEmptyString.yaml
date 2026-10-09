@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: nonEmptyString.yaml
+type: string
+examples:
+  - Example
+minLength: 1
+description: A string with at least one character

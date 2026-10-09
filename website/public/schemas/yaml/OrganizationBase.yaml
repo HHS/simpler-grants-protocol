@@ -7,13 +7,16 @@ properties:
     description: The organization's unique identifier.
   name:
     type: string
-    description: The organization's legal name as registered with relevant authorities.
+    description: The name this organization is known by; for a legal entity, its legal name.
   identifiers:
     $ref: OrgIds.yaml
     description: Identifiers associated with the organization, keyed by registry code.
   orgType:
     $ref: PCSOrgType.yaml
     description: The organization's type within the Philanthropy Classification System (PCS).
+  status:
+    $ref: OrgStatus.yaml
+    description: Whether the organization exists and operates, or has dissolved or ceased operating.
   ein:
     $ref: employerTaxId.yaml
     description: The organization's Employer Identification Number (EIN), a unique identifier assigned by the IRS.
@@ -41,6 +44,15 @@ properties:
   socials:
     $ref: OrgSocialLinks.yaml
     description: Collection of the organization's social media and web presence links.
+  aliases:
+    type: array
+    items:
+      $ref: nonEmptyString.yaml
+    uniqueItems: true
+    description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
+  relationships:
+    $ref: OrgRelationships.yaml
+    description: The organization's relationships to other organizations.
   customFields:
     $ref: "#/$defs/RecordCustomField"
     description: Custom fields for the organization.
@@ -57,6 +69,9 @@ examples:
       class: Organization types
       description: Institutions with the primary purpose of providing in-patient physical and mental health services...
       code: EO000000
+    status:
+      value: active
+      description: The organization exists and operates
     identifiers:
       org:us:ein:
         registry:

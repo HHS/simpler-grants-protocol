@@ -120,7 +120,7 @@ namespace Examples.Proposal {
   const exampleOpportunity = #{
     id: "083b4567-e89d-42c8-a439-6c1234567890",
     title: "Example Opportunity",
-    customFields: #{ agency: Fields.Examples.CustomField.agency },
+    customFields: #{ programArea: Fields.Examples.CustomField.programArea },
   };
 
   // #####################################

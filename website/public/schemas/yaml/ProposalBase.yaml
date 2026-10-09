@@ -38,11 +38,12 @@ examples:
       id: 083b4567-e89d-42c8-a439-6c1234567890
       title: Example Opportunity
       customFields:
-        agency:
-          name: agency
+        programArea:
+          name: programArea
           fieldType: string
-          value: Department of Transportation
-          description: The agency responsible for managing this opportunity
+          value: Healthcare Innovation
+          description: Primary focus area of the grant program
+          schema: https://example.com/program-areas.json
     projectTimeline:
       startDate:
         name: Project Start Date
@@ -127,6 +128,9 @@ examples:
           class: Organization types
           description: Institutions with the primary purpose of providing in-patient physical and mental health services...
           code: EO000000
+        status:
+          value: active
+          description: The organization exists and operates
         identifiers:
           org:us:ein:
             registry:
@@ -203,6 +207,9 @@ examples:
             class: Organization types
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
+          status:
+            value: active
+            description: The organization exists and operates
           identifiers:
             org:us:ein:
               registry:
@@ -278,6 +285,9 @@ examples:
             class: Organization types
             description: Institutions with the primary purpose of providing in-patient physical and mental health services...
             code: EO000000
+          status:
+            value: active
+            description: The organization exists and operates
           identifiers:
             org:us:ein:
               registry:

@@ -315,6 +315,112 @@ describe("opportunities routes", () => {
       expect(body.data).not.toHaveProperty("acceptedApplicantTypes");
       expect(body.data.id).toBe(STEM_ID);
     });
+
+    // #1220-T4: `OpportunityBase.funders` is `@added(v0_5)`.
+    it("includes funders in the 0.5.0 list and detail responses for a record known to have it, and omits it at 0.4.0", async () => {
+      const listResponse050 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.5.0")),
+      );
+      const listBody050 = (await listResponse050.json()) as {
+        items: Array<Record<string, unknown> & { id: string }>;
+      };
+      const listItem050 = listBody050.items.find(
+        (item) => item.id === CANONICAL_OPPORTUNITY_ID,
+      );
+      expect(listItem050).toBeDefined();
+      expect(listItem050).toHaveProperty("funders");
+
+      const detailResponse050 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+      );
+      const detailBody050 = (await detailResponse050.json()) as {
+        data: Record<string, unknown> & { id: string };
+      };
+      expect(detailBody050.data).toHaveProperty("funders");
+
+      const listResponse040 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.4.0")),
+      );
+      const listBody040 = (await listResponse040.json()) as {
+        items: Array<Record<string, unknown> & { id: string }>;
+      };
+      const listItem040 = listBody040.items.find(
+        (item) => item.id === CANONICAL_OPPORTUNITY_ID,
+      );
+      expect(listItem040).toBeDefined();
+      expect(listItem040).not.toHaveProperty("funders");
+
+      const detailResponse040 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+      );
+      const detailBody040 = (await detailResponse040.json()) as {
+        data: Record<string, unknown> & { id: string };
+      };
+      expect(detailBody040.data).not.toHaveProperty("funders");
+    });
+
+    // #1221-T3: `OpportunityDetails.awards` is detail-only (like `competitions`)
+    // and `@added(v0_5)` (like `funders`).
+    it("includes awards in the 0.5.0 detail response only, omitting it from the 0.5.0 list and from 0.4.0 entirely", async () => {
+      const detailResponse050 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+      );
+      const detailBody050 = (await detailResponse050.json()) as {
+        data: Record<string, unknown> & { id: string };
+      };
+      expect(detailBody050.data).toHaveProperty("awards");
+
+      const listResponse050 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.5.0")),
+      );
+      const listBody050 = (await listResponse050.json()) as {
+        items: Array<Record<string, unknown> & { id: string }>;
+      };
+      const listItem050 = listBody050.items.find(
+        (item) => item.id === CANONICAL_OPPORTUNITY_ID,
+      );
+      expect(listItem050).toBeDefined();
+      expect(listItem050).not.toHaveProperty("awards");
+
+      // The acceptance criterion names the list *and* the search response.
+      // Search shapes through the same list variant today, so this pins that
+      // a future handler cannot shape it independently and regress.
+      const searchResponse050 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.5.0", "/search"), {
+          method: "POST",
+          body: JSON.stringify({}),
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      const searchBody050 = (await searchResponse050.json()) as {
+        items: Array<Record<string, unknown> & { id: string }>;
+      };
+      const searchItem050 = searchBody050.items.find(
+        (item) => item.id === CANONICAL_OPPORTUNITY_ID,
+      );
+      expect(searchItem050).toBeDefined();
+      expect(searchItem050).not.toHaveProperty("awards");
+
+      const detailResponse040 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+      );
+      const detailBody040 = (await detailResponse040.json()) as {
+        data: Record<string, unknown> & { id: string };
+      };
+      expect(detailBody040.data).not.toHaveProperty("awards");
+
+      const listResponse040 = await handleMockRequest(
+        new Request(opportunitiesUrl("0.4.0")),
+      );
+      const listBody040 = (await listResponse040.json()) as {
+        items: Array<Record<string, unknown> & { id: string }>;
+      };
+      const listItem040 = listBody040.items.find(
+        (item) => item.id === CANONICAL_OPPORTUNITY_ID,
+      );
+      expect(listItem040).toBeDefined();
+      expect(listItem040).not.toHaveProperty("awards");
+    });
   });
 
   describe("determinism", () => {

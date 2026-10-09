@@ -2,7 +2,7 @@
  * Fixture suite ported verbatim from the 3A standalone Worker (#1078);
  * only the import path changed.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
@@ -114,6 +114,80 @@ describe("OPPORTUNITY_FIXTURES", () => {
       expect(count).toBeGreaterThanOrEqual(2);
     }
   });
+
+  // #1219-T3: pins the identifiers the 0.5.0 mock must demonstrate.
+  it("demonstrates opp:us:fon and opp:us:aln together, plus a systemId and an otherIds example", () => {
+    const withBoth = OPPORTUNITY_FIXTURES.filter(
+      (opp) =>
+        opp.identifiers?.["opp:us:fon"] !== undefined &&
+        opp.identifiers?.["opp:us:aln"] !== undefined,
+    );
+    expect(withBoth.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => opp.identifiers?.systemId !== undefined,
+      ),
+    ).toBe(true);
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => Object.keys(opp.identifiers?.otherIds ?? {}).length > 0,
+      ),
+    ).toBe(true);
+  });
+
+  it("never duplicates a base identifier key under otherIds", () => {
+    const withIdentifiers = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.identifiers !== undefined,
+    );
+    expect(withIdentifiers.length).toBeGreaterThan(0);
+
+    // `otherIds` is only for registries the protocol does not define on the
+    // model, so no key with its own slot may also appear there.
+    const baseCodes = [
+      "opp:us:fon",
+      "opp:us:aln",
+      "opp:grants.gov:system",
+      "systemId",
+    ];
+
+    for (const opp of withIdentifiers) {
+      const otherIds = opp.identifiers!.otherIds ?? {};
+      for (const code of baseCodes) {
+        expect(otherIds[code]).toBeUndefined();
+      }
+      // A system id belongs on `systemId`, never re-filed by its registry code.
+      for (const entry of Object.values(otherIds)) {
+        expect(entry.registry.code).not.toBe("opp:grants.gov:system");
+      }
+    }
+  });
+
+  // #1220-T4: pins the funders shapes the 0.5.0 mock must demonstrate.
+  it("demonstrates a funders collection with only a primary, and at least one with otherOrgs populated", () => {
+    const withOnlyPrimary = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.funders !== undefined && opp.funders.otherOrgs === undefined,
+    );
+    expect(withOnlyPrimary.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some(
+        (opp) => Object.keys(opp.funders?.otherOrgs ?? {}).length > 0,
+      ),
+    ).toBe(true);
+  });
+
+  // #1221-T3: pins the awards the 0.5.0 mock must demonstrate.
+  it("demonstrates an opportunity with awards, including one with two entries", () => {
+    const withAwards = OPPORTUNITY_FIXTURES.filter(
+      (opp) => opp.awards !== undefined,
+    );
+    expect(withAwards.length).toBeGreaterThan(0);
+
+    expect(
+      OPPORTUNITY_FIXTURES.some((opp) => (opp.awards?.length ?? 0) >= 2),
+    ).toBe(true);
+  });
 });
 
 describe("shapeOpportunityForVersion", () => {
@@ -158,6 +232,33 @@ describe("shapeOpportunityForVersion", () => {
     expect(shaped.length).toBe(OPPORTUNITY_FIXTURES.length);
   });
 
+  it("keeps each nested competition's opportunityId through v0.4", () => {
+    const shaped = shapeOpportunityForVersion(detailRecord, "0.4.0", "detail");
+
+    for (const preview of shaped.competitions ?? []) {
+      expect(preview.opportunityId).toBe(detailRecord.id);
+      expect(preview).not.toHaveProperty("opportunity");
+    }
+  });
+
+  it("replaces each nested competition's opportunityId with a reference to its opportunity at v0.5", () => {
+    const shaped = shapeOpportunityForVersion(detailRecord, "0.5.0", "detail");
+
+    expect(shaped.competitions?.length).toBeGreaterThan(0);
+    for (const preview of shaped.competitions ?? []) {
+      expect(preview).not.toHaveProperty("opportunityId");
+      expect(preview.opportunity).toEqual({
+        id: detailRecord.id,
+        title: detailRecord.title,
+        identifiers: detailRecord.identifiers,
+      });
+      expect(Object.keys(preview)[1]).toBe("opportunity");
+    }
+    for (const preview of detailRecord.competitions ?? []) {
+      expect(preview).not.toHaveProperty("opportunity");
+    }
+  });
+
   it("shapes 0.4.0 identically to 0.3.0 for both list and detail variants", () => {
     expect(shapeOpportunityForVersion(detailRecord, "0.4.0", "list")).toEqual(
       shapeOpportunityForVersion(detailRecord, "0.3.0", "list"),
@@ -165,6 +266,142 @@ describe("shapeOpportunityForVersion", () => {
     expect(shapeOpportunityForVersion(detailRecord, "0.4.0", "detail")).toEqual(
       shapeOpportunityForVersion(detailRecord, "0.3.0", "detail"),
     );
+  });
+
+  // #1219-T3: v0.5.0 adds `OppRef.identifiers`; earlier versions predate it.
+  const identifiedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.identifiers !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      identifiedRecord!,
+      "no opportunity fixture carries identifiers",
+    ).toBeDefined();
+  });
+
+  it("keeps identifiers for v0.5.0 detail and list records", () => {
+    const list = shapeOpportunityForVersion(identifiedRecord!, "0.5.0", "list");
+    const detail = shapeOpportunityForVersion(
+      identifiedRecord!,
+      "0.5.0",
+      "detail",
+    );
+
+    expect(list.identifiers).toEqual(identifiedRecord!.identifiers);
+    expect(detail.identifiers).toEqual(identifiedRecord!.identifiers);
+  });
+
+  it("strips identifiers for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(
+        identifiedRecord!,
+        version,
+        "list",
+      );
+      const detail = shapeOpportunityForVersion(
+        identifiedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("identifiers");
+      expect(detail).not.toHaveProperty("identifiers");
+    }
+  });
+
+  // #1220-T4: v0.5.0 adds `OpportunityBase.funders`; earlier versions predate it.
+  const fundedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.funders !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      fundedRecord,
+      "no opportunity fixture carries funders",
+    ).toBeDefined();
+  });
+
+  it("keeps funders for v0.5.0 detail and list records", () => {
+    const list = shapeOpportunityForVersion(fundedRecord!, "0.5.0", "list");
+    const detail = shapeOpportunityForVersion(fundedRecord!, "0.5.0", "detail");
+
+    expect(list.funders).toEqual(fundedRecord!.funders);
+    expect(detail.funders).toEqual(fundedRecord!.funders);
+  });
+
+  it("strips funders for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(fundedRecord!, version, "list");
+      const detail = shapeOpportunityForVersion(
+        fundedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("funders");
+      expect(detail).not.toHaveProperty("funders");
+    }
+  });
+
+  // #1221-T3: v0.5.0 adds `OpportunityDetails.awards`; earlier versions predate it.
+  const awardedRecord = OPPORTUNITY_FIXTURES.find(
+    (opp) => opp.awards !== undefined,
+  );
+
+  // Both tests below are meaningless without such a record, so fail loudly here
+  // rather than with a TypeError inside the shaper.
+  beforeAll(() => {
+    expect(
+      awardedRecord!,
+      "no opportunity fixture carries awards",
+    ).toBeDefined();
+  });
+
+  it("keeps awards for v0.5.0 detail records", () => {
+    const detail = shapeOpportunityForVersion(
+      awardedRecord!,
+      "0.5.0",
+      "detail",
+    );
+
+    expect(detail.awards).toEqual(awardedRecord!.awards);
+  });
+
+  it("strips awards from the v0.5.0 list variant", () => {
+    const list = shapeOpportunityForVersion(awardedRecord!, "0.5.0", "list");
+
+    expect(list).not.toHaveProperty("awards");
+  });
+
+  it("strips awards for every version below 0.5.0, both variants", () => {
+    const olderVersions = SUPPORTED_VERSIONS.filter(
+      (version) => version !== "0.5.0",
+    );
+
+    for (const version of olderVersions) {
+      const list = shapeOpportunityForVersion(awardedRecord!, version, "list");
+      const detail = shapeOpportunityForVersion(
+        awardedRecord!,
+        version,
+        "detail",
+      );
+
+      expect(list).not.toHaveProperty("awards");
+      expect(detail).not.toHaveProperty("awards");
+    }
   });
 });
 
@@ -195,6 +432,6 @@ describe("isSupportedVersion", () => {
   });
 
   it("rejects a version the fixture cannot shape", () => {
-    expect(isSupportedVersion("0.5.0")).toBe(false);
+    expect(isSupportedVersion("0.6.0")).toBe(false);
   });
 });

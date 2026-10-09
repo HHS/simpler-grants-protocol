@@ -70,6 +70,13 @@ describe("OrgPatchData merge-patch schema", () => {
       ],
       ["deletes a base identifier", { identifiers: { "org:us:ein": null } }],
       ["clears a whole field", { customFields: null }],
+      ["sets status to active", { status: { value: "active" } }],
+      ["sets status to inactive", { status: { value: "inactive" } }],
+      [
+        "sets a custom status",
+        { status: { value: "custom", customValue: "merging" } },
+      ],
+      ["clears status", { status: null }],
       [
         "applies the documented example",
         {
@@ -100,11 +107,232 @@ describe("OrgPatchData merge-patch schema", () => {
     });
   });
 
+  /**
+   * ADR 0030 organization relationships (v0.5). These pin the patch shape
+   * only: each list is an array a patch replaces whole, `null` removes the
+   * addressed list or every list, omitted lists are untouched, and an entry's
+   * `org` can be named by its writable `id` alone. Validation never fills in
+   * the other organization's `name` or `identifiers`.
+   */
+  describe("organization relationships (ADR 0030)", () => {
+    const NETWORK = "01912a8b-7c3d-7891-abcd-ef1234567891";
+    const FOUNDATION = "01912a8b-7c3d-7892-abcd-ef1234567892";
+    const LISTS: Array<[string, string]> = [
+      ["parents", "chapter"],
+      ["children", "fiscalSponsor"],
+      ["succeededBy", "split"],
+      ["succeeds", "merger"],
+      ["recordReplacedBy", "duplicate"],
+      ["recordReplaces", "merged"],
+      ["otherRelationships", "custom"],
+    ];
+    const kind = (value: string) =>
+      value === "custom" ? { value, customValue: "partner" } : { value };
+
+    const accepted: Array<[string, object]> = [
+      ...LISTS.map(([list, value]): [string, object] => [
+        `replaces ${list} with an ID-only entry`,
+        {
+          relationships: {
+            [list]: [{ org: { id: NETWORK }, kind: kind(value) }],
+          },
+        },
+      ]),
+      ...LISTS.map(([list]): [string, object] => [
+        `removes ${list} with null`,
+        { relationships: { [list]: null } },
+      ]),
+      ...LISTS.map(([list]): [string, object] => [
+        `sends an empty ${list} list`,
+        { relationships: { [list]: [] } },
+      ]),
+      ["removes all relationships with null", { relationships: null }],
+      [
+        "sends an entry with only org",
+        { relationships: { otherRelationships: [{ org: { id: NETWORK } }] } },
+      ],
+      [
+        "sends optional org name and identifiers",
+        {
+          relationships: {
+            parents: [
+              {
+                org: {
+                  id: FOUNDATION,
+                  name: "Riverside Community Foundation",
+                  identifiers: {
+                    "org:us:ein": {
+                      registry: { code: "org:us:ein" },
+                      id: "123456789",
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+      [
+        "ends a sponsorship by resending the whole parents list",
+        {
+          relationships: {
+            parents: [
+              { org: { id: NETWORK }, kind: { value: "chapter" } },
+              {
+                org: { id: FOUNDATION },
+                kind: { value: "fiscalSponsor" },
+                startDate: "2024-07-01",
+                endDate: "2026-06-30",
+                status: "inactive",
+              },
+            ],
+          },
+        },
+      ],
+      [
+        "replaces two lists together",
+        {
+          relationships: {
+            parents: [{ org: { id: NETWORK } }],
+            succeededBy: [
+              { org: { id: FOUNDATION }, kind: { value: "split" } },
+            ],
+          },
+        },
+      ],
+      ["replaces the aliases", { aliases: ["Agile Six", "Agile6"] }],
+      ["sends empty aliases", { aliases: [] }],
+      ["removes the aliases", { aliases: null }],
+    ];
+
+    it.each(accepted)("accepts: %s", (_name, patch) => {
+      expect(validate!(patch), JSON.stringify(validate!.errors)).toBe(true);
+    });
+
+    const rejected: Array<[string, object]> = [
+      [
+        "an entry without org",
+        { relationships: { parents: [{ kind: { value: "chapter" } }] } },
+      ],
+      [
+        "an org without an id",
+        {
+          relationships: {
+            parents: [{ org: { name: "National Reading Network" } }],
+          },
+        },
+      ],
+      [
+        "a null org id",
+        { relationships: { parents: [{ org: { id: null } }] } },
+      ],
+      ["a null org", { relationships: { parents: [{ org: null }] } }],
+      [
+        "a single entry where a list is required",
+        { relationships: { parents: { org: { id: NETWORK } } } },
+      ],
+      ["a null entry in a list", { relationships: { parents: [null] } }],
+      [
+        "a bare reference instead of an entry",
+        { relationships: { parents: [{ id: NETWORK }] } },
+      ],
+      [
+        "kind beside the reference's fields",
+        {
+          relationships: {
+            parents: [{ org: { id: NETWORK, kind: { value: "chapter" } } }],
+          },
+        },
+      ],
+      [
+        "an unknown member on an entry",
+        {
+          relationships: {
+            parents: [{ org: { id: NETWORK }, category: "parent" }],
+          },
+        },
+      ],
+      [
+        "parents grouped by kind",
+        { relationships: { parents: { chapter: [{ id: NETWORK }] } } },
+      ],
+      [
+        "an unknown relationship list",
+        { relationships: { fiscalSponsor: { id: FOUNDATION } } },
+      ],
+      [
+        "otherRelationships keyed by label",
+        {
+          relationships: {
+            otherRelationships: { affiliate: [{ id: NETWORK }] },
+          },
+        },
+      ],
+      [
+        "a kind as a bare string",
+        {
+          relationships: {
+            parents: [{ org: { id: NETWORK }, kind: "chapter" }],
+          },
+        },
+      ],
+      [
+        "a kind from another category",
+        {
+          relationships: {
+            succeededBy: [{ org: { id: NETWORK }, kind: { value: "chapter" } }],
+          },
+        },
+      ],
+      [
+        "a status outside active and inactive",
+        {
+          relationships: {
+            parents: [{ org: { id: NETWORK }, status: "pending" }],
+          },
+        },
+      ],
+      [
+        "a null identifier in a replaced entry's org",
+        {
+          relationships: {
+            parents: [
+              { org: { id: NETWORK, identifiers: { "org:us:ein": null } } },
+            ],
+          },
+        },
+      ],
+      // An entry in a replaced list is stored as written, so its optional
+      // members are omitted rather than `null`.
+      ...["kind", "startDate", "endDate", "status"].map(
+        (member): [string, object] => [
+          `a null ${member} in a replaced entry`,
+          {
+            relationships: {
+              parents: [{ org: { id: NETWORK }, [member]: null }],
+            },
+          },
+        ],
+      ),
+      ["a non-string alias", { aliases: [42] }],
+      ["a single string for aliases", { aliases: "Agile Six" }],
+      ["an empty alias", { aliases: [""] }],
+      ["a repeated alias", { aliases: ["Agile Six", "Agile Six"] }],
+      ["a null alias", { aliases: [null] }],
+      ["the old dbaNames member", { dbaNames: ["Agile Six"] }],
+    ];
+
+    it.each(rejected)("rejects: %s", (_name, patch) => {
+      expect(validate!(patch)).toBe(false);
+    });
+  });
+
   describe("rejects invalid patches", () => {
     const invalid: Array<[string, object]> = [
       ["unknown top-level property", { bogus: true }],
       ["null for the non-clearable name field", { name: null }],
       ["wrong type for mission", { mission: 42 }],
+      ["invalid status value", { status: { value: "dissolved" } }],
       [
         "wrong type inside an otherIds entry",
         { identifiers: { otherIds: { "org:xi:foo": { id: 123 } } } },
@@ -168,7 +396,8 @@ describe("OrgPatchData merge-patch schema", () => {
   };
 
   // Root cause 1: a record member with no `null` branch rejects RFC 7396
-  // per-key deletion.
+  // per-key deletion. A `ReplaceOnly` schema is an array element that a patch
+  // replaces whole, so it has nothing to delete keys from and is exempt.
   it("every record member accepts null (per-key deletion)", () => {
     // A sealed model emits `unevaluatedProperties: {not: {}}`. A record emits
     // its value schema there instead, and declares no properties of its own.
@@ -196,7 +425,7 @@ describe("OrgPatchData merge-patch schema", () => {
     const records: string[] = [];
     const violations: string[] = [];
     eachSchemaNode((node, where) => {
-      if (!isRecord(node)) return;
+      if (!isRecord(node) || where.includes("ReplaceOnly")) return;
       records.push(where);
       if (!permitsNull(node.unevaluatedProperties)) violations.push(where);
     });
@@ -238,5 +467,76 @@ describe("OrgPatchData merge-patch schema", () => {
     const writable = base.filter((key) => !readOnly.includes(key));
 
     expect(patch.sort()).toEqual(writable.sort());
+  });
+
+  // `Patch.OrgRelationships`, the patch entries, and `Patch.OrgTargetRef` are
+  // redeclared by hand rather than spread, so a member added to the read
+  // models would otherwise be silently impossible to patch. Each written entry
+  // must match its read entry apart from `org`, and the written `org` must
+  // carry the read `OrgRef` members and the read identifier shapes.
+  it("covers every relationship member and target field (drift guard)", () => {
+    type Props = { properties: Record<string, Node>; required?: string[] };
+    const load = (name: string) =>
+      yaml.load(
+        fs.readFileSync(path.join(Paths.SCHEMAS_DIR, name), "utf-8"),
+      ) as Props & { $defs: Record<string, Props> };
+    const patchData = load("OrgPatchData.yaml");
+    // Follows a property, or an array's items, to its object schema: inline,
+    // a local definition, or a published file.
+    const defOf = (property: Node): Props => {
+      const branches = [property, ...((property.anyOf as Node[]) ?? [])];
+      const items = branches.map((b) => (isObj(b.items) ? b.items : b));
+      const inline = items.find((b) => isObj(b.properties));
+      if (inline) return inline as Props;
+      const ref = items.find((b) => typeof b.$ref === "string")!.$ref as string;
+      return ref.startsWith("#/$defs/")
+        ? patchData.$defs[ref.replace("#/$defs/", "")]
+        : load(ref);
+    };
+    const keys = (props: Props) => Object.keys(props.properties).sort();
+
+    const relationships = defOf(patchData.properties.relationships);
+    const readRelationships = load("OrgRelationships.yaml");
+    expect(keys(relationships)).toEqual(keys(readRelationships));
+
+    const readIdNames = [
+      ...keys(load("OrgIds.yaml")),
+      ...keys(load("IdentifierCollection.yaml")),
+    ].sort();
+    const readIdFiles: Record<string, string> = {
+      "org:us:ein": "OrgIdEin.yaml",
+      "org:us:uei": "OrgIdUei.yaml",
+      "org:xi:duns": "OrgIdDuns.yaml",
+      systemId: "SystemId.yaml",
+      otherIds: "Identifier.yaml",
+    };
+    expect(Object.keys(readIdFiles).sort()).toEqual(readIdNames);
+
+    for (const list of keys(readRelationships)) {
+      const entry = defOf(relationships.properties[list]);
+      const readEntry = defOf(readRelationships.properties[list]);
+      const { org, ...members } = entry.properties;
+      const { org: readOrg, ...readMembers } = readEntry.properties;
+      expect(readOrg, list).toBeDefined();
+      expect(members, list).toEqual(readMembers);
+      expect(entry.required, list).toEqual(readEntry.required);
+
+      const target = defOf(org);
+      expect(keys(target), list).toEqual(keys(load("OrgRef.yaml")));
+      expect(target.required, list).toEqual(["id"]);
+      const ids = defOf(target.properties.identifiers);
+      expect(keys(ids), list).toEqual(readIdNames);
+      for (const [name, file] of Object.entries(readIdFiles)) {
+        // `otherIds` is a record, so its member is the record's value schema.
+        const property = ids.properties[name];
+        const member =
+          name === "otherIds"
+            ? defOf(property.unevaluatedProperties as Node)
+            : defOf(property);
+        expect(member.properties, `${list} ${name}`).toEqual(
+          load(file).properties,
+        );
+      }
+    }
   });
 });

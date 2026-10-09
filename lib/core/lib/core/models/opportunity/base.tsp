@@ -1,6 +1,7 @@
 import "./status.tsp";
 import "./funding.tsp";
 import "./timeline.tsp";
+import "../organization.tsp";
 import "../../fields/index.tsp";
 import "../../types.tsp";
 
@@ -23,15 +24,17 @@ using Types;
  * using CommonGrants.Fields;
  * using CommonGrants.Models;
  *
- * model Agency extends CustomField {
+ * model ProgramArea extends CustomField {
+ *   name: "programArea";
+ *
  *   fieldType: CustomFieldType.string;
  *
- *   @example("Department of Transportation")
+ *   @example("Healthcare Innovation")
  *   value: string;
  * }
  *
  * model NewFields extends CustomFieldMap {
- *   agency: Agency;
+ *   programArea: ProgramArea;
  * }
  *
  * model CustomOpportunity extends OpportunityBase {
@@ -55,6 +58,11 @@ model OpportunityBase {
   /** Details about the funding available */
   funding?: OppFunding;
 
+  /** Organization(s) offering the funding for this opportunity */
+  @example(Examples.OrgRef.funders)
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  funders?: OrgRefCollection;
+
   /** Key dates for the opportunity, such as when the application opens and closes */
   keyDates?: OppTimeline;
 
@@ -70,6 +78,35 @@ model OpportunityBase {
 
   // Spreads the fields from the Metadata model into the Opportunity model
   ...SystemMetadata;
+}
+
+// ########################################
+// Opportunity identifiers
+// ########################################
+
+/** An opportunity's Funding Opportunity Number (FON), assigned by the awarding agency. */
+@example(Examples.Opportunity.fon)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIdFon is Fields.IdentifierT<string, "opp:us:fon">;
+
+/** An opportunity's Assistance Listing Number (ALN), formerly the CFDA number. */
+@example(Examples.Opportunity.aln)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIdAln is Fields.IdentifierT<string, "opp:us:aln">;
+
+/** A collection of identifiers associated with an opportunity.
+ *
+ * Extends the generic identifier collection with the base identifiers CommonGrants
+ * defines for opportunities. Additional registries can be published under `otherIds`.
+ */
+@example(Examples.Opportunity.identifiers)
+@Versioning.added(CommonGrants.Versions.v0_5)
+model OppIds extends Fields.IdentifierCollection {
+  /** The opportunity's Funding Opportunity Number (FON). */
+  `opp:us:fon`?: OppIdFon;
+
+  /** The opportunity's Assistance Listing Number (ALN). */
+  `opp:us:aln`?: OppIdAln;
 }
 
 // ########################################
@@ -91,6 +128,10 @@ model OppRef {
   /** Title or name of the funding opportunity */
   @example("Small business grant program")
   title: string;
+
+  /** System and registry-specific identifiers for the opportunity */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  identifiers?: OppIds;
 }
 
 // ########################################
@@ -102,14 +143,60 @@ model OppRef {
 model OpportunityDetails extends OpportunityBase {
   /** The competitions associated with the opportunity */
   competitions?: CompetitionBase[];
+
+  /** Awards that resulted from this opportunity, as references.
+   *
+   * Each entry references an award that resulted from this opportunity; the
+   * award's `opportunity.id`, when it is published, is this record's `id`.
+   * An entry is a reference, not the award record: `GET /awards/<id>` is the
+   * canonical record only where an implementation serves the award routes,
+   * and otherwise the entry's `identifiers`, where the publisher supplies
+   * them, are the key for joining the award in another system. A consumer
+   * must not assume a reference can be dereferenced through this API.
+   *
+   * Absent means the implementation does not publish this link for the
+   * record, and an empty array means the link is published and no awards are
+   * known. Entries carry no ordering guarantee.
+   */
+  @Versioning.added(CommonGrants.Versions.v0_5)
+  awards?: AwdRef[];
 }
 
 // ########################################
 // Model examples
 // ########################################
 
-/** Examples of the OppRef model */
+/** Examples of the opportunity identifier and reference models */
 namespace Examples.Opportunity {
+  const fon = #{
+    registry: #{
+      code: "opp:us:fon",
+      url: "https://commongrants.org/registries/opp-us-fon",
+    },
+    id: "HHS-2026-ACF-OCC-YD-0001",
+  };
+
+  const aln = #{
+    registry: #{
+      code: "opp:us:aln",
+      url: "https://commongrants.org/registries/opp-us-aln",
+    },
+    id: "93.575",
+  };
+
+  const identifiers = #{
+    systemId: #{
+      registry: #{ code: "opp:grants.gov:system" },
+      id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
+    },
+    `opp:us:fon`: fon,
+    `opp:us:aln`: aln,
+  };
+
+  // Deliberately without `identifiers`. The emitter does not project `@example`
+  // values per version (see `OrgRef`, whose v0.2/v0.3 schemas show the v0.4
+  // `identifiers` field in `examples` but not in `properties`), so adding it
+  // here would surface a v0.5 field in the v0.1-v0.4 `OppRef` examples.
   const ref = #{
     id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
     title: "Health Center Capital Improvement Program",

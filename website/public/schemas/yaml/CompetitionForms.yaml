@@ -17,6 +17,7 @@ examples:
       formA:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
         name: Form A
+        title: Form A
         description: Form A description
         instructions: Form A instructions
         jsonSchema:
@@ -73,6 +74,7 @@ examples:
       formB:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
         name: Form A
+        title: Form A
         description: Form A description
         instructions: Form A instructions
         jsonSchema:
