@@ -13,8 +13,8 @@ revision:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/revision.tsp"
-      startLine: 57
-      endLine: 107
+      startLine: 48
+      endLine: 98
 revisionStatus:
   example:
     file:
@@ -26,7 +26,7 @@ revisionStatus:
     file:
       path: "lib/core/lib/core/models/revision.tsp"
       startLine: 36
-      endLine: 51
+      endLine: 42
 revisionStatusOptions:
   example:
     file:
@@ -49,8 +49,8 @@ orgRevision:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/organization-sync.tsp"
-      startLine: 45
-      endLine: 52
+      startLine: 291
+      endLine: 298
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -131,7 +131,7 @@ The fixed set of values a [RevisionStatus](#revisionstatus) can take: `pending`,
 
 ## OrgRevision
 
-A [Revision](#revision) bound to organization profiles, where `patch` is an [OrgPatchData](/protocol/models/organization#orgpatchdata) merge patch and `snapshot` is an [OrganizationBase](/protocol/models/organization#organizationbase) with that change applied. Returned by the organization write and changes routes.
+A [Revision](#revision) bound to organization profiles, where `patch` is an [OrgPatchData](/protocol/models/organization#orgpatchdata) merge patch and `snapshot` is an [OrganizationBase](/protocol/models/organization#organizationbase) with that change applied. Returned by the organization write and changes routes. The `patch` is recorded as received. From v0.5.0, a relationship target's `name` or `identifiers` in the `patch` isn't authoritative: the receiver fills them in from its own record, and the `snapshot` carries the filled-in values.
 
 ### Table
 

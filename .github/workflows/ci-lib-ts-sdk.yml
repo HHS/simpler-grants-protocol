@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - lib/ts-sdk/**
+      - lib/core/**
       - .github/workflows/ci-lib-ts-sdk.yml
 
 defaults:

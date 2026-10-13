@@ -24,15 +24,15 @@ enum CustomFieldType {
  * @example How to define a custom field using this model
  *
  * ```typespec
- * model Agency extends CustomField {
- *   name: "agency";
+ * model ProgramArea extends CustomField {
+ *   name: "programArea";
  *
  *   fieldType: CustomFieldType.string;
  *
- *   @example("Department of Transportation")
+ *   @example("Healthcare Innovation")
  *   value: string;
  *
- *   description?: "The agency responsible for managing this opportunity";
+ *   description?: "Primary focus area of the grant program";
  * }
  * ```
  */
@@ -76,13 +76,6 @@ namespace Examples.CustomField {
     value: "Healthcare Innovation",
     description: "Primary focus area of the grant program",
     schema: "https://example.com/program-areas.json",
-  };
-
-  const agency = #{
-    name: "agency",
-    fieldType: CustomFieldType.string,
-    value: "Department of Transportation",
-    description: "The agency responsible for managing this opportunity",
   };
 
   /** An example of an array custom field */

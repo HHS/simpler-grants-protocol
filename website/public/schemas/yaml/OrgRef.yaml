@@ -7,7 +7,7 @@ properties:
     description: The organization's unique identifier.
   name:
     type: string
-    description: The organization's legal name as registered with relevant authorities.
+    description: The name this organization is known by; for a legal entity, its legal name.
   identifiers:
     $ref: OrgIds.yaml
     description: Identifiers associated with the organization, keyed by registry code.

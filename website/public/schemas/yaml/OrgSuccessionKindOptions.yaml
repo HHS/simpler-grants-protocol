@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgSuccessionKindOptions.yaml
+type: string
+enum:
+  - merger
+  - acquisition
+  - divestiture
+  - split
+  - custom
+description: |-
+  The standard subtypes of organizational succession:
+  - `merger`: Succession through a merger
+  - `acquisition`: Succession through an acquisition
+  - `divestiture`: Succession through a divestiture
+  - `split`: Succession through a split into several organizations
+  - `custom`: Another subtype, named in `customValue`

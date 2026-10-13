@@ -6,13 +6,22 @@
  * `OpportunityDetails` and omits the required `forms` object.
  */
 
-import { OPPORTUNITY_FIXTURES, type CustomField } from "./fixtures";
+import { isAtLeastVersion } from "./availability";
+import {
+  OPPORTUNITY_FIXTURES,
+  withOpportunityRef,
+  type CustomField,
+  type Version,
+} from "./fixtures";
 import {
   FORM_FIXTURES,
   getFormById,
+  shapeFormForVersion,
   type FileAttachment,
   type Form,
+  type WireForm,
 } from "./forms";
+import type { OppRef } from "./awards";
 import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
 import type {
   ApplicantType,
@@ -30,7 +39,11 @@ export interface CompetitionForms {
   validation?: { required?: string[] };
 }
 
-/** A competition in its fullest (`Models.CompetitionBase`) shape. */
+/**
+ * A competition in its fullest (`Models.CompetitionBase`) shape, stored with
+ * the v0.2-v0.4 `opportunityId`, which the application fixtures also join on;
+ * `shapeCompetitionForVersion` serves the v0.5 `opportunity` reference.
+ */
 export interface Competition {
   id: string;
   opportunityId: string;
@@ -323,4 +336,40 @@ export const COMPETITION_FIXTURES: readonly Competition[] = Object.freeze<
 /** Looks up a competition fixture by its exact id. */
 export function getCompetitionById(id: string): Competition | undefined {
   return COMPETITION_FIXTURES.find((competition) => competition.id === id);
+}
+
+/**
+ * A competition as a given version puts it on the wire: `opportunityId` and
+ * named forms through v0.4, an `opportunity` reference and titled forms from
+ * v0.5.
+ */
+export type WireCompetition = Omit<Competition, "opportunityId" | "forms"> & {
+  opportunityId?: string;
+  opportunity?: OppRef;
+  forms: Omit<CompetitionForms, "forms"> & { forms: Record<string, WireForm> };
+};
+
+/**
+ * Projects a competition onto the shape a version documents. Returns a copy;
+ * the frozen fixtures, and the forms they embed, are untouched.
+ */
+export function shapeCompetitionForVersion(
+  competition: Competition,
+  version: Version,
+): WireCompetition {
+  if (!isAtLeastVersion(version, "0.5.0")) {
+    return { ...competition };
+  }
+  return {
+    ...withOpportunityRef(competition),
+    forms: {
+      ...competition.forms,
+      forms: Object.fromEntries(
+        Object.entries(competition.forms.forms).map(([key, form]) => [
+          key,
+          shapeFormForVersion(form, version),
+        ]),
+      ),
+    },
+  };
 }

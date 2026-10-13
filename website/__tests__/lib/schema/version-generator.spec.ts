@@ -270,6 +270,70 @@ describe("Version Generator", () => {
       expect(formBaseV3?.properties).toHaveProperty("name");
       expect(formBaseV3?.properties).toHaveProperty("description");
     });
+
+    it("should drop local $defs reachable only from fields added later", () => {
+      // The emitter writes non-file models (such as merge-patch variants) as
+      // local `$defs`, so a field added later can bring definitions that must
+      // not linger, unreferenced, in earlier versions.
+      const profile = {
+        $id: "Profile.yaml",
+        type: "object",
+        properties: {
+          owner: { $ref: "#/$defs/Owner" },
+          links: {
+            anyOf: [{ $ref: "#/$defs/LinkGroup" }, { type: "null" }],
+          },
+        },
+        $defs: {
+          Owner: { type: "object" },
+          LinkGroup: {
+            type: "object",
+            properties: {
+              items: { type: "array", items: { $ref: "#/$defs/Link" } },
+            },
+          },
+          Link: {
+            type: "object",
+            properties: { next: { $ref: "#/$defs/Link" } },
+          },
+        },
+      } as JsonSchema;
+      const profileLog: Changelog = {
+        versions: ["0.1.0", "0.2.0"],
+        logs: {
+          Profile: {
+            "0.1.0": [
+              {
+                message: "Added `Profile` model",
+                action: Action.Added,
+                targetKind: TargetType.Model,
+                currTargetName: "Profile",
+              },
+            ],
+            "0.2.0": [
+              {
+                message: "Added `links` field",
+                action: Action.Added,
+                targetKind: TargetType.ModelProperty,
+                currTargetName: "links",
+              },
+            ],
+          },
+        },
+      };
+      const only = new Map([["Profile", profile]]);
+      const defsIn = (version: string) =>
+        Object.keys(
+          (
+            generateSchemaVersions(version, profileLog, only).schemas.get(
+              "Profile",
+            ) as { $defs?: object }
+          ).$defs ?? {},
+        ).sort();
+
+      expect(defsIn("0.1.0")).toEqual(["Owner"]);
+      expect(defsIn("0.2.0")).toEqual(["Link", "LinkGroup", "Owner"]);
+    });
   });
 
   // #############################################################################
@@ -415,5 +479,287 @@ describe("Version Generator", () => {
       const formsItemsV3 = formsPropertyV3?.items as { $ref?: string };
       expect(formsItemsV3?.$ref).toBe("FormBase.yaml");
     });
+  });
+});
+
+// #############################################################################
+// # Nested example projection
+// #############################################################################
+
+// Mirrors `FormBase` at v0.5 (`name` removed, `title` added) and the models
+// that embed forms, in the shapes the JSON Schema emitter writes: `$ref`s to
+// other files, `#/$defs` records, and arrays. Examples carry both keys, as the
+// unversioned TypeSpec source must.
+describe("Version Generator: nested examples", () => {
+  const added = (name: string, kind = TargetType.ModelProperty) => ({
+    message: `Added \`${name}\``,
+    action: Action.Added,
+    targetKind: kind,
+    currTargetName: name,
+  });
+  const removed = (name: string) => ({
+    message: `Removed \`${name}\``,
+    action: Action.Removed,
+    targetKind: TargetType.ModelProperty,
+    currTargetName: name,
+  });
+  const changelog: Changelog = {
+    versions: ["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"],
+    logs: {
+      FormBase: {
+        "0.2.0": [added("Form", TargetType.Model)],
+        "0.3.0": [
+          {
+            message: "Renamed model from `Form` to `FormBase`",
+            action: Action.Renamed,
+            targetKind: TargetType.Model,
+            prevTargetName: "Form",
+            currTargetName: "FormBase",
+          },
+          added("version"),
+        ],
+        "0.5.0": [removed("name"), added("title")],
+      },
+      FormJsonSchema: { "0.2.0": [added("FormJsonSchema", TargetType.Model)] },
+      CustomField: { "0.1.0": [added("CustomField", TargetType.Model)] },
+      CompetitionForms: {
+        "0.2.0": [added("CompetitionForms", TargetType.Model)],
+      },
+      CompetitionBase: {
+        "0.2.0": [added("CompetitionBase", TargetType.Model)],
+      },
+      FormShelf: { "0.2.0": [added("FormShelf", TargetType.Model)] },
+    },
+  };
+
+  /** Opaque content that happens to use the renamed keys. */
+  const opaque = () => ({
+    jsonSchema: {
+      $id: "formA.json",
+      properties: { name: { type: "string" }, title: { type: "string" } },
+    },
+    customFields: {
+      title: {
+        name: "title",
+        fieldType: "object",
+        value: { name: "literal-name", title: "literal-title" },
+      },
+    },
+  });
+  const sourceForm = () => ({
+    id: "f1",
+    name: "Form A",
+    title: "Form A",
+    version: "1.0.0",
+    ...opaque(),
+  });
+  /** The form each version should publish. */
+  const formAt = (version: string) => {
+    const { name, title, version: formVersion, ...rest } = sourceForm();
+    const head = { id: "f1" };
+    if (version === "0.5.0")
+      return { ...head, title, version: formVersion, ...rest };
+    if (version === "0.2.0") return { ...head, name, ...rest };
+    return { ...head, name, version: formVersion, ...rest };
+  };
+
+  const formSchema = {
+    $id: "FormBase.yaml",
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      name: { type: "string" },
+      title: { type: "string" },
+      version: { type: "string" },
+      jsonSchema: { $ref: "FormJsonSchema.yaml" },
+      customFields: { $ref: "#/$defs/RecordCustomField" },
+    },
+    required: ["id", "name", "title"],
+    examples: [sourceForm()],
+    $defs: {
+      RecordCustomField: {
+        type: "object",
+        properties: {},
+        unevaluatedProperties: { $ref: "CustomField.yaml" },
+      },
+    },
+  };
+  const createSchemas = () =>
+    new Map<string, JsonSchema>(
+      Object.entries({
+        FormBase: structuredClone(formSchema),
+        FormJsonSchema: {
+          $id: "FormJsonSchema.yaml",
+          type: "object",
+          properties: {},
+          unevaluatedProperties: {},
+        },
+        CustomField: {
+          $id: "CustomField.yaml",
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            fieldType: { type: "string" },
+            value: {},
+          },
+        },
+        CompetitionForms: {
+          $id: "CompetitionForms.yaml",
+          type: "object",
+          properties: {
+            forms: { $ref: "#/$defs/RecordFormBase" },
+            validation: { $ref: "#/$defs/RecordUnknown" },
+          },
+          // Record keys are the competition's own labels, so `name` and
+          // `title` here are data, never fields to drop.
+          examples: [
+            {
+              forms: {
+                formA: sourceForm(),
+                name: sourceForm(),
+                title: sourceForm(),
+              },
+              validation: { required: ["formA"] },
+            },
+          ],
+          $defs: {
+            RecordFormBase: {
+              type: "object",
+              properties: {},
+              unevaluatedProperties: { $ref: "FormBase.yaml" },
+            },
+            RecordUnknown: {
+              type: "object",
+              properties: {},
+              unevaluatedProperties: {},
+            },
+          },
+        },
+        CompetitionBase: {
+          $id: "CompetitionBase.yaml",
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            title: { type: "string" },
+            forms: { $ref: "CompetitionForms.yaml" },
+          },
+          examples: [
+            {
+              id: "c1",
+              title: "Competition",
+              forms: { forms: { formA: sourceForm() } },
+            },
+          ],
+        },
+        FormShelf: {
+          $id: "FormShelf.yaml",
+          type: "object",
+          properties: {
+            primary: { $ref: "FormBase.yaml" },
+            items: { type: "array", items: { $ref: "FormBase.yaml" } },
+            note: { type: "string" },
+          },
+          examples: [
+            {
+              primary: sourceForm(),
+              items: [sourceForm(), sourceForm()],
+              note: "n",
+            },
+            // Optional values absent: nothing to project, nothing to break.
+            { items: [] },
+          ],
+        },
+      }) as [string, JsonSchema][],
+    );
+
+  /** A generated model's examples for one version. */
+  const examplesAt = (
+    version: string,
+    model: string,
+    schemas = createSchemas(),
+  ) => {
+    const result = generateSchemaVersions(version, changelog, schemas);
+    const versionedName =
+      model === "FormBase" && version === "0.2.0" ? "Form" : model;
+    return (result.schemas.get(versionedName) as { examples: unknown[] })
+      .examples;
+  };
+
+  const VERSIONS = ["0.2.0", "0.3.0", "0.4.0", "0.5.0"];
+
+  it.each(VERSIONS)("gives the direct form example v%s's keys", (version) => {
+    const [example] = examplesAt(version, "FormBase");
+    expect(example).toEqual(formAt(version));
+    expect(Object.keys(example as object)).toEqual(
+      Object.keys(formAt(version)),
+    );
+  });
+
+  it.each(VERSIONS)(
+    "projects every form in a CompetitionForms record at v%s, keeping its keys",
+    (version) => {
+      const [example] = examplesAt(version, "CompetitionForms");
+      expect(example).toEqual({
+        forms: {
+          formA: formAt(version),
+          name: formAt(version),
+          title: formAt(version),
+        },
+        validation: { required: ["formA"] },
+      });
+    },
+  );
+
+  it.each(VERSIONS)(
+    "projects forms two references deep in CompetitionBase at v%s",
+    (version) => {
+      expect(examplesAt(version, "CompetitionBase")).toEqual([
+        {
+          id: "c1",
+          title: "Competition",
+          forms: { forms: { formA: formAt(version) } },
+        },
+      ]);
+    },
+  );
+
+  it.each(VERSIONS)(
+    "projects a referenced form and an array of forms at v%s",
+    (version) => {
+      expect(examplesAt(version, "FormShelf")).toEqual([
+        {
+          primary: formAt(version),
+          items: [formAt(version), formAt(version)],
+          note: "n",
+        },
+        { items: [] },
+      ]);
+    },
+  );
+
+  it("keeps opaque values whole in every version", () => {
+    for (const version of VERSIONS) {
+      const [shelf] = examplesAt(version, "FormShelf") as {
+        primary: Record<string, unknown>;
+      }[];
+      expect(shelf.primary.jsonSchema).toEqual(opaque().jsonSchema);
+      expect(shelf.primary.customFields).toEqual(opaque().customFields);
+    }
+  });
+
+  it("leaves the source schemas untouched across interleaved versions", () => {
+    const schemas = createSchemas();
+    const pristine = structuredClone(Object.fromEntries(schemas));
+    const first = VERSIONS.map((v) =>
+      examplesAt(v, "CompetitionBase", schemas),
+    );
+    const interleaved = ["0.5.0", "0.2.0", "0.5.0", "0.4.0", "0.3.0"].map(
+      (v) => [v, examplesAt(v, "CompetitionBase", schemas)] as const,
+    );
+
+    expect(Object.fromEntries(schemas)).toEqual(pristine);
+    for (const [version, examples] of interleaved) {
+      expect(examples).toEqual(first[VERSIONS.indexOf(version)]);
+    }
   });
 });

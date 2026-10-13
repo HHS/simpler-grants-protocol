@@ -7,10 +7,21 @@ using JsonSchema;
 
 namespace CustomFields.Agency;
 
-/** Agency information including code and name */
+/** Agency information including code and name.
+ *
+ * Deprecated for opportunities since protocol v0.5, which added
+ * `OpportunityBase.funders`. Still valid for competitions and forms.
+ */
 @extension("x-tags", #[Tags.organization])
 @extension("x-author", "CommonGrants")
 @extension("x-version", "0.1.0")
+@extension(
+  "x-deprecated",
+  #{
+    note: "Deprecated for opportunities since protocol v0.5. Use OpportunityBase.funders instead.",
+    href: "/custom-fields/overview/#migrating-from-agency-to-funders",
+  }
+)
 @extension(
   "x-valid-schemas",
   #[

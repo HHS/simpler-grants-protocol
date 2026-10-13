@@ -8,6 +8,9 @@ properties:
   name:
     type: string
     description: The form's name.
+  title:
+    type: string
+    description: The form's title.
   description:
     type: string
     description: The form's description.
@@ -46,6 +49,7 @@ properties:
 required:
   - id
   - name
+  - title
   - createdAt
   - lastModifiedAt
 unevaluatedProperties:
@@ -53,6 +57,7 @@ unevaluatedProperties:
 examples:
   - id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
     name: Form A
+    title: Form A
     description: Form A description
     instructions: Form A instructions
     jsonSchema:

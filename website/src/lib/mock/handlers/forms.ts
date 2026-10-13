@@ -4,7 +4,7 @@
  * renders with the docs site's own form renderer.
  */
 
-import { allForms, getFormById } from "../data/forms";
+import { allForms, getFormById, shapeFormForVersion } from "../data/forms";
 import type { Version } from "../data/fixtures";
 import { errorResponse, successResponse } from "../http/envelope";
 import {
@@ -20,7 +20,6 @@ import {
  * newest-modified first per the operation's `@doc`.
  */
 export function listForms(request: Request, version: Version): Response {
-  void version;
   const pagination = resolveQueryPagination(request);
   if (!pagination.ok) {
     return errorResponse(
@@ -38,7 +37,9 @@ export function listForms(request: Request, version: Version): Response {
   );
 
   return successResponse({
-    items: pageOf(sorted, page, pageSize),
+    items: pageOf(sorted, page, pageSize).map((form) =>
+      shapeFormForVersion(form, version),
+    ),
     paginationInfo: paginationInfo(page, pageSize, sorted.length),
   });
 }
@@ -48,7 +49,6 @@ export function listForms(request: Request, version: Version): Response {
  * id answers 400, not a route miss.
  */
 export function getForm(formId: string, version: Version): Response {
-  void version;
   if (!isUuid(formId)) {
     return errorResponse(400, "Invalid form id", [
       { field: "formId", message: "Must be a valid UUID" },
@@ -62,5 +62,5 @@ export function getForm(formId: string, version: Version): Response {
     ]);
   }
 
-  return successResponse({ data: form });
+  return successResponse({ data: shapeFormForVersion(form, version) });
 }

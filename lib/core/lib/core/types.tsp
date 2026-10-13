@@ -55,6 +55,12 @@ scalar samUEI extends string;
 @Versioning.added(CommonGrants.Versions.v0_2)
 scalar duns extends string;
 
+/** A string with at least one character */
+@example("Example")
+@minLength(1)
+@Versioning.added(CommonGrants.Versions.v0_5)
+scalar nonEmptyString extends string;
+
 // ########################################
 // Numeric types
 // ########################################

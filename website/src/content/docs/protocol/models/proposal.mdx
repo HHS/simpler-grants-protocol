@@ -17,11 +17,12 @@ proposalBase:
           "id": "083b4567-e89d-42c8-a439-6c1234567890",
           "title": "Example Opportunity",
           "customFields": {
-            "agency": {
-              "name": "Agency",
+            "programArea": {
+              "name": "programArea",
               "fieldType": "string",
-              "value": "Department of Energy",
-              "description": "The agency managing the funding opportunity."
+              "value": "Healthcare Innovation",
+              "description": "Primary focus area of the grant program",
+              "schema": "https://example.com/program-areas.json"
             }
           }
         },
@@ -122,11 +123,12 @@ proposalOpportunity:
         "id": "083b4567-e89d-42c8-a439-6c1234567890",
         "title": "Example Opportunity",
         "customFields": {
-          "agency": {
-            "name": "Agency",
+          "programArea": {
+            "name": "programArea",
             "fieldType": "string",
-            "value": "Department of Energy",
-            "description": "The agency managing the funding opportunity."
+            "value": "Healthcare Innovation",
+            "description": "Primary focus area of the grant program",
+            "schema": "https://example.com/program-areas.json"
           }
         }
       }
