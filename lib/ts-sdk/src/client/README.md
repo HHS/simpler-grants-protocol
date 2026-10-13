@@ -147,7 +147,7 @@ See also: [get-opportunity.ts](../../examples/get-opportunity.ts)
 
 ### Award methods
 
-The `client.awards` namespace provides typed access to the CommonGrants award get and list endpoints.
+The `client.awards` namespace provides typed access to the CommonGrants award get, list, and search endpoints.
 
 #### List awards <!-- omit in toc -->
 
