@@ -34,14 +34,12 @@ The Opportunity model is templated to support custom fields. First define your c
 // models.tsp
 
 import "@common-grants/core"; // Import the base specification library
-import "@typespec/versioning";
 
 // Allows us to use models and fields defined in the core library without
 // prefixing each item with `CommonGrants.Models` or `CommonGrants.Fields`
 using CommonGrants.Models;
 using CommonGrants.Fields;
 
-@Versioning.useDependency(CommonGrants.Versions.v0_2) // Specify the version of the core library to use
 namespace CustomAPI.CustomModels;
 
 // Define a custom field
@@ -79,7 +77,6 @@ using TypeSpec.Http;
 
 @tag("Search")
 @route("/common-grants/opportunities")
-@Versioning.useDependency(CommonGrants.Versions.v0_2)
 namespace CustomAPI.CustomRoutes {
   alias OpportunitiesRouter = Opportunities;
 
@@ -92,12 +89,14 @@ namespace CustomAPI.CustomRoutes {
 
 ### Define an API service
 
-Next, use these updated routes to define an API service:
+Next, use these updated routes to define an API service, and pick the version of the CommonGrants protocol it implements:
 
 ```typespec
 // main.tsp
 
 import "@typespec/http";
+import "@typespec/versioning";
+import "@common-grants/core"; // Provides the `CommonGrants.Versions` enum used below
 
 import "./routes.tsp"; // Import the routes from above
 
@@ -105,8 +104,11 @@ using TypeSpec.Http;
 
 /** Description of your API goes here */
 @service(#{ title: "Custom API" })
+@Versioning.useDependency(CommonGrants.Versions.v0_5) // Specify the version of the core library to use
 namespace CustomAPI;
 ```
+
+The `@Versioning.useDependency` decorator must be on the `@service` namespace. It applies to every namespace nested inside it, including your custom models and routes, so the generated spec only includes the fields and routes available in that version.
 
 ### Generate the OpenAPI spec
 
