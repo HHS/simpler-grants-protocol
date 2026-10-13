@@ -31,12 +31,12 @@ Don't run `npx` inside the repo until [#1288](https://github.com/HHS/simpler-gra
 
 Minor and major core releases go through a hold branch. Follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch) for the shared steps. This section covers only the core-specific checks.
 
-Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Run the release review checks that apply (pack and install, quickstart, `cg preview`) and the release checklist.
+Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Consider running the release review checks that apply (pack and install, quickstart, `cg preview`), then the release checklist.
 
 ### Development checklist
 
 - [ ] For major or minor updates:
-  - [ ] The first PR into the hold branch adds the new version to the `Versions` enum in [`main.tsp`](lib/main.tsp)
+  - [ ] An early PR into the hold branch adds the new version to the `Versions` enum in [`main.tsp`](lib/main.tsp)
   - [ ] Every PR decorates what it changes with the matching [versioning decorators](https://typespec.io/docs/libraries/versioning/reference/decorators/#@TypeSpec.Versioning.removed)
 - [ ] Every core PR runs `pnpm --filter website run typespec` and commits the regenerated files in [`website/public/openapi/`](../../website/public/openapi/) and [`website/public/schemas/yaml/`](../../website/public/schemas/yaml/)
 
@@ -53,7 +53,7 @@ Run this on the hold branch before merging the staging PR, and note the results 
   - [ ] From the repo root: `node lib/cli/dist/index.js preview website/public/openapi/openapi.<new-version>.yaml` (`pnpm install` builds the CLI), or `pnpm dlx @common-grants/cli preview <spec>`
   - [ ] The previous version has no new-version fields, schemas or example values
 - [ ] The package installs and works outside the repo:
-  - [ ] `pnpm --filter @common-grants/core pack --pack-destination <scratch-dir>` has been run with a directory outside the repo, and in that directory `npm init -y` and `npm install ./common-grants-core-<version>.tgz` have been run. If npm reports `ERESOLVE`, also install the `@typespec/*` versions in the peer ranges in [`package.json`](package.json), and file an issue.
+  - [ ] `pnpm --filter @common-grants/core pack --pack-destination <scratch-dir>` has been run with a directory outside the repo, and in that directory `npm init -y` and `npm install ./common-grants-core-<version>.tgz` have been run. If npm reports `ERESOLVE`, also install the `@typespec/*` versions in the peer ranges in [`package.json`](package.json), and consider filing an issue.
   - [ ] The [README](README.md) quickstart compiles at the new version (set `@Versioning.useDependency` to the new version). The README ships in the npm package.
 - [ ] The website preview (linked in a comment on the staging PR) has been reviewed:
   - [ ] Model tables are up to date for [Types](../../website/src/content/docs/protocol/types/), [Fields](../../website/src/content/docs/protocol/fields/), [Models](../../website/src/content/docs/protocol/models/), [Filters](../../website/src/content/docs/protocol/filters/), [Responses](../../website/src/content/docs/protocol/responses/), [Pagination](../../website/src/content/docs/protocol/pagination.mdx) and [Sorting](../../website/src/content/docs/protocol/sorting.mdx)
@@ -75,7 +75,7 @@ Follow [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch)
 - [ ] Website updates:
   - [ ] No dependency bump is needed. The website uses the workspace copy of core (`"@common-grants/core": "workspace:*"`), and its specs were regenerated in the hold branch PRs.
   - [ ] The [CD - Deploy Website](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-deploy-website.yml) run for the merge succeeded, and [commongrants.org](https://commongrants.org) shows the new version
-- [ ] The CLI has a PR open to bundle the new version. See [Bundled specs](../cli/DEVELOPMENT.md#bundled-specs).
+- [ ] There's an open issue or PR for the CLI release that bundles the new version. It doesn't have to ship right away. See [Bundled specs](../cli/DEVELOPMENT.md#bundled-specs).
 - [ ] SDK and template updates:
   - [ ] The [**Quickstart template**](../../templates/quickstart/DEVELOPMENT.md) and guide have been updated
   - [ ] The [**Python SDK**](../python-sdk/DEVELOPMENT.md#release-runbook) has been updated and a new version has been released

@@ -33,11 +33,11 @@ Run `pnpm install` once from the repo root. Then run these from `lib/cli/`, or f
 
 ## Bundled specs
 
-The CLI bundles a copy of each protocol version's OpenAPI spec in [`lib/openapi/`](lib/openapi/), and `cg check spec --protocol-version` can only select versions bundled there. The `build` script runs `typespec`, which recompiles those specs from the workspace copy of `@common-grants/core`. So any CLI build picks up the latest core spec, even one for an unrelated fix.
+The CLI bundles a copy of each protocol version's OpenAPI spec in [`lib/openapi/`](lib/openapi/), and `cg check spec --protocol-version` can only select versions bundled there. The `build` script runs `typespec`, which recompiles those specs from the workspace copy of `@common-grants/core`. So any CLI build regenerates them from the latest core spec, and once those files are committed, even an unrelated fix ships them.
 
 After a core release, ship the new version in a minor CLI release:
 
-1. Open a PR into `main` (no hold branch) titled `feat(cli): bundle protocol v<new-version> spec`. It must be `feat`, never `fix`.
+1. Make sure the next PR that touches `lib/cli` uses a `feat` title (for example `feat(cli): bundle protocol v<new-version> spec`), never `fix`. It can be a dedicated PR or ride along with other CLI work.
 2. Run `pnpm --filter @common-grants/cli run typespec` and commit the new `lib/cli/lib/openapi/openapi.<new-version>.yaml`, plus any bundled specs that changed.
 3. Follow the [release runbook](#release-runbook) below.
 

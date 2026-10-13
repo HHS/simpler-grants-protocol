@@ -91,32 +91,39 @@ A hold branch collects the `feat` and breaking work for one minor release so it 
 
 The rules:
 
-- **One milestone and one hold branch per minor release, per package.** A maintainer creates both, branching from `main`. Title the milestone like `[Core] v0.5.0 release` and name the branch to mirror it. For example, the core v0.5.0 work lives on `CORE-v0.5.0`.
+- **One milestone and one hold branch per minor release, per package.** Set both up in planning. Branch from `main`, or from core's hold branch for stacked SDK work (see [SDK changes](#sdk-changes)). Title the milestone like `[Core] v0.5.0 release`. Name the branch to mirror the milestone.
 - **What goes into the hold branch:** `feat` and breaking (`!`) work for that release, and fixes to that unreleased work.
-- **What goes straight to `main`:** `fix` PRs for code already released on `main`, Dependabot and security updates, and docs that don't describe unreleased work. If a package has no open hold branch, `feat` work goes to `main` too.
+- **What goes straight to `main`:** `fix` PRs for code already released on `main`, Dependabot and security updates, and docs-only changes. Docs for unreleased work, like migration notes, go in the hold branch with that work.
 - **Releases are always cut from `main`.**
-- **Hold branches aren't for blocked work.** A PR waiting on a review, a decision or another PR stays open against its usual base. The hold branch is for finished work that shouldn't ship yet.
-- **Keep it current with `main`.** Use **Update branch** on the staging PR, or rebase, at least weekly.
-- **Open the staging PR early.** Open it as soon as the hold branch exists. CI and the website preview then run on all the release's changes together, and the PR updates as each PR lands. "This branch is out-of-date with the base branch" is normal. A real merge conflict stops CI and the preview, so resolve it right away.
+- **Hold branches aren't for blocked work.** A PR waiting on a review, a decision or another PR stays open against its usual base. The hold branch is for next-release work clustered in planning. Work continues on it normally.
+- **Keep it current with `main`.** Merge `main` into the hold branch at least weekly (**Update branch** on the staging PR does this). Rebasing works too.
+- **Open the staging PR early.** Open the staging PR as a draft early on. CI and the website preview then run on all the release's changes together, and the PR updates as each PR lands. "This branch is out-of-date with the base branch" is normal. A real merge conflict stops CI and the preview, so resolve it right away.
 
 ### SDK changes
 
-- Keep SDK changes on the SDK's own hold branch. If they need unreleased core functionality, branch the SDK hold branch from the core hold branch, and point it at `main` once core is released.
-- If SDK changes do ride on the core hold branch, merging it also opens an SDK Release PR. Don't merge that SDK Release PR until the SDK's own hold work has landed on it.
+- Try to keep SDK changes on the SDK's own hold branch. If they need core functionality that isn't on `main` yet, stack the SDK hold branch on the core hold branch where possible, and retarget it to `main` once core merges.
+- SDK changes can ride on the core hold branch. This is OK when the SDK's own hold branch is almost ready. Merging the core hold branch then also opens an SDK Release PR. Don't merge the SDK Release PR until the SDK hold work has landed on it.
 
 ## Releasing from a hold branch
 
 These steps apply to every package. Each package's runbook adds its own checks: [core](core/DEVELOPMENT.md#release-runbook), [CLI](cli/DEVELOPMENT.md#release-runbook), [TypeScript SDK](ts-sdk/DEVELOPMENT.md#release-runbook), [Python SDK](python-sdk/DEVELOPMENT.md#release-runbook).
 
-- [ ] A second person reviews the release. For core, always.
+- [ ] Get a second person to review the release when you can, especially for core. Don't rush a core release.
 - [ ] Every PR in the milestone has merged into the hold branch. Fixes found during review go in as small PRs into the hold branch.
 - [ ] The hold branch is synced with `main`, and CI is green on the staging PR.
 - [ ] The package's release review is done and noted on the staging PR.
 - [ ] The staging PR description is ready to become the squash commit body:
-  - Release Please builds `CHANGELOG.md` from commit headers, not body text, so a plain list of changes only reaches git history.
-  - For one changelog entry per change, end the description with each change as its own conventional-commit line, separated by blank lines (for example `feat(core): add funders to OpportunityBase`). These entries apply to every package the squash touches.
-  - List breaking changes in a `BREAKING CHANGE:` footer. A `!` in the title alone only repeats the title in the changelog.
-  - To fix entries after the merge, edit the merged staging PR's description and add a `BEGIN_COMMIT_OVERRIDE` ... `END_COMMIT_OVERRIDE` block with the corrected lines. Release Please uses it in place of the commit message on its next run.
+  - Release Please parses conventional commits. A plain bullet list isn't parsed into changelog entries.
+  - Add each extra change as its own conventional-commit line at the bottom of the description, separated by blank lines.
+  - For a breaking change, indent a `BREAKING-CHANGE:` (or `BREAKING CHANGE:`) footer under the change line it applies to, not one footer for the whole release.
+  - To fix entries after the merge, edit the merged staging PR's description to add a `BEGIN_COMMIT_OVERRIDE` ... `END_COMMIT_OVERRIDE` block. Release Please uses it instead of the commit message on its next run. This works with squash merges.
+
+  ```text
+  feat(core): add funders to OpportunityBase
+
+  feat(core): rename FormBase.name to title
+    BREAKING-CHANGE: FormBase.name is now FormBase.title
+  ```
 - [ ] The staging PR title uses `feat(<scope>):`, or `feat(<scope>)!:` if the release has breaking changes. While packages are below 1.0, a `!` title still bumps the minor version, not the major (`bump-minor-pre-major` in `release-please-config.json`).
 - [ ] The staging PR has been squash-merged into `main`, and Release Please opened or updated the Release PR for each package it touched.
 - [ ] The Release PR has been merged. This tags the release, creates the GitHub release and publishes the package. Then run the [manual validation checklist](#manual-validation-checklist).
