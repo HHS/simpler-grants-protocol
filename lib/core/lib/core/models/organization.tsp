@@ -2,6 +2,18 @@ import "../fields/index.tsp";
 
 namespace CommonGrants.Models;
 
+// Declared before OrganizationBase: TypeSpec 1.17 skips decorators on an enum
+// that a template body reaches before its declaration.
+/** Whether a relationship is in effect, as stated by the provider. */
+@Versioning.added(CommonGrants.Versions.v0_5)
+enum OrgRelationshipStatus {
+  /** The relationship is in effect. */
+  active,
+
+  /** The relationship is no longer in effect. */
+  inactive,
+}
+
 /** An organization that can apply for grants. */
 @example(Examples.Organization.exampleOrg)
 @Versioning.added(CommonGrants.Versions.v0_2)
@@ -190,16 +202,6 @@ enum OrgRecordKindOptions {
 @Versioning.added(CommonGrants.Versions.v0_5)
 enum OrgOtherKindOptions {
   custom,
-}
-
-/** Whether a relationship is in effect, as stated by the provider. */
-@Versioning.added(CommonGrants.Versions.v0_5)
-enum OrgRelationshipStatus {
-  /** The relationship is in effect. */
-  active,
-
-  /** The relationship is no longer in effect. */
-  inactive,
 }
 
 /** A relationship from this organization to another organization.
