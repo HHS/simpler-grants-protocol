@@ -36,7 +36,7 @@ export type BuiltClient<T extends PluginSchemasInput, TRoutes extends PluginRout
 > & {
   // resource-slot: typed projection per resource
   opportunities: Opportunities<TRoutes, ResolvedItemType<T>>;
-  awards: Awards<AwardBase>;
+  awards: Awards<TRoutes, AwardBase>;
 };
 
 /**
@@ -63,7 +63,11 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
   );
 
   const { resourceClass: AwardResource, baseSchema } = RESOURCE_REGISTRY.awards;
-  (client as unknown as { awards: Awards }).awards = new AwardResource(client, baseSchema);
+  (client as unknown as { awards: Awards }).awards = new AwardResource(
+    client,
+    baseSchema,
+    plugin.routes
+  );
 
   // Final projection cast; the two slot assignments above are the other
   // documented casts. BuiltClient projects the plugin's item + filter types.

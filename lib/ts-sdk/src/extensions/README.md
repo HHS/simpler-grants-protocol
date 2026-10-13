@@ -657,7 +657,7 @@ for (const err of out.errors) {
 
 ## Plugin custom filters
 
-Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012): default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
+Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012, or `AwdFilters` for `awards.search`): default fields land as named top-level fields, validated against the selected resource's default-filter schema; custom and ad-hoc keys land under `customFilters`. The examples below use `opportunities.search`; `awards.search` classifies the same way against the award default filters (`status`, `opportunityId`, `awardDateRange`, `awardedAmountRange`).
 
 ### Routes vs. schemas — a critical distinction
 

@@ -164,6 +164,58 @@ const secondPage = await client.awards.list({ page: 2, pageSize: 25 });
 
 Each response row is parsed separately. By default, valid rows appear in `items` and invalid rows appear in `errors` with their page-local indexes. Pass `onParseError: "throw"` to raise `BatchParseError` on the first invalid row.
 
+#### Search awards <!-- omit in toc -->
+
+**`POST /common-grants/awards/search`**
+
+`search()` maps `query` to the request's text search and auto-paginates by default. Like `list()`, it parses each row separately and honors `page`, `pageSize`, `maxItems`, `signal`, and `onParseError`:
+
+```ts
+const results = await client.awards.search({ query: "research" });
+
+// Fetch one page instead of auto-paginating.
+const page2 = await client.awards.search({ query: "research", page: 2, pageSize: 25 });
+```
+
+Pass a flat `filters` bag built with the `F.*` helpers. The four standard award filters (`status`, `opportunityId`, `awardDateRange`, and `awardedAmountRange`) are validated against the award default-filter schema and sent as named fields in the request body:
+
+```ts
+import { F } from "@common-grants/sdk/extensions";
+
+const awarded = await client.awards.search({
+  query: "conservation",
+  filters: {
+    status: F.in(["active"]),
+    opportunityId: F.in(["123e4567-e89b-12d3-a456-426614174000"]),
+    awardDateRange: F.between("2025-01-01", "2025-12-31"),
+    awardedAmountRange: F.between(
+      { amount: "0", currency: "USD" },
+      { amount: "1000000", currency: "USD" }
+    ),
+  },
+});
+```
+
+Any other key is treated as a custom filter and sent under `filters.customFilters`. A plugin that declares `routes.awards.search.filters` validates those registered names against their declared types; ad-hoc and `gov.<system>@<filterName>` namespaced keys pass through with a shape-only check. Invalid standard, registered, or ad-hoc values throw before any request is sent:
+
+```ts
+const client = definePlugin({
+  routes: { awards: { search: { filters: { program: { filterType: "stringArray" } } } } },
+  // ...
+}).getClient();
+
+const filtered = await client.awards.search({
+  filters: {
+    program: F.in(["SBIR"]), // registered custom filter → customFilters
+    "gov.usaspending@cfda": F.eq("47.049"), // ad-hoc namespaced key → customFilters
+  },
+});
+```
+
+These route-declared custom filters are distinct from the plugin schema custom fields of [#1246](https://github.com/HHS/simpler-grants-protocol/issues/1246): route filters shape the search request body, while schema custom fields extend the parsed award response.
+
+The corresponding public option types are `AwardSearchOptions` and `AwardCustomFilterBag`.
+
 #### Get a single award <!-- omit in toc -->
 
 **`GET /common-grants/awards/{id}`**
@@ -173,7 +225,7 @@ const award = await client.awards.get("123e4567-e89b-12d3-a456-426614174000");
 console.log(award.title);
 ```
 
-Both methods accept a compatible Zod schema per call. The schema parses the response and determines the inferred output type:
+All three award methods accept a compatible Zod schema per call. The schema parses the response and determines the inferred output type:
 
 ```ts
 import { AwardBaseSchema } from "@common-grants/sdk/schemas";
@@ -258,10 +310,11 @@ const response = await client.fetch("/custom/endpoint", {
 
 ### Awards resource
 
-| Method                                                     | Route                            | Description                                                                                                  |
-| ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [`client.awards.get(id, options?)`](./resources/awards.ts) | `GET /common-grants/awards/{id}` | Fetch a single award by ID. Accepts an optional compatible schema that determines the parsed output type.    |
-| [`client.awards.list(options?)`](./resources/awards.ts)    | `GET /common-grants/awards`      | List awards with auto-pagination. Pass `page` for one page or `onParseError: "throw"` for fail-hard parsing. |
+| Method                                                     | Route                               | Description                                                                                                  |
+| ---------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [`client.awards.get(id, options?)`](./resources/awards.ts) | `GET /common-grants/awards/{id}`    | Fetch a single award by ID. Accepts an optional compatible schema that determines the parsed output type.    |
+| [`client.awards.list(options?)`](./resources/awards.ts)    | `GET /common-grants/awards`         | List awards with auto-pagination. Pass `page` for one page or `onParseError: "throw"` for fail-hard parsing. |
+| [`client.awards.search(options?)`](./resources/awards.ts)  | `POST /common-grants/awards/search` | Search awards with a text query, standard and custom filters, and auto-pagination.                           |
 
 ### Auth namespace
 
