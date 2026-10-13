@@ -5,8 +5,9 @@
  * records rather than re-typing them.
  */
 
+import { isAtLeastVersion } from "./availability";
 import { CANONICAL_RECORD_ID, DOCUMENTED_EXAMPLE_ID } from "./ids";
-import type { CustomField } from "./fixtures";
+import type { CustomField, Version } from "./fixtures";
 
 /** A JSON Schema for a form's responses (mirrors `Models.FormJsonSchema`). */
 export interface FormJsonSchema {
@@ -49,7 +50,11 @@ export type MappingSchema = {
   [key: string]: MappingField | MappingSchema | undefined;
 };
 
-/** A form in its fullest (`Models.FormBase`) shape. */
+/**
+ * A form in its fullest (`Models.FormBase`) shape, stored with the v0.2-v0.4
+ * `name`, which the application fixtures pick canned answers by;
+ * `shapeFormForVersion` serves the v0.5 `title`.
+ */
 export interface Form {
   id: string;
   name: string;
@@ -342,4 +347,23 @@ export function getFormById(id: string): Form | undefined {
 /** Every form fixture, as a mutable copy the handlers can sort and page. */
 export function allForms(): Form[] {
   return [...FORM_FIXTURES];
+}
+
+/** A form as a given version puts it on the wire. */
+export type WireForm = Omit<Form, "name"> & { name?: string; title?: string };
+
+/**
+ * Projects a form onto the shape a version documents: `name` through v0.4,
+ * `title` from v0.5, in the same key position. Returns a copy; the fixtures
+ * are untouched.
+ */
+export function shapeFormForVersion(form: Form, version: Version): WireForm {
+  if (!isAtLeastVersion(version, "0.5.0")) {
+    return { ...form };
+  }
+  return Object.fromEntries(
+    Object.entries(form).map(([key, value]) =>
+      key === "name" ? ["title", value] : [key, value],
+    ),
+  ) as WireForm;
 }

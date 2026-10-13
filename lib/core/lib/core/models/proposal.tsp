@@ -173,9 +173,16 @@ namespace Examples.Proposal {
 
   const organizations = #{
     primary: Examples.Organization.exampleOrg,
-    otherOrgs: #{
-      fiscalSponsor: Examples.Organization.exampleOrg,
-      partner: Examples.Organization.exampleOrg,
-    },
+    otherOrgs: #{ fiscalSponsor: fiscalSponsor, partner: partner },
+  };
+
+  const fiscalSponsor = #{
+    id: "01912a8b-7c3d-7892-abcd-ef1234567892",
+    name: "Riverside Community Foundation",
+  };
+
+  const partner = #{
+    id: "01912a8b-7c3d-7895-abcd-ef1234567895",
+    name: "Riverside Literacy Coalition",
   };
 }

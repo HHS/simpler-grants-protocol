@@ -8,7 +8,7 @@
  * v0.5 — see `shapeAwardForVersion`.
  */
 
-import { OPPORTUNITY_FIXTURES, usd } from "./fixtures";
+import { OPPORTUNITY_FIXTURES, toOppRef, usd } from "./fixtures";
 import type { OppIds, Version } from "./fixtures";
 import { isAtLeastVersion } from "./availability";
 import { APPLICATION_FIXTURES, type Application } from "./applications";
@@ -29,11 +29,11 @@ import { CANONICAL_RECORD_ID } from "./ids";
 import {
   CASCADE_WORKFORCE_ORG_ID,
   COASTAL_RESEARCH_ORG_ID,
-  DOCUMENTED_ORGANIZATION_ID,
   HRSA_ORG_ID,
   LAKESIDE_ARTS_ORG_ID,
   NSF_ORG_ID,
   PRAIRIE_BROADBAND_ORG_ID,
+  RIVERSIDE_CHC_ORG_ID,
   orgRefCollection,
   type Identifier,
   type OrgRefCollection,
@@ -157,7 +157,7 @@ export const DOCUMENTED_AWARD_ID = DOCUMENTED_AWARD_REF.id;
  */
 const HRSA = HRSA_ORG_ID;
 const NSF = NSF_ORG_ID;
-const RIVERSIDE_CHC = DOCUMENTED_ORGANIZATION_ID;
+const RIVERSIDE_CHC = RIVERSIDE_CHC_ORG_ID;
 const CASCADE_WORKFORCE = CASCADE_WORKFORCE_ORG_ID;
 const LAKESIDE_ARTS = LAKESIDE_ARTS_ORG_ID;
 const PRAIRIE_BROADBAND = PRAIRIE_BROADBAND_ORG_ID;
@@ -191,13 +191,7 @@ function oppRefFor(index: number): OppRef {
   if (!opportunity) {
     throw new Error(`Award fixture references opportunity index ${index}`);
   }
-  return {
-    id: opportunity.id,
-    title: opportunity.title,
-    ...(opportunity.identifiers
-      ? { identifiers: { ...opportunity.identifiers } }
-      : {}),
-  };
+  return toOppRef(opportunity);
 }
 
 /** Builds an `AppRef` from an application index, reading its real title. */

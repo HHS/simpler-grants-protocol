@@ -104,7 +104,11 @@ class VersionedSchemaGenerator {
     for (const filePath of yamlFiles) {
       try {
         const content = readFileSync(filePath, "utf-8");
-        const schema = yaml.load(content) as JsonSchema;
+        // CORE_SCHEMA, not the default: the default resolves unquoted dates
+        // in `examples` to Date objects, which dump back as ISO timestamps.
+        const schema = yaml.load(content, {
+          schema: yaml.CORE_SCHEMA,
+        }) as JsonSchema;
 
         if (!schema) {
           console.warn(`Empty schema file: ${filePath}`);

@@ -1,5 +1,11 @@
 ## Validation scenarios
 
+Outcomes below mean:
+
+- **Error**: reported and the run fails.
+- **Warning**: reported, marked `(warning)` in the output, and the run still succeeds. A missing optional route is the only warning the checker emits today, because an optional route MAY be omitted (ADR 0019).
+- **Ignore**: not reported at all.
+
 ### Check Routes
 
 - **Case 1:** Extra routes
@@ -15,10 +21,10 @@
 
 ### Check query params
 
-- **Case 1:** [Extra params](#query-param-case-1-extra-param) -> Warn
+- **Case 1:** [Extra params](#query-param-case-1-extra-param) -> Ignore
 - **Case 2:** Missing params
   - **Case 2.1:** [Required in base spec](#query-param-case-21-missing-required-param) -> Error
-  - **Case 2.2:** [Optional in base spec](#query-param-case-21-missing-optional-param) -> Warning
+  - **Case 2.2:** [Optional in base spec](#query-param-case-22-missing-optional-param) -> Error
 - **Param case 3:** Matching params -> [Check schemas](#check-schemas)
 
 ### Check status codes
@@ -31,8 +37,8 @@ If the routes match, check whether the status codes are compatible between the b
 
 ### Check mime types
 
-- **Case 1:** [Extra mime types](#mimetype-case-1-extra-mime-type) -> Ignore
-- **Case 2:** [Missing mime types](#mimetype-case-2-missing-mime-type) -> Error
+- **Case 1:** [Extra mime types](#mimetype-case-1-extra-mimetype) -> Ignore
+- **Case 2:** [Missing mime types](#mimetype-case-2-mimetype-missing) -> Error
 - **Case 3:** Matching mime types -> [Check schemas](#check-schemas)
 
 ### Check schemas
@@ -43,7 +49,7 @@ If the routes match, check whether the status codes are compatible between the b
   - **Case 1.3:** [Additional props follow schema](#schema-case-13-additional-props-conforms-to-schema) -> Check schemas (recursive)
 - **Case 2:** Missing props
   - **Case 2.1:** [Required in base spec](#schema-case-21-missing-required-prop) -> Error
-  - **Case 2.2:** [Optional in base spec](#schema-case-22-missing-optional-prop) -> Warn
+  - **Case 2.2:** [Optional in base spec](#schema-case-22-missing-optional-prop) -> Ignore
 - **Case 3:** Matching props
   - Check type -> [Check types](#type-case-1-base-type-not-specified)
   - Check enum -> [Check enums](#check-enums)
@@ -65,8 +71,8 @@ If the routes match, check whether the status codes are compatible between the b
 ### Check required status
 
 - **Case 1:** [Required status matches](#required-status-case-1-required-status-matches) -> Ignore
-- **Case 2:** [Made required](#required-status-case-2-made-required) -> Warn
-- **Case 3:** [Made optional](#required-status-case-3-made-optional) -> Error
+- **Case 2:** [Made required](#required-status-case-2-made-required) -> Ignore
+- **Case 3:** [Made optional](#required-status-case-3-made-optional) -> Ignore
 
 ## Example scenarios
 
@@ -268,8 +274,8 @@ paths: # missing optional POST /common-grants/test, will warn
 #### Query param case 1: Extra param
 
 - **Scenario:** An extra query parameter is found in the implementation spec that is not present in the base spec.
-- **Outcome:** Warning
-- **Reason:** Additional query parameters are allowed but should be documented.
+- **Outcome:** Ignore
+- **Reason:** Additional query parameters are allowed. The checker compares the base spec's parameters against the implementation and does not inspect parameters the base spec does not declare, so an extra one is never reported.
 
 <details>
 <summary>Base spec example</summary>
@@ -312,7 +318,7 @@ paths:
           required: true
           schema:
             type: string
-        - name: extra_param # extra parameter, will warn
+        - name: extra_param # extra parameter, not reported
           in: query
           required: false
           schema:
@@ -376,8 +382,8 @@ paths:
 #### Query param case 2.2: Missing optional param
 
 - **Scenario:** An optional query parameter from the base spec is missing in the implementation spec.
-- **Outcome:** Warning
-- **Reason:** Optional parameters should be implemented but their absence is not critical.
+- **Outcome:** Error
+- **Reason:** The checker reports any parameter the base spec declares and the implementation omits, without distinguishing required from optional, so this fails the run like [case 2.1](#query-param-case-21-missing-required-param).
 
 <details>
 <summary>Base spec example</summary>
@@ -414,7 +420,7 @@ info:
 paths:
   /common-grants/test:
     get:
-      parameters: [] # missing optional parameter, will warn
+      parameters: [] # missing optional parameter, reported as an error
       responses:
         "200":
           description: OK
@@ -876,8 +882,8 @@ paths:
 #### Schema case 2.2: Missing optional prop
 
 - **Scenario:** The implementation spec is missing an optional property from the base spec.
-- **Outcome:** Warning
-- **Reason:** Optional properties should be implemented but their absence is not critical.
+- **Outcome:** Ignore
+- **Reason:** Optional properties should be implemented but their absence is not critical, and the checker only flags a missing property when the base schema lists it under `required`.
 
 <details>
 <summary>Base spec example</summary>
@@ -927,7 +933,7 @@ paths:
                 properties:
                   name:
                     type: string
-                  # missing optional 'description' property, will warn
+                  # missing optional 'description' property, not reported
 ```
 
 </details>
@@ -1418,8 +1424,8 @@ paths:
 #### Required status case 2: Made required
 
 - **Scenario:** The implementation spec makes a property required that was optional in the base spec.
-- **Outcome:** Warning
-- **Reason:** Implementations can make optional properties required because a valid JSON input for the implementation spec would still be valid for the base spec. But we'll warn because removing those optional properties from the base spec would break compatibility.
+- **Outcome:** Ignore
+- **Reason:** Implementations can make optional properties required because a valid JSON input for the implementation spec would still be valid for the base spec. The checker does not currently detect this transition, so nothing is reported.
 
 <details>
 <summary>Base spec example</summary>
@@ -1465,7 +1471,7 @@ paths:
               schema:
                 type: object
                 required:
-                  - name # made required, will warn
+                  - name # made required, not reported
                 properties:
                   name:
                     type: string
@@ -1476,8 +1482,8 @@ paths:
 #### Required status case 3: Made optional
 
 - **Scenario:** The implementation spec makes a property optional that was required in the base spec.
-- **Outcome:** Error
-- **Reason:** Making a required property optional means that a valid JSON input for the implementation spec (i.e. without that property) would not be valid for the base spec.
+- **Outcome:** Ignore
+- **Reason:** Making a required property optional means that a valid JSON input for the implementation spec (i.e. without that property) would not be valid for the base spec. The checker does not currently detect this transition, because it never reads the implementation schema's `required` list, so nothing is reported today. Unlike the other ignored cases, this one is a known gap rather than intended behavior: it is a compatibility break the checker should catch.
 
 <details>
 <summary>Base spec example</summary>
@@ -1524,7 +1530,7 @@ paths:
             application/json:
               schema:
                 type: object
-                # missing required array, will error
+                # missing required array, not reported
                 properties:
                   name:
                     type: string

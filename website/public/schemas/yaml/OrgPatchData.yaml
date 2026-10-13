@@ -4,7 +4,7 @@ type: object
 properties:
   name:
     type: string
-    description: The organization's legal name as registered with relevant authorities.
+    description: The name this organization is known by; for a legal entity, its legal name.
   status:
     anyOf:
       - $ref: OrgPatchOrgStatusOrCreate.yaml
@@ -20,6 +20,14 @@ properties:
       - $ref: calendarYear.yaml
       - type: "null"
     description: The calendar year the organization was founded.
+  aliases:
+    anyOf:
+      - type: array
+        items:
+          $ref: nonEmptyString.yaml
+      - type: "null"
+    uniqueItems: true
+    description: Other names this organization goes by, such as a trading name or a short form of its legal name. Not a history of former names. Don't list a name that has its own live trading-name record linked to this organization by a `dba` entry in either record; see the organization relationships guide.
   identifiers:
     anyOf:
       - $ref: "#/$defs/OrgPatchOrgIdsOrCreate"
@@ -50,6 +58,63 @@ properties:
       - $ref: "#/$defs/OrgPatchOrgSocialLinksOrCreate"
       - type: "null"
     description: Collection of the organization's social media and web presence links.
+  relationships:
+    anyOf:
+      - type: object
+        properties:
+          parents:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgHierarchyRelationshipReplaceOnly"
+              - type: "null"
+            description: Organizations above this one, such as a containing organization or a fiscal sponsor.
+          children:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgHierarchyRelationshipReplaceOnly"
+              - type: "null"
+            description: Organizations below this one, such as its chapters or sponsored projects.
+          succeededBy:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgSuccessionRelationshipReplaceOnly"
+              - type: "null"
+            description: Organizations that carry on all or part of this one.
+          succeeds:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgSuccessionRelationshipReplaceOnly"
+              - type: "null"
+            description: Organizations whose work this one carries on in whole or in part.
+          recordReplacedBy:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgRecordRelationshipReplaceOnly"
+              - type: "null"
+            description: Records to use instead of this record.
+          recordReplaces:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgRecordRelationshipReplaceOnly"
+              - type: "null"
+            description: Records that this record is used instead of.
+          otherRelationships:
+            anyOf:
+              - type: array
+                items:
+                  $ref: "#/$defs/OrgPatchOrgOtherRelationshipReplaceOnly"
+              - type: "null"
+            description: Connections outside the categories above, which need not have a direction.
+        unevaluatedProperties:
+          not: {}
+      - type: "null"
+    description: The organization's relationships to other organizations.
   customFields:
     anyOf:
       - type: object
@@ -264,3 +329,405 @@ $defs:
     unevaluatedProperties:
       not: {}
     description: A collection of social media and web presence links for an organization.
+  OrgPatchOrgHierarchyRelationshipReplaceOnly:
+    type: object
+    properties:
+      org:
+        $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+        description: The other organization, which a writer can name by `id` alone.
+      kind:
+        type: object
+        properties:
+          value:
+            $ref: OrgHierarchyKindOptions.yaml
+            description: The selected value, from a predefined set of options
+          customValue:
+            type: string
+            description: A custom value, used when the selected value is the `custom` option
+          description:
+            type: string
+            description: A human-readable description of the value
+        required:
+          - value
+        unevaluatedProperties:
+          not: {}
+        description: The relationship's subtype within the category its list names.
+      startDate:
+        $ref: isoDate.yaml
+        description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
+      endDate:
+        $ref: isoDate.yaml
+        description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
+      status:
+        $ref: OrgRelationshipStatus.yaml
+        description: Whether the relationship is in effect, as stated by the provider.
+    required:
+      - org
+    unevaluatedProperties:
+      not: {}
+    description: A parent or child relationship, as written.
+  OrgPatchOrgSuccessionRelationshipReplaceOnly:
+    type: object
+    properties:
+      org:
+        $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+        description: The other organization, which a writer can name by `id` alone.
+      kind:
+        type: object
+        properties:
+          value:
+            $ref: OrgSuccessionKindOptions.yaml
+            description: The selected value, from a predefined set of options
+          customValue:
+            type: string
+            description: A custom value, used when the selected value is the `custom` option
+          description:
+            type: string
+            description: A human-readable description of the value
+        required:
+          - value
+        unevaluatedProperties:
+          not: {}
+        description: The relationship's subtype within the category its list names.
+      startDate:
+        $ref: isoDate.yaml
+        description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
+      endDate:
+        $ref: isoDate.yaml
+        description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
+      status:
+        $ref: OrgRelationshipStatus.yaml
+        description: Whether the relationship is in effect, as stated by the provider.
+    required:
+      - org
+    unevaluatedProperties:
+      not: {}
+    description: A succession relationship, as written.
+  OrgPatchOrgRecordRelationshipReplaceOnly:
+    type: object
+    properties:
+      org:
+        $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+        description: The other organization, which a writer can name by `id` alone.
+      kind:
+        type: object
+        properties:
+          value:
+            $ref: OrgRecordKindOptions.yaml
+            description: The selected value, from a predefined set of options
+          customValue:
+            type: string
+            description: A custom value, used when the selected value is the `custom` option
+          description:
+            type: string
+            description: A human-readable description of the value
+        required:
+          - value
+        unevaluatedProperties:
+          not: {}
+        description: The relationship's subtype within the category its list names.
+      startDate:
+        $ref: isoDate.yaml
+        description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
+      endDate:
+        $ref: isoDate.yaml
+        description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
+      status:
+        $ref: OrgRelationshipStatus.yaml
+        description: Whether the relationship is in effect, as stated by the provider.
+    required:
+      - org
+    unevaluatedProperties:
+      not: {}
+    description: A record replacement relationship, as written.
+  OrgPatchOrgOtherRelationshipReplaceOnly:
+    type: object
+    properties:
+      org:
+        $ref: "#/$defs/OrgPatchOrgTargetRefReplaceOnly"
+        description: The other organization, which a writer can name by `id` alone.
+      kind:
+        type: object
+        properties:
+          value:
+            $ref: OrgOtherKindOptions.yaml
+            description: The selected value, from a predefined set of options
+          customValue:
+            type: string
+            description: A custom value, used when the selected value is the `custom` option
+          description:
+            type: string
+            description: A human-readable description of the value
+        required:
+          - value
+        unevaluatedProperties:
+          not: {}
+        description: The relationship's subtype within the category its list names.
+      startDate:
+        $ref: isoDate.yaml
+        description: "When the relationship started, in ISO 8601 format: YYYY-MM-DD"
+      endDate:
+        $ref: isoDate.yaml
+        description: "When the relationship ended, in ISO 8601 format: YYYY-MM-DD"
+      status:
+        $ref: OrgRelationshipStatus.yaml
+        description: Whether the relationship is in effect, as stated by the provider.
+    required:
+      - org
+    unevaluatedProperties:
+      not: {}
+    description: A relationship outside the named categories, as written.
+  OrgPatchOrgTargetRefReplaceOnly:
+    type: object
+    properties:
+      id:
+        $ref: uuid.yaml
+        description: The other organization's unique identifier.
+      name:
+        type: string
+        description: "The other organization's name. Ignored if supplied: the receiver fills it in from its own record."
+      identifiers:
+        type: object
+        properties:
+          org:us:ein:
+            type: object
+            properties:
+              registry:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    const: org:us:ein
+                    description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                  url:
+                    type: string
+                    format: uri
+                    description: Link to the catalog entry for this registry.
+                unevaluatedProperties:
+                  not: {}
+                description: Registry-level facts shared by every record in this registry.
+              id:
+                $ref: employerTaxId.yaml
+                description: |-
+                  The primary identifier string, when the registry has a single canonical value.
+
+                  May be omitted for registries with no natural primary; consumers should read
+                  `allIds` in that case.
+              allIds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: employerTaxId.yaml
+                      description: The identifier string.
+                    status:
+                      $ref: IdentifierStatus.yaml
+                      description: Whether the identifier is currently valid or retired.
+                  required:
+                    - id
+                    - status
+                  unevaluatedProperties:
+                    not: {}
+                description: Every known identifier for this record in this registry, including archived values.
+            unevaluatedProperties:
+              not: {}
+            description: The organization's Employer Identification Number (EIN), assigned by the IRS.
+          org:us:uei:
+            type: object
+            properties:
+              registry:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    const: org:us:uei
+                    description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                  url:
+                    type: string
+                    format: uri
+                    description: Link to the catalog entry for this registry.
+                unevaluatedProperties:
+                  not: {}
+                description: Registry-level facts shared by every record in this registry.
+              id:
+                $ref: samUEI.yaml
+                description: |-
+                  The primary identifier string, when the registry has a single canonical value.
+
+                  May be omitted for registries with no natural primary; consumers should read
+                  `allIds` in that case.
+              allIds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: samUEI.yaml
+                      description: The identifier string.
+                    status:
+                      $ref: IdentifierStatus.yaml
+                      description: Whether the identifier is currently valid or retired.
+                  required:
+                    - id
+                    - status
+                  unevaluatedProperties:
+                    not: {}
+                description: Every known identifier for this record in this registry, including archived values.
+            unevaluatedProperties:
+              not: {}
+            description: The organization's Unique Entity Identifier (UEI) from SAM.gov.
+          org:xi:duns:
+            type: object
+            properties:
+              registry:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    const: org:xi:duns
+                    description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                  url:
+                    type: string
+                    format: uri
+                    description: Link to the catalog entry for this registry.
+                unevaluatedProperties:
+                  not: {}
+                description: Registry-level facts shared by every record in this registry.
+              id:
+                $ref: duns.yaml
+                description: |-
+                  The primary identifier string, when the registry has a single canonical value.
+
+                  May be omitted for registries with no natural primary; consumers should read
+                  `allIds` in that case.
+              allIds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: duns.yaml
+                      description: The identifier string.
+                    status:
+                      $ref: IdentifierStatus.yaml
+                      description: Whether the identifier is currently valid or retired.
+                  required:
+                    - id
+                    - status
+                  unevaluatedProperties:
+                    not: {}
+                description: Every known identifier for this record in this registry, including archived values.
+            unevaluatedProperties:
+              not: {}
+            description: The organization's Data Universal Numbering System (DUNS) number.
+          systemId:
+            type: object
+            properties:
+              registry:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                  url:
+                    type: string
+                    format: uri
+                    description: Link to the catalog entry for this registry.
+                unevaluatedProperties:
+                  not: {}
+                description: Registry-level facts shared by every record in this registry.
+              id:
+                $ref: uuid.yaml
+                description: |-
+                  The primary identifier string, when the registry has a single canonical value.
+
+                  May be omitted for registries with no natural primary; consumers should read
+                  `allIds` in that case.
+              allIds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: uuid.yaml
+                      description: The identifier string.
+                    status:
+                      $ref: IdentifierStatus.yaml
+                      description: Whether the identifier is currently valid or retired.
+                  required:
+                    - id
+                    - status
+                  unevaluatedProperties:
+                    not: {}
+                description: Every known identifier for this record in this registry, including archived values.
+            unevaluatedProperties:
+              not: {}
+            description: The hosting system's own identifier for this record.
+          otherIds:
+            type: object
+            properties: {}
+            unevaluatedProperties:
+              type: object
+              properties:
+                registry:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      description: Canonical CommonGrants registry code, `<schema>:<scope>:<prop>` (e.g. `org:us:ein`).
+                    url:
+                      type: string
+                      format: uri
+                      description: Link to the catalog entry for this registry.
+                  unevaluatedProperties:
+                    not: {}
+                  description: Registry-level facts shared by every record in this registry.
+                id:
+                  type: string
+                  description: |-
+                    The primary identifier string, when the registry has a single canonical value.
+
+                    May be omitted for registries with no natural primary; consumers should read
+                    `allIds` in that case.
+                allIds:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: The identifier string.
+                      status:
+                        $ref: IdentifierStatus.yaml
+                        description: Whether the identifier is currently valid or retired.
+                    required:
+                      - id
+                      - status
+                    unevaluatedProperties:
+                      not: {}
+                  description: Every known identifier for this record in this registry, including archived values.
+              unevaluatedProperties:
+                not: {}
+            description: |-
+              Additional identifiers keyed by their registry code, for registries the
+              protocol does not define as a base identifier on the model.
+        unevaluatedProperties:
+          not: {}
+        description: "Identifiers associated with the other organization, keyed by registry code. Ignored if supplied: the receiver fills them in from its own record."
+    required:
+      - id
+    unevaluatedProperties:
+      not: {}
+    description: |-
+      A writable reference to a relationship's other organization.
+
+      Unlike `Models.OrgRef`, whose `id` is read-only, `id` is writable here so a
+      patch can name the other organization, and the rest is optional so it can
+      be named by `id` alone. The receiver identifies the target by `id` and
+      rejects an `id` it doesn't recognize. It ignores a supplied `name` and
+      `identifiers` and fills both in from its own record on reads and revision
+      snapshots. They stay accepted, rather than read-only, so a writer can
+      resend entries copied from a read: read-only members would be dropped
+      from this closed schema, which would then reject them. Schema validation
+      checks only this shape; it does not look up or fill in the target.

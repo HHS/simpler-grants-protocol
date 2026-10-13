@@ -27,8 +27,205 @@ opportunityBase:
       endLine: 162
 opportunityDetails:
   example:
-    file:
-      path: "website/public/schemas/yaml/OpportunityDetails.yaml"
+    code: |
+      {
+        "competitions": [
+          {
+            "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+            "opportunity": {
+              "id": "30a12e5e-5940-4c08-921c-17a8960fcf4b",
+              "title": "Small business grant program"
+            },
+            "title": "Competition 1",
+            "description": "Competition 1 description",
+            "instructions": "Competition 1 instructions",
+            "status": {
+              "value": "open",
+              "description": "Competition is open for applications"
+            },
+            "keyDates": {
+              "openDate": {
+                "name": "Open Date",
+                "eventType": "singleDate",
+                "date": "2025-01-01"
+              },
+              "closeDate": {
+                "name": "Close Date",
+                "eventType": "singleDate",
+                "date": "2025-01-30"
+              },
+              "otherDates": {
+                "reviewPeriod": {
+                  "name": "Application Review Period",
+                  "eventType": "dateRange",
+                  "startDate": "2025-02-01",
+                  "endDate": "2025-02-28"
+                }
+              }
+            },
+            "forms": {
+              "forms": {
+                "formA": {
+                  "id": "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e5f",
+                  "title": "Form A",
+                  "createdAt": "2025-01-01T00:00:00Z",
+                  "lastModifiedAt": "2025-01-01T00:00:00Z"
+                },
+                "formB": {
+                  "id": "c1d2e3f4-5a6b-4c7d-8e9f-0a1b2c3d4e60",
+                  "title": "Form B",
+                  "createdAt": "2025-01-01T00:00:00Z",
+                  "lastModifiedAt": "2025-01-01T00:00:00Z"
+                }
+              },
+              "validation": {
+                "required": [
+                  "formA"
+                ]
+              }
+            },
+            "createdAt": "2025-01-01T00:00:00Z",
+            "lastModifiedAt": "2025-01-01T00:00:00Z"
+          }
+        ],
+        "awards": [
+          {
+            "id": "01912a8b-7c3d-7894-abcd-ef1234567890",
+            "title": "Community Health Center Capital Improvement Grant",
+            "identifiers": {
+              "systemId": {
+                "registry": {
+                  "code": "awd:grants.gov:system"
+                },
+                "id": "01912a8b-7c3d-7894-abcd-ef1234567890"
+              },
+              "awd:us:fain": {
+                "registry": {
+                  "code": "awd:us:fain",
+                  "url": "https://commongrants.org/registries/awd-us-fain"
+                },
+                "id": "H80CS00001"
+              }
+            }
+          }
+        ],
+        "id": "30a12e5e-5940-4c08-921c-17a8960fcf4b",
+        "title": "Small business grant program",
+        "identifiers": {
+          "systemId": {
+            "registry": {
+              "code": "opp:grants.gov:system"
+            },
+            "id": "018f2e77-3a4b-7c1d-9e2f-abcdef123456"
+          },
+          "opp:us:fon": {
+            "registry": {
+              "code": "opp:us:fon",
+              "url": "https://commongrants.org/registries/opp-us-fon"
+            },
+            "id": "HHS-2026-ACF-OCC-YD-0001"
+          },
+          "opp:us:aln": {
+            "registry": {
+              "code": "opp:us:aln",
+              "url": "https://commongrants.org/registries/opp-us-aln"
+            },
+            "id": "93.575"
+          }
+        },
+        "status": {
+          "value": "open",
+          "description": "The opportunity is currently accepting applications"
+        },
+        "description": "This program provides funding to small businesses to help them grow and create jobs",
+        "funding": {
+          "totalAmountAvailable": {
+            "amount": "1000000.00",
+            "currency": "USD"
+          },
+          "minAwardAmount": {
+            "amount": "10000.00",
+            "currency": "USD"
+          },
+          "maxAwardAmount": {
+            "amount": "50000.00",
+            "currency": "USD"
+          },
+          "minAwardCount": 5,
+          "maxAwardCount": 20,
+          "estimatedAwardCount": 10
+        },
+        "funders": {
+          "primary": {
+            "id": "018f2e77-4b5c-7d2e-9f3a-bcdef1234567",
+            "name": "Health Resources and Services Administration",
+            "identifiers": {
+              "otherIds": {
+                "org:grants.gov:agency": {
+                  "registry": {
+                    "code": "org:grants.gov:agency"
+                  },
+                  "id": "HRSA"
+                }
+              }
+            }
+          }
+        },
+        "keyDates": {
+          "postDate": {
+            "name": "Opportunity posted date",
+            "eventType": "singleDate",
+            "date": "2024-01-15",
+            "description": "Opportunity is posted publicly"
+          },
+          "closeDate": {
+            "name": "Opportunity close date",
+            "eventType": "singleDate",
+            "date": "2024-12-31",
+            "time": "17:00:00",
+            "description": "Opportunity closes for all applications"
+          },
+          "otherDates": {
+            "anticipatedAward": {
+              "name": "Anticipated award date",
+              "eventType": "singleDate",
+              "date": "2025-03-15",
+              "description": "When we expect to announce awards for this opportunity."
+            },
+            "applicationPeriod": {
+              "name": "Application period",
+              "eventType": "dateRange",
+              "startDate": "2024-01-01",
+              "endDate": "2024-01-31",
+              "endTime": "17:00:00",
+              "description": "Primary application period for the grant opportunity"
+            },
+            "performancePeriod": {
+              "name": "Period of Performance",
+              "eventType": "dateRange",
+              "startDate": "2024-01-01",
+              "endDate": "2024-12-31",
+              "description": "Period of performance for the grant"
+            },
+            "infoSessions": {
+              "name": "Info sessions",
+              "eventType": "other",
+              "details": "Every other Tuesday",
+              "description": "Info sessions for the opportunity"
+            }
+          }
+        },
+        "acceptedApplicantTypes": [
+          {
+            "value": "individual",
+            "description": "An individual applicant"
+          }
+        ],
+        "source": "http://example.com",
+        "customFields": {},
+        "createdAt": "2019-08-24T14:15:22Z",
+        "lastModifiedAt": "2019-08-24T14:15:22Z"
+      }
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/OpportunityDetails.yaml"

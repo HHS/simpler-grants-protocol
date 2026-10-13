@@ -5,8 +5,61 @@ sidebar:
   order: 5
 form:
   example:
+    code: |
+      {
+        "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+        "title": "Form A",
+        "description": "Form A description",
+        "instructions": "Form A instructions",
+        "jsonSchema": {
+          "$id": "formA.json",
+          "type": "object",
+          "properties": {
+            "name": {
+              "first": { "type": "string" },
+              "last": { "type": "string" }
+            },
+            "email": { "type": "string" },
+            "phone": { "type": "string" }
+          }
+        },
+        "uiSchema": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Group",
+              "label": "Name",
+              "elements": [
+                { "type": "Control", "scope": "#/properties/name/first" },
+                { "type": "Control", "scope": "#/properties/name/last" }
+              ]
+            },
+            { "type": "Control", "scope": "#/properties/email" },
+            { "type": "Control", "scope": "#/properties/phone" }
+          ]
+        },
+        "mappingToCommonGrants": {
+          "name": {
+            "firstName": { "field": "name.first" },
+            "lastName": { "field": "name.last" }
+          },
+          "emails": { "primary": { "field": "email" } },
+          "phones": { "primary": { "field": "phone" } }
+        },
+        "mappingFromCommonGrants": {
+          "name": {
+            "first": { "field": "name.firstName" },
+            "last": { "field": "name.lastName" }
+          },
+          "email": { "field": "emails.primary" },
+          "phone": { "field": "phones.primary" }
+        },
+        "createdAt": "2025-01-01T17:01:01",
+        "lastModifiedAt": "2025-01-02T17:30:00"
+      }
+  table:
     file:
-      path: "website/public/schemas/yaml/FormBase.yaml"
+      path: "website/public/schemas/yaml/versions/v0.5.0/FormBase.yaml"
   jsonSchema:
     file:
       path: "website/public/schemas/yaml/FormBase.yaml"
@@ -14,7 +67,7 @@ form:
     file:
       path: "lib/core/lib/core/models/form.tsp"
       startLine: 9
-      endLine: 46
+      endLine: 51
 formJsonSchema:
   example:
     code: |
@@ -36,8 +89,8 @@ formJsonSchema:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"
-      startLine: 52
-      endLine: 57
+      startLine: 57
+      endLine: 62
 formUISchema:
   example:
     code: |
@@ -62,8 +115,8 @@ formUISchema:
   typeSpec:
     file:
       path: "lib/core/lib/core/models/form.tsp"
-      startLine: 63
-      endLine: 68
+      startLine: 68
+      endLine: 73
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -74,11 +127,17 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 A form for collecting data from a user.
 
+From v0.5, a form's label is `title`, in place of the `name` used through v0.4. A payload for any one version never carries both; only TypeSpec source examples do (see [Authoring in TypeSpec](#authoring-in-typespec)).
+
+The table and the example below show the v0.5 payload. To validate a payload, use the OpenAPI document for its version, such as `/openapi/openapi.0.5.0.yaml`, also browsable on the [API docs](/protocol/api-docs) page.
+
 ### Table
 
-<SchemaTable filePath={frontmatter.form.jsonSchema.file.path} />
+<SchemaTable filePath={frontmatter.form.table.file.path} />
 
 ### Formats
+
+The JSON Schema tab shows the unversioned authoring schema, not a v0.5 payload schema. It combines every version's fields, so it requires both `name` and `title`.
 
 <SchemaFormatTabs
   example={frontmatter.form.example}
@@ -89,6 +148,47 @@ A form for collecting data from a user.
 ### Changelog
 
 <SchemaChangelog schema="FormBase" />
+
+### Migrating from v0.4
+
+| Version          | Field   | Type               |
+| ---------------- | ------- | ------------------ |
+| v0.4 and earlier | `name`  | `string`, required |
+| v0.5             | `title` | `string`, required |
+
+- **Producers:** send the value you sent as `name` as `title` instead.
+- **Consumers:** read a form's label from `title`.
+- **Everywhere a form appears:** forms nested in a [competition](/protocol/models/competition#migrating-from-v04)'s `forms`, and in any model of your own that embeds `FormBase`, change the same way.
+- **Form content is unaffected:** `jsonSchema`, `uiSchema`, both mappings, and `customFields` keep their keys and values, including `name` keys of their own. Form responses and answers still identify a form by `formId`.
+
+v0.4 and earlier:
+
+```json
+{
+  "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+  "name": "Form A",
+  "description": "Form A description"
+}
+```
+
+v0.5:
+
+```json
+{
+  "id": "b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a",
+  "title": "Form A",
+  "description": "Form A description"
+}
+```
+
+Both excerpts omit the other required fields.
+
+### Authoring in TypeSpec
+
+The TypeSpec model declares every version's fields at once: `name` is removed in v0.5 and `title` added in v0.5, so the changelog records a removal and an addition, and the unversioned model requires both.
+
+- **Examples:** an `@example` for `FormBase`, or for a model that embeds a form, must set both `name` and `title`, even in a project pinned to an earlier version, and should give them the same value. The compiler checks examples against the unversioned model and does not compare the two values; each version's OpenAPI output keeps only the field that version declares.
+- **The unversioned JSON Schema,** `/schemas/yaml/FormBase.yaml` (the JSON Schema tab above), is that combined model, so it requires both fields. No single version's payload satisfies it; validate a payload with the OpenAPI document for its version.
 
 ## FormJsonSchema
 
