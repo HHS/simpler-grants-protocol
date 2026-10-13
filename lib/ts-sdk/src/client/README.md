@@ -265,6 +265,33 @@ const awards = await client.awards.list({ schema: AwardWithLabelSchema });
 
 The corresponding public option types are `AwardGetOptions` and `AwardListOptions`.
 
+#### Plugin-bound award calls <!-- omit in toc -->
+
+Build a client from a plugin with `plugin.getClient()` to get award methods pre-bound to the plugin's compiled `AwdRecipientIndividual` schema, with no per-call `schema` needed. `get`, `list`, and `search` all parse the nested `recipientIndividual` through that schema by default:
+
+```ts
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+const awardPlugin = definePlugin({
+  schemas: {
+    AwdRecipientIndividual: {
+      customFields: {
+        tier: { fieldType: "string", description: "Recipient's award tier" },
+      },
+    },
+  },
+} as const);
+
+const client = awardPlugin.getClient({ baseUrl: "https://api.example.org" });
+
+const award = await client.awards.get(awardId);
+award.recipientIndividual?.customFields?.tier?.value; // typed as string
+```
+
+When the plugin declares no `AwdRecipientIndividual` custom fields, award methods fall back to `AwardBaseSchema`. The per-call `schema` option (see [Get a single award](#get-a-single-award) above) takes precedence over the plugin-bound default for that call only. Later calls on the same client keep using the bound schema.
+
+**Client parsing does not invoke source-system transforms.** `get`, `list`, and `search` call `.parse()` on the bound (or per-call) schema directly; they never run a plugin's `toCommon` / `fromCommon`. If a plugin declares transforms, invoke them explicitly on the raw payload. See [Plugin transformations](../extensions/README.md#plugin-transformations) in the extensions guide.
+
 ### Pagination
 
 All list and search methods auto-paginate by default, fetching up to `maxItems` (default: 1000) across multiple pages. To control this behavior:
