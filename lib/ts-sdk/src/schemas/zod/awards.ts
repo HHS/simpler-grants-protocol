@@ -12,8 +12,15 @@ import {
   NameSchema,
   SystemMetadataSchema,
 } from "./fields";
+import {
+  DateRangeFilterSchema,
+  DefaultFilterSchema,
+  MoneyRangeFilterSchema,
+  StringArrayFilterSchema,
+} from "./filters";
 import { createIdentifierSchema, IdentifierCollectionSchema } from "./identifiers";
 import { AppRefSchema, OppRefSchema, OrgRefCollectionSchema } from "./references";
+import { SortOrderEnum } from "./sorting";
 import { UuidSchema } from "./types";
 
 // ############################################################################
@@ -167,4 +174,75 @@ export const AwardBaseSchema = z
     source: z.url().optional(),
   })
   .extend(SystemMetadataSchema.shape)
+  .strict();
+
+// ############################################################################
+// Award search filters
+// ############################################################################
+
+const AwardStringArrayFilterSchema = StringArrayFilterSchema.strict();
+const AwardDateRangeFilterSchema = DateRangeFilterSchema.extend({
+  value: DateRangeFilterSchema.shape.value.strict(),
+}).strict();
+const AwardMoneyRangeFilterSchema = MoneyRangeFilterSchema.extend({
+  value: MoneyRangeFilterSchema.shape.value.strict(),
+}).strict();
+const AwardDefaultFilterSchema = DefaultFilterSchema.strict();
+
+const awardNamedFilterShape = {
+  /** Award statuses to include. */
+  status: AwardStringArrayFilterSchema.optional(),
+
+  /** Opportunity identifiers to include. */
+  opportunityId: AwardStringArrayFilterSchema.optional(),
+
+  /** Range of award dates to include. */
+  awardDateRange: AwardDateRangeFilterSchema.optional(),
+
+  /** Range of awarded amounts to include. */
+  awardedAmountRange: AwardMoneyRangeFilterSchema.optional(),
+};
+
+/** Standard award filters, plus implementation-defined filters at the root. */
+export const AwdDefaultFiltersSchema = z
+  .object(awardNamedFilterShape)
+  .catchall(AwardDefaultFilterSchema);
+
+/** Filters accepted by the award search request. */
+export const AwdFiltersSchema = z
+  .object({
+    ...awardNamedFilterShape,
+
+    /** Additional implementation-defined filters. */
+    customFilters: z.record(z.string(), AwardDefaultFilterSchema).optional(),
+  })
+  .strict();
+
+// ############################################################################
+// Award search sorting
+// ############################################################################
+
+/** Fields by which award search results can be sorted. */
+export const AwdSortByEnum = z.enum([
+  "lastModifiedAt",
+  "createdAt",
+  "title",
+  "status.value",
+  "keyDates.awardDate",
+  "funding.awardedAmount",
+  "custom",
+]);
+
+/** Sorting parameters for award searches. */
+export const AwdSortingSchema = z
+  .object({
+    /** The field by which to sort results. */
+    sortBy: AwdSortByEnum,
+
+    /** Implementation-defined sort key. */
+    customSortBy: z.string().optional(),
+
+    /** Direction in which to sort results. */
+    sortOrder: SortOrderEnum.optional(),
+  })
   .strict();

@@ -20,6 +20,10 @@ import {
   AwdRefSchema,
   AwdRecipientIndividualSchema,
   AwardBaseSchema,
+  AwdSortByEnum,
+  AwdSortingSchema,
+  AwdDefaultFiltersSchema,
+  AwdFiltersSchema,
   // Fields
   EventSchema,
   SingleDateEventSchema,
@@ -177,6 +181,10 @@ export type AwdRecipientIndividual = z.infer<typeof AwdRecipientIndividualSchema
 export type AwardBase = z.infer<typeof AwardBaseSchema>;
 /** Convenience alias for the canonical base award model. */
 export type Award = AwardBase;
+export type AwdSortBy = z.infer<typeof AwdSortByEnum>;
+export type AwdSorting = z.infer<typeof AwdSortingSchema>;
+export type AwdDefaultFilters = z.infer<typeof AwdDefaultFiltersSchema>;
+export type AwdFilters = z.infer<typeof AwdFiltersSchema>;
 export type OppStatus = z.infer<typeof OppStatusSchema>;
 export type OppStatusOptions = z.infer<typeof OppStatusOptionsEnum>;
 export type ApplicantType = z.infer<typeof ApplicantTypeSchema>;

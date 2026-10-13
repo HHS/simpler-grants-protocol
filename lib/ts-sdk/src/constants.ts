@@ -10,6 +10,7 @@
 
 import {
   AwdStatusOptionsEnum,
+  AwdSortByEnum,
   OppStatusOptionsEnum,
   ApplicantTypeOptionsEnum,
   OppSortByEnum,
@@ -29,6 +30,7 @@ import {
 // ############################################################################
 
 export const AwdStatusOptions: typeof AwdStatusOptionsEnum.enum = AwdStatusOptionsEnum.enum;
+export const AwdSortBy: typeof AwdSortByEnum.enum = AwdSortByEnum.enum;
 export const OppStatusOptions: typeof OppStatusOptionsEnum.enum = OppStatusOptionsEnum.enum;
 export const ApplicantTypeOptions: typeof ApplicantTypeOptionsEnum.enum =
   ApplicantTypeOptionsEnum.enum;

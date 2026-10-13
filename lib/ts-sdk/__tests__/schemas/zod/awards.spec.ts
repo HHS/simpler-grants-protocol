@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import * as AwardConstants from "@/constants";
+import * as AwardSchemas from "@/schemas";
 import {
   AwardBaseSchema,
   AwdFundingSchema,
@@ -10,6 +12,7 @@ import {
   AwdStatusSchema,
   AwdTimelineSchema,
 } from "@/schemas";
+import type * as AwardTypes from "@/types";
 import { expectZodMatchesJsonSchema } from "../../helper";
 import { ajv, validate } from "../../utils/ajv-validator";
 import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test";
@@ -434,5 +437,188 @@ describe("award model schemas", () => {
       },
     });
     expect(validate(ajv, "AwardBase.yaml", serialized).isValid).toBe(true);
+  });
+
+  it("matches award sorting and filter contracts with public types and constants", async () => {
+    const comparisons: Array<{
+      name: string;
+      schema: Parameters<typeof expectZodMatchesJsonSchema>[0];
+      jsonSchemaId: string;
+    }> = [
+      {
+        name: "AwdSortByEnum",
+        schema: AwardSchemas.AwdSortByEnum,
+        jsonSchemaId: "AwdSortBy.yaml",
+      },
+      {
+        name: "AwdSortingSchema",
+        schema: AwardSchemas.AwdSortingSchema,
+        jsonSchemaId: "AwdSorting.yaml",
+      },
+      {
+        name: "AwdDefaultFiltersSchema",
+        schema: AwardSchemas.AwdDefaultFiltersSchema,
+        jsonSchemaId: "AwdDefaultFilters.yaml",
+      },
+      {
+        name: "AwdFiltersSchema",
+        schema: AwardSchemas.AwdFiltersSchema,
+        jsonSchemaId: "AwdFilters.yaml",
+      },
+    ];
+
+    for (const { name, schema, jsonSchemaId } of comparisons) {
+      expect(schema, `${name} should be exported from @/schemas`).toBeDefined();
+      await expectZodMatchesJsonSchema(schema, jsonSchemaId, [], 0, true);
+    }
+
+    expect(AwardConstants.AwdSortBy, "AwdSortBy should be exported from @/constants").toEqual({
+      lastModifiedAt: "lastModifiedAt",
+      createdAt: "createdAt",
+      title: "title",
+      "status.value": "status.value",
+      "keyDates.awardDate": "keyDates.awardDate",
+      "funding.awardedAmount": "funding.awardedAmount",
+      custom: "custom",
+    });
+
+    const publicTypes: [
+      AwardTypes.AwdSortBy,
+      AwardTypes.AwdSorting,
+      AwardTypes.AwdDefaultFilters,
+      AwardTypes.AwdFilters,
+    ] = [
+      AwardConstants.AwdSortBy.custom,
+      { sortBy: AwardConstants.AwdSortBy["status.value"] },
+      {},
+      {},
+    ];
+    expect(publicTypes).toEqual(["custom", { sortBy: "status.value" }, {}, {}]);
+  });
+
+  it("validates open default filters and sealed custom filters", () => {
+    const agency = { operator: "in", value: ["HHS", "NSF"] };
+    const openFilters = { agency };
+
+    expect(validate(ajv, "AwdDefaultFilters.yaml", openFilters).isValid).toBe(true);
+    expect(AwardSchemas.AwdDefaultFiltersSchema.parse(openFilters)).toEqual(openFilters);
+
+    for (const invalidAgency of [
+      { operator: "invalid", value: ["HHS"] },
+      { operator: "in" },
+      "HHS",
+    ]) {
+      const invalid = { agency: invalidAgency };
+      expect(validate(ajv, "AwdDefaultFilters.yaml", invalid).isValid).toBe(false);
+      expect(AwardSchemas.AwdDefaultFiltersSchema.safeParse(invalid).success).toBe(false);
+    }
+
+    expect(validate(ajv, "AwdFilters.yaml", openFilters).isValid).toBe(false);
+    expect(AwardSchemas.AwdFiltersSchema.safeParse(openFilters).success).toBe(false);
+
+    const nestedFilters = { customFilters: { agency } };
+    expect(validate(ajv, "AwdFilters.yaml", nestedFilters).isValid).toBe(true);
+    expect(AwardSchemas.AwdFiltersSchema.parse(nestedFilters)).toEqual(nestedFilters);
+  });
+
+  it("retains named filter constraints and applies only emitted sorting rules", () => {
+    const validFilters = {
+      status: { operator: "in", value: ["awarded", "completed"] },
+      opportunityId: { operator: "notIn", value: [RELATED_ID] },
+      awardDateRange: {
+        operator: "between",
+        value: { min: "2026-01-01", max: "2026-12-31T23:59:59-05:00" },
+      },
+      awardedAmountRange: {
+        operator: "outside",
+        value: {
+          min: { amount: "100000.00", currency: "USD" },
+          max: { amount: "500000", currency: "USD" },
+        },
+      },
+    };
+
+    for (const [schema, jsonSchemaId] of [
+      [AwardSchemas.AwdDefaultFiltersSchema, "AwdDefaultFilters.yaml"],
+      [AwardSchemas.AwdFiltersSchema, "AwdFilters.yaml"],
+    ] as const) {
+      expect(validate(ajv, jsonSchemaId, validFilters).isValid).toBe(true);
+      expect(schema.parse(validFilters)).toEqual(validFilters);
+
+      for (const invalid of [
+        { ...validFilters, status: { operator: "eq", value: ["awarded"] } },
+        { ...validFilters, opportunityId: { operator: "in", value: RELATED_ID } },
+        {
+          ...validFilters,
+          awardDateRange: {
+            operator: "between",
+            value: { min: "2026-01-01", max: "not-a-date" },
+          },
+        },
+        {
+          ...validFilters,
+          awardedAmountRange: {
+            operator: "between",
+            value: {
+              min: { amount: "100,000.00", currency: "USD" },
+              max: { amount: "500000", currency: "USD" },
+            },
+          },
+        },
+        {
+          ...validFilters,
+          awardedAmountRange: {
+            operator: "between",
+            value: {
+              min: { amount: "100000.00" },
+              max: { amount: "500000", currency: "USD" },
+            },
+          },
+        },
+        {
+          ...validFilters,
+          awardDateRange: {
+            operator: "between",
+            value: { min: "2026-01-01", max: "2026-12-31", unexpected: true },
+          },
+        },
+        {
+          ...validFilters,
+          awardedAmountRange: {
+            operator: "between",
+            value: {
+              min: { amount: "100000", currency: "USD", unexpected: true },
+              max: { amount: "500000", currency: "USD" },
+            },
+          },
+        },
+        { ...validFilters, status: null },
+      ]) {
+        expect(schema.safeParse(invalid).success).toBe(false);
+      }
+    }
+
+    expect(AwardSchemas.AwdFiltersSchema.parse({})).toEqual({});
+
+    for (const sorting of [
+      { sortBy: "title" },
+      { sortBy: "createdAt", sortOrder: "asc" },
+      { sortBy: "lastModifiedAt", sortOrder: "desc" },
+      { sortBy: "custom" },
+      { sortBy: "title", customSortBy: "implementationRank" },
+    ]) {
+      expect(validate(ajv, "AwdSorting.yaml", sorting).isValid).toBe(true);
+      expect(AwardSchemas.AwdSortingSchema.parse(sorting)).toEqual(sorting);
+    }
+
+    for (const invalid of [
+      {},
+      { sortBy: "title", sortOrder: "ascending" },
+      { sortBy: "title", customSortBy: 1 },
+      { sortBy: "title", sortOrder: null },
+      { sortBy: "title", customSortBy: null },
+    ]) {
+      expect(AwardSchemas.AwdSortingSchema.safeParse(invalid).success).toBe(false);
+    }
   });
 });
