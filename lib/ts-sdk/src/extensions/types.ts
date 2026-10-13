@@ -111,7 +111,7 @@ export interface RouteDeclarations {
 }
 
 /** Resource names the SDK exposes. Grows as API resources land. */
-export type ResourceName = "opportunities";
+export type ResourceName = "opportunities" | "awards";
 
 /** Route methods that accept custom filters. Widen only when a method actually takes filters. */
 export type RouteMethod = "search";

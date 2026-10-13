@@ -2,9 +2,14 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
 import { http, HttpResponse, setupServer } from "../utils/mock-fetch.js";
 import { definePlugin, F, FilterError } from "../../src/extensions/index.js";
-import { Auth } from "../../src/client/index.js";
-import type { CustomFilterBag, ListResult } from "../../src/client/index.js";
-import { OpportunityBaseSchema } from "../../src/schemas/index.js";
+import { Auth, Awards, Client } from "../../src/client/index.js";
+import type {
+  AwardCustomFilterBag,
+  AwardSearchOptions,
+  CustomFilterBag,
+  ListResult,
+} from "../../src/client/index.js";
+import { AwardBaseSchema, OpportunityBaseSchema } from "../../src/schemas/index.js";
 import { withCustomFields } from "../../src/extensions/index.js";
 
 const server = setupServer();
@@ -140,6 +145,117 @@ describe("plugin.getClient", () => {
     ).rejects.toThrow(FilterError);
 
     expect(requested).toBe(false);
+  });
+
+  it("binds award filter routes for typed classification and fail-fast validation", async () => {
+    const awardPlugin = definePlugin({
+      routes: {
+        awards: {
+          search: {
+            filters: {
+              recipientRegion: { filterType: "stringArray" },
+            },
+          },
+        },
+      },
+      meta: { name: "award adapter", sourceSystem: "awards.example" },
+    } as const);
+    type AwardRoutes = NonNullable<typeof awardPlugin.routes>;
+
+    const registeredAndAdHoc = {
+      status: F.in(["awarded"]),
+      recipientRegion: F.in(["US-CA"]),
+      legacyAwardCode: F.eq("LEGACY-42"),
+      "gov.usaspending@recipientType": F.in(["nonprofit"]),
+    } satisfies AwardCustomFilterBag<AwardRoutes>;
+    const options = {
+      page: 1,
+      filters: registeredAndAdHoc,
+    } satisfies AwardSearchOptions<typeof AwardBaseSchema, AwardRoutes>;
+    const requestBodies: unknown[] = [];
+
+    server.use(
+      http.post("/common-grants/awards/search", async ({ request }) => {
+        requestBodies.push(await request.json());
+        return HttpResponse.json({
+          status: 200,
+          message: "Success",
+          items: [],
+          paginationInfo: { page: 1, pageSize: 25, totalItems: 0, totalPages: 0 },
+          sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+          filterInfo: { filters: {} },
+        });
+      })
+    );
+
+    const client = awardPlugin.getClient({ baseUrl: "https://api.example.org" });
+    await client.awards.search(options);
+    await client.awards.search({ page: 1, filters: {} });
+
+    expect(requestBodies).toEqual([
+      {
+        filters: {
+          status: F.in(["awarded"]),
+          customFilters: {
+            recipientRegion: F.in(["US-CA"]),
+            legacyAwardCode: F.eq("LEGACY-42"),
+            "gov.usaspending@recipientType": F.in(["nonprofit"]),
+          },
+        },
+        pagination: { page: 1 },
+      },
+      { filters: {}, pagination: { page: 1 } },
+    ]);
+
+    const requestCountBeforeInvalidFilters = requestBodies.length;
+    const searchWithUncheckedFilters = (filters: Record<string, unknown>) =>
+      client.awards.search({
+        page: 1,
+        filters: filters as unknown as AwardCustomFilterBag<AwardRoutes>,
+      });
+    const invalidFilters = [
+      { status: F.eq("awarded") },
+      { recipientRegion: F.eq("US-CA") },
+      { unregistered: { operator: "in", value: "not-an-array" } },
+    ];
+
+    for (const filters of invalidFilters) {
+      await expect(searchWithUncheckedFilters(filters)).rejects.toBeInstanceOf(FilterError);
+    }
+    expect(requestBodies).toHaveLength(requestCountBeforeInvalidFilters);
+
+    expect(() =>
+      definePlugin({
+        routes: {
+          awards: {
+            search: { filters: { mystery: { filterType: "unknown" } } },
+          },
+        },
+      } as never)
+    ).toThrow(FilterError);
+    expect(() =>
+      definePlugin({
+        routes: {
+          awards: {
+            list: { filters: { recipientRegion: { filterType: "stringArray" } } },
+          },
+        },
+      } as never)
+    ).toThrow(FilterError);
+
+    const collidingRoutes = {
+      awards: {
+        search: { filters: { status: { filterType: "stringArray" } } },
+      },
+    } as const;
+    expect(
+      () =>
+        new Awards(
+          new Client({ baseUrl: "https://api.example.org" }),
+          AwardBaseSchema,
+          collidingRoutes
+        )
+    ).toThrow(FilterError);
   });
 
   it("definePlugin throws FilterError on a bad route at definition time (runtime backstop)", () => {

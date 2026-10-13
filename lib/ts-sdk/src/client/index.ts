@@ -22,6 +22,13 @@ export {
   type ListOptions,
   type SearchOptions,
 } from "./resources/opportunities.js";
+export {
+  Awards,
+  type AwardCustomFilterBag,
+  type AwardGetOptions,
+  type AwardListOptions,
+  type AwardSearchOptions,
+} from "./resources/awards.js";
 export type { BuiltClient } from "./resources/builder.js";
 export { Resource } from "./resources/base.js";
 export { RESOURCE_REGISTRY } from "./resources/registry.js";

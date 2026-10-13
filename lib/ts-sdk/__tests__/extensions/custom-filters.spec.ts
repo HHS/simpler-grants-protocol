@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import type { AwardCustomFilterBag, CustomFilterBag, SearchOptions } from "@/client";
 import { classifyFilters, F, validateRoutes } from "@/extensions";
 import { validateFilterCall } from "@/extensions/custom-filters";
 import { FilterError } from "@/extensions";
 import type { PluginRoutes } from "@/extensions";
 import { OppFiltersSchema } from "@/schemas/zod/models";
 import { DefaultFilterSchema } from "@/schemas/zod/filters";
+import type { AwdFilters, OppFilters } from "@/types";
 
 // ############################################################################
 // File-scope fixtures
@@ -323,6 +325,101 @@ describe("F helpers", () => {
 // ############################################################################
 
 describe("classifyFilters", () => {
+  it("keeps route validation, defaults, and registered filter types isolated by resource", () => {
+    const routes = {
+      opportunities: {
+        search: {
+          filters: {
+            shared: { filterType: "stringArray" },
+          },
+        },
+      },
+      awards: {
+        search: {
+          filters: {
+            shared: { filterType: "numberComparison" },
+          },
+        },
+      },
+    } as const satisfies PluginRoutes;
+
+    const opportunityFilters = {
+      status: F.in(["open"]),
+      shared: F.in(["HHS"]),
+      awardDateRange: F.between("2026-01-01", "2026-12-31"),
+    } satisfies CustomFilterBag<typeof routes>;
+    const awardFilters = {
+      status: F.in(["awarded"]),
+      shared: F.gte(100),
+      closeDateRange: F.between("2026-01-01", "2026-12-31"),
+    } satisfies AwardCustomFilterBag<typeof routes>;
+    const opportunityOptions = {
+      statuses: ["open"],
+    } satisfies SearchOptions;
+
+    expect(() => validateRoutes(routes)).not.toThrow();
+    expect(() =>
+      validateRoutes({
+        opportunities: {
+          search: { filters: { awardDateRange: { filterType: "dateRange" } } },
+        },
+        awards: {
+          search: { filters: { closeDateRange: { filterType: "dateRange" } } },
+        },
+      })
+    ).not.toThrow();
+    expect(() =>
+      validateRoutes({
+        opportunities: {
+          search: { filters: { closeDateRange: { filterType: "dateRange" } } },
+        },
+      })
+    ).toThrow(FilterError);
+    expect(() =>
+      validateRoutes({
+        awards: {
+          search: { filters: { awardDateRange: { filterType: "dateRange" } } },
+        },
+      })
+    ).toThrow(FilterError);
+
+    const classifiedOpportunities: OppFilters = classifyFilters(
+      routes,
+      "opportunities",
+      "search",
+      opportunityFilters
+    );
+    const classifiedAwards: AwdFilters = classifyFilters(routes, "awards", "search", awardFilters);
+
+    expect(classifiedOpportunities).toEqual({
+      status: { operator: "in", value: ["open"] },
+      customFilters: {
+        shared: { operator: "in", value: ["HHS"] },
+        awardDateRange: {
+          operator: "between",
+          value: { min: "2026-01-01", max: "2026-12-31" },
+        },
+      },
+    });
+    expect(classifiedAwards).toEqual({
+      status: { operator: "in", value: ["awarded"] },
+      customFilters: {
+        shared: { operator: "gte", value: 100 },
+        closeDateRange: {
+          operator: "between",
+          value: { min: "2026-01-01", max: "2026-12-31" },
+        },
+      },
+    });
+    expect(opportunityOptions.statuses).toEqual(["open"]);
+    expect(() =>
+      classifyFilters(routes, "opportunities", "search", { shared: F.gte(100) })
+    ).toThrow(FilterError);
+    expect(() => classifyFilters(routes, "awards", "search", { shared: F.in(["HHS"]) })).toThrow(
+      FilterError
+    );
+  });
+
   it("classifies defaults top-level and registered/ad-hoc under customFilters", () => {
     const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
       status: { operator: "in", value: ["open"] },
