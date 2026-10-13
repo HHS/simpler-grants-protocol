@@ -5,10 +5,10 @@
  */
 
 import { z } from "zod";
-import { AwardBaseSchema, AwdFiltersSchema, AwdSortingSchema } from "./awards";
-import { SuccessSchema } from "./responses";
-import { SortOrderEnum } from "./sorting";
-import { UuidSchema } from "./types";
+import { AwardBaseSchema, AwdFiltersSchema, AwdSortingSchema } from "./awards.js";
+import { SuccessSchema } from "./responses.js";
+import { SortOrderEnum } from "./sorting.js";
+import { UuidSchema } from "./types.js";
 
 const INT32_MAX = 2_147_483_647;
 

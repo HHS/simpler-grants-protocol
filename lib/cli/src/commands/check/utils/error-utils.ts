@@ -121,13 +121,25 @@ export class ErrorFormatter {
 
   /** Format all errors in the collection */
   format(): string {
-    const errorCount = this.errors.getErrorCount();
-    if (errorCount === 0) {
+    const findings = this.errors.getAllErrors();
+    if (findings.length === 0) {
       return "No errors found";
     }
 
+    // A finding counts as a warning only when it says so. Findings that carry
+    // no level, such as the route conflicts from `checkMatchingRoutes`, are
+    // counted as errors, matching the rule `checkSpec` uses to decide whether
+    // a run fails.
+    const warningCount = this.errors.filterByLevel("WARNING").getErrorCount();
+    const errorCount = findings.length - warningCount;
+
     const sections: string[] = [];
-    sections.push(`${errorCount} errors`);
+    // With no warnings the summary keeps its original wording, so a run that
+    // reports only errors reads exactly as it did before warnings became
+    // non-blocking. The plural is left uninflected to match that wording.
+    sections.push(
+      warningCount > 0 ? `${errorCount} errors, ${warningCount} warnings` : `${errorCount} errors`
+    );
     sections.push("=================================");
 
     // Format missing routes
@@ -135,7 +147,7 @@ export class ErrorFormatter {
     if (missingRoutes.getErrorCount() > 0) {
       sections.push("Routes missing");
       for (const error of missingRoutes) {
-        sections.push(`  ${error.endpoint}`);
+        sections.push(`  ${this.formatEndpoint(error)}`);
       }
     }
 
@@ -144,7 +156,7 @@ export class ErrorFormatter {
     if (extraRoutes.getErrorCount() > 0) {
       sections.push("Extra routes");
       for (const error of extraRoutes) {
-        sections.push(`  ${error.endpoint}`);
+        sections.push(`  ${this.formatEndpoint(error)}`);
       }
     }
 
@@ -191,6 +203,16 @@ export class ErrorFormatter {
     }
 
     return sections.join("\n");
+  }
+
+  /**
+   * An entry's endpoint, marked when the finding only warns.
+   *
+   * Route conflicts are deliberately not marked: their endpoint line is a
+   * group header covering several findings, which need not share a level.
+   */
+  private formatEndpoint(error: ComplianceError): string {
+    return error.level === "WARNING" ? `${error.endpoint} (warning)` : `${error.endpoint}`;
   }
 
   private formatSubTypeTitle(subType: string): string {

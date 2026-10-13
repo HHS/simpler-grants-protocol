@@ -20,6 +20,14 @@ The CommonGrants protocol TypeScript SDK.
 npm install @common-grants/sdk
 ```
 
+This SDK is published as native ECMAScript modules (ESM) and requires Node.js 22 or later. In
+TypeScript and ESM JavaScript projects, use the documented `import` statements without changing
+their public package paths.
+
+CommonJS `require()` calls are no longer supported. CommonJS consumers must either migrate their
+package to ESM (for example, by setting `"type": "module"` in `package.json`) or load the SDK with
+the asynchronous `import()` function.
+
 ## Usage
 
 ### Quick start

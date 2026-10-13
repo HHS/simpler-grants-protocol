@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   IdentifierStatusEnum,
   IdentifierSchema,
@@ -7,7 +7,7 @@ import {
   IdentifierCollectionSchema,
 } from "@/schemas";
 import * as Schemas from "@/schemas";
-import type { BoundaryCase } from "../../utils/fuzz-test";
+import type { BoundaryCase } from "../../utils/fuzz-test.js";
 
 const VALID_UUID = "01912a8b-7c3d-7890-abcd-ef1234567890";
 

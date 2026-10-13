@@ -4,10 +4,10 @@
  * resource = one entry here plus its typed slots (grep `resource-slot`).
  */
 
-import { Opportunities } from "./opportunities";
-import { Awards } from "./awards";
-import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types";
-import { AwardBaseSchema } from "../../schemas";
+import { Opportunities } from "./opportunities.js";
+import { Awards } from "./awards.js";
+import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types.js";
+import { AwardBaseSchema } from "../../schemas/index.js";
 
 type ResourceRegistryEntry =
   | { resourceClass: typeof Opportunities; schemaName: ExtensibleSchemaName }

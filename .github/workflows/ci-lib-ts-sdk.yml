@@ -6,6 +6,8 @@ on:
     paths:
       - lib/ts-sdk/**
       - lib/core/**
+      - pnpm-workspace.yaml
+      - pnpm-lock.yaml
       - .github/workflows/ci-lib-ts-sdk.yml
 
 defaults:
@@ -31,11 +33,42 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build library
-        run: pnpm --filter @common-grants/sdk run build
+      - name: Run SDK CI
+        run: pnpm --filter @common-grants/sdk run ci
 
-      - name: Run checks
-        run: pnpm --filter @common-grants/sdk run checks
+  # Verify the published artifact on the declared runtime minimum. Packing,
+  # installing, and type-checking run on the toolchain Node from .nvmrc, whose
+  # engines may require a newer patch; only the native runtime probe runs on
+  # Node 22.0.0.
+  verify-runtime:
+    runs-on: ubuntu-latest
 
-      - name: Run tests
-        run: pnpm --filter @common-grants/sdk run test:coverage
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and stage the installed package
+        run: node scripts/smoke-package.mjs --prepare
+        env:
+          SDK_CONSUMER_DIR: ${{ runner.temp }}/sdk-consumer
+
+      - name: Install minimum Node.js runtime
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.0.0"
+
+      - name: Probe installed artifact runtime
+        run: node scripts/smoke-package.mjs --probe
+        env:
+          SDK_CONSUMER_DIR: ${{ runner.temp }}/sdk-consumer

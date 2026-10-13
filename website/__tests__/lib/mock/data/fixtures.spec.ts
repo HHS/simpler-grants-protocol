@@ -232,6 +232,33 @@ describe("shapeOpportunityForVersion", () => {
     expect(shaped.length).toBe(OPPORTUNITY_FIXTURES.length);
   });
 
+  it("keeps each nested competition's opportunityId through v0.4", () => {
+    const shaped = shapeOpportunityForVersion(detailRecord, "0.4.0", "detail");
+
+    for (const preview of shaped.competitions ?? []) {
+      expect(preview.opportunityId).toBe(detailRecord.id);
+      expect(preview).not.toHaveProperty("opportunity");
+    }
+  });
+
+  it("replaces each nested competition's opportunityId with a reference to its opportunity at v0.5", () => {
+    const shaped = shapeOpportunityForVersion(detailRecord, "0.5.0", "detail");
+
+    expect(shaped.competitions?.length).toBeGreaterThan(0);
+    for (const preview of shaped.competitions ?? []) {
+      expect(preview).not.toHaveProperty("opportunityId");
+      expect(preview.opportunity).toEqual({
+        id: detailRecord.id,
+        title: detailRecord.title,
+        identifiers: detailRecord.identifiers,
+      });
+      expect(Object.keys(preview)[1]).toBe("opportunity");
+    }
+    for (const preview of detailRecord.competitions ?? []) {
+      expect(preview).not.toHaveProperty("opportunity");
+    }
+  });
+
   it("shapes 0.4.0 identically to 0.3.0 for both list and detail variants", () => {
     expect(shapeOpportunityForVersion(detailRecord, "0.4.0", "list")).toEqual(
       shapeOpportunityForVersion(detailRecord, "0.3.0", "list"),

@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - website/**
+      - lib/core/**
       - .github/workflows/ci-website-preview.yml
       - .github/scripts/upload-worker-preview.sh
       - pnpm-lock.yaml

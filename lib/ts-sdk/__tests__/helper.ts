@@ -4,7 +4,7 @@ import {
   checkZodMatchesJsonSchema,
   type BoundaryCase,
   type FuzzTestResult,
-} from "./utils/fuzz-test";
+} from "./utils/fuzz-test.js";
 
 /**
  * Validates that a Zod schema matches a JSON schema and throws on failure.

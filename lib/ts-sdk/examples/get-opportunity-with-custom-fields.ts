@@ -7,10 +7,10 @@
  */
 
 import { z } from "zod";
-import { OpportunityBaseSchema, OkSchema } from "../src/schemas";
-import { CustomFieldType } from "../src/constants";
-import { withCustomFields } from "../src/extensions";
-import { Client, Auth } from "../src/client";
+import { OpportunityBaseSchema, OkSchema } from "../src/schemas/index.js";
+import { CustomFieldType } from "../src/constants.js";
+import { withCustomFields } from "../src/extensions/index.js";
+import { Client, Auth } from "../src/client/index.js";
 
 // Extended schema with one typed custom field (e.g. from your API)
 const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {

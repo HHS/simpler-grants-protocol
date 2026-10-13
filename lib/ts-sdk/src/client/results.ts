@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import { Filtered, OppFilters, Paginated } from "../types";
+import { Filtered, OppFilters, Paginated } from "../types.js";
 
 /**
  * One response row that failed schema validation, with its position and raw payload.

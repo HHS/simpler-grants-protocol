@@ -5,9 +5,9 @@
  * an AJV instance that can be used to validate JSON inputs against the schemas.
  */
 
-import Ajv2020 from "ajv/dist/2020";
+import { Ajv2020 } from "ajv/dist/2020.js";
 import type { ValidateFunction } from "ajv";
-import addFormats from "ajv-formats";
+import addFormatsModule, { type FormatsPlugin } from "ajv-formats";
 import * as yaml from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
@@ -20,10 +20,11 @@ import * as path from "path";
  * reports.
  */
 const schemaIdsByInstance = new WeakMap<Ajv2020, string[]>();
+const addFormats = addFormatsModule as unknown as FormatsPlugin;
 
 /** The path to the TypeSpec-generated schema bundle the harness compares against. */
 const DEFAULT_SCHEMAS_PATH = path.resolve(
-  __dirname,
+  import.meta.dirname,
   "../../tsp-output/@typespec/json-schema/schemas.yaml"
 );
 

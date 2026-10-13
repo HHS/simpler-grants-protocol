@@ -3,24 +3,24 @@
  */
 
 import { z } from "zod";
-import type { AwardBase, AwdFilters, AwdSearchRequest } from "../../types";
+import type { AwardBase, AwdFilters, AwdSearchRequest } from "../../types.js";
 import {
   AwardBaseSchema,
   AwdFiltersSchema,
   FilteredSchema,
   OkSchema,
   PaginatedSchema,
-} from "../../schemas";
-import type { Client, FetchManyOptions } from "../client";
+} from "../../schemas/index.js";
+import type { Client, FetchManyOptions } from "../client.js";
 import {
   classifyFilters,
   type CustomFilterInput,
   validateRoutes,
-} from "../../extensions/custom-filters";
-import type { CustomFilterType, PluginRoutes } from "../../extensions/types";
-import { parseBatch } from "../results";
-import type { ListResult, OnParseError, SearchResult } from "../results";
-import { Resource } from "./base";
+} from "../../extensions/custom-filters.js";
+import type { CustomFilterType, PluginRoutes } from "../../extensions/types.js";
+import { parseBatch } from "../results.js";
+import type { ListResult, OnParseError, SearchResult } from "../results.js";
+import { Resource } from "./base.js";
 
 /** Any schema whose parsed output satisfies the base award contract. */
 type AwardSchema = z.ZodType<AwardBase, unknown>;

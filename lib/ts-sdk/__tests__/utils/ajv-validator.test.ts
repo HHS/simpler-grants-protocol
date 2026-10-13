@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import Ajv2020 from "ajv/dist/2020";
-import addFormats from "ajv-formats";
+import { Ajv2020 } from "ajv/dist/2020.js";
+import addFormatsModule, { type FormatsPlugin } from "ajv-formats";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -14,7 +14,9 @@ import {
   createAjvFromDefs,
   createAjvValidator,
   validate,
-} from "./ajv-validator";
+} from "./ajv-validator.js";
+
+const addFormats = addFormatsModule as unknown as FormatsPlugin;
 
 describe("AJV validator utility", () => {
   // #########################################################

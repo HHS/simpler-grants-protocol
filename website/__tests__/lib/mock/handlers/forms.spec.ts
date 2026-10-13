@@ -209,3 +209,61 @@ describe("GET /v{version}/common-grants/forms/{formId} (detail)", () => {
     expect(body.errors.some((error) => error.field === "formId")).toBe(true);
   });
 });
+
+describe("forms per protocol version", () => {
+  const OLDER: Version[] = ["0.2.0", "0.3.0", "0.4.0"];
+  const pristine = structuredClone(FORM_FIXTURES);
+
+  async function listAt(version: Version) {
+    const response = listForms(
+      new Request(`https://docs.example/api/v${version}/common-grants/forms`),
+      version,
+    );
+    expect(response.status).toBe(200);
+    return ((await response.json()) as { items: Record<string, unknown>[] })
+      .items;
+  }
+
+  async function detailAt(version: Version) {
+    const response = getForm(CANONICAL_FORM_ID, version);
+    expect(response.status).toBe(200);
+    return ((await response.json()) as { data: Record<string, unknown> }).data;
+  }
+
+  it.each(OLDER)("serves named forms at v%s", async (version) => {
+    for (const form of [...(await listAt(version)), await detailAt(version)]) {
+      expect(typeof form.name).toBe("string");
+      expect(form).not.toHaveProperty("title");
+    }
+  });
+
+  it("serves each v0.5 form its name as title, in name's place", async () => {
+    const canonical = getFormById(CANONICAL_FORM_ID)!;
+    const detail = await detailAt("0.5.0");
+
+    const { name, ...rest } = structuredClone(canonical);
+    expect(detail).toEqual({ ...rest, title: name });
+    expect(Object.keys(detail)[1]).toBe("title");
+
+    const items = await listAt("0.5.0");
+    expect(items).toHaveLength(FORM_FIXTURES.length);
+    for (const item of items) {
+      const source = getFormById(item.id as string)!;
+      expect(item.title).toBe(source.name);
+      expect(item).not.toHaveProperty("name");
+      // Opaque content passes through, `name` keys and all.
+      expect(item.jsonSchema).toEqual(source.jsonSchema);
+      expect(item.mappingToCommonGrants).toEqual(source.mappingToCommonGrants);
+    }
+  });
+
+  it("leaves the fixtures and each version's output intact across interleaved requests", async () => {
+    const older = await listAt("0.4.0");
+    const latest = await listAt("0.5.0");
+
+    expect(await detailAt("0.4.0")).toHaveProperty("name");
+    expect(await listAt("0.4.0")).toEqual(older);
+    expect(await listAt("0.5.0")).toEqual(latest);
+    expect(FORM_FIXTURES).toEqual(pristine);
+  });
+});

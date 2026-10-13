@@ -18,6 +18,7 @@ import {
   CANONICAL_ORGANIZATION_ID,
   CANONICAL_ORG_REVISION_ID,
   DOCUMENTED_ORGANIZATION_ID,
+  RIVERSIDE_CHC_ORG_ID,
   getOrganizationById,
   revisionsForOrg,
 } from "@/lib/mock/data/organizations";
@@ -91,14 +92,16 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
 
   // `?registry=&id=` is the spec's documented external-identifier lookup. The
   // expected record comes from the fixture set rather than being hardcoded.
+  // The EIN is one only a single fixture carries: the canonical record's is
+  // shared with its copy under the documented example id.
   it("narrows to exactly the organization carrying the given registry + id pair", async () => {
     const expected = ORGANIZATION_FIXTURES.find(
-      (org) => org.identifiers?.["org:us:ein"]?.id === "123456789",
+      (org) => org.identifiers?.["org:us:ein"]?.id === "582345679",
     );
     expect(expected).toBeDefined();
 
     const response = listOrganizations(
-      new Request(orgsUrl("?registry=org:us:ein&id=123456789")),
+      new Request(orgsUrl("?registry=org:us:ein&id=582345679")),
       VERSION,
     );
 
@@ -182,6 +185,28 @@ describe("GET /v{version}/common-grants/orgs/{orgId} (read)", () => {
     const body = (await response.json()) as { data: { id: string } };
 
     expect(body.data.id).toBe(CANONICAL_ORGANIZATION_ID);
+  });
+
+  it("returns the canonical record under the id the OrganizationBase example publishes", async () => {
+    const response = getOrganization(
+      DOCUMENTED_ORGANIZATION_ID,
+      new Request(orgsUrl(`/${DOCUMENTED_ORGANIZATION_ID}`)),
+      VERSION,
+    );
+
+    expect(response.status).toBe(200);
+
+    const body = (await response.json()) as { data: { id: string } };
+    const canonical = (await getOrganization(
+      CANONICAL_ORGANIZATION_ID,
+      new Request(orgsUrl(`/${CANONICAL_ORGANIZATION_ID}`)),
+      VERSION,
+    ).json()) as { data: { id: string } };
+
+    expect(body.data).toEqual({
+      ...canonical.data,
+      id: DOCUMENTED_ORGANIZATION_ID,
+    });
   });
 
   it("returns 400 with a field-level validation error for a malformed (non-UUID) orgId", async () => {
@@ -385,11 +410,11 @@ describe("PATCH /v{version}/common-grants/orgs/{orgId} (update)", () => {
     });
 
     it("replaces an array wholesale rather than merging it index by index", async () => {
-      const documented = getOrganizationById(DOCUMENTED_ORGANIZATION_ID)!;
+      const riverside = getOrganizationById(RIVERSIDE_CHC_ORG_ID)!;
       // The fixture carries two entries, one of them archived.
-      expect(documented.identifiers!["org:us:ein"]!.allIds).toHaveLength(2);
+      expect(riverside.identifiers!["org:us:ein"]!.allIds).toHaveLength(2);
 
-      const snapshot = await snapshotAfter(DOCUMENTED_ORGANIZATION_ID, {
+      const snapshot = await snapshotAfter(RIVERSIDE_CHC_ORG_ID, {
         identifiers: {
           "org:us:ein": { allIds: [{ id: "999888777", status: "active" }] },
         },
@@ -407,7 +432,7 @@ describe("PATCH /v{version}/common-grants/orgs/{orgId} (update)", () => {
     });
 
     it("adds a nested key that the target does not have", async () => {
-      const snapshot = await snapshotAfter(DOCUMENTED_ORGANIZATION_ID, {
+      const snapshot = await snapshotAfter(RIVERSIDE_CHC_ORG_ID, {
         addresses: { primary: { street2: "Building C" } },
       });
 
@@ -632,7 +657,7 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view ch
   });
 
   it("returns 404 for a changeId that belongs to a different organization", () => {
-    const foreignChangeId = revisionsForOrg(DOCUMENTED_ORGANIZATION_ID)[0]!.id;
+    const foreignChangeId = revisionsForOrg(RIVERSIDE_CHC_ORG_ID)[0]!.id;
 
     const response = getOrgChange(
       CANONICAL_ORGANIZATION_ID,

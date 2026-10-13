@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth, Opportunities, BatchParseError } from "../../src/client";
-import type { CustomFilterBag } from "../../src/client";
-import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F, FilterError, validateRoutes } from "../../src/extensions";
-import type { PluginRoutes } from "../../src/extensions";
-import { CustomFieldType } from "../../src/constants";
+import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch.js";
+import { Client, Auth, Opportunities, BatchParseError } from "../../src/client/index.js";
+import type { CustomFilterBag } from "../../src/client/index.js";
+import { OpportunityBaseSchema } from "../../src/schemas/index.js";
+import { withCustomFields, F, FilterError, validateRoutes } from "../../src/extensions/index.js";
+import type { PluginRoutes } from "../../src/extensions/index.js";
+import { CustomFieldType } from "../../src/constants.js";
 
 // =============================================================================
 // Custom schema for testing withCustomFields support

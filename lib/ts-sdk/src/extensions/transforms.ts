@@ -10,8 +10,8 @@
 
 import { z } from "zod";
 
-import { TransformError, type Handler, type TransformResult } from "./types";
-import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "../utils/transformation";
+import { TransformError, type Handler, type TransformResult } from "./types.js";
+import { DEFAULT_HANDLERS, HandlerError, transformFromMapping } from "../utils/transformation.js";
 
 // ############################################################################
 // Internal - mapping structure validation

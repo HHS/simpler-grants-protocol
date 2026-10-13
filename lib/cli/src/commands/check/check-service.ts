@@ -34,14 +34,31 @@ export class DefaultCheckService {
 
     // Validate the specs
     const errors = validateSpecs(baseDoc, implDoc);
+    const findings = errors.getAllErrors();
 
-    // If there are errors, throw an error
-    if (errors.getAllErrors().length > 0) {
+    // A finding blocks the run unless it is explicitly a warning. Testing for
+    // the absence of WARNING rather than the presence of ERROR keeps findings
+    // that carry no level, such as the route conflicts from
+    // `checkMatchingRoutes`, on the blocking side.
+    const blocking = findings.filter(finding => finding.level !== "WARNING");
+    const warningCount = findings.length - blocking.length;
+
+    if (blocking.length > 0) {
       const message = new ErrorFormatter(errors).format();
       throw new Error(`Spec validation failed:\n${message}`);
-    } else {
-      console.log("Spec is valid and compliant with base spec");
     }
+
+    // An optional route MAY be omitted (ADR 0019), so a missing one is
+    // reported and the run still succeeds.
+    if (warningCount > 0) {
+      console.warn(new ErrorFormatter(errors).format());
+      // Uninflected to agree with the summary line of the warning block printed
+      // just above, which keeps the package's existing `N errors` wording.
+      console.log(`Spec is compliant with base spec, with ${warningCount} warnings`);
+      return;
+    }
+
+    console.log("Spec is valid and compliant with base spec");
   }
 }
 

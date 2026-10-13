@@ -4,8 +4,8 @@
  */
 
 import { z } from "zod";
-import type { Client } from "../client";
-import type { PluginRoutes } from "../../extensions/types";
+import type { Client } from "../client.js";
+import type { PluginRoutes } from "../../extensions/types.js";
 
 export abstract class Resource<TItem> {
   constructor(

@@ -4,8 +4,8 @@
  * Run with: pnpm example:search <searchTerm>
  */
 
-import { Client, Auth } from "../src/client";
-import { OppStatusOptions } from "../src/constants";
+import { Client, Auth } from "../src/client/index.js";
+import { OppStatusOptions } from "../src/constants.js";
 
 const searchTerm = process.argv[2];
 

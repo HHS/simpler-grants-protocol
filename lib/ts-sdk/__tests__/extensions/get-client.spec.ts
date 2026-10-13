@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer } from "../utils/mock-fetch";
-import { definePlugin, F, FilterError } from "../../src/extensions";
-import { Auth, Awards, Client } from "../../src/client";
+import { http, HttpResponse, setupServer } from "../utils/mock-fetch.js";
+import { definePlugin, F, FilterError } from "../../src/extensions/index.js";
+import { Auth, Awards, Client } from "../../src/client/index.js";
 import type {
   AwardCustomFilterBag,
   AwardSearchOptions,
   CustomFilterBag,
   ListResult,
-} from "../../src/client";
-import { AwardBaseSchema, OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields } from "../../src/extensions";
+} from "../../src/client/index.js";
+import { AwardBaseSchema, OpportunityBaseSchema } from "../../src/schemas/index.js";
+import { withCustomFields } from "../../src/extensions/index.js";
 
 const server = setupServer();
 

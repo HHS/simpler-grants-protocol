@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import { UuidSchema } from "./types";
+import { UuidSchema } from "./types.js";
 
 // ############################################################################
 // Identifier status

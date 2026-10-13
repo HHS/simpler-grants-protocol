@@ -10,7 +10,7 @@ import {
   OppDefaultFiltersSchema,
   OppFiltersSchema,
 } from "@/schemas";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 
 // ############################################################################
 // OppStatusOptionsEnum

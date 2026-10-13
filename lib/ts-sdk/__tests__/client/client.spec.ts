@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth, BatchParseError } from "../../src/client";
+import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch.js";
+import { Client, Auth, BatchParseError } from "../../src/client/index.js";
 
 // =============================================================================
 // Mock data helpers

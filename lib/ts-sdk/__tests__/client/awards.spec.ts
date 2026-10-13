@@ -9,11 +9,11 @@ import {
   type AwardListOptions,
   type AwardSearchOptions,
   type SearchResult,
-} from "../../src/client";
-import { classifyFilters, definePlugin, F, FilterError } from "../../src/extensions";
-import { AwardBaseSchema, AwdDefaultFiltersSchema } from "../../src/schemas";
-import type { Award, AwdFilters } from "../../src/types";
-import { createPaginatedHandler, http, HttpResponse, setupServer } from "../utils/mock-fetch";
+} from "../../src/client/index.js";
+import { classifyFilters, definePlugin, F, FilterError } from "../../src/extensions/index.js";
+import { AwardBaseSchema, AwdDefaultFiltersSchema } from "../../src/schemas/index.js";
+import type { Award, AwdFilters } from "../../src/types.js";
+import { createPaginatedHandler, http, HttpResponse, setupServer } from "../utils/mock-fetch.js";
 
 const PLAIN_ID = "award/2026?revision=1#final";
 const PLUGIN_ID = "partner award/%complete";
