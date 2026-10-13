@@ -321,15 +321,15 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
       // `allIds` carries the full registry history, archived values included;
       // the scalar `ein` and `id` stay the current value.
       "org:us:ein": {
-        ...ein("234567890"),
+        ...ein("582345679"),
         allIds: [
-          { id: "234567890", status: "active" },
+          { id: "582345679", status: "active" },
           { id: "231456789", status: "archived" },
         ],
       },
       "org:us:uei": uei("BC1234567890"),
     },
-    ein: "234567890",
+    ein: "582345679",
     uei: "BC1234567890",
     addresses: {
       primary: usAddress("1200 Riverside Dr", "Riverside", "CA", "92501"),
