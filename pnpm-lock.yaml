@@ -67,8 +67,8 @@ catalogs:
       specifier: ^4.1.11
       version: 4.1.11
     zod:
-      specifier: ^4.4.3
-      version: 4.4.3
+      specifier: ^4.5.0
+      version: 4.6.7
   website:
     vitest:
       specifier: ^4.1.11
@@ -153,7 +153,7 @@ importers:
         version: 5.0.1(express@4.22.3(supports-color@10.2.2))
       zod:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 4.6.7
     devDependencies:
       '@common-grants/core':
         specifier: workspace:*
@@ -283,7 +283,7 @@ importers:
     dependencies:
       zod:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 4.6.7
     devDependencies:
       '@common-grants/cg-grants-gov':
         specifier: ^0.3.1
@@ -431,7 +431,7 @@ importers:
         version: link:../lib/changelog-emitter
       zod:
         specifier: 'catalog:'
-        version: 4.4.3
+        version: 4.6.7
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10
@@ -5467,9 +5467,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
-
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
@@ -5707,7 +5704,7 @@ snapshots:
     dependencies:
       sitemap: 9.0.1
       stream-replace-string: 2.0.0
-      zod: 4.4.3
+      zod: 4.6.7
 
   '@astrojs/starlight@0.42.6(astro@7.3.8(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
@@ -6879,14 +6876,14 @@ snapshots:
       '@scalar/helpers': 0.11.3
       nanoid: 5.1.16
       type-fest: 5.10.0
-      zod: 4.4.3
+      zod: 4.6.7
 
   '@scalar/types@0.23.1':
     dependencies:
       '@scalar/helpers': 0.16.2
       nanoid: 5.1.16
       type-fest: 5.10.0
-      zod: 4.4.3
+      zod: 4.6.7
 
   '@scarf/scarf@1.4.0': {}
 
@@ -10646,8 +10643,6 @@ snapshots:
       youch-core: 0.3.3
 
   zod@3.25.76: {}
-
-  zod@4.4.3: {}
 
   zod@4.6.7: {}
 
