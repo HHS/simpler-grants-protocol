@@ -96,6 +96,7 @@ Next, use these updated routes to define an API service, and pick the version of
 
 import "@typespec/http";
 import "@typespec/versioning";
+import "@common-grants/core"; // Provides the `CommonGrants.Versions` enum used below
 
 import "./routes.tsp"; // Import the routes from above
 
