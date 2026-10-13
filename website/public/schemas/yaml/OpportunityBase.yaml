@@ -10,6 +10,9 @@ properties:
     examples:
       - Small business grant program
     description: Title or name of the funding opportunity
+  identifiers:
+    $ref: OppIds.yaml
+    description: System and registry-specific identifiers for the opportunity
   status:
     $ref: OppStatus.yaml
     description: Status of the opportunity
@@ -21,6 +24,19 @@ properties:
   funding:
     $ref: OppFunding.yaml
     description: Details about the funding available
+  funders:
+    $ref: OrgRefCollection.yaml
+    examples:
+      - primary:
+          id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
+          name: Health Resources and Services Administration
+          identifiers:
+            otherIds:
+              org:grants.gov:agency:
+                registry:
+                  code: org:grants.gov:agency
+                id: HRSA
+    description: Organization(s) offering the funding for this opportunity
   keyDates:
     $ref: OppTimeline.yaml
     description: Key dates for the opportunity, such as when the application opens and closes

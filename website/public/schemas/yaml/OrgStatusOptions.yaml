@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgStatusOptions.yaml
+type: string
+enum:
+  - active
+  - inactive
+  - custom
+description: |-
+  The set of values accepted for organization status:
+  - `active`: The organization exists and operates
+  - `inactive`: The organization has dissolved or ceased operating; loss of tax-exempt status alone does not make an organization inactive
+  - `custom`: A status not covered by the other options, described in `customValue`

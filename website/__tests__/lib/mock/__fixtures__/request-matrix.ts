@@ -48,8 +48,18 @@ const REPRESENTATIVE_SEARCH = JSON.stringify({
   pagination: { page: 1, pageSize: 5 },
 });
 
-/** The three endpoints across all four versions. */
-const versionedCases: MatrixCase[] = SUPPORTED_VERSIONS.flatMap((version) => [
+/**
+ * Versions the golden corpus covers. `capture-golden.ts` replays the matrix
+ * against the deployed 3A Worker, so a protocol version this repo has added but
+ * that Worker has not been redeployed with cannot be captured. Drop the filter
+ * once the Worker serves every entry in `SUPPORTED_VERSIONS` again.
+ */
+const GOLDEN_VERSIONS = SUPPORTED_VERSIONS.filter(
+  (version) => version !== "0.5.0",
+);
+
+/** The three endpoints across every version the golden corpus covers. */
+const versionedCases: MatrixCase[] = GOLDEN_VERSIONS.flatMap((version) => [
   { name: `list-v${version}`, method: "GET", path: opportunities(version) },
   {
     name: `detail-canonical-v${version}`,

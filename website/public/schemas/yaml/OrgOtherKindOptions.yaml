@@ -1,0 +1,6 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OrgOtherKindOptions.yaml
+type: string
+enum:
+  - custom
+description: Other relationships define no standard subtypes, so a stated subtype is `custom`.

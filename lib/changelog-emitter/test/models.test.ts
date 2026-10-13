@@ -107,6 +107,177 @@ describe("Models - Log @added()", () => {
     });
   });
 
+  it("should log the model's own @added when it `is` a template added earlier", async () => {
+    // The `is` copy carries the template's @added alongside the model's own,
+    // and the two can name different versions. The model's own decorator says
+    // when the model was added; the template's says when the template was, so
+    // only the model's own version belongs in its log.
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+      }
+
+      @added(Versions.v1)
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      @added(Versions.v2)
+      model ${USER_MODEL} is Base<string>;
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      [USER_MODEL]: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+    });
+  });
+
+  it("should fall back to the template's @added when the model has none of its own", async () => {
+    // With no @added written on the model, the inherited one is all there is:
+    // the model exists from the version the template does.
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+      }
+
+      @added(Versions.v2)
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      model ${USER_MODEL} is Base<string>;
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      [USER_MODEL]: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+    });
+  });
+
+  it("should take the source model's @added when the model has none of its own, through a chain of `is`", async () => {
+    // Each `is` copies the whole decorator list, so a model at the end of a
+    // chain carries every ancestor's @added. With none of its own, it exists
+    // from whenever the model it `is` does, not from the oldest ancestor.
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+      }
+
+      @added(Versions.v1)
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      @added(Versions.v2)
+      model Middle is Base<string>;
+
+      model ${USER_MODEL} is Middle;
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      Middle: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, "Middle")],
+      },
+      [USER_MODEL]: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+    });
+  });
+
+  it("should tell an augment decorator on the model from one on its template", async () => {
+    // `@@added` has no owning declaration node, so it is attributed by what it
+    // targets: on the model it is the model's own, on the template it is
+    // inherited like an inline decorator would be.
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+      }
+
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      model ${USER_MODEL} is Base<string>;
+
+      model ${CAR_MODEL} is Base<string>;
+
+      @@added(Base, Versions.v1);
+      @@added(${CAR_MODEL}, Versions.v2);
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+      },
+      [CAR_MODEL]: {
+        [V2_VERSION]: [Log.added(MODEL_TYPE, CAR_MODEL)],
+      },
+    });
+  });
+
+  it("should log the model's own @removed over the one inherited from its template", async () => {
+    const code = `
+    @versioned(Versions)
+    namespace Service {
+      enum Versions {
+        v1,
+        v2,
+        v3,
+      }
+
+      @added(Versions.v1)
+      @removed(Versions.v3)
+      model Base<Id extends string = string> {
+        id?: Id;
+      }
+
+      @added(Versions.v1)
+      @removed(Versions.v2)
+      model ${USER_MODEL} is Base<string>;
+    }
+    `;
+
+    await emitAndValidate(code, {
+      Base: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, "Base")],
+      },
+      [USER_MODEL]: {
+        [V1_VERSION]: [Log.added(MODEL_TYPE, USER_MODEL)],
+        [V2_VERSION]: [Log.removed(MODEL_TYPE, USER_MODEL)],
+      },
+    });
+  });
+
   it("should exclude versions that have no changes", async () => {
     const code = `
       @versioned(Versions)

@@ -118,8 +118,8 @@ describe("assertMockServesVersion", () => {
   // docs page whose every Execute answers 404.
   it("throws for a spec version the router does not serve", () => {
     expect(() =>
-      assertMockServesVersion("0.5.0", "openapi.0.5.0.yaml"),
-    ).toThrow(/openapi\.0\.5\.0\.yaml.*does not serve/s);
+      assertMockServesVersion("0.6.0", "openapi.0.6.0.yaml"),
+    ).toThrow(/openapi\.0\.6\.0\.yaml.*does not serve/s);
   });
 });
 
