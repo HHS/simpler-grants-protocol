@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer } from "../utils/mock-fetch";
-import { definePlugin, F, FilterError } from "../../src/extensions";
-import { Auth } from "../../src/client";
-import type { CustomFilterBag, ListResult } from "../../src/client";
-import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields } from "../../src/extensions";
+import { http, HttpResponse, setupServer } from "../utils/mock-fetch.js";
+import { definePlugin, F, FilterError } from "../../src/extensions/index.js";
+import { Auth } from "../../src/client/index.js";
+import type { CustomFilterBag, ListResult } from "../../src/client/index.js";
+import { OpportunityBaseSchema } from "../../src/schemas/index.js";
+import { withCustomFields } from "../../src/extensions/index.js";
 
 const server = setupServer();
 

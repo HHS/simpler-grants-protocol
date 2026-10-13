@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   AppRefSchema,
   OrgIdEinSchema,
@@ -13,7 +13,7 @@ import {
   OppIdsSchema,
   OppRefSchema,
 } from "@/schemas";
-import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test";
+import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test.js";
 
 const VALID_UUID = "123e4567-e89b-12d3-a456-426614174000";
 

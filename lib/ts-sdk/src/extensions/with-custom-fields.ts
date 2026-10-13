@@ -8,9 +8,9 @@
  */
 
 import { z } from "zod";
-import type { CustomField, CustomFieldType } from "../types";
-import { CustomFieldSchema } from "../schemas";
-import type { CustomFieldSpec, HasCustomFields } from "./types";
+import type { CustomField, CustomFieldType } from "../types.js";
+import { CustomFieldSchema } from "../schemas/index.js";
+import type { CustomFieldSpec, HasCustomFields } from "./types.js";
 
 // ############################################################################
 // Public type - WithCustomFieldsResult

@@ -286,8 +286,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@common-grants/cg-grants-gov':
-        specifier: ^0.2.0
-        version: 0.2.0(@common-grants/sdk@0.5.0)
+        specifier: ^0.3.1
+        version: 0.3.1(@common-grants/sdk@0.6.1)
       '@common-grants/core':
         specifier: workspace:*
         version: link:../core
@@ -956,13 +956,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@common-grants/cg-grants-gov@0.2.0':
-    resolution: {integrity: sha512-BOMJ1PqKJdZm6M41Nsreou3SxKJ17R4owGP7HlrUc07NIVvM3Z7ZAVqtHIph8ruFp0oeRDY6hS0WbdYgV8fDrw==}
+  '@common-grants/cg-grants-gov@0.3.1':
+    resolution: {integrity: sha512-z5o/497JNVLtUoupuwFj9RoipkAsm7Cyzf3ybHxYUtSRTNAznjTzJWcKgT57b/YA4+IGWwPjv+ZwaFEhvf1nyg==}
     peerDependencies:
-      '@common-grants/sdk': ^0.5.0
+      '@common-grants/sdk': ^0.6.0
 
-  '@common-grants/sdk@0.5.0':
-    resolution: {integrity: sha512-91/MsRcnoWBfPnw44r8qRWHMohNswJ0HWWnJ/luMosXT4XEcvp7ddchPEZkxfghB51HV6DThoOGRpk1b4JGiog==}
+  '@common-grants/sdk@0.6.1':
+    resolution: {integrity: sha512-Ce3Litu0n7+Sv8CF6P00AY1TV3ze+vqOFvvAPWVh0MWCCnLwVeQ2kUhcBAG8vI1o755RsQuHzdySMY3nL5m/5w==}
     engines: {node: '>=22.0.0'}
 
   '@cspell/cspell-bundled-dicts@8.19.4':
@@ -6201,11 +6201,12 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261001.1':
     optional: true
 
-  '@common-grants/cg-grants-gov@0.2.0(@common-grants/sdk@0.5.0)':
+  '@common-grants/cg-grants-gov@0.3.1(@common-grants/sdk@0.6.1)':
     dependencies:
-      '@common-grants/sdk': 0.5.0
+      '@common-grants/sdk': 0.6.1
+      zod: 3.25.76
 
-  '@common-grants/sdk@0.5.0':
+  '@common-grants/sdk@0.6.1':
     dependencies:
       zod: 3.25.76
 

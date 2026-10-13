@@ -10,15 +10,38 @@
 | Command                  | Description                                                      |
 | ------------------------ | ---------------------------------------------------------------- |
 | `pnpm install`           | Installs dependencies                                            |
-| `pnpm run build`         | Compiles TypeScript code to JavaScript and runs TypeSpec         |
+| `pnpm run build`         | Builds the ESM package from `src` and runs TypeSpec              |
 | `pnpm run typespec`      | Compile and emit TypeSpec outputs (i.e. OpenAPI and JSON schema) |
 | `pnpm run test`          | Run Vitest test suite                                            |
+| `pnpm run test:package`  | Test the packed SDK in an isolated ESM consumer                  |
 | `pnpm run test:watch`    | Run Vitest in watch mode                                         |
 | `pnpm run test:coverage` | Run Vitest with coverage report                                  |
 | `pnpm run lint`          | Run ESLint and fix issues                                        |
 | `pnpm run format`        | Format code with Prettier                                        |
 | `pnpm run checks`        | Run lint and format checks                                       |
-| `pnpm run prepare`       | Compile TypeScript (pre-publish hook)                            |
+| `pnpm run prepare`       | Rebuild the publishable ESM artifact from `src`                  |
+
+## ESM package validation
+
+The SDK is published as native ESM. Relative imports in TypeScript source use `.js` extensions so
+the emitted files work directly in Node.js. `tsconfig.build.json` limits package output to `src`;
+tests and examples are type-checked but are not compiled into the npm artifact.
+
+The package check creates a consumer outside the pnpm workspace, installs a packed tarball, and
+verifies native Node.js imports, strict TypeScript declaration resolution, and archive contents. It
+runs separately from the unit suite through its own command so ordinary `pnpm run test` does not
+perform a registry install:
+
+```bash
+pnpm run test:package
+```
+
+`test:package` packs the SDK (building it through the `prepare` lifecycle), then installs the
+tarball with npm. That install resolves the SDK's runtime dependencies from the registry, so it
+needs network access; the subsequent runtime probes make no network requests.
+
+`pnpm run ci` is the authoritative CI command and runs in dependency order: the ESM build, lint and
+format and type checks, coverage, the offline transforms example, and finally the package check.
 
 ## Runbooks
 

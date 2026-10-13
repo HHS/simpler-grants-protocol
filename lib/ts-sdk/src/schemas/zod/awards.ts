@@ -11,17 +11,17 @@ import {
   MoneySchema,
   NameSchema,
   SystemMetadataSchema,
-} from "./fields";
+} from "./fields.js";
 import {
   DateRangeFilterSchema,
   DefaultFilterSchema,
   MoneyRangeFilterSchema,
   StringArrayFilterSchema,
-} from "./filters";
-import { createIdentifierSchema, IdentifierCollectionSchema } from "./identifiers";
-import { AppRefSchema, OppRefSchema, OrgRefCollectionSchema } from "./references";
-import { SortOrderEnum } from "./sorting";
-import { UuidSchema } from "./types";
+} from "./filters.js";
+import { createIdentifierSchema, IdentifierCollectionSchema } from "./identifiers.js";
+import { AppRefSchema, OppRefSchema, OrgRefCollectionSchema } from "./references.js";
+import { SortOrderEnum } from "./sorting.js";
+import { UuidSchema } from "./types.js";
 
 // ############################################################################
 // Award status

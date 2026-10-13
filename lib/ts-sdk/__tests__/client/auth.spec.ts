@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Auth, buildAuthHeaders, AuthType } from "../../src/client/auth";
+import { Auth, buildAuthHeaders, AuthType } from "../../src/client/auth.js";
 
 // =============================================================================
 // Auth type

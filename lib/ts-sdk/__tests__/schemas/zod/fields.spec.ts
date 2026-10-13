@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   EventTypeEnum,
   SingleDateEventSchema,
@@ -12,7 +12,7 @@ import {
   SystemMetadataSchema,
   NameSchema,
 } from "@/schemas";
-import type { BoundaryCase } from "../../utils/fuzz-test";
+import type { BoundaryCase } from "../../utils/fuzz-test.js";
 
 // ############################################################################
 // Event type enum

@@ -9,9 +9,9 @@
  */
 
 // Plugin creation — define and compose plugins
-export type { Plugin, DefinePluginOptions, PluginSchemasInput } from "./define-plugin";
-export type { CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types";
-export { definePlugin } from "./define-plugin";
+export type { Plugin, DefinePluginOptions, PluginSchemasInput } from "./define-plugin.js";
+export type { CustomFieldSpec, HasCustomFields, ExtensibleObject } from "./types.js";
+export { definePlugin } from "./define-plugin.js";
 
 // Custom filters — route-keyed filter registration + classification
 export type {
@@ -22,16 +22,16 @@ export type {
   RouteDeclarations,
   RouteMethod,
   RouteMethods,
-} from "./types";
-export { FilterError } from "./types";
-export type { CustomFilterInput } from "./custom-filters";
-export { classifyFilters, validateRoutes, F } from "./custom-filters";
+} from "./types.js";
+export { FilterError } from "./types.js";
+export type { CustomFilterInput } from "./custom-filters.js";
+export { classifyFilters, validateRoutes, F } from "./custom-filters.js";
 
 // Schema utilities — lower-level tools for working with custom fields
-export type { WithCustomFieldsResult } from "./with-custom-fields";
-export type { ExtensibleSchemaName } from "./types";
-export { withCustomFields } from "./with-custom-fields";
-export { getCustomFieldValue } from "./get-custom-field-value";
+export type { WithCustomFieldsResult } from "./with-custom-fields.js";
+export type { ExtensibleSchemaName } from "./types.js";
+export { withCustomFields } from "./with-custom-fields.js";
+export { getCustomFieldValue } from "./get-custom-field-value.js";
 
 // Transforms — bidirectional plugin transformation contract
 export type {
@@ -43,13 +43,13 @@ export type {
   PluginCapability,
   PluginMeta,
   TransformResult,
-} from "./types";
-export { TransformError } from "./types";
+} from "./types.js";
+export { TransformError } from "./types.js";
 // Helper types for annotating hand-written toCommon / fromCommon functions.
-export type { ToCommon, FromCommon, TransformTypes } from "./transform-helpers";
-export type { BuiltTransforms } from "./transforms";
-export { buildTransforms } from "./transforms";
-export type { TransformFromMappingOptions } from "../utils/transformation";
+export type { ToCommon, FromCommon, TransformTypes } from "./transform-helpers.js";
+export type { BuiltTransforms } from "./transforms.js";
+export { buildTransforms } from "./transforms.js";
+export type { TransformFromMappingOptions } from "../utils/transformation.js";
 // Individual handler functions (fieldValue, constValue, switchOnValue, etc.)
 // stay internal; reach them through DEFAULT_HANDLERS when needed.
-export { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "../utils/transformation";
+export { DEFAULT_HANDLERS, getFromPath, transformFromMapping } from "../utils/transformation.js";

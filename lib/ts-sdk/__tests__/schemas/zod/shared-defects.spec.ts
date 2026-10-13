@@ -38,7 +38,7 @@
  */
 
 import { describe, it } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   SingleDateEventSchema,
   CustomFieldSchema,

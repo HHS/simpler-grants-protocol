@@ -3,7 +3,7 @@ import { z } from "zod";
 import * as AwardRouteSchemas from "@common-grants/sdk/schemas";
 import { NotFoundSchema } from "@common-grants/sdk/schemas";
 import type * as AwardTypes from "@common-grants/sdk/types";
-import { ajv, validate } from "../../utils/ajv-validator";
+import { ajv, validate } from "../../utils/ajv-validator.js";
 
 const AWARD_ID = "123e4567-e89b-42d3-a456-426614174000";
 

@@ -4,7 +4,7 @@
  * Run with: pnpm example:get <oppId>
  */
 
-import { Client, Auth } from "../src/client";
+import { Client, Auth } from "../src/client/index.js";
 
 const oppId = process.argv[2];
 

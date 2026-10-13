@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { http, HttpResponse, setupServer } from "./mock-fetch";
+import { http, HttpResponse, setupServer } from "./mock-fetch.js";
 
 // Define handlers - same pattern as MSW
 const handlers = [

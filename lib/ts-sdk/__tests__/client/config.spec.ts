@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { resolveConfig } from "../../src/client/config";
+import { resolveConfig } from "../../src/client/config.js";
 
 const BASE_URL = "https://api.example.org";
 

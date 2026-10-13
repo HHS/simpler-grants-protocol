@@ -19,13 +19,13 @@
 
 import { z } from "zod";
 
-import { CustomFieldType } from "../src/constants";
+import { CustomFieldType } from "../src/constants.js";
 import {
   definePlugin,
   type FromCommon,
   type ToCommon,
   type TransformResult,
-} from "../src/extensions";
+} from "../src/extensions/index.js";
 
 // ############################################################################
 // Shared setup — source schema, sample data, custom fields

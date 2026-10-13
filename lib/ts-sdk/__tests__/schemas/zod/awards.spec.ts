@@ -13,9 +13,9 @@ import {
   AwdTimelineSchema,
 } from "@/schemas";
 import type * as AwardTypes from "@/types";
-import { expectZodMatchesJsonSchema } from "../../helper";
-import { ajv, validate } from "../../utils/ajv-validator";
-import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
+import { ajv, validate } from "../../utils/ajv-validator.js";
+import { checkZodMatchesJsonSchema, type BoundaryCase } from "../../utils/fuzz-test.js";
 
 const AWARD_ID = "123e4567-e89b-42d3-a456-426614174000";
 const RELATED_ID = "018f2e77-3a4b-4c1d-9e2f-abcdef123456";

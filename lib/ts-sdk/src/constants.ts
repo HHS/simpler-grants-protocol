@@ -23,7 +23,7 @@ import {
   RangeOperatorsEnum,
   AllOperatorsEnum,
   IdentifierStatusEnum,
-} from "./schemas";
+} from "./schemas/index.js";
 
 // ############################################################################
 // Model enum constants

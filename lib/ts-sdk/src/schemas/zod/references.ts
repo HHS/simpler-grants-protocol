@@ -7,8 +7,8 @@
  */
 
 import { z } from "zod";
-import { createIdentifierSchema, IdentifierCollectionSchema } from "./identifiers";
-import { DunsSchema, EmployerTaxIdSchema, SamUeiSchema, UuidSchema } from "./types";
+import { createIdentifierSchema, IdentifierCollectionSchema } from "./identifiers.js";
+import { DunsSchema, EmployerTaxIdSchema, SamUeiSchema, UuidSchema } from "./types.js";
 
 // ############################################################################
 // AppRef schema

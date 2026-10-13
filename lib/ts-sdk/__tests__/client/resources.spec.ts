@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer } from "../utils/mock-fetch";
-import { Client, Resource } from "../../src/client";
+import { http, HttpResponse, setupServer } from "../utils/mock-fetch.js";
+import { Client, Resource } from "../../src/client/index.js";
 
 const server = setupServer();
 const client = new Client({ baseUrl: "https://api.example.org" });

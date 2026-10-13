@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { EventSchema, MoneySchema, CustomFieldSchema, SystemMetadataSchema } from "./fields";
+import { EventSchema, MoneySchema, CustomFieldSchema, SystemMetadataSchema } from "./fields.js";
 import {
   StringArrayFilterSchema,
   DateRangeFilterSchema,
   MoneyRangeFilterSchema,
   DefaultFilterSchema,
-} from "./filters";
-import { UuidSchema } from "./types";
+} from "./filters.js";
+import { UuidSchema } from "./types.js";
 
 // ############################################################################
 // Status models

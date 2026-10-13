@@ -12,9 +12,9 @@
  */
 
 import { z } from "zod";
-import { EXTENSIBLE_SCHEMA_MAP } from "./types";
-import type { CustomFieldSpec, ExtensibleSchemaName, TransformResult } from "./types";
-import type { WithCustomFieldsResult } from "./with-custom-fields";
+import { EXTENSIBLE_SCHEMA_MAP } from "./types.js";
+import type { CustomFieldSpec, ExtensibleSchemaName, TransformResult } from "./types.js";
+import type { WithCustomFieldsResult } from "./with-custom-fields.js";
 
 /**
  * The single named argument for {@link ToCommon} / {@link FromCommon}.
