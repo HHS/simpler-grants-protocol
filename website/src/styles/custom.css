@@ -39,6 +39,7 @@
 @media (min-width: 50em) {
   :root[data-has-hero] {
     --sl-content-inline-start: 0rem;
+    --__sidebar-pad: 0rem;
   }
   :root[data-has-hero] .sidebar-pane {
     display: none;
