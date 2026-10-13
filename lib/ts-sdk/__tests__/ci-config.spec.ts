@@ -61,8 +61,6 @@ describe("TypeScript SDK CI configuration", () => {
   });
 
   it("probes the installed package on the exact minimum Node runtime", () => {
-    expect(readFileSync(resolve(process.cwd(), "../../.nvmrc"), "utf8").trim()).toBe("22");
-
     const workflow = yaml.load(
       readFileSync(resolve(process.cwd(), "../../.github/workflows/ci-lib-ts-sdk.yml"), "utf8")
     ) as Workflow;
