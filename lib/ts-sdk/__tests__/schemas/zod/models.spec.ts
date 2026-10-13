@@ -174,6 +174,23 @@ describe("OppTimeline Schema", () => {
 describe("OpportunityBase Schema", () => {
   const jsonSchemaId = "OpportunityBase.yaml";
 
+  // Valid v0.5 shapes, shared by the parse test and the fuzz boundary controls:
+  // a funder collection with its required `primary` plus a role-keyed `otherOrgs`,
+  // and an identifier collection carrying both base registries (FON, ALN) alongside
+  // `systemId` and `otherIds`.
+  const validFunders = {
+    primary: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Primary Organization" },
+    otherOrgs: {
+      fiscalSponsor: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Fiscal Sponsor" },
+    },
+  };
+  const validIdentifiers = {
+    systemId: { id: "123e4567-e89b-12d3-a456-426614174000" },
+    otherIds: { custom: { id: "custom-id" } },
+    "opp:us:fon": { registry: { code: "opp:us:fon" }, id: "FON-0001" },
+    "opp:us:aln": { registry: {}, id: "93.123" },
+  };
+
   it("should validate a valid OpportunityBase", () => {
     const validOpportunity = {
       id: "123e4567-e89b-12d3-a456-426614174000",
@@ -199,6 +216,22 @@ describe("OpportunityBase Schema", () => {
       lastModifiedAt: "2025-01-02T00:00:00Z",
     };
     expect(OpportunityBaseSchema.parse(validOpportunity)).toBeDefined();
+  });
+
+  it("should validate v0.5 funders and identifiers shapes", () => {
+    const opportunity = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      funders: validFunders,
+      identifiers: validIdentifiers,
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+    };
+    const parsed = OpportunityBaseSchema.parse(opportunity);
+    expect(parsed.funders).toEqual(validFunders);
+    expect(parsed.identifiers).toEqual(validIdentifiers);
   });
 
   it("should match opportunityBase.yaml", async () => {
@@ -231,11 +264,13 @@ describe("OpportunityBase Schema", () => {
         // against the wire form.
         { label: "createdAt as a Date instance", value: { ...valid, createdAt: new Date() } },
 
-        // Values the SDK accepts that the protocol does not: every optional field
-        // is `.nullish()` in Zod, while the protocol declares it optional but not
-        // nullable. This is the disagreement Hono template verification hit, and
-        // ADR 0024 alignment (#1192) owns the fix. The harness fails if one stops
-        // reproducing, so these entries cannot outlive it.
+        // Values the SDK accepts that the protocol does not: these optional
+        // fields are `.nullish()` in Zod, while the protocol declares them
+        // optional but not nullable. This is the disagreement Hono template
+        // verification hit, and ADR 0024 alignment (#1192) owns the fix. The
+        // harness fails if one stops reproducing, so these entries cannot
+        // outlive it. (`funders`/`identifiers` are `.optional()`, not
+        // `.nullish()`, so their `null` cases agree and sit below as controls.)
         ...(
           [
             ["funding", { funding: null }],
@@ -243,8 +278,6 @@ describe("OpportunityBase Schema", () => {
             ["source", { source: null }],
             ["customFields", { customFields: null }],
             ["acceptedApplicantTypes", { acceptedApplicantTypes: null }],
-            ["identifiers", { identifiers: null }],
-            ["funders", { funders: null }],
           ] as const
         ).map(([field, override]) => ({
           label: `${field} explicitly null (SDK nullish, protocol optional but not nullable)`,
@@ -253,46 +286,58 @@ describe("OpportunityBase Schema", () => {
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
         })),
 
-        // `identifiers` is any object on the SDK side until the Zod identifier
-        // models land (#1244), while the protocol seals `OppIds` to its base
-        // registries plus `systemId` and `otherIds`. Non-objects still agree.
+        // `identifiers` now models `OppIds`, sealed to its base registries plus
+        // `systemId` and `otherIds`. Both FON and ALN present is accepted by
+        // both sides; a non-object, a `null`, and an unregistered top-level key
+        // are all rejected by both sides, so every case agrees.
+        {
+          label: "identifiers with both FON and ALN",
+          value: { ...valid, identifiers: validIdentifiers },
+        },
         {
           label: "identifiers is not an object",
           value: { ...valid, identifiers: "not an object" },
         },
         {
-          label:
-            "identifiers with an unregistered top-level key (SDK any object, protocol sealed OppIds)",
+          label: "identifiers is null (SDK optional, protocol optional but not nullable)",
+          value: { ...valid, identifiers: null },
+        },
+        {
+          label: "identifiers with an unregistered top-level key (sealed OppIds)",
           value: { ...valid, identifiers: { "opp:made:up": { id: "x" } } },
-          expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
         },
 
-        // `funders` is any object on the SDK side until the Zod organization
-        // models land (#1156), while the protocol requires `OrgRefCollection` to
-        // carry a `primary` property. Non-objects still agree.
+        // `funders` now models `OrgRefCollection`, which requires a `primary`
+        // organization and keys the rest under `otherOrgs`. A collection with
+        // both is accepted by both sides; a non-object, a `null`, and a
+        // collection missing `primary` are all rejected by both sides.
+        {
+          label: "funders with primary and otherOrgs",
+          value: { ...valid, funders: validFunders },
+        },
         {
           label: "funders is not an object",
           value: { ...valid, funders: "not an object" },
         },
         {
-          label: "funders without primary (SDK any object, protocol requires primary)",
+          label: "funders is null (SDK optional, protocol optional but not nullable)",
+          value: { ...valid, funders: null },
+        },
+        {
+          label: "funders without primary (OrgRefCollection requires primary)",
           value: { ...valid, funders: { otherOrgs: {} } },
-          expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1244",
         },
       ],
-      9
+      5
     );
 
     // Not full parity: every optional field on this model still accepts null
-    // where the protocol does not, and `identifiers` is unmodeled. Stated here
-    // so a green test does not read as agreement.
+    // where the protocol does not. The two newly-modeled fields (`funders`,
+    // `identifiers`) no longer diverge, so the remaining divergences are the
+    // `.nullish()` fields ADR 0024 alignment (#1192) owns. Stated here so a
+    // green test does not read as agreement.
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
-      new Set([
-        "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-        "https://github.com/HHS/simpler-grants-protocol/issues/1244",
-      ])
+      new Set(["https://github.com/HHS/simpler-grants-protocol/issues/1192"])
     );
   });
 
@@ -336,6 +381,33 @@ describe("OpportunityBase Schema", () => {
         lastModifiedAt: "2025-01-02T00:00:00Z",
       })
     ).toThrow();
+  });
+
+  it("should reject invalid funders and identifiers shapes", () => {
+    const baseline = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+    };
+
+    // funders missing required 'primary'
+    expect(() =>
+      OpportunityBaseSchema.parse({ ...baseline, funders: { otherOrgs: {} } })
+    ).toThrow();
+    // identifiers with an unregistered top-level key (OppIds is strict)
+    expect(() =>
+      OpportunityBaseSchema.parse({
+        ...baseline,
+        identifiers: { "opp:made:up": { id: "x" } },
+      })
+    ).toThrow();
+    // funders explicitly null
+    expect(() => OpportunityBaseSchema.parse({ ...baseline, funders: null })).toThrow();
+    // identifiers explicitly null
+    expect(() => OpportunityBaseSchema.parse({ ...baseline, identifiers: null })).toThrow();
   });
 });
 

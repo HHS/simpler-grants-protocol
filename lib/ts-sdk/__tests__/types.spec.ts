@@ -74,10 +74,29 @@ describe("Model types", () => {
       description: "A test opportunity",
       createdAt: new Date("2025-01-01T00:00:00Z"),
       lastModifiedAt: new Date("2025-01-01T00:00:00Z"),
+      funders: {
+        primary: {
+          id: "123e4567-e89b-12d3-a456-426614174000",
+          name: "Primary Organization",
+        },
+        otherOrgs: {
+          funder: {
+            id: "123e4567-e89b-12d3-a456-426614174000",
+            name: "Funder",
+          },
+        },
+      },
+      identifiers: {
+        "opp:us:fon": { id: "FON-0001" },
+        "opp:us:aln": { id: "93.123" },
+      },
     };
     expect(opportunity).toBeDefined();
     expect(opportunity.id).toBe("123e4567-e89b-12d3-a456-426614174000");
     expect(opportunity.status.value).toBe("open");
+    expect(opportunity.funders?.otherOrgs?.funder.name).toBe("Funder");
+    expect(opportunity.identifiers?.["opp:us:fon"]?.id).toBe("FON-0001");
+    expect(opportunity.identifiers?.["opp:us:aln"]?.id).toBe("93.123");
   });
 
   it("should instantiate OppSorting correctly", () => {

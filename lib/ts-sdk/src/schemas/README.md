@@ -10,6 +10,7 @@ The `@common-grants/sdk/types` and `@common-grants/sdk/constants` modules comple
 - [Usage](#usage)
   - [Validation](#validation)
   - [Type safety](#type-safety)
+  - [Opportunity model](#opportunity-model)
   - [Award contracts](#award-contracts)
   - [Generic response schemas](#generic-response-schemas)
 - [API reference](#api-reference)
@@ -165,6 +166,46 @@ Test Opportunity
 Opportunity is open
 Currently accepting applications
 ```
+
+### Opportunity model
+
+`OpportunityBaseSchema` carries two Core v0.5 fields backed by the shared
+reference schemas: `funders`, an `OrgRefCollectionSchema` with one required
+`primary` organization plus any others keyed by role, and `identifiers`, an
+`OppIdsSchema` sealed to the opportunity's base registries (`opp:us:fon`,
+`opp:us:aln`) alongside `systemId` and `otherIds`:
+
+```ts
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+
+const opportunity = OpportunityBaseSchema.parse({
+  id: "123e4567-e89b-12d3-a456-426614174000",
+  title: "Sample Grant Opportunity",
+  status: { value: "open" },
+  description: "A sample grant opportunity for testing",
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  funders: {
+    primary: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Primary Organization" },
+    otherOrgs: {
+      fiscalSponsor: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Fiscal Sponsor" },
+    },
+  },
+  identifiers: {
+    "opp:us:fon": { registry: { code: "opp:us:fon" }, id: "FON-0001" },
+    "opp:us:aln": { registry: {}, id: "93.123" },
+  },
+});
+
+console.log(opportunity.funders?.primary.name); // "Primary Organization"
+console.log(opportunity.identifiers?.["opp:us:fon"]?.id); // "FON-0001"
+```
+
+Unlike the model's other optional fields, which stay `.nullish()` pending
+[#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192), `funders`
+and `identifiers` are `.optional()`: they may be omitted, but `null` is
+rejected. A `funders` object without `primary`, or an `identifiers` object with
+a top-level key outside the registered registries, is also rejected.
 
 ### Award contracts
 
