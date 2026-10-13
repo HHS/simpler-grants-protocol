@@ -861,3 +861,20 @@ describe("relationship target round trip", () => {
     );
   });
 });
+
+/**
+ * TypeSpec 1.17 drops `@added` from an enum that a template reaches before its
+ * declaration, which publishes the enum in every earlier version.
+ */
+describe("OrgRelationshipStatus versioning", () => {
+  it("first appears in v0.5.0", () => {
+    const versionsDir = path.join(Paths.SCHEMAS_DIR, "versions");
+    const published = ["v0.1.0", "v0.2.0", "v0.3.0", "v0.4.0", "v0.5.0"].filter(
+      (version) =>
+        fs.existsSync(
+          path.join(versionsDir, version, "OrgRelationshipStatus.yaml"),
+        ),
+    );
+    expect(published).toEqual(["v0.5.0"]);
+  });
+});
