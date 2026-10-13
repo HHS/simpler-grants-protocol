@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@tsp-output": path.resolve(__dirname, "./tsp-output"),
+      "@common-grants/sdk/schemas": path.resolve(__dirname, "./src/schemas"),
     },
   },
   test: {

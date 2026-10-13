@@ -20,17 +20,23 @@ import {
  *   diverge. Defaults to 0, so tolerating a divergence has to be declared here,
  *   next to the entries that name their owning issues, and the test fails when
  *   the observed count differs.
+ * @param preserveObjectPolicy - Compare against the supplied schema's own object
+ *   policy at every level instead of forcing root `.strict()`. Award contracts
+ *   need this to assert an open record's catch-all and a sealed object's nested
+ *   closure. Defaults to `false`, so existing callers are unaffected.
  * @returns The comparison result.
  */
 export async function expectZodMatchesJsonSchema(
   zodSchema: ZodType,
   jsonSchemaId: string,
   cases: BoundaryCase[] = [],
-  expectedDivergences = 0
+  expectedDivergences = 0,
+  preserveObjectPolicy = false
 ): Promise<FuzzTestResult> {
   const result = await checkZodMatchesJsonSchema(zodSchema, jsonSchemaId, {
     cases,
     expectedDivergences,
+    preserveObjectPolicy,
   });
 
   if (!result.passed) {

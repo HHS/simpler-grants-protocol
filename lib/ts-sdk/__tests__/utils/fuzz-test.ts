@@ -112,6 +112,20 @@ export interface FuzzTestOptions {
    * own generation-failure accounting cannot otherwise be exercised.
    */
   generateSample?: (schema: unknown, seed: number) => Promise<unknown>;
+  /**
+   * Whether to compare against the supplied Zod schema exactly as given.
+   *
+   * By default the harness forces `.strict()` on the root object so a schema
+   * that forgot to seal its top level is still caught. That root-only strict
+   * has two limits the award contracts run into: it overrides a caller's
+   * deliberate `.catchall()` (an open record can never be shown to accept an
+   * extra key), and it only ever reaches the outermost object (nested closure
+   * can never be shown to reject a nested extra key). Set this to `true` to
+   * trust the schema's own object policy at every level instead: seal objects
+   * with `.strict()` and leave records open with `z.record()`/`.catchall()`
+   * yourself, and the harness compares what you wrote.
+   */
+  preserveObjectPolicy?: boolean;
 }
 
 /**
@@ -272,6 +286,7 @@ export async function checkZodMatchesJsonSchema(
     cases = [],
     expectedDivergences = 0,
     generateSample = generateWithFaker,
+    preserveObjectPolicy = false,
   } = options;
 
   // A tolerated divergence without an owner is an untracked bug with a test
@@ -300,9 +315,12 @@ export async function checkZodMatchesJsonSchema(
   // Combine seed with schema ID hash to ensure different schemas get different sequences
   const schemaSeed = seed + hashString(jsonSchemaId);
 
-  // Apply strict() to object schemas to catch extra/missing properties
-  const strictSchema =
-    "strict" in zodSchema && typeof zodSchema.strict === "function"
+  // Apply strict() to the root object to catch extra/missing properties, unless
+  // the caller has opted to own the object policy themselves. The override is
+  // deliberately root-only, so a caller preserving their own policy is also the
+  // only way to assert an open record's catch-all or a nested object's closure.
+  const comparisonSchema =
+    !preserveObjectPolicy && "strict" in zodSchema && typeof zodSchema.strict === "function"
       ? zodSchema.strict()
       : zodSchema;
 
@@ -350,7 +368,7 @@ export async function checkZodMatchesJsonSchema(
       );
     }
 
-    const zodResult = strictSchema.safeParse(sample);
+    const zodResult = comparisonSchema.safeParse(sample);
     const zodValid = zodResult.success;
 
     if (jsonSchemaValid === zodValid) {

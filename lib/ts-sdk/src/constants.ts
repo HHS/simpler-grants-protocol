@@ -9,6 +9,8 @@
  */
 
 import {
+  AwdStatusOptionsEnum,
+  AwdSortByEnum,
   OppStatusOptionsEnum,
   ApplicantTypeOptionsEnum,
   OppSortByEnum,
@@ -20,12 +22,15 @@ import {
   StringOperatorsEnum,
   RangeOperatorsEnum,
   AllOperatorsEnum,
+  IdentifierStatusEnum,
 } from "./schemas";
 
 // ############################################################################
 // Model enum constants
 // ############################################################################
 
+export const AwdStatusOptions: typeof AwdStatusOptionsEnum.enum = AwdStatusOptionsEnum.enum;
+export const AwdSortBy: typeof AwdSortByEnum.enum = AwdSortByEnum.enum;
 export const OppStatusOptions: typeof OppStatusOptionsEnum.enum = OppStatusOptionsEnum.enum;
 export const ApplicantTypeOptions: typeof ApplicantTypeOptionsEnum.enum =
   ApplicantTypeOptionsEnum.enum;
@@ -37,6 +42,12 @@ export const OppSortBy: typeof OppSortByEnum.enum = OppSortByEnum.enum;
 
 export const EventType: typeof EventTypeEnum.enum = EventTypeEnum.enum;
 export const CustomFieldType: typeof CustomFieldTypeEnum.enum = CustomFieldTypeEnum.enum;
+
+// ############################################################################
+// Identifier enum constants
+// ############################################################################
+
+export const IdentifierStatus: typeof IdentifierStatusEnum.enum = IdentifierStatusEnum.enum;
 
 // ############################################################################
 // Filter operator enum constants

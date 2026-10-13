@@ -79,13 +79,15 @@ export const EventSchema = z.discriminatedUnion("eventType", [
 // Money schema
 // ############################################################################
 
-export const MoneySchema = z.object({
-  /** The amount of money */
-  amount: DecimalStringSchema,
+export const MoneySchema = z
+  .object({
+    /** The amount of money */
+    amount: DecimalStringSchema,
 
-  /** The ISO 4217 currency code */
-  currency: z.string(),
-});
+    /** The ISO 4217 currency code */
+    currency: z.string(),
+  })
+  .strict();
 
 // ############################################################################
 // CustomField schema
@@ -116,6 +118,29 @@ export const CustomFieldSchema = z.object({
   /** Description of the custom field's purpose */
   description: z.string().nullish(),
 });
+
+// ############################################################################
+// Name schema
+// ############################################################################
+
+export const NameSchema = z
+  .object({
+    /** Honorific prefix (e.g., Mr., Mrs., Dr., Prof.) */
+    prefix: z.string().optional(),
+
+    /** The person's first or given name */
+    firstName: z.string(),
+
+    /** The person's middle name or names */
+    middleName: z.string().optional(),
+
+    /** The person's last name or family name */
+    lastName: z.string(),
+
+    /** Name suffix (e.g., Jr., Sr., III, Ph.D.) */
+    suffix: z.string().optional(),
+  })
+  .strict();
 
 // ############################################################################
 // SystemMetadata schema

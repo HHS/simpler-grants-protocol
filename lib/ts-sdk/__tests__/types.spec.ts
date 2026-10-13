@@ -282,4 +282,187 @@ describe("Field types", () => {
     expect(metadata.createdAt).toBeInstanceOf(Date);
     expect(metadata.lastModifiedAt).toBeInstanceOf(Date);
   });
+
+  it("should instantiate Name correctly", () => {
+    const name: Types.Name = {
+      prefix: "Dr.",
+      firstName: "Jane",
+      middleName: "Edward",
+      lastName: "Doe",
+      suffix: "Jr.",
+    };
+    expect(name).toBeDefined();
+    expect(name.firstName).toBe("Jane");
+    expect(name.lastName).toBe("Doe");
+  });
+
+  it("should instantiate EmployerTaxId correctly", () => {
+    const employerTaxId: Types.EmployerTaxId = "012345678";
+    expect(employerTaxId).toBe("012345678");
+  });
+
+  it("should instantiate SamUei correctly", () => {
+    const samUei: Types.SamUei = "AB0123456789";
+    expect(samUei).toBe("AB0123456789");
+  });
+
+  it("should instantiate Duns correctly", () => {
+    const duns: Types.Duns = "012345678";
+    expect(duns).toBe("012345678");
+  });
+});
+
+// ############################################################################
+// Identifier types
+// ############################################################################
+
+describe("Identifier types", () => {
+  it("should instantiate IdentifierStatus correctly", () => {
+    const status: Types.IdentifierStatus = Constants.IdentifierStatus.active;
+    expect(status).toBe("active");
+  });
+
+  it("should instantiate Identifier correctly", () => {
+    const identifier: Types.Identifier = {
+      registry: {
+        code: "org:us:ein",
+        url: "https://commongrants.org/registries/org-us-ein",
+      },
+      id: "123456789",
+      allIds: [{ id: "123456789", status: Constants.IdentifierStatus.active }],
+    };
+    expect(identifier).toBeDefined();
+    expect(identifier.id).toBe("123456789");
+    expect(identifier.allIds?.[0].status).toBe("active");
+  });
+
+  it("should instantiate SystemId correctly", () => {
+    const systemId: Types.SystemId = {
+      registry: { code: "org:grants.gov:system" },
+      id: "01912a8b-7c3d-7890-abcd-ef1234567890",
+    };
+    expect(systemId).toBeDefined();
+    expect(systemId.id).toBe("01912a8b-7c3d-7890-abcd-ef1234567890");
+  });
+
+  it("should instantiate IdentifierCollection correctly", () => {
+    const collection: Types.IdentifierCollection = {
+      systemId: {
+        registry: { code: "org:grants.gov:system" },
+        id: "01912a8b-7c3d-7890-abcd-ef1234567890",
+      },
+      otherIds: {
+        "org:candid:bridge": { registry: { code: "org:candid:bridge" }, id: "1234567" },
+      },
+    };
+    expect(collection).toBeDefined();
+    expect(collection.otherIds?.["org:candid:bridge"].id).toBe("1234567");
+  });
+
+  it("should instantiate OrgIdEin correctly", () => {
+    const identifier: Types.OrgIdEin = {
+      registry: { code: "org:us:ein" },
+      id: "123456789",
+    };
+    expect(identifier.registry?.code).toBe("org:us:ein");
+  });
+
+  it("should instantiate OrgIdUei correctly", () => {
+    const identifier: Types.OrgIdUei = {
+      registry: { code: "org:us:uei" },
+      id: "AB0123456789",
+    };
+    expect(identifier.registry?.code).toBe("org:us:uei");
+  });
+
+  it("should instantiate OrgIdDuns correctly", () => {
+    const identifier: Types.OrgIdDuns = {
+      registry: { code: "org:xi:duns" },
+      id: "123456789",
+    };
+    expect(identifier.registry?.code).toBe("org:xi:duns");
+  });
+
+  it("should instantiate OrgIds correctly", () => {
+    const identifiers: Types.OrgIds = {
+      systemId: { id: "123e4567-e89b-12d3-a456-426614174000" },
+      "org:us:ein": { id: "123456789" },
+      otherIds: { custom: { id: "custom-id" } },
+    };
+    expect(identifiers["org:us:ein"]?.id).toBe("123456789");
+  });
+
+  it("should instantiate OppIdFon correctly", () => {
+    const identifier: Types.OppIdFon = {
+      registry: { code: "opp:us:fon" },
+      id: "FON-0001",
+    };
+    expect(identifier.registry?.code).toBe("opp:us:fon");
+  });
+
+  it("should instantiate OppIdAln correctly", () => {
+    const identifier: Types.OppIdAln = {
+      registry: { code: "opp:us:aln" },
+      id: "93.123",
+    };
+    expect(identifier.registry?.code).toBe("opp:us:aln");
+  });
+
+  it("should instantiate OppIds correctly", () => {
+    const identifiers: Types.OppIds = {
+      systemId: { id: "123e4567-e89b-12d3-a456-426614174000" },
+      "opp:us:fon": { id: "FON-0001" },
+      otherIds: { custom: { id: "custom-id" } },
+    };
+    expect(identifiers["opp:us:fon"]?.id).toBe("FON-0001");
+  });
+});
+
+// ############################################################################
+// Reference types
+// ############################################################################
+
+describe("Reference types", () => {
+  it("should instantiate AppRef correctly", () => {
+    const appRef: Types.AppRef = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "My Application",
+    };
+    expect(appRef).toBeDefined();
+    expect(appRef.title).toBe("My Application");
+  });
+
+  it("should instantiate OrgRef correctly", () => {
+    const orgRef: Types.OrgRef = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      name: "Example Organization",
+      identifiers: { "org:us:ein": { id: "123456789" } },
+    };
+    expect(orgRef.identifiers?.["org:us:ein"]?.id).toBe("123456789");
+  });
+
+  it("should instantiate OrgRefCollection correctly", () => {
+    const collection: Types.OrgRefCollection = {
+      primary: {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        name: "Primary Organization",
+      },
+      otherOrgs: {
+        funder: {
+          id: "123e4567-e89b-12d3-a456-426614174000",
+          name: "Funder",
+        },
+      },
+    };
+    expect(collection.otherOrgs?.funder.name).toBe("Funder");
+  });
+
+  it("should instantiate OppRef correctly", () => {
+    const oppRef: Types.OppRef = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Example Opportunity",
+      identifiers: { "opp:us:fon": { id: "FON-0001" } },
+    };
+    expect(oppRef.identifiers?.["opp:us:fon"]?.id).toBe("FON-0001");
+  });
 });
