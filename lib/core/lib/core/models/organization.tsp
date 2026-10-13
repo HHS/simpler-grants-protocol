@@ -372,6 +372,8 @@ namespace Examples.Organization {
     mission: "To provide support and resources to the community.",
     yearFounded: "2024",
     socials: exampleSocials,
+    aliases: #["Example Org"],
+    relationships: #{ parents: #[Examples.OrgRelationships.chapter] },
   };
 
   const exampleSocials = #{

@@ -108,6 +108,12 @@ examples:
     opportunity:
       id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
       title: Health Center Capital Improvement Program
+      identifiers:
+        opp:us:fon:
+          registry:
+            code: opp:us:fon
+            url: https://commongrants.org/registries/opp-us-fon
+          id: HHS-2026-ACF-OCC-YD-0001
     funders:
       primary:
         id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567

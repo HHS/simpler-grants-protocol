@@ -193,12 +193,11 @@ namespace Examples.Opportunity {
     `opp:us:aln`: aln,
   };
 
-  // Deliberately without `identifiers`. The emitter does not project `@example`
-  // values per version (see `OrgRef`, whose v0.2/v0.3 schemas show the v0.4
-  // `identifiers` field in `examples` but not in `properties`), so adding it
-  // here would surface a v0.5 field in the v0.1-v0.4 `OppRef` examples.
+  // `identifiers` is a v0.5 field. The OpenAPI emitter and the website's
+  // versioned JSON Schema generator both drop it from v0.1-v0.4 examples.
   const ref = #{
     id: "018f2e77-3a4b-7c1d-9e2f-abcdef123456",
     title: "Health Center Capital Improvement Program",
+    identifiers: #{ `opp:us:fon`: fon },
   };
 }

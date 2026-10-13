@@ -198,6 +198,15 @@ examples:
           linkedin: https://www.linkedin.com/company/example
           otherSocials:
             youtube: https://www.youtube.com/example
+        aliases:
+          - Example Org
+        relationships:
+          parents:
+            - org:
+                id: 01912a8b-7c3d-7891-abcd-ef1234567891
+                name: National Reading Network
+              kind:
+                value: chapter
       otherOrgs:
         fiscalSponsor:
           id: 083b4567-e89d-42c8-a439-6c1234567890
@@ -277,6 +286,15 @@ examples:
             linkedin: https://www.linkedin.com/company/example
             otherSocials:
               youtube: https://www.youtube.com/example
+          aliases:
+            - Example Org
+          relationships:
+            parents:
+              - org:
+                  id: 01912a8b-7c3d-7891-abcd-ef1234567891
+                  name: National Reading Network
+                kind:
+                  value: chapter
         partner:
           id: 083b4567-e89d-42c8-a439-6c1234567890
           name: Example Organization
@@ -355,6 +373,15 @@ examples:
             linkedin: https://www.linkedin.com/company/example
             otherSocials:
               youtube: https://www.youtube.com/example
+          aliases:
+            - Example Org
+          relationships:
+            parents:
+              - org:
+                  id: 01912a8b-7c3d-7891-abcd-ef1234567891
+                  name: National Reading Network
+                kind:
+                  value: chapter
 description: A proposal for funding.
 $defs:
   RecordCustomField:

@@ -118,6 +118,15 @@ examples:
         linkedin: https://www.linkedin.com/company/example
         otherSocials:
           youtube: https://www.youtube.com/example
+      aliases:
+        - Example Org
+      relationships:
+        parents:
+          - org:
+              id: 01912a8b-7c3d-7891-abcd-ef1234567891
+              name: National Reading Network
+            kind:
+              value: chapter
     createdAt: 2026-06-20T14:30:00Z
     lastModifiedAt: 2026-06-20T14:30:00Z
 description: |-
