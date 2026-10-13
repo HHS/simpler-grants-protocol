@@ -9,11 +9,13 @@ The `@common-grants/sdk/client` module provides an HTTP client for interacting w
   - [Authentication](#authentication)
   - [Configuration](#configuration)
   - [Opportunity methods](#opportunity-methods)
+  - [Award methods](#award-methods)
   - [Pagination](#pagination)
   - [Low-level HTTP methods](#low-level-http-methods)
 - [API reference](#api-reference)
   - [Client class](#client-class)
   - [Opportunities resource](#opportunities-resource)
+  - [Awards resource](#awards-resource)
   - [Auth namespace](#auth-namespace)
 
 ## Quick start
@@ -143,6 +145,50 @@ console.log(opportunity.title);
 
 See also: [get-opportunity.ts](../../examples/get-opportunity.ts)
 
+### Award methods
+
+The `client.awards` namespace provides typed access to the CommonGrants award get and list endpoints.
+
+#### List awards <!-- omit in toc -->
+
+**`GET /common-grants/awards`**
+
+`list()` auto-paginates by default and accepts the same `page`, `pageSize`, `maxItems`, `signal`, and `onParseError` controls as opportunity listing:
+
+```ts
+const awards = await client.awards.list({ pageSize: 50, maxItems: 500 });
+
+// Passing page disables auto-pagination and fetches only that page.
+const secondPage = await client.awards.list({ page: 2, pageSize: 25 });
+```
+
+Each response row is parsed separately. By default, valid rows appear in `items` and invalid rows appear in `errors` with their page-local indexes. Pass `onParseError: "throw"` to raise `BatchParseError` on the first invalid row.
+
+#### Get a single award <!-- omit in toc -->
+
+**`GET /common-grants/awards/{id}`**
+
+```ts
+const award = await client.awards.get("123e4567-e89b-12d3-a456-426614174000");
+console.log(award.title);
+```
+
+Both methods accept a compatible Zod schema per call. The schema parses the response and determines the inferred output type:
+
+```ts
+import { AwardBaseSchema } from "@common-grants/sdk/schemas";
+
+const AwardWithLabelSchema = AwardBaseSchema.transform(award => ({
+  ...award,
+  label: `${award.title} (${award.status.value})`,
+}));
+
+const award = await client.awards.get(id, { schema: AwardWithLabelSchema });
+const awards = await client.awards.list({ schema: AwardWithLabelSchema });
+```
+
+The corresponding public option types are `AwardGetOptions` and `AwardListOptions`.
+
 ### Pagination
 
 All list and search methods auto-paginate by default, fetching up to `maxItems` (default: 1000) across multiple pages. To control this behavior:
@@ -209,6 +255,13 @@ const response = await client.fetch("/custom/endpoint", {
 | [`client.opportunities.get(id, options?)`](./resources/opportunities.ts) | `GET /common-grants/opportunities/{id}`    | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
 | [`client.opportunities.list(options?)`](./resources/opportunities.ts)    | `GET /common-grants/opportunities`         | List opportunities with auto-pagination. Pass `page` to fetch a specific page instead.  |
 | [`client.opportunities.search(options?)`](./resources/opportunities.ts)  | `POST /common-grants/opportunities/search` | Search with text query, status filters, and auto-pagination.                            |
+
+### Awards resource
+
+| Method                                                     | Route                            | Description                                                                                                  |
+| ---------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [`client.awards.get(id, options?)`](./resources/awards.ts) | `GET /common-grants/awards/{id}` | Fetch a single award by ID. Accepts an optional compatible schema that determines the parsed output type.    |
+| [`client.awards.list(options?)`](./resources/awards.ts)    | `GET /common-grants/awards`      | List awards with auto-pagination. Pass `page` for one page or `onParseError: "throw"` for fail-hard parsing. |
 
 ### Auth namespace
 

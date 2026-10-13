@@ -7,12 +7,13 @@
 import { z } from "zod";
 import { Client } from "../client";
 import { Opportunities } from "./opportunities";
+import { Awards } from "./awards";
 import { RESOURCE_REGISTRY } from "./registry";
 import type { PluginRoutes, ResourceName } from "../../extensions/types";
 import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin";
 import type { ClientConfig } from "../config";
 import type { AuthMethod } from "../auth";
-import type { OpportunityBase } from "../../types";
+import type { AwardBase, OpportunityBase } from "../../types";
 
 /** Item type projected from the plugin's compiled schema for a model. */
 type ResolvedItemType<T extends PluginSchemasInput> = z.infer<
@@ -35,13 +36,13 @@ export type BuiltClient<T extends PluginSchemasInput, TRoutes extends PluginRout
 > & {
   // resource-slot: typed projection per resource
   opportunities: Opportunities<TRoutes, ResolvedItemType<T>>;
+  awards: Awards<AwardBase>;
 };
 
 /**
  * Builds a client from a plugin: constructs the transport `Client`, then
- * overlays each resource slot with a plugin-bound instance (the plugin's
- * compiled schema as the default parse schema, its routes for filter
- * classification).
+ * overlays extensible resource slots with plugin-bound schemas and fixed
+ * resource slots with their base schemas.
  */
 export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes extends PluginRoutes>(
   plugin: Plugin<T, TRoutes>,
@@ -61,7 +62,10 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
     plugin.routes
   );
 
-  // Second of the two cast points (the slot assignment above is the other):
-  // BuiltClient projects the plugin's item + filter types.
+  const { resourceClass: AwardResource, baseSchema } = RESOURCE_REGISTRY.awards;
+  (client as unknown as { awards: Awards }).awards = new AwardResource(client, baseSchema);
+
+  // Final projection cast; the two slot assignments above are the other
+  // documented casts. BuiltClient projects the plugin's item + filter types.
   return client as unknown as BuiltClient<T, TRoutes>;
 }

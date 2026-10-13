@@ -22,6 +22,7 @@ export {
   type ListOptions,
   type SearchOptions,
 } from "./resources/opportunities";
+export { Awards, type AwardGetOptions, type AwardListOptions } from "./resources/awards";
 export type { BuiltClient } from "./resources/builder";
 export { Resource } from "./resources/base";
 export { RESOURCE_REGISTRY } from "./resources/registry";
