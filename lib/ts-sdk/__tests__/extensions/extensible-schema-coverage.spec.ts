@@ -1,13 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { EXTENSIBLE_SCHEMA_MAP } from "@/extensions/types";
+import * as zodAwards from "@/schemas/zod/awards";
 import * as zodModels from "@/schemas/zod/models";
 
 describe("extensible schema coverage", () => {
   it("every schema with customFields should be in EXTENSIBLE_SCHEMA_MAP", () => {
     const registeredSchemas = new Set<z.ZodObject>(Object.values(EXTENSIBLE_SCHEMA_MAP));
 
-    for (const [name, value] of Object.entries(zodModels)) {
+    const publicModelSchemas = { ...zodModels, ...zodAwards };
+
+    for (const [name, value] of Object.entries(publicModelSchemas)) {
       if (!(value instanceof z.ZodObject)) continue;
       if (!("customFields" in value.shape)) continue;
 

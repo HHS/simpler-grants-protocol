@@ -7,6 +7,9 @@ import {
   ISODateSchema,
   ISOTimeSchema,
   OffsetDateTimeSchema,
+  EmployerTaxIdSchema,
+  SamUeiSchema,
+  DunsSchema,
 } from "@/schemas";
 
 // ############################################################################
@@ -32,6 +35,48 @@ describe("UUID Schema", () => {
     expect(() => UuidSchema.parse("123e4567e89b12d3a456426614174000")).toThrow();
     // Too short
     expect(() => UuidSchema.parse("123e4567-e89b")).toThrow();
+  });
+});
+
+// ############################################################################
+// Organization identifier scalar schemas
+// ############################################################################
+
+describe("EmployerTaxId Schema", () => {
+  it("should validate exactly nine digits while preserving leading zeros", () => {
+    expect(EmployerTaxIdSchema.parse("012345678")).toBe("012345678");
+    expect(() => EmployerTaxIdSchema.parse("12345678")).toThrow();
+    expect(() => EmployerTaxIdSchema.parse("1234567890")).toThrow();
+  });
+
+  it("should match employerTaxId.yaml", async () => {
+    await expectZodMatchesJsonSchema(EmployerTaxIdSchema, "employerTaxId.yaml");
+  });
+});
+
+describe("SamUei Schema", () => {
+  it("should require twelve uppercase letters or digits excluding I and O", () => {
+    expect(SamUeiSchema.parse("AB0123456789")).toBe("AB0123456789");
+    expect(() => SamUeiSchema.parse("ab0123456789")).toThrow();
+    expect(() => SamUeiSchema.parse("AI0123456789")).toThrow();
+    expect(() => SamUeiSchema.parse("AO0123456789")).toThrow();
+    expect(() => SamUeiSchema.parse("AB012345678")).toThrow();
+  });
+
+  it("should match samUEI.yaml", async () => {
+    await expectZodMatchesJsonSchema(SamUeiSchema, "samUEI.yaml");
+  });
+});
+
+describe("Duns Schema", () => {
+  it("should validate exactly nine digits while preserving leading zeros", () => {
+    expect(DunsSchema.parse("012345678")).toBe("012345678");
+    expect(() => DunsSchema.parse("12345678")).toThrow();
+    expect(() => DunsSchema.parse("123-45678")).toThrow();
+  });
+
+  it("should match duns.yaml", async () => {
+    await expectZodMatchesJsonSchema(DunsSchema, "duns.yaml");
   });
 });
 

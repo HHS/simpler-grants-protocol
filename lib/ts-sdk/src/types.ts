@@ -10,6 +10,27 @@
 
 import { z } from "zod";
 import {
+  // Awards
+  AwdStatusOptionsEnum,
+  AwdStatusSchema,
+  AwdFundingSchema,
+  AwdTimelineSchema,
+  AwdIdFainSchema,
+  AwdIdsSchema,
+  AwdRefSchema,
+  AwdRecipientIndividualSchema,
+  AwardBaseSchema,
+  AwdSortByEnum,
+  AwdSortingSchema,
+  AwdDefaultFiltersSchema,
+  AwdFiltersSchema,
+  AwardsListRequestSchema,
+  AwardGetRequestSchema,
+  AwdSearchRequestSchema,
+  AwardResponseSchema,
+  AwardsListResponseSchema,
+  AwardsSortedResponseSchema,
+  AwardsFilteredResponseSchema,
   // Fields
   EventSchema,
   SingleDateEventSchema,
@@ -18,8 +39,30 @@ import {
   MoneySchema,
   CustomFieldSchema,
   SystemMetadataSchema,
+  NameSchema,
   EventTypeEnum,
   CustomFieldTypeEnum,
+  // Scalar types
+  EmployerTaxIdSchema,
+  SamUeiSchema,
+  DunsSchema,
+  // Identifiers
+  IdentifierSchema,
+  SystemIdSchema,
+  IdentifierCollectionSchema,
+  IdentifierStatusEnum,
+  // References
+  AppRefSchema,
+  OrgIdEinSchema,
+  OrgIdUeiSchema,
+  OrgIdDunsSchema,
+  OrgIdsSchema,
+  OrgRefSchema,
+  OrgRefCollectionSchema,
+  OppIdFonSchema,
+  OppIdAlnSchema,
+  OppIdsSchema,
+  OppRefSchema,
   // Filters
   DefaultFilterSchema,
   StringComparisonFilterSchema,
@@ -71,6 +114,43 @@ export type Money = z.infer<typeof MoneySchema>;
 export type CustomField = z.infer<typeof CustomFieldSchema>;
 export type CustomFieldType = z.infer<typeof CustomFieldTypeEnum>;
 export type SystemMetadata = z.infer<typeof SystemMetadataSchema>;
+export type Name = z.infer<typeof NameSchema>;
+
+// ############################################################################
+// Scalar types
+// ############################################################################
+
+export type EmployerTaxId = z.infer<typeof EmployerTaxIdSchema>;
+export type SamUei = z.infer<typeof SamUeiSchema>;
+export type Duns = z.infer<typeof DunsSchema>;
+
+// ############################################################################
+// Identifier types
+// ############################################################################
+
+export type Identifier = z.infer<typeof IdentifierSchema>;
+export type SystemId = z.infer<typeof SystemIdSchema>;
+export type IdentifierCollection = z.infer<typeof IdentifierCollectionSchema>;
+export type IdentifierStatus = z.infer<typeof IdentifierStatusEnum>;
+export type OrgIdEin = z.infer<typeof OrgIdEinSchema>;
+export type OrgIdUei = z.infer<typeof OrgIdUeiSchema>;
+export type OrgIdDuns = z.infer<typeof OrgIdDunsSchema>;
+export type OrgIds = z.infer<typeof OrgIdsSchema>;
+export type OppIdFon = z.infer<typeof OppIdFonSchema>;
+export type OppIdAln = z.infer<typeof OppIdAlnSchema>;
+export type OppIds = z.infer<typeof OppIdsSchema>;
+export type AwdIdFain = z.infer<typeof AwdIdFainSchema>;
+export type AwdIds = z.infer<typeof AwdIdsSchema>;
+
+// ############################################################################
+// Reference types
+// ############################################################################
+
+export type AppRef = z.infer<typeof AppRefSchema>;
+export type OrgRef = z.infer<typeof OrgRefSchema>;
+export type OrgRefCollection = z.infer<typeof OrgRefCollectionSchema>;
+export type OppRef = z.infer<typeof OppRefSchema>;
+export type AwdRef = z.infer<typeof AwdRefSchema>;
 
 // ############################################################################
 // Filter types
@@ -100,6 +180,18 @@ export type MoneyRangeFilter = z.infer<typeof MoneyRangeFilterSchema>;
 // Model types
 // ############################################################################
 
+export type AwdStatusOptions = z.infer<typeof AwdStatusOptionsEnum>;
+export type AwdStatus = z.infer<typeof AwdStatusSchema>;
+export type AwdFunding = z.infer<typeof AwdFundingSchema>;
+export type AwdTimeline = z.infer<typeof AwdTimelineSchema>;
+export type AwdRecipientIndividual = z.infer<typeof AwdRecipientIndividualSchema>;
+export type AwardBase = z.infer<typeof AwardBaseSchema>;
+/** Convenience alias for the canonical base award model. */
+export type Award = AwardBase;
+export type AwdSortBy = z.infer<typeof AwdSortByEnum>;
+export type AwdSorting = z.infer<typeof AwdSortingSchema>;
+export type AwdDefaultFilters = z.infer<typeof AwdDefaultFiltersSchema>;
+export type AwdFilters = z.infer<typeof AwdFiltersSchema>;
 export type OppStatus = z.infer<typeof OppStatusSchema>;
 export type OppStatusOptions = z.infer<typeof OppStatusOptionsEnum>;
 export type ApplicantType = z.infer<typeof ApplicantTypeSchema>;
@@ -156,6 +248,18 @@ export type Filtered<T, F> = Sorted<T> & {
     errors?: string[] | null | undefined;
   };
 };
+
+// ############################################################################
+// Award-specific request and response types
+// ############################################################################
+
+export type AwardsListRequest = z.input<typeof AwardsListRequestSchema>;
+export type AwardGetRequest = z.input<typeof AwardGetRequestSchema>;
+export type AwdSearchRequest = z.input<typeof AwdSearchRequestSchema>;
+export type AwardResponse = z.infer<typeof AwardResponseSchema>;
+export type AwardsListResponse = z.infer<typeof AwardsListResponseSchema>;
+export type AwardsSortedResponse = z.infer<typeof AwardsSortedResponseSchema>;
+export type AwardsFilteredResponse = z.infer<typeof AwardsFilteredResponseSchema>;
 
 // ############################################################################
 // Opportunity-specific request and response types
