@@ -163,7 +163,7 @@ describe("OrgPatchData merge-patch schema", () => {
                   identifiers: {
                     "org:us:ein": {
                       registry: { code: "org:us:ein" },
-                      id: "123456789",
+                      id: "472345678",
                     },
                   },
                 },

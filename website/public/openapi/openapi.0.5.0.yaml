@@ -2700,6 +2700,12 @@ components:
         opportunity:
           id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
           title: Health Center Capital Improvement Program
+          identifiers:
+            opp:us:fon:
+              registry:
+                code: opp:us:fon
+                url: https://commongrants.org/registries/opp-us-fon
+              id: HHS-2026-ACF-OCC-YD-0001
         funders:
           primary:
             id: 018f2e77-4b5c-7d2e-9f3a-bcdef1234567
@@ -2718,7 +2724,7 @@ components:
               org:us:ein:
                 registry:
                   code: org:us:ein
-                id: '123456789'
+                id: '582345679'
         source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
         createdAt: '2026-03-01T00:00:00Z'
         lastModifiedAt: '2026-06-01T00:00:00Z'
@@ -4123,6 +4129,12 @@ components:
       example:
         id: 018f2e77-3a4b-7c1d-9e2f-abcdef123456
         title: Health Center Capital Improvement Program
+        identifiers:
+          opp:us:fon:
+            registry:
+              code: opp:us:fon
+              url: https://commongrants.org/registries/opp-us-fon
+            id: HHS-2026-ACF-OCC-YD-0001
     CommonGrants.Models.OppSortBy:
       type: string
       enum:
@@ -4408,7 +4420,7 @@ components:
             org:us:ein:
               registry:
                 code: org:us:ein
-              id: '123456789'
+              id: '472345678'
         kind:
           value: fiscalSponsor
         startDate: '2024-07-01'
@@ -5121,7 +5133,7 @@ components:
                 org:us:ein:
                   registry:
                     code: org:us:ein
-                  id: '123456789'
+                  id: '472345678'
             kind:
               value: fiscalSponsor
             startDate: '2024-07-01'
@@ -5255,6 +5267,15 @@ components:
             linkedin: https://www.linkedin.com/company/example
             otherSocials:
               youtube: https://www.youtube.com/example
+          aliases:
+            - Example Org
+          relationships:
+            parents:
+              - org:
+                  id: 01912a8b-7c3d-7891-abcd-ef1234567891
+                  name: National Reading Network
+                kind:
+                  value: chapter
         createdAt: '2026-06-20T14:30:00Z'
         lastModifiedAt: '2026-06-20T14:30:00Z'
     CommonGrants.Models.OrgSocialLinks:
@@ -5532,6 +5553,15 @@ components:
           linkedin: https://www.linkedin.com/company/example
           otherSocials:
             youtube: https://www.youtube.com/example
+        aliases:
+          - Example Org
+        relationships:
+          parents:
+            - org:
+                id: 01912a8b-7c3d-7891-abcd-ef1234567891
+                name: National Reading Network
+              kind:
+                value: chapter
     CommonGrants.Models.RevisionStatus:
       type: object
       required:

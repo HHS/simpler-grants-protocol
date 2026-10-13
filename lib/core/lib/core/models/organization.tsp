@@ -372,6 +372,8 @@ namespace Examples.Organization {
     mission: "To provide support and resources to the community.",
     yearFounded: "2024",
     socials: exampleSocials,
+    aliases: #["Example Org"],
+    relationships: #{ parents: #[Examples.OrgRelationships.chapter] },
   };
 
   const exampleSocials = #{
@@ -447,7 +449,7 @@ namespace Examples.OrgRef {
     id: "018f2e77-6d7e-7f4a-9b5c-def123456789",
     name: "Riverside Community Health Center",
     identifiers: #{
-      `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+      `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "582345679" },
     },
   };
 
@@ -471,7 +473,7 @@ namespace Examples.OrgRelationships {
       id: "01912a8b-7c3d-7892-abcd-ef1234567892",
       name: "Riverside Community Foundation",
       identifiers: #{
-        `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+        `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "472345678" },
       },
     },
     kind: #{ value: OrgHierarchyKindOptions.fiscalSponsor },
