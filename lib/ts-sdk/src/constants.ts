@@ -9,6 +9,7 @@
  */
 
 import {
+  AwdStatusOptionsEnum,
   OppStatusOptionsEnum,
   ApplicantTypeOptionsEnum,
   OppSortByEnum,
@@ -27,6 +28,7 @@ import {
 // Model enum constants
 // ############################################################################
 
+export const AwdStatusOptions: typeof AwdStatusOptionsEnum.enum = AwdStatusOptionsEnum.enum;
 export const OppStatusOptions: typeof OppStatusOptionsEnum.enum = OppStatusOptionsEnum.enum;
 export const ApplicantTypeOptions: typeof ApplicantTypeOptionsEnum.enum =
   ApplicantTypeOptionsEnum.enum;

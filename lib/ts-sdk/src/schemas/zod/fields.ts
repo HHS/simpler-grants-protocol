@@ -79,13 +79,15 @@ export const EventSchema = z.discriminatedUnion("eventType", [
 // Money schema
 // ############################################################################
 
-export const MoneySchema = z.object({
-  /** The amount of money */
-  amount: DecimalStringSchema,
+export const MoneySchema = z
+  .object({
+    /** The amount of money */
+    amount: DecimalStringSchema,
 
-  /** The ISO 4217 currency code */
-  currency: z.string(),
-});
+    /** The ISO 4217 currency code */
+    currency: z.string(),
+  })
+  .strict();
 
 // ############################################################################
 // CustomField schema

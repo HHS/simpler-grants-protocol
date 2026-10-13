@@ -10,6 +10,16 @@
 
 import { z } from "zod";
 import {
+  // Awards
+  AwdStatusOptionsEnum,
+  AwdStatusSchema,
+  AwdFundingSchema,
+  AwdTimelineSchema,
+  AwdIdFainSchema,
+  AwdIdsSchema,
+  AwdRefSchema,
+  AwdRecipientIndividualSchema,
+  AwardBaseSchema,
   // Fields
   EventSchema,
   SingleDateEventSchema,
@@ -118,6 +128,8 @@ export type OrgIds = z.infer<typeof OrgIdsSchema>;
 export type OppIdFon = z.infer<typeof OppIdFonSchema>;
 export type OppIdAln = z.infer<typeof OppIdAlnSchema>;
 export type OppIds = z.infer<typeof OppIdsSchema>;
+export type AwdIdFain = z.infer<typeof AwdIdFainSchema>;
+export type AwdIds = z.infer<typeof AwdIdsSchema>;
 
 // ############################################################################
 // Reference types
@@ -127,6 +139,7 @@ export type AppRef = z.infer<typeof AppRefSchema>;
 export type OrgRef = z.infer<typeof OrgRefSchema>;
 export type OrgRefCollection = z.infer<typeof OrgRefCollectionSchema>;
 export type OppRef = z.infer<typeof OppRefSchema>;
+export type AwdRef = z.infer<typeof AwdRefSchema>;
 
 // ############################################################################
 // Filter types
@@ -156,6 +169,14 @@ export type MoneyRangeFilter = z.infer<typeof MoneyRangeFilterSchema>;
 // Model types
 // ############################################################################
 
+export type AwdStatusOptions = z.infer<typeof AwdStatusOptionsEnum>;
+export type AwdStatus = z.infer<typeof AwdStatusSchema>;
+export type AwdFunding = z.infer<typeof AwdFundingSchema>;
+export type AwdTimeline = z.infer<typeof AwdTimelineSchema>;
+export type AwdRecipientIndividual = z.infer<typeof AwdRecipientIndividualSchema>;
+export type AwardBase = z.infer<typeof AwardBaseSchema>;
+/** Convenience alias for the canonical base award model. */
+export type Award = AwardBase;
 export type OppStatus = z.infer<typeof OppStatusSchema>;
 export type OppStatusOptions = z.infer<typeof OppStatusOptionsEnum>;
 export type ApplicantType = z.infer<typeof ApplicantTypeSchema>;

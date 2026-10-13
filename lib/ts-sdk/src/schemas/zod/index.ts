@@ -1,4 +1,5 @@
 // Re-export all public exports from each module
+export * from "./awards";
 export * from "./fields";
 export * from "./filters";
 export * from "./models";

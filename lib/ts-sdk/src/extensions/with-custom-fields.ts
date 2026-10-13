@@ -121,9 +121,18 @@ export function withCustomFields<
     }).optional();
   }
 
-  // Create new customFields schema with passthrough for unknown fields
-  // Use nullish() to match the base schema's customFields: z.record(...).nullish()
-  const customFieldsSchema = z.object(typedFieldSchemas).loose().nullish();
+  // Keep unregistered fields extensible, but validate them with the same
+  // CustomField contract as the base record rather than accepting arbitrary
+  // values. Preserve the base schema's null/undefined policy: Opportunity's
+  // customFields is nullish, while AwdRecipientIndividual's is optional only.
+  let customFieldsSchema: z.ZodType = z.object(typedFieldSchemas).catchall(CustomFieldSchema);
+
+  if (schemaShape.customFields.safeParse(null).success) {
+    customFieldsSchema = customFieldsSchema.nullable();
+  }
+  if (schemaShape.customFields.safeParse(undefined).success) {
+    customFieldsSchema = customFieldsSchema.optional();
+  }
 
   // Extend base schema with new customFields
   const result = baseSchema.extend({
