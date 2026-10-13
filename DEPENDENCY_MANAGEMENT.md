@@ -71,7 +71,7 @@ The `website` catalog has its own `vitest` version (`^4.x`). The update script i
 
 **How it works:**
 1. Runs `.github/scripts/update-catalog-deps.sh --dry-run` to check for outdated packages
-2. If updates exist, runs the script without `--dry-run` to update `pnpm-workspace.yaml` and regenerate the lockfile
+2. If updates exist, runs the script without `--dry-run` to update `pnpm-workspace.yaml`, raise any matching floor peer ranges (`>=X.Y.Z <N`) in `lib/core/package.json`, and regenerate the lockfile
 3. Opens a PR on branch `chore/update-catalog-deps` via `peter-evans/create-pull-request`
 
 **Running locally:**
@@ -80,7 +80,7 @@ The `website` catalog has its own `vitest` version (`^4.x`). The update script i
 # Check what's outdated without making changes
 ./.github/scripts/update-catalog-deps.sh --dry-run
 
-# Apply updates (modifies pnpm-workspace.yaml and pnpm-lock.yaml)
+# Apply updates (modifies pnpm-workspace.yaml, pnpm-lock.yaml, and core's floor peers)
 ./.github/scripts/update-catalog-deps.sh
 ```
 

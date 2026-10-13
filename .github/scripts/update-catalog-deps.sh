@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update catalog-managed dependencies in pnpm-workspace.yaml and regenerate
-# the lockfile. These deps are excluded from Dependabot to avoid lockfile
-# corruption (dependabot-core #14339).
+# Update catalog-managed dependencies in pnpm-workspace.yaml, raise core's
+# matching floor peer ranges, and regenerate the lockfile. These deps are
+# excluded from Dependabot to avoid lockfile corruption (dependabot-core #14339).
 #
 # Two modes, controlled by --majors-only:
 #
