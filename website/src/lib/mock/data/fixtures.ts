@@ -7,7 +7,7 @@
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "./ids";
 // Type-only: erased at build time, so this does not close the runtime import
 // cycle that `awards.ts` opens by importing this module.
-import type { AwdRef } from "./awards";
+import type { AwdRef, OppRef } from "./awards";
 // The award references below are shared with `awards.ts`, which builds each
 // award fixture from the same constant, so a title or identifier cannot drift
 // between an award and the opportunity that lists it.
@@ -31,7 +31,8 @@ import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
  * Protocol versions the fixture can shape, matching the specs the docs site
  * publishes. v0.4.0 left the opportunity models untouched, so it shapes
  * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which
- * `shapeOpportunityForVersion` strips for every earlier version.
+ * `shapeOpportunityForVersion` strips for every earlier version, and replaces
+ * each nested competition's `opportunityId` with an `opportunity` reference.
  */
 export const SUPPORTED_VERSIONS = [
   "0.1.0",
@@ -155,6 +156,7 @@ export interface CompetitionTimeline {
 /**
  * A trimmed competition (mirrors `Models.CompetitionBase`, added v0.2). The
  * full model requires a `forms` object; the mock omits it deliberately.
+ * Stored with the v0.2-v0.4 `opportunityId`; see `WireCompetitionPreview`.
  */
 export interface Competition {
   id: string;
@@ -164,6 +166,15 @@ export interface Competition {
   status: CompetitionStatus;
   keyDates?: CompetitionTimeline;
 }
+
+/**
+ * A nested competition as a version serves it: v0.5 replaces `opportunityId`
+ * with an `opportunity` reference.
+ */
+export type WireCompetitionPreview = Omit<Competition, "opportunityId"> & {
+  opportunityId?: string;
+  opportunity?: OppRef;
+};
 
 /** A funding opportunity in its fullest (v0.3+, detail) shape. */
 /**
@@ -1211,6 +1222,11 @@ export const OPPORTUNITY_FIXTURES: readonly Opportunity[] = Object.freeze([
   },
 ]);
 
+/** An opportunity as a version serves it (see `WireCompetitionPreview`). */
+export type WireOpportunity = Omit<Opportunity, "competitions"> & {
+  competitions?: WireCompetitionPreview[];
+};
+
 /**
  * Projects a record down to the shape a given version + variant should emit.
  * Returns a shallow copy; the original is untouched.
@@ -1219,8 +1235,8 @@ export function shapeOpportunityForVersion(
   opp: Opportunity,
   version: Version,
   variant: ShapeVariant = "list",
-): Opportunity {
-  const shaped: Opportunity = { ...opp };
+): WireOpportunity {
+  const shaped: WireOpportunity = { ...opp };
 
   // `competitions` and `awards` only exist on the detail
   // (OpportunityDetails) shape.
@@ -1248,7 +1264,54 @@ export function shapeOpportunityForVersion(
     delete shaped.awards;
   }
 
+  // `CompetitionBase.opportunity` replaces `opportunityId` at v0.5.
+  if (
+    shaped.competitions &&
+    SUPPORTED_VERSIONS.indexOf(version) >= SUPPORTED_VERSIONS.indexOf("0.5.0")
+  ) {
+    shaped.competitions = shaped.competitions.map((preview) =>
+      withOpportunityRef(preview),
+    );
+  }
+
   return shaped;
+}
+
+/**
+ * Builds the `OppRef` a v0.5 competition carries, reading the real record so
+ * the title cannot drift from it.
+ */
+export function toOppRef(opportunity: Opportunity): OppRef {
+  return {
+    id: opportunity.id,
+    title: opportunity.title,
+    ...(opportunity.identifiers
+      ? { identifiers: { ...opportunity.identifiers } }
+      : {}),
+  };
+}
+
+/**
+ * Replaces a competition's `opportunityId` with an `opportunity` reference to
+ * the same record, in the same key position. Throws on an unknown id, which
+ * would be a dangling fixture reference.
+ */
+export function withOpportunityRef<T extends { opportunityId?: string }>(
+  competition: T,
+): Omit<T, "opportunityId"> & { opportunity: OppRef } {
+  const opportunity = getById(competition.opportunityId ?? "");
+  if (!opportunity) {
+    throw new Error(
+      `Competition references unknown opportunity ${competition.opportunityId}`,
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(competition).map(([key, value]) =>
+      key === "opportunityId"
+        ? ["opportunity", toOppRef(opportunity)]
+        : [key, value],
+    ),
+  ) as Omit<T, "opportunityId"> & { opportunity: OppRef };
 }
 
 /**
@@ -1262,7 +1325,7 @@ export function getById(id: string): Opportunity | undefined {
 }
 
 /** Returns every fixture projected to the list (OpportunityBase) shape for a version. */
-export function allForVersion(version: Version): Opportunity[] {
+export function allForVersion(version: Version): WireOpportunity[] {
   return OPPORTUNITY_FIXTURES.map((opp) =>
     shapeOpportunityForVersion(opp, version, "list"),
   );

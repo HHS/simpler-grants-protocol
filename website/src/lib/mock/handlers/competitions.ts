@@ -5,7 +5,10 @@
  * is no list route; competitions are reached from an opportunity's detail.
  */
 
-import { getCompetitionById } from "../data/competitions";
+import {
+  getCompetitionById,
+  shapeCompetitionForVersion,
+} from "../data/competitions";
 import type { Version } from "../data/fixtures";
 import { errorResponse, successResponse } from "../http/envelope";
 import { isUuid } from "../http/query";
@@ -15,7 +18,6 @@ import { isUuid } from "../http/query";
  * competition. A malformed id answers 400, not a route miss.
  */
 export function getCompetition(compId: string, version: Version): Response {
-  void version;
   if (!isUuid(compId)) {
     return errorResponse(400, "Invalid competition id", [
       { field: "compId", message: "Must be a valid UUID" },
@@ -29,5 +31,7 @@ export function getCompetition(compId: string, version: Version): Response {
     ]);
   }
 
-  return successResponse({ data: competition });
+  return successResponse({
+    data: shapeCompetitionForVersion(competition, version),
+  });
 }

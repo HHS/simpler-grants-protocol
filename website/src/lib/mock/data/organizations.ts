@@ -160,7 +160,11 @@ export const CANONICAL_ORGANIZATION_ID = CANONICAL_RECORD_ID;
  */
 export const CANONICAL_ORG_REVISION_ID = CANONICAL_RECORD_ID;
 
-/** The id published on the `Models.OrganizationBase` example itself. */
+/**
+ * The id published on the `Models.OrganizationBase` example itself. The
+ * record under it is the canonical record again, so the documented id
+ * resolves to the documented organization.
+ */
 export const DOCUMENTED_ORGANIZATION_ID =
   "083b4567-e89d-42c8-a439-6c1234567890";
 
@@ -171,7 +175,9 @@ export const DOCUMENTED_ORGANIZATION_ID =
  */
 export const HRSA_ORG_ID = "018f2e77-4b5c-7d2e-9f3a-bcdef1234567";
 export const NSF_ORG_ID = "018f2e77-5c6d-7e3f-8a4b-cdef12345678";
-export const CASCADE_WORKFORCE_ORG_ID = "018f2e77-6d7e-7f4a-9b5c-def123456789";
+/** The id the spec's `OrgRef` recipient example publishes for this org. */
+export const RIVERSIDE_CHC_ORG_ID = "018f2e77-6d7e-7f4a-9b5c-def123456789";
+export const CASCADE_WORKFORCE_ORG_ID = "018f2e77-a0b1-7d8e-8f9a-234567890123";
 export const LAKESIDE_ARTS_ORG_ID = "018f2e77-7e8f-7a5b-8c6d-ef1234567890";
 export const PRAIRIE_BROADBAND_ORG_ID = "018f2e77-8f90-7b6c-8d7e-f12345678901";
 export const COASTAL_RESEARCH_ORG_ID = "018f2e77-9012-7c7d-8e8f-123456789012";
@@ -224,31 +230,40 @@ function usPhone(number: string, isMobile = false): Phone {
   return { countryCode: "+1", number, isMobile };
 }
 
-/** The fixture set: 8 organizations spanning funders and recipients. */
-export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
-  Organization[]
->([
-  // ---- The canonical record: the spec's documented OrganizationBase example ----
-  {
-    // Mirrors the spec's documented OrganizationBase example field for field,
-    // oddities included. Only the id differs (see `./ids`).
-    id: CANONICAL_ORGANIZATION_ID,
-    name: "Example Organization",
-    orgType: {
-      term: "Hospital",
-      class: "Organization types",
-      code: "EO000000",
-      description:
-        "Institutions with the primary purpose of providing in-patient physical and mental health services",
+/**
+ * The canonical record: the spec's documented OrganizationBase example. It
+ * mirrors that example, oddities included, except for the id (see `./ids`)
+ * and the v0.5 `aliases` and `relationships` fields, which this mock
+ * `Organization` type does not model.
+ */
+const CANONICAL_ORGANIZATION: Organization = {
+  id: CANONICAL_ORGANIZATION_ID,
+  name: "Example Organization",
+  orgType: {
+    term: "Hospital",
+    class: "Organization types",
+    code: "EO000000",
+    description:
+      "Institutions with the primary purpose of providing in-patient physical and mental health services",
+  },
+  identifiers: {
+    "org:us:ein": ein("123456789"),
+    "org:us:uei": uei("AB0123456789"),
+  },
+  ein: "123456789",
+  uei: "AB0123456789",
+  addresses: {
+    primary: {
+      street1: "456 Main St",
+      street2: "Suite 100",
+      city: "Anytown",
+      stateOrProvince: "CA",
+      country: "US",
+      postalCode: "12345",
     },
-    identifiers: {
-      "org:us:ein": ein("123456789"),
-      "org:us:uei": uei("AB0123456789"),
-    },
-    ein: "123456789",
-    uei: "AB0123456789",
-    addresses: {
-      primary: {
+    otherAddresses: {
+      // Duplicate of `primary` on purpose; the published example does this.
+      satellite: {
         street1: "456 Main St",
         street2: "Suite 100",
         city: "Anytown",
@@ -256,61 +271,60 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
         country: "US",
         postalCode: "12345",
       },
-      otherAddresses: {
-        // Duplicate of `primary` on purpose; the published example does this.
-        satellite: {
-          street1: "456 Main St",
-          street2: "Suite 100",
-          city: "Anytown",
-          stateOrProvince: "CA",
-          country: "US",
-          postalCode: "12345",
-        },
-        international: {
-          street1: "123 Rue Principale",
-          city: "Montreal",
-          stateOrProvince: "QC",
-          country: "CA",
-          postalCode: "H2Y 1C6",
-        },
+      international: {
+        street1: "123 Rue Principale",
+        city: "Montreal",
+        stateOrProvince: "QC",
+        country: "CA",
+        postalCode: "H2Y 1C6",
       },
-    },
-    phones: {
-      primary: usPhone("444-456-1230", true),
-      fax: {
-        countryCode: "+1",
-        number: "555-123-4567",
-        extension: "123",
-        isMobile: false,
-      },
-      otherPhones: {
-        support: usPhone("333-456-1230"),
-        // Same number as `primary` on purpose; the example's own value.
-        marketing: usPhone("444-456-1230", true),
-      },
-    },
-    emails: {
-      primary: "info@example.com",
-      otherEmails: {
-        support: "support@example.com",
-        marketing: "marketing@example.com",
-      },
-    },
-    mission: "To provide support and resources to the community.",
-    yearFounded: "2024",
-    socials: {
-      website: "https://www.example.com",
-      facebook: "https://www.facebook.com/example",
-      twitterOrX: "https://x.com/example",
-      instagram: "https://www.instagram.com/example",
-      linkedin: "https://www.linkedin.com/company/example",
-      otherSocials: { youtube: "https://www.youtube.com/example" },
     },
   },
+  phones: {
+    primary: usPhone("444-456-1230", true),
+    fax: {
+      countryCode: "+1",
+      number: "555-123-4567",
+      extension: "123",
+      isMobile: false,
+    },
+    otherPhones: {
+      support: usPhone("333-456-1230"),
+      // Same number as `primary` on purpose; the example's own value.
+      marketing: usPhone("444-456-1230", true),
+    },
+  },
+  emails: {
+    primary: "info@example.com",
+    otherEmails: {
+      support: "support@example.com",
+      marketing: "marketing@example.com",
+    },
+  },
+  mission: "To provide support and resources to the community.",
+  yearFounded: "2024",
+  socials: {
+    website: "https://www.example.com",
+    facebook: "https://www.facebook.com/example",
+    twitterOrX: "https://x.com/example",
+    instagram: "https://www.instagram.com/example",
+    linkedin: "https://www.linkedin.com/company/example",
+    otherSocials: { youtube: "https://www.youtube.com/example" },
+  },
+};
+
+/** The fixture set: 9 organizations spanning funders and recipients. */
+export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
+  Organization[]
+>([
+  CANONICAL_ORGANIZATION,
 
   // ---- The id published on the OrganizationBase example ----
+  { ...CANONICAL_ORGANIZATION, id: DOCUMENTED_ORGANIZATION_ID },
+
+  // ---- The id published on the OrgRef recipient example ----
   {
-    id: DOCUMENTED_ORGANIZATION_ID,
+    id: RIVERSIDE_CHC_ORG_ID,
     name: "Riverside Community Health Center",
     orgType: {
       term: "Hospital",
@@ -321,15 +335,15 @@ export const ORGANIZATION_FIXTURES: readonly Organization[] = Object.freeze<
       // `allIds` carries the full registry history, archived values included;
       // the scalar `ein` and `id` stay the current value.
       "org:us:ein": {
-        ...ein("234567890"),
+        ...ein("582345679"),
         allIds: [
-          { id: "234567890", status: "active" },
+          { id: "582345679", status: "active" },
           { id: "231456789", status: "archived" },
         ],
       },
       "org:us:uei": uei("BC1234567890"),
     },
-    ein: "234567890",
+    ein: "582345679",
     uei: "BC1234567890",
     addresses: {
       primary: usAddress("1200 Riverside Dr", "Riverside", "CA", "92501"),
@@ -574,7 +588,7 @@ export const ORG_REVISION_FIXTURES: readonly OrgRevision[] = Object.freeze<
   },
   {
     id: "2c3d4e5f-6071-4283-8c9d-0e1f20314253",
-    orgId: DOCUMENTED_ORGANIZATION_ID,
+    orgId: RIVERSIDE_CHC_ORG_ID,
     status: {
       value: "denied",
       description: "The submitted EIN did not match IRS records.",
