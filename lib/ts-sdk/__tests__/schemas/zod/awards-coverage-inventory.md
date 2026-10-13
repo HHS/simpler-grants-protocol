@@ -99,37 +99,38 @@ shared-schema dependencies**.
 
 ## Award routes
 
-| Emitted `$id`                  | Route or role                         | SDK schema                     | Status            |
-| ------------------------------ | ------------------------------------- | ------------------------------ | ----------------- |
-| `AwardsListRequest.yaml`       | `GET /awards/` query                  | `AwardsListRequestSchema`      | new (T6)          |
-| `AwardGetRequest.yaml`         | `GET /awards/{awdId}` path            | `AwardGetRequestSchema`        | new (T6)          |
-| `AwdSearchRequest.yaml`        | `POST /awards/search` body            | `AwdSearchRequestSchema`       | new (T6)          |
-| `AwardResponse.yaml`           | successful read response              | `AwardResponseSchema`          | new (T6)          |
-| `AwardsListResponse.yaml`      | successful paginated list response    | `AwardsListResponseSchema`     | new (T6)          |
-| `AwardsSortedResponse.yaml`    | paginated award response with sorting | `AwardsSortedResponseSchema`   | new (T6)          |
-| `AwardsFilteredResponse.yaml`  | successful search response            | `AwardsFilteredResponseSchema` | new (T6)          |
-| `NotFound.yaml`                | read error response                   | `NotFoundSchema`               | existing          |
+| Emitted `$id`                 | Route or role                         | SDK schema                     | Status   |
+| ----------------------------- | ------------------------------------- | ------------------------------ | -------- |
+| `AwardsListRequest.yaml`      | `GET /awards/` query                  | `AwardsListRequestSchema`      | new (T6) |
+| `AwardGetRequest.yaml`        | `GET /awards/{awdId}` path            | `AwardGetRequestSchema`        | new (T6) |
+| `AwdSearchRequest.yaml`       | `POST /awards/search` body            | `AwdSearchRequestSchema`       | new (T6) |
+| `AwardResponse.yaml`          | successful read response              | `AwardResponseSchema`          | new (T6) |
+| `AwardsListResponse.yaml`     | successful paginated list response    | `AwardsListResponseSchema`     | new (T6) |
+| `AwardsSortedResponse.yaml`   | paginated award response with sorting | `AwardsSortedResponseSchema`   | new (T6) |
+| `AwardsFilteredResponse.yaml` | successful search response            | `AwardsFilteredResponseSchema` | new (T6) |
 
 `AwardsListRequestSchema` maps the operation's `PaginatedQueryParams` to the
 protocol-exact local `RoutePaginationInputSchema`. `AwardGetRequestSchema` maps
 the `awdId` path parameter to `UuidSchema`. `AwdSearchRequestSchema` composes
 `search?`, `AwdFiltersSchema`, `AwdSortingSchema`, and the protocol-exact local
 pagination input corresponding to `PaginatedBodyParams`. See Unresolved below
-for why the two shared pagination schemas cannot be reused yet.
+for why the two shared pagination schemas cannot be reused yet. The read
+operation's error contract uses the existing `NotFoundSchema`; the test entry
+point emits only the seven concrete success/request contracts listed above.
 
 ### Award filter and sorting references
 
-| Emitted `$id`            | Reached from                                 | SDK schema                    | Status                               |
-| ------------------------ | -------------------------------------------- | ----------------------------- | ------------------------------------ |
-| `AwdFilters.yaml`        | search `filters`                                                                                                     | n/a                                                                                   | new (T5)                             |
-| `AwdDefaultFilters.yaml` | base of `AwdFilters`                                                                                                 | n/a                                                                                   | new (T5)                             |
-| `StringArrayFilter.yaml` | `status`, `opportunityId`                                                                                            | n/a                                                                                   | existing (`StringArrayFilterSchema`) |
-| `DateRangeFilter.yaml`   | `awardDateRange`                                                                                                     | n/a                                                                                   | existing (`DateRangeFilterSchema`)   |
-| `MoneyRangeFilter.yaml`  | `awardedAmountRange`                                                                                                 | n/a                                                                                   | existing (`MoneyRangeFilterSchema`)  |
-| `DefaultFilter.yaml`     | `customFilters[*]` / `AwdDefaultFilters` catch-all                                                                   | n/a                                                                                   | existing (`DefaultFilterSchema`)     |
-| `AwdSorting.yaml`        | search `sorting`                                                                                                     | n/a                                                                                   | new (T5)                             |
-| `AwdSortBy.yaml`         | `AwdSorting.sortBy`                                                                                                  | n/a                                                                                   | new (T5); constant `AwdSortBy`       |
-| `SortBodyParams.yaml`    | base of `AwdSorting`                                                                                                 | n/a                                                                                   | existing (`SortBodyParamsSchema`)    |
+| Emitted `$id`            | Reached from                        | SDK schema                    | Status   |
+| ------------------------ | ----------------------------------- | ----------------------------- | -------- |
+| `AwdFilters.yaml`        | search `filters`                    | `AwdFiltersSchema`            | new (T5) |
+| `AwdDefaultFilters.yaml` | base of `AwdFilters`                | `AwdDefaultFiltersSchema`     | new (T5) |
+| `StringArrayFilter.yaml` | `status`, `opportunityId`           | `StringArrayFilterSchema`     | existing |
+| `DateRangeFilter.yaml`   | `awardDateRange`                    | `DateRangeFilterSchema`       | existing |
+| `MoneyRangeFilter.yaml`  | `awardedAmountRange`                | `MoneyRangeFilterSchema`      | existing |
+| `DefaultFilter.yaml`     | custom/default filter record values | `DefaultFilterSchema`         | existing |
+| `AwdSorting.yaml`        | search `sorting`                    | `AwdSortingSchema`            | new (T5) |
+| `AwdSortBy.yaml`         | `AwdSorting.sortBy`                 | `AwdSortByEnum` / `AwdSortBy` | new (T5) |
+| `SortBodyParams.yaml`    | base of `AwdSorting`                | `SortBodyParamsSchema`        | existing |
 
 `AwdDefaultFilters` is open: it accepts additional `DefaultFilter`-valued keys
 through its `RecordDefaultFilter` catch-all. `AwdFilters` is sealed except for

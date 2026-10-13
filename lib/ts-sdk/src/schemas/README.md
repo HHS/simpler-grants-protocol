@@ -228,6 +228,13 @@ arbitrary keys, but every value must satisfy `CustomFieldSchema`. The recipient
 schema is also registered with `withCustomFields()` and the plugin extension
 framework as `AwdRecipientIndividual`.
 
+The award schemas currently inherit two shared-model parity dependencies tracked
+by [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192): event
+variants and `CustomFieldSchema` accept `null` for some optional metadata and do
+not yet reject every unknown nested key that the emitted Core contract rejects.
+The award-specific route envelopes avoid the analogous shared pagination and
+sorting differences by using protocol-exact concrete validators.
+
 Award filters have two intentionally different object policies:
 
 - `AwdDefaultFiltersSchema` is open. Alongside its named fields, it accepts and
