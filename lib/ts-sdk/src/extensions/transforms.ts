@@ -87,7 +87,8 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
  * fallback is a safety net, not an expected code path.
  *
  * Also skips schemas that accept unknown keys via a non-`never` catchall
- * (`.loose()` / `.catchall(...)`). Those keys are valid by definition, so
+ * (`.loose()` / `.passthrough()` / `.catchall(...)`). Those keys are valid by
+ * definition, so
  * flagging them would be a false positive, common for a source schema that
  * only models the fields a transform maps and passes the rest through. This
  * waives build-time key-typo detection for the whole mapping against such a
@@ -106,8 +107,11 @@ function validateOutputPaths(
   commonSchema: z.ZodType<unknown, any>
 ): void {
   if (!(commonSchema instanceof z.ZodObject)) return;
-  // A `.loose()` / `.catchall(...)` object accepts keys outside its shape;
-  // `.strict()` sets catchall to `z.never()`, which does not. Skip the former.
+  // A `.loose()` / `.passthrough()` / `.catchall(...)` object accepts keys
+  // outside its shape; `.strict()` sets catchall to `z.never()`, which does
+  // not. Skip the former. `.def` is Zod v4's public schema-introspection API
+  // (not a private field); `.def.catchall` is `undefined` for a plain
+  // `z.object()`, so the `!== undefined` guard keeps plain objects validated.
   const catchall = commonSchema.def.catchall;
   if (catchall !== undefined && !(catchall instanceof z.ZodNever)) return;
   const validNames = new Set(Object.keys(commonSchema.shape));
