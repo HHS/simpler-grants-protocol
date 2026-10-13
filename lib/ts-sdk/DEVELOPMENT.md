@@ -39,3 +39,10 @@ Follow these steps when adding a new model that supports `customFields`:
    - Map entries that point to schemas without `customFields`
 
 `definePlugin()` automatically includes all registered models, so no further wiring is needed.
+
+### Release runbook
+
+A full TypeScript SDK release runbook hasn't been written yet. Until then:
+
+- Follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch).
+- Keep SDK changes on the SDK's own hold branch, branched from the core hold branch if they need unreleased core functionality. If SDK changes ride on the core hold branch, don't merge the `@common-grants/sdk` Release PR until the SDK's own hold work has landed on it. See [SDK changes](../README.md#sdk-changes).

@@ -8,26 +8,40 @@ The CommonGrants CLI is a command-line tool that provides a set of commands for 
 
 ## Development commands
 
-| Command                | Description                                                         |
-| ---------------------- | ------------------------------------------------------------------- |
-| `npm install`          | Installs dependencies                                               |
-| `npm run build`        | Compiles TypeScript and runs typespec compilation                   |
-| `npm run typespec`     | Run the TypeSpec compiler to generate OpenAPI specs                 |
-| `npm run start`        | Start the CLI application                                           |
-| `npm run dev`          | Start development server with ts-node                               |
-| `npm run prepare`      | Run TypeScript compilation (pre-install hook)                       |
-| `npm run test`         | Run vi test suite                                                   |
-| `npm run test:watch`   | Run vi test suite in watch mode                                     |
-| `npm run lint`         | Run ESLint with automatic fixes                                     |
-| `npm run format`       | Run automatic formatting and fix issues                             |
-| `npm run check:lint`   | Check linting, fail if issues are found                             |
-| `npm run check:format` | Check formatting, fail if issues are found                          |
-| `npm run checks`       | Run all CI checks listed above                                      |
-| `npm pack`             | Creates a tarball of the library to simulate installing it from npm |
+Run `pnpm install` once from the repo root. Then run these from `lib/cli/`, or from the repo root as `pnpm --filter @common-grants/cli run <script>`.
+
+| Command                  | Description                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `pnpm run build`         | Regenerates the bundled OpenAPI specs (`typespec`), then compiles TypeScript |
+| `pnpm run typespec`      | Regenerates the bundled OpenAPI specs in `lib/openapi/`                      |
+| `pnpm run start`         | Start the CLI application                                                    |
+| `pnpm run dev`           | Start development server with ts-node                                        |
+| `pnpm run prepare`       | Run TypeScript compilation only (pre-install hook)                           |
+| `pnpm run test`          | Run Vitest test suite                                                        |
+| `pnpm run test:watch`    | Run Vitest test suite in watch mode                                          |
+| `pnpm run test:coverage` | Run Vitest with coverage report                                              |
+| `pnpm run lint`          | Run ESLint with automatic fixes                                              |
+| `pnpm run format`        | Run automatic formatting and fix issues                                      |
+| `pnpm run check:lint`    | Check linting, fail if issues are found                                      |
+| `pnpm run check:format`  | Check formatting, fail if issues are found                                   |
+| `pnpm run check:types`   | Check types, fail if issues are found                                        |
+| `pnpm run checks`        | Run all the checks listed above                                              |
+| `pnpm run ci`            | Run the checks, build and tests that CI runs                                 |
+| `pnpm pack`              | Creates a tarball of the library to simulate installing it from npm          |
+
+`pnpm install` compiles the CLI, so you can run it from the repo root with `node lib/cli/dist/index.js <command>`. Don't run `npx` inside the repo until [#1288](https://github.com/HHS/simpler-grants-protocol/issues/1288) lands. It fails with `EDUPLICATEWORKSPACE`. Use `pnpm dlx @common-grants/cli <command>` or the local binary instead.
+
+## Bundled specs
+
+The CLI bundles a copy of each protocol version's OpenAPI spec in [`lib/openapi/`](lib/openapi/), and `cg check spec --protocol-version` can only select versions bundled there. The `build` script runs `typespec`, which recompiles those specs from the workspace copy of `@common-grants/core`. So any CLI build picks up the latest core spec, even one for an unrelated fix.
+
+- After a core release, the next CLI release must use a `feat(cli): ...` title, so the release that adds the new protocol version is a minor release. Never ship it as a `fix`.
+- That release doesn't have to go out with core, but don't let the CLI fall several core versions behind.
+- Whether to take `typespec` out of the CLI `build` script is an open decision, tracked in [#1286](https://github.com/HHS/simpler-grants-protocol/issues/1286).
 
 ## Release runbook
 
-Steps to follow when preparing a new release of the CommonGrants core library.
+Steps to follow when preparing a new release of the CommonGrants CLI. Feature work that ships with a minor release follows [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch).
 
 ### Pre-release checklist
 
@@ -35,15 +49,16 @@ Steps to follow when preparing a new release of the CommonGrants core library.
   - [ ] If commands were added or changed
     - [ ] The [`README.md` usage section](README.md#usage) has been updated to include them
     - [ ] The [man page](./man/cg.1) has been updated to include them
-  - [ ] `npm pack` has been run, the package has been installed in a new directory outside this repo, and all the commands listed in the [README](README.md#usage) have been tested
+  - [ ] If this is the first CLI release since a core release, `lib/openapi/` includes the new protocol version's spec, and `cg check spec --protocol-version <new-version>` works
+  - [ ] `pnpm --filter @common-grants/cli pack --pack-destination <dir-outside-repo>` has been run, the package has been installed in that directory, and all the commands listed in the [README](README.md#usage) have been tested
   - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
-  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
+  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change. After a core release, it's `feat` (see [Bundled specs](#bundled-specs)).
 - [ ] After merging:
   - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `@common-grants/cli` Release PR
 
 ### Release checklist
 
-- [ ] The `@common-grants/cli` Release PR has been merged — this tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to npm automatically
+- [ ] The `@common-grants/cli` Release PR has been merged. This tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to npm automatically.
 - [ ] The auto-generated release notes are accurate
 - [ ] The new version appears on [npm](https://www.npmjs.com/package/@common-grants/cli)
 

@@ -29,15 +29,15 @@ All commands are run from the root of the project, from a terminal:
 
 | Command                   | Action                                       |
 | :------------------------ | :------------------------------------------- |
-| `npm install`             | Installs dependencies                        |
-| `npm run dev`             | Starts local dev server at `localhost:4321`  |
-| `npm run build`           | Build your production site to `./dist/`      |
-| `npm run preview`         | Preview your build locally, before deploying |
-| `npm run astro -- --help` | Get help using the Astro CLI                 |
-| `npm run format`          | Run automatic formatting and fix issues      |
-| `npm run lint`            | Run automatic linting and fix issues         |
-| `npm run check:format`    | Check formatting, fail if issues are found   |
-| `npm run check:lint`      | Check linting, fail if issues are found      |
-| `npm run check:spelling`  | Check spelling, fail if issues are found     |
-| `npm run check:astro`     | Check Astro build and type safety            |
-| `npm run checks`          | Run all CI checks listed above               |
+| `pnpm install`            | Installs dependencies                        |
+| `pnpm run dev`            | Starts local dev server at `localhost:4321`  |
+| `pnpm run build`          | Build your production site to `./dist/`      |
+| `pnpm run preview`        | Preview your build locally, before deploying |
+| `pnpm astro --help`       | Get help using the Astro CLI                 |
+| `pnpm run format`         | Run automatic formatting and fix issues      |
+| `pnpm run lint`           | Run automatic linting and fix issues         |
+| `pnpm run check:format`   | Check formatting, fail if issues are found   |
+| `pnpm run check:lint`     | Check linting, fail if issues are found      |
+| `pnpm run check:spelling` | Check spelling, fail if issues are found     |
+| `pnpm run check:astro`    | Check Astro build and type safety            |
+| `pnpm run checks`         | Run all CI checks listed above               |

@@ -63,7 +63,9 @@ A `BREAKING CHANGE:` footer in the squashed commit body also triggers a breaking
 
 Once the PR is merged into `main`, the `cd-release.yml` workflow updates (or opens) a **Release PR** for each affected package. The Release PR accumulates every releasable commit since the package's last release, and contains the version bump (`package.json` for Node packages, `pyproject.toml` and `common_grants_sdk/__init__.py` for Python) plus the generated `CHANGELOG.md` entry.
 
-Nothing is published at this point — merges can stack in the Release PR until the team is ready to ship.
+Nothing is published at this point. Merges can stack in the Release PR until the team is ready to ship.
+
+Merges into a [hold branch](#hold-branches) don't trigger this. Release Please only runs on pushes to `main`.
 
 ### Step 4: Merge the Release PR to publish
 
@@ -77,6 +79,40 @@ Merging a package's Release PR:
 
 - **Publish retry (npm or PyPI):** Dispatch `cd-release.yml` with the package and its existing tag. This publishes only; it does not create a release.
 - **Release Please retry:** Re-run the failed Action or merge another commit to `main`.
+
+---
+
+## Hold branches
+
+A hold branch collects the `feat` and breaking work for one minor release, so it reaches `main` in a single merge and ships together.
+
+- **One milestone and one hold branch per minor release, per package.** Title the milestone like `[Core] v0.5.0 release` and name the branch to mirror it. For example, the core v0.5.0 work lives on `CORE-v0.5.0`.
+- **What targets the hold branch:** `feat` and breaking (`!`) work for that release.
+- **What goes straight to `main`:** `fix` PRs, Dependabot and security updates, and docs-only changes.
+- **Releases are always cut from `main`.** Merging into a hold branch never opens or updates a Release PR.
+- **Hold branches aren't for blocked work.** A PR waiting on a review, a decision or another PR stays open against its usual base. The hold branch is for finished work that shouldn't ship yet.
+- **Keep it current with `main`.** Use **Update branch** on the staging PR, or rebase, at least weekly.
+- **Open the staging PR early.** Once the hold branch exists, open a draft PR from it into `main`. CI and the website preview then run on all the release's changes together, and the PR updates as each PR lands. "This branch is out-of-date with the base branch" is normal. A real merge conflict stops CI and the preview, so resolve it right away.
+- **After the release:** close the milestone and delete the hold branch.
+
+### SDK changes
+
+- Keep SDK changes on the SDK's own hold branch. If they need unreleased core functionality, branch the SDK hold branch from the core hold branch, and point it at `main` once core is released.
+- If SDK changes do ride on the core hold branch, merging it also opens an SDK Release PR. Don't merge that SDK Release PR until the SDK's own hold work has landed on it.
+
+## Releasing from a hold branch
+
+These steps apply to every package. Each package's runbook adds its own checks: [core](core/DEVELOPMENT.md#release-runbook), [CLI](cli/DEVELOPMENT.md#release-runbook), [TypeScript SDK](ts-sdk/DEVELOPMENT.md#release-runbook), [Python SDK](python-sdk/DEVELOPMENT.md#release-runbook).
+
+- [ ] A second person reviews the release. Never release core alone.
+- [ ] Every PR in the milestone has merged into the hold branch. Fixes found during review go in as small PRs into the hold branch.
+- [ ] The hold branch is synced with `main`, and CI is green on the staging PR.
+- [ ] The package's release review is done and noted on the staging PR.
+- [ ] The staging PR description lists every change in the release. It becomes the squash commit message, and Release Please builds the changelog from commit messages. Without it, the squash collapses the whole release to one line.
+- [ ] The staging PR title uses `feat(<scope>):`, or `feat(<scope>)!:` if the release has breaking changes. Pre-1.0, `bump-minor-pre-major` keeps a `!` release a minor bump, but the changelog flags the breaking changes.
+- [ ] The staging PR has been squash-merged into `main`, and Release Please opened or updated the Release PR for each package it touched.
+- [ ] The Release PR has been merged. This tags the release, creates the GitHub release and publishes the package. Then run the [manual validation checklist](#manual-validation-checklist).
+- [ ] The milestone is closed and the hold branch is deleted. GitHub only auto-closes issues when a PR merges into `main`, so close any issues fixed through the hold branch by hand.
 
 ---
 
