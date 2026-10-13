@@ -86,6 +86,7 @@ import {
   OppFundingSchema,
   OppTimelineSchema,
   OpportunityBaseSchema,
+  OpportunityDetailsSchema,
   OppSortingSchema,
   OppDefaultFiltersSchema,
   OppFiltersSchema,
@@ -199,6 +200,7 @@ export type ApplicantTypeOptions = z.infer<typeof ApplicantTypeOptionsEnum>;
 export type OppFunding = z.infer<typeof OppFundingSchema>;
 export type OppTimeline = z.infer<typeof OppTimelineSchema>;
 export type OpportunityBase = z.infer<typeof OpportunityBaseSchema>;
+export type OpportunityDetails = z.infer<typeof OpportunityDetailsSchema>;
 export type OppSorting = z.infer<typeof OppSortingSchema>;
 export type OppSortBy = z.infer<typeof OppSortByEnum>;
 export type OppDefaultFilters = z.infer<typeof OppDefaultFiltersSchema>;
@@ -265,7 +267,7 @@ export type AwardsFilteredResponse = z.infer<typeof AwardsFilteredResponseSchema
 // Opportunity-specific request and response types
 // ############################################################################
 
-export type OpportunityResponse = Ok<OpportunityBase>;
+export type OpportunityResponse = Ok<OpportunityDetails>;
 export type OpportunitiesListResponse = Paginated<OpportunityBase>;
 export type OpportunitiesSortedResponse = Sorted<OpportunityBase>;
 export type OpportunitiesFilteredResponse = Filtered<OpportunityBase, OppFilters>;

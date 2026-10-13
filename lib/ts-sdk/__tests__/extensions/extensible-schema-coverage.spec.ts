@@ -3,6 +3,7 @@ import { z } from "zod";
 import { EXTENSIBLE_SCHEMA_MAP } from "@/extensions/types";
 import * as zodAwards from "@/schemas/zod/awards";
 import * as zodModels from "@/schemas/zod/models";
+import { OpportunityDetailsSchema } from "@/schemas/zod/models";
 
 describe("extensible schema coverage", () => {
   it("every schema with customFields should be in EXTENSIBLE_SCHEMA_MAP", () => {
@@ -29,5 +30,29 @@ describe("extensible schema coverage", () => {
         `EXTENSIBLE_SCHEMA_MAP["${name}"] does not have a customFields property.`
       ).toBe(true);
     }
+  });
+
+  it("should not register OpportunityDetailsSchema in EXTENSIBLE_SCHEMA_MAP", () => {
+    const registeredSchemas = new Set<unknown>(Object.values(EXTENSIBLE_SCHEMA_MAP));
+
+    expect(registeredSchemas.has(OpportunityDetailsSchema)).toBe(false);
+  });
+
+  it("should resolve customFields declared on the base schema when parsing through OpportunityDetailsSchema", () => {
+    const validDetails = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+      customFields: {
+        foo: { fieldType: "string", name: "foo", value: "bar" },
+      },
+    };
+
+    const parsed = OpportunityDetailsSchema.parse(validDetails);
+
+    expect(parsed.customFields?.foo).toEqual({ fieldType: "string", name: "foo", value: "bar" });
   });
 });

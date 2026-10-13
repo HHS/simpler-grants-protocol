@@ -5,6 +5,7 @@ import {
   OppFundingSchema,
   OppTimelineSchema,
   OpportunityBaseSchema,
+  OpportunityDetailsSchema,
   OppSortByEnum,
   OppSortingSchema,
   OppDefaultFiltersSchema,
@@ -408,6 +409,81 @@ describe("OpportunityBase Schema", () => {
     expect(() => OpportunityBaseSchema.parse({ ...baseline, funders: null })).toThrow();
     // identifiers explicitly null
     expect(() => OpportunityBaseSchema.parse({ ...baseline, identifiers: null })).toThrow();
+  });
+});
+
+// ############################################################################
+// OpportunityDetails Schema
+// ############################################################################
+
+describe("OpportunityDetails Schema", () => {
+  const validOpportunity = {
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    title: "Sample Grant Opportunity",
+    status: { value: "open" },
+    description: "A sample grant opportunity for testing",
+    funding: {
+      totalAmountAvailable: { amount: "1000000.00", currency: "USD" },
+    },
+    keyDates: {
+      closeDate: {
+        eventType: "singleDate",
+        date: "2025-12-31",
+        name: "Opportunity Close Date",
+      },
+    },
+    acceptedApplicantTypes: [
+      { value: "individual" },
+      { value: "organization", description: "Any organization type" },
+    ],
+    source: "https://example.com/opportunity",
+    createdAt: "2025-01-01T00:00:00Z",
+    lastModifiedAt: "2025-01-02T00:00:00Z",
+  };
+
+  it("should validate a valid OpportunityDetails and preserve awards", () => {
+    const validDetails = {
+      ...validOpportunity,
+      awards: [
+        {
+          id: "30a12e5e-5940-4c08-921c-17a8960fcf4b",
+          title: "Community Health Center Capital Improvement Grant",
+          identifiers: {
+            "awd:us:fain": { registry: { code: "awd:us:fain" }, id: "H80CS00001" },
+          },
+        },
+      ],
+    };
+    const parsed = OpportunityDetailsSchema.parse(validDetails);
+    expect(parsed.awards?.[0].id).toBe("30a12e5e-5940-4c08-921c-17a8960fcf4b");
+    expect(parsed.awards?.[0].title).toBe("Community Health Center Capital Improvement Grant");
+  });
+
+  it("should raise an error for a malformed award entry", () => {
+    expect(() =>
+      OpportunityDetailsSchema.parse({
+        ...validOpportunity,
+        awards: [{ id: "not-a-uuid", title: "x" }],
+      })
+    ).toThrow();
+  });
+
+  it("should distinguish omitted awards (undefined) from an empty awards list", () => {
+    const withoutAwards = OpportunityDetailsSchema.parse({ ...validOpportunity });
+    expect(withoutAwards.awards).toBeUndefined();
+
+    const withEmptyAwards = OpportunityDetailsSchema.parse({ ...validOpportunity, awards: [] });
+    expect(withEmptyAwards.awards).toEqual([]);
+  });
+
+  it("should raise an error when awards is explicitly null", () => {
+    expect(() => OpportunityDetailsSchema.parse({ ...validOpportunity, awards: null })).toThrow();
+  });
+
+  it("should preserve an arbitrary competitions shape without validating it", () => {
+    const competitions = [{ anything: "goes", nested: { a: 1 } }];
+    const parsed = OpportunityDetailsSchema.parse({ ...validOpportunity, competitions });
+    expect(parsed.competitions).toEqual(competitions);
   });
 });
 

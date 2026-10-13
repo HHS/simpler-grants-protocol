@@ -12,6 +12,7 @@ The `@common-grants/sdk/types` and `@common-grants/sdk/constants` modules comple
   - [Type safety](#type-safety)
   - [Opportunity model](#opportunity-model)
   - [Award contracts](#award-contracts)
+  - [Opportunity base vs detail](#opportunity-base-vs-detail)
   - [Generic response schemas](#generic-response-schemas)
 - [API reference](#api-reference)
   - [Base schemas](#base-schemas)
@@ -317,6 +318,42 @@ The response schemas above require status `200` and validate embedded awards
 plus pagination, sorting, and filtering metadata. `NotFoundSchema` validates
 the read route's not-found response.
 
+### Opportunity base vs detail
+
+`OpportunityBaseSchema` validates list/search rows. `OpportunityDetailsSchema`
+additionally validates the fields only a single-item read returns: `awards`
+(validated against `AwdRefSchema`) and `competitions`.
+
+```ts
+import { OpportunityDetailsSchema } from "@common-grants/sdk/schemas";
+
+const opportunity = OpportunityDetailsSchema.parse({
+  id: "ac201443-5480-4e36-9799-a39765225153",
+  title: "Test Opportunity",
+  description: "This is a test opportunity",
+  status: { value: "open" },
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  awards: [{ id: "018f2e77-3a4b-4c1d-9e2f-abcdef123456", title: "Community Health Center Grant" }],
+});
+```
+
+`awards` entries are validated; an omitted `awards` key means the implementation
+does not publish the link for this record, while an empty array means the link
+is published with no awards yet. `null` is rejected: only omission or an array
+are valid. Entries carry no ordering guarantee, and a reference is not
+dereferenceable through this API.
+
+`competitions` is preserved on the parsed result but not deeply validated:
+`CompetitionBase` is not yet modeled in the SDK, so entries pass through as
+opaque values rather than being dropped. Full validation is deferred to a
+dedicated competitions ticket.
+
+`OpportunityDetailsSchema` is built as `OpportunityBaseSchema.and(...)`, an
+intersection rather than an extended object, so it is not an independently
+extensible unit: custom fields are declared once, on the base, and flow
+through the intersection automatically.
+
 ### Generic response schemas
 
 The SDK provides generic (parameterized) schemas for validating common API response shapes. Pass any item schema to create a typed response validator:
@@ -383,7 +420,7 @@ All Zod schemas are exported from `@common-grants/sdk/schemas`. See the [schemas
 - [**References**](./zod/references.ts): `AppRefSchema`; organization EIN, UEI, and DUNS identifier schemas; organization collections; opportunity FON and ALN identifier schemas; `OppRefSchema`
 - [**Awards**](./zod/awards.ts): `AwardBaseSchema`, award status, funding, timeline, FAIN identifier, reference, individual-recipient, filter, and sorting schemas
 - [**Award routes**](./zod/award-routes.ts): `AwardsListRequestSchema`, `AwardGetRequestSchema`, `AwdSearchRequestSchema`, `AwardResponseSchema`, `AwardsListResponseSchema`, `AwardsSortedResponseSchema`, `AwardsFilteredResponseSchema`
-- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
+- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OpportunityDetailsSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
 - [**Filters**](./zod/filters.ts): String, number, date, and money comparison/range/array filters
 - [**Responses**](./zod/responses.ts): `OkSchema`, `PaginatedSchema`, `SortedSchema`, `FilteredSchema`, `CreatedSchema`, `ErrorSchema`, `UnauthorizedSchema`, `NotFoundSchema`
 - [**Pagination**](./zod/pagination.ts): `PaginatedBodyParamsSchema`, `PaginatedResultsInfoSchema`
@@ -393,7 +430,7 @@ All Zod schemas are exported from `@common-grants/sdk/schemas`. See the [schemas
 
 All TypeScript types are inferred from schemas using `z.infer<>` and exported from `@common-grants/sdk/types`. See [types.ts](../types.ts) for the full list, including:
 
-- Model types: `OpportunityBase`, `OppStatus`, `OppFunding`, `OppTimeline`
+- Model types: `OpportunityBase`, `OpportunityDetails`, `OppStatus`, `OppFunding`, `OppTimeline`
 - Award model types: `AwardBase` (`Award` is an alias), `AwdStatus`, `AwdFunding`, `AwdTimeline`, `AwdRecipientIndividual`, `AwdSorting`, `AwdDefaultFilters`, `AwdFilters`
 - Identifier and reference types: `Identifier`, `SystemId`, `IdentifierCollection`, `AwdIdFain`, `AwdIds`, `AwdRef`, `AppRef`, organization identifiers/references, and opportunity identifiers/references
 - Field types: `Event`, `Money`, `CustomField`
