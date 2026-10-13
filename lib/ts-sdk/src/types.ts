@@ -24,6 +24,13 @@ import {
   AwdSortingSchema,
   AwdDefaultFiltersSchema,
   AwdFiltersSchema,
+  AwardsListRequestSchema,
+  AwardGetRequestSchema,
+  AwdSearchRequestSchema,
+  AwardResponseSchema,
+  AwardsListResponseSchema,
+  AwardsSortedResponseSchema,
+  AwardsFilteredResponseSchema,
   // Fields
   EventSchema,
   SingleDateEventSchema,
@@ -241,6 +248,18 @@ export type Filtered<T, F> = Sorted<T> & {
     errors?: string[] | null | undefined;
   };
 };
+
+// ############################################################################
+// Award-specific request and response types
+// ############################################################################
+
+export type AwardsListRequest = z.input<typeof AwardsListRequestSchema>;
+export type AwardGetRequest = z.input<typeof AwardGetRequestSchema>;
+export type AwdSearchRequest = z.input<typeof AwdSearchRequestSchema>;
+export type AwardResponse = z.infer<typeof AwardResponseSchema>;
+export type AwardsListResponse = z.infer<typeof AwardsListResponseSchema>;
+export type AwardsSortedResponse = z.infer<typeof AwardsSortedResponseSchema>;
+export type AwardsFilteredResponse = z.infer<typeof AwardsFilteredResponseSchema>;
 
 // ############################################################################
 // Opportunity-specific request and response types
