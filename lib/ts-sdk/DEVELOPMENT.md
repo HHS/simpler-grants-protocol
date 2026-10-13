@@ -7,9 +7,10 @@
 
 ### Development commands
 
+Run `pnpm install` once from the repo root. Then run these from `lib/ts-sdk/`, or from the repo root as `pnpm --filter @common-grants/sdk run <script>`.
+
 | Command                  | Description                                                      |
 | ------------------------ | ---------------------------------------------------------------- |
-| `pnpm install`           | Installs dependencies                                            |
 | `pnpm run build`         | Compiles TypeScript code to JavaScript and runs TypeSpec         |
 | `pnpm run typespec`      | Compile and emit TypeSpec outputs (i.e. OpenAPI and JSON schema) |
 | `pnpm run test`          | Run Vitest test suite                                            |
@@ -17,8 +18,10 @@
 | `pnpm run test:coverage` | Run Vitest with coverage report                                  |
 | `pnpm run lint`          | Run ESLint and fix issues                                        |
 | `pnpm run format`        | Format code with Prettier                                        |
-| `pnpm run checks`        | Run lint and format checks                                       |
-| `pnpm run prepare`       | Compile TypeScript (pre-publish hook)                            |
+| `pnpm run check:types`   | Check types, fail if issues are found                            |
+| `pnpm run checks`        | Run lint, format and type checks                                 |
+| `pnpm run ci`            | Run the checks, build, tests and transforms example that CI runs |
+| `pnpm run prepare`       | Compile TypeScript (runs on `pnpm install`)                      |
 
 ## Runbooks
 
@@ -42,7 +45,4 @@ Follow these steps when adding a new model that supports `customFields`:
 
 ### Release runbook
 
-A full TypeScript SDK release runbook hasn't been written yet. Until then:
-
-- Follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch).
-- Keep SDK changes on the SDK's own hold branch, branched from the core hold branch if they need unreleased core functionality. If SDK changes ride on the core hold branch, don't merge the `@common-grants/sdk` Release PR until the SDK's own hold work has landed on it. See [SDK changes](../README.md#sdk-changes).
+A full TypeScript SDK release runbook hasn't been written yet. Until then, follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch), including the rules for [SDK changes](../README.md#sdk-changes).

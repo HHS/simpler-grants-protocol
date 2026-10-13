@@ -16,7 +16,7 @@ Run `pnpm install` once from the repo root. Then run these from `lib/cli/`, or f
 | `pnpm run typespec`      | Regenerates the bundled OpenAPI specs in `lib/openapi/`                      |
 | `pnpm run start`         | Start the CLI application                                                    |
 | `pnpm run dev`           | Start development server with ts-node                                        |
-| `pnpm run prepare`       | Run TypeScript compilation only (pre-install hook)                           |
+| `pnpm run prepare`       | Run TypeScript compilation only (runs on `pnpm install`)                     |
 | `pnpm run test`          | Run Vitest test suite                                                        |
 | `pnpm run test:watch`    | Run Vitest test suite in watch mode                                          |
 | `pnpm run test:coverage` | Run Vitest with coverage report                                              |
@@ -29,15 +29,21 @@ Run `pnpm install` once from the repo root. Then run these from `lib/cli/`, or f
 | `pnpm run ci`            | Run the checks, build and tests that CI runs                                 |
 | `pnpm pack`              | Creates a tarball of the library to simulate installing it from npm          |
 
-`pnpm install` compiles the CLI, so you can run it from the repo root with `node lib/cli/dist/index.js <command>`. Don't run `npx` inside the repo until [#1288](https://github.com/HHS/simpler-grants-protocol/issues/1288) lands. It fails with `EDUPLICATEWORKSPACE`. Use `pnpm dlx @common-grants/cli <command>` or the local binary instead.
+`pnpm install` compiles the CLI, so you can run it from the repo root with `node lib/cli/dist/index.js <command>`. Don't use `npx` inside the repo yet; see the [core development commands](../core/DEVELOPMENT.md#development-commands).
 
 ## Bundled specs
 
 The CLI bundles a copy of each protocol version's OpenAPI spec in [`lib/openapi/`](lib/openapi/), and `cg check spec --protocol-version` can only select versions bundled there. The `build` script runs `typespec`, which recompiles those specs from the workspace copy of `@common-grants/core`. So any CLI build picks up the latest core spec, even one for an unrelated fix.
 
-- After a core release, the next CLI release must use a `feat(cli): ...` title, so the release that adds the new protocol version is a minor release. Never ship it as a `fix`.
-- That release doesn't have to go out with core, but don't let the CLI fall several core versions behind.
-- Whether to take `typespec` out of the CLI `build` script is an open decision, tracked in [#1286](https://github.com/HHS/simpler-grants-protocol/issues/1286).
+After a core release, ship the new version in a minor CLI release:
+
+1. Open a PR into `main` (no hold branch) titled `feat(cli): bundle protocol v<new-version> spec`. It must be `feat`, never `fix`.
+2. Run `pnpm --filter @common-grants/cli run typespec` and commit the new `lib/cli/lib/openapi/openapi.<new-version>.yaml`, plus any bundled specs that changed.
+3. Follow the [release runbook](#release-runbook) below.
+
+It doesn't have to ship with core, but don't let the CLI fall several core versions behind.
+
+Whether to take `typespec` out of the CLI `build` script is an open decision, tracked in [#1286](https://github.com/HHS/simpler-grants-protocol/issues/1286).
 
 ## Release runbook
 
@@ -45,15 +51,15 @@ Steps to follow when preparing a new release of the CommonGrants CLI. Feature wo
 
 ### Pre-release checklist
 
-- [ ] Before merging:
+- [ ] Before merging the PR that triggers the release:
   - [ ] If commands were added or changed
     - [ ] The [`README.md` usage section](README.md#usage) has been updated to include them
     - [ ] The [man page](./man/cg.1) has been updated to include them
   - [ ] If this is the first CLI release since a core release, `lib/openapi/` includes the new protocol version's spec, and `cg check spec --protocol-version <new-version>` works
   - [ ] `pnpm --filter @common-grants/cli pack --pack-destination <dir-outside-repo>` has been run, the package has been installed in that directory, and all the commands listed in the [README](README.md#usage) have been tested
   - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
-  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change. After a core release, it's `feat` (see [Bundled specs](#bundled-specs)).
-- [ ] After merging:
+  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
+- [ ] After merging that PR:
   - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `@common-grants/cli` Release PR
 
 ### Release checklist
