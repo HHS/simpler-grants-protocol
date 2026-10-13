@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@bruits/satteri-wasm32-wasi": "0.10.5",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/ajv": "^0.0.5",
@@ -81,9 +82,9 @@
     "globals": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-astro": "^0.14.1",
-    "starlight-links-validator": "^0.24.0",
+    "starlight-links-validator": "^0.27.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.147.0"
+    "wrangler": "^4.149.0"
   }
 }
