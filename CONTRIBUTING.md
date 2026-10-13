@@ -120,12 +120,12 @@ If you've implemented a new feature, fixed a bug, or made some documentation cle
 2. **Find or create an issue:** Before proposing a change, make sure there is a corresponding issue (i.e. Bug Fix, Task, Feature Request) that describes the contribution you'll be making. If there isn't an existing issue, create a new one by selecting and filling out a template from the [issue tab](https://github.com/HHS/simpler-grants-protocol/issues/new/choose).
 3. **Create a feature branch:** Create a feature branch on your forked repository with a descriptive name, ideally one that references the issue number that your contribution is related to (e.g., `issue-10-unit-testing`).
 4. **Make changes and test them:** Add your code or documentation and commit those changes to the feature branch. If your contribution includes code, make sure you've written tests for it and that all of the tests are passing.
-5. **Submit a pull request:** When you're ready to make your contribution, [submit a pull request against the upstream repo](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) and fill out the PR template sections so that project maintainers can begin to review your contributions.
+5. **Submit a pull request:** When you're ready to make your contribution, [submit a pull request against the upstream repo](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) and fill out the PR template sections so that project maintainers can begin to review your contributions. Target `main`, unless your issue is in a release milestone. Then target that release's [hold branch](lib/README.md#hold-branches). A maintainer can help you retarget.
 6. **Fix requested changes:** As maintainers review your proposed contribution, they may request specific changes. If so, simply add and commit those changes to the feature branch directly and they'll automatically show up on the PR.
 
 #### PR title format
 
-PR titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) format — `type(scope): description` — and a CI check enforces this. PRs are squash-merged with the PR title as the commit subject, and that history drives releases: [release-please](https://github.com/googleapis/release-please) reads the commit type to decide version bumps and changelog entries for the published packages.
+PR titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) format (`type(scope): description`), and a CI check enforces this. PRs are squash-merged with the PR title as the commit subject, and that history drives releases: [release-please](https://github.com/googleapis/release-please) reads the commit type to decide version bumps and changelog entries for the published packages.
 
 | Type | Effect on the touched package(s) | Example |
 |------|----------------------------------|---------|
@@ -135,11 +135,11 @@ PR titles must follow the [Conventional Commits](https://www.conventionalcommits
 | `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(core): clarify filter usage` |
 | `chore`, `ci`, `test` | No release; hidden from changelogs (a `!` marker still cuts a breaking release) | `chore(deps): bump the runtime group` |
 
-The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package — `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
+The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package, `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
 
 A PR touching two packages bumps both at the title's type. That is usually right, since both packages changed; split the PR when they warrant different bumps, such as a `feat` in `lib/core/` alongside a mechanical regeneration in `lib/ts-sdk/`.
 
-GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. release-please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check. Retitle it `revert: <description>` before merging. Release Please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
 
 ## Getting started
 

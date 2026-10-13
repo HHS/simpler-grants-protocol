@@ -8,65 +8,74 @@ The CommonGrants core library is a TypeSpec library that defines the core models
 
 ## Development commands
 
-| Command                | Description                                                               |
-| ---------------------- | ------------------------------------------------------------------------- |
-| `npm install`          | Installs dependencies                                                     |
-| `npm run clean`        | Removes dist and tsp-output directories                                   |
-| `npm run build`        | Compiles TypeScript code to JavaScript                                    |
-| `npm run typespec`     | Runs the TypeSpec compiler to generate the OpenAPI specs and JSON schemas |
-| `npm run prepare`      | Run build (pre-install hook)                                              |
-| `npm run lint`         | Run ESLint with automatic fixes                                           |
-| `npm run format`       | Run automatic formatting and fix issues                                   |
-| `npm run check:lint`   | Check linting, fail if issues are found                                   |
-| `npm run check:format` | Check formatting, fail if issues are found                                |
-| `npm run checks`       | Run all CI checks listed above                                            |
-| `npm pack`             | Creates a tarball of the library to simulate installing it from npm       |
+Run `pnpm install` once from the repo root. Then run these from `lib/core/`, or from the repo root as `pnpm --filter @common-grants/core run <script>`.
+
+| Command                 | Description                                                               |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `pnpm run clean`        | Removes dist and tsp-output directories                                   |
+| `pnpm run build`        | Compiles TypeScript code to JavaScript                                    |
+| `pnpm run typespec`     | Runs the TypeSpec compiler to generate the OpenAPI specs and JSON schemas |
+| `pnpm run prepare`      | Run build (runs on `pnpm install`)                                        |
+| `pnpm run lint`         | Run ESLint with automatic fixes                                           |
+| `pnpm run format`       | Run automatic formatting and fix issues                                   |
+| `pnpm run check:lint`   | Check linting, fail if issues are found                                   |
+| `pnpm run check:format` | Check formatting, fail if issues are found                                |
+| `pnpm run check:types`  | Check types, fail if issues are found                                     |
+| `pnpm run checks`       | Run all the checks listed above                                           |
+| `pnpm run ci`           | Run the checks, build and typespec steps that CI runs                     |
+| `pnpm pack`             | Creates a tarball of the library to simulate installing it from npm       |
+
+Don't run `npx` inside the repo until [#1288](https://github.com/HHS/simpler-grants-protocol/issues/1288) lands. It fails with `EDUPLICATEWORKSPACE`. Use `pnpm dlx <pkg>` or a local binary instead.
 
 ## Release runbook
 
-Steps to follow when preparing a new release of the CommonGrants core library.
+Minor and major core releases go through a hold branch. Follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch) for the shared steps. This section covers only the core-specific checks.
+
+Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Consider running the release review checks that apply (pack and install, quickstart, `cg preview`), then the release checklist.
 
 ### Development checklist
 
 - [ ] For major or minor updates:
-  - [ ] A new version has been added to the `Versions` enum in [`main.tsp`](lib/main.tsp)
-  - [ ] All updated routes, models, etc. have been decorated with their corresponding [versioning decorators](https://typespec.io/docs/libraries/versioning/reference/decorators/#@TypeSpec.Versioning.removed)
-- [ ] `npm typespec` has been run to auto-generate the OpenAPI spec outputs and the following has been completed for each spec version:
-  - [ ] `cg preview <path-to-spec>` has been run and the Swagger docs for that version have been reviewed
-  - [ ] Each version has been compared to its equivalent in the [website/public/openapi](../../website/public/openapi/) directory using `diff` to confirm the versioning decorators were applied correctly
-- [ ] `npm pack` has been run, the package has been installed in a new directory outside this repo, and the quickstart guide in the [README](README.md) has been completed
+  - [ ] An early PR into the hold branch adds the new version to the `Versions` enum in [`main.tsp`](lib/main.tsp)
+  - [ ] Every PR decorates what it changes with the matching [versioning decorators](https://typespec.io/docs/libraries/versioning/reference/decorators/#@TypeSpec.Versioning.removed)
+- [ ] Every core PR runs `pnpm --filter website run typespec` and commits the regenerated files in [`website/public/openapi/`](../../website/public/openapi/) and [`website/public/schemas/yaml/`](../../website/public/schemas/yaml/)
 
-### Pre-release checklist
+### Release review checklist
 
-- [ ] Before merging:
-  - [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
-  - [ ] The PR title uses the [conventional commit type](../README.md#step-2-title-your-pr-with-a-conventional-commit) matching the intended release impact (`fix` = patch, `feat` = minor, `!` = breaking) and meaningfully summarizes the change
-  - [ ] If the change affects the CLI's vendored spec output, the regenerated [`lib/cli/lib/openapi/`](../cli/lib/openapi/) files are included in the PR — touching those paths is what carries the change into the next CLI release
-- [ ] After merging:
-  - [ ] The [Release Please](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-release.yml) workflow ran and updated (or opened) the `@common-grants/core` Release PR — and the `@common-grants/cli` Release PR if CLI files were touched
+Run this on the hold branch before merging the staging PR, and note the results on the staging PR.
+
+- [ ] Regenerated specs match the committed files: after `pnpm --filter website run typespec`, `git status` shows no changes
+- [ ] Older versions are unchanged except for intended edits:
+  - [ ] `git fetch origin` and `git diff origin/main...origin/<hold-branch> -- website/public/openapi/` have been run
+  - [ ] The diff adds `openapi.<new-version>.yaml`, and older versions show only edits you meant to make, such as a description or example fix
+  - Comparing against `main` is what confirms the versioning decorators. Don't diff `lib/core/tsp-output/` against `website/public/openapi/`: the website build prunes unused tags (`website/src/scripts/prune-openapi-tags.ts`), so older versions always differ.
+- [ ] The new version has been reviewed in Swagger with `cg preview`:
+  - [ ] From the repo root: `node lib/cli/dist/index.js preview website/public/openapi/openapi.<new-version>.yaml` (`pnpm install` builds the CLI), or `pnpm dlx @common-grants/cli preview <spec>`
+  - [ ] The previous version has no new-version fields, schemas or example values
+- [ ] The package installs and works outside the repo:
+  - [ ] `pnpm --filter @common-grants/core pack --pack-destination <scratch-dir>` has been run with a directory outside the repo, and in that directory `npm init -y` and `npm install ./common-grants-core-<version>.tgz` have been run. If npm reports `ERESOLVE`, also install the `@typespec/*` versions in the peer ranges in [`package.json`](package.json), and consider filing an issue.
+  - [ ] The [README](README.md) quickstart compiles at the new version (set `@Versioning.useDependency` to the new version). The README ships in the npm package.
+- [ ] The website preview (linked in a comment on the staging PR) has been reviewed:
+  - [ ] Model tables are up to date for [Types](../../website/src/content/docs/protocol/types/), [Fields](../../website/src/content/docs/protocol/fields/), [Models](../../website/src/content/docs/protocol/models/), [Filters](../../website/src/content/docs/protocol/filters/), [Responses](../../website/src/content/docs/protocol/responses/), [Pagination](../../website/src/content/docs/protocol/pagination.mdx) and [Sorting](../../website/src/content/docs/protocol/sorting.mdx)
+  - [ ] Per-model changelogs list every change in the release
+    - Today, fields inherited through `extends` aren't listed on the child model's changelog (fields pulled in with a spread are). Whether that's intended is an open question.
+  - [ ] The model and changelog pages look right in light mode, dark mode and at phone width
+- [ ] If the staging PR also touches another package (for example `lib/ts-sdk/`), the team has agreed whether its Release PR ships alongside core. See [SDK changes](../README.md#sdk-changes).
+- [ ] (Optional) A pre-release of the new version with an `alpha`, `beta`, or `rc` tag has been manually published to test the installation from npm
 
 ### Release checklist
 
-- [ ] For the core library release:
-  - [ ] The `@common-grants/core` Release PR has been merged — this tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to npm automatically
-  - [ ] The auto-generated release notes are accurate
-  - [ ] The new version appears on [npm](https://www.npmjs.com/package/@common-grants/core)
-- [ ] For a CLI release (after the core library is released):
-  - [ ] The `@common-grants/cli` Release PR has been merged and the new version appears on [npm](https://www.npmjs.com/package/@common-grants/cli)
+Follow [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch), then:
+
+- [ ] The auto-generated release notes are accurate
+- [ ] The new version appears on [npm](https://www.npmjs.com/package/@common-grants/core)
 
 ### Post-release checklist
 
 - [ ] Website updates:
-  - [ ] The website's [`package.json`](../../website/package.json) and [`package-lock.json`](../../website/package-lock.json) have been updated to use the latest version
-  - [ ] `npm run typespec` has been run and the [`public/`](../../website/public/) directory has been updated with the auto-generated OpenAPI specs and JSON schemas
-  - [ ] The table and format sections have been reviewed and updated for the following sections of the protocol docs:
-    - [ ] [Types](../../website/src/content/docs/protocol/types/)
-    - [ ] [Fields](../../website/src/content/docs/protocol/fields/)
-    - [ ] [Models](../../website/src/content/docs/protocol/models/)
-    - [ ] [Filters](../../website/src/content/docs/protocol/filters/)
-    - [ ] [Responses](../../website/src/content/docs/protocol/responses/)
-    - [ ] [Pagination](../../website/src/content/docs/protocol/pagination.mdx)
-    - [ ] [Sorting](../../website/src/content/docs/protocol/sorting.mdx)
+  - [ ] No dependency bump is needed. The website uses the workspace copy of core (`"@common-grants/core": "workspace:*"`), and its specs were regenerated in the hold branch PRs.
+  - [ ] The [CD - Deploy Website](https://github.com/HHS/simpler-grants-protocol/actions/workflows/cd-deploy-website.yml) run for the merge succeeded, and [commongrants.org](https://commongrants.org) shows the new version
+- [ ] There's an open issue or PR for the CLI release that bundles the new version. It doesn't have to ship right away. See [Bundled specs](../cli/DEVELOPMENT.md#bundled-specs).
 - [ ] SDK and template updates:
   - [ ] The [**Quickstart template**](../../templates/quickstart/DEVELOPMENT.md) and guide have been updated
   - [ ] The [**Python SDK**](../python-sdk/DEVELOPMENT.md#release-runbook) has been updated and a new version has been released
