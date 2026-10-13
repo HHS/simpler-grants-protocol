@@ -57,17 +57,24 @@
   "author": "CommonGrants",
   "license": "CC0-1.0",
   "peerDependencies": {
+    "@typespec/compiler": ">=1.16.0 <2",
+    "@typespec/http": ">=1.16.0 <2",
+    "@typespec/json-schema": ">=1.16.0 <2",
+    "@typespec/openapi": ">=1.16.0 <2",
+    "@typespec/openapi3": ">=1.16.0 <2",
+    "@typespec/rest": ">=0.86.0 <1",
+    "@typespec/versioning": ">=0.86.0 <1"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
     "@typespec/compiler": "catalog:",
     "@typespec/http": "catalog:",
     "@typespec/json-schema": "catalog:",
     "@typespec/openapi": "catalog:",
     "@typespec/openapi3": "catalog:",
     "@typespec/rest": "catalog:",
-    "@typespec/versioning": "catalog:"
-  },
-  "devDependencies": {
-    "@eslint/js": "catalog:",
-    "@types/node": "catalog:",
+    "@typespec/versioning": "catalog:",
     "eslint": "catalog:",
     "globals": "catalog:",
     "prettier": "catalog:",
