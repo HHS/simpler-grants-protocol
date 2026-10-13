@@ -232,8 +232,9 @@ function usPhone(number: string, isMobile = false): Phone {
 
 /**
  * The canonical record: the spec's documented OrganizationBase example. It
- * mirrors that example field for field, oddities included. Only the id
- * differs (see `./ids`).
+ * mirrors that example, oddities included, except for the id (see `./ids`)
+ * and the v0.5 `aliases` and `relationships` fields, which this mock
+ * `Organization` type does not model.
  */
 const CANONICAL_ORGANIZATION: Organization = {
   id: CANONICAL_ORGANIZATION_ID,
