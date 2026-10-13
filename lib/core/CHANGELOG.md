@@ -1,5 +1,21 @@
 # @common-grants/core
 
+## [0.5.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/core@0.4.0...@common-grants/core@0.5.0) (2026-10-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** release protocol v0.5.0 ([#1268](https://github.com/HHS/simpler-grants-protocol/issues/1268))
+
+### Features
+
+* **core:** release protocol v0.5.0 ([#1268](https://github.com/HHS/simpler-grants-protocol/issues/1268)) ([1a03d3e](https://github.com/HHS/simpler-grants-protocol/commit/1a03d3ef0acc603b7c82f5ea9a4c6e0efd2acf99))
+
+
+### Bug Fixes
+
+* **deps:** bump GitHub Actions majors and clear the September audit advisories ([#1093](https://github.com/HHS/simpler-grants-protocol/issues/1093)) ([47326da](https://github.com/HHS/simpler-grants-protocol/commit/47326da429e5d2c1bb1aaf34f0a22bede4b392ac))
+
 ## 0.4.0
 
 ### Minor Changes
