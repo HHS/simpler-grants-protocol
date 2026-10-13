@@ -55,8 +55,9 @@
   ],
   "scripts": {
     "clean": "node --input-type=module -e \"import{rmSync}from'node:fs';rmSync('dist',{recursive:true,force:true})\"",
-    "build": "pnpm run clean && tsc -p tsconfig.build.json && pnpm typespec",
-    "prepare": "pnpm run clean && tsc -p tsconfig.build.json",
+    "compile": "pnpm run clean && tsc -p tsconfig.build.json",
+    "build": "pnpm run compile && pnpm typespec",
+    "prepare": "pnpm run compile",
     "test": "vitest run",
     "test:package": "node scripts/smoke-package.mjs",
     "test:watch": "vitest",
