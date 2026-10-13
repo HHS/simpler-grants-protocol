@@ -2,7 +2,7 @@
 
 This directory contains independently versioned packages for the Simpler Grants Protocol, supporting both Python and Node.js.
 
-Versioning is managed via [release-please](https://github.com/googleapis/release-please), driven by the conventional-commit history on `main`. There is no separate versioning file to author: the squashed commit title of each merged PR determines whether and how each package's version bumps.
+Versioning is managed via [Release Please](https://github.com/googleapis/release-please), driven by the conventional-commit history on `main`. There is no separate versioning file to author: the squashed commit title of each merged PR determines whether and how each package's version bumps.
 
 ---
 
@@ -24,7 +24,7 @@ This setup enables:
 lib/
 ├── core/                  # Node package
 │   ├── package.json
-│   └── CHANGELOG.md       # Auto-maintained by release-please
+│   └── CHANGELOG.md       # Auto-maintained by Release Please
 ├── cli/                   # Node package
 │   ├── package.json
 │   └── CHANGELOG.md
@@ -47,7 +47,7 @@ Modify the appropriate files under any `lib/` package.
 
 ### Step 2: Title your PR with a conventional commit
 
-The PR title becomes the squashed commit subject on `main`, which release-please parses. The type determines the version bump for every package whose files the PR touches:
+The PR title becomes the squashed commit subject on `main`, which Release Please parses. The type determines the version bump for every package whose files the PR touches:
 
 | PR title | Bump |
 |----------|------|
@@ -150,6 +150,6 @@ After merging a Release PR:
 
 ## Notes
 
-- Per-package versions are tracked in `.release-please-manifest.json`; release-please config lives in `release-please-config.json` (both at the repo root).
-- The Python SDK's version lives only in `pyproject.toml` (mirrored into `common_grants_sdk/__init__.py` by release-please); it has no `package.json`.
+- Per-package versions are tracked in `.release-please-manifest.json`; Release Please config lives in `release-please-config.json` (both at the repo root).
+- The Python SDK's version lives only in `pyproject.toml` (mirrored into `common_grants_sdk/__init__.py` by Release Please); it has no `package.json`.
 - `lib/changelog-emitter` is unpublished and excluded from releases by omission from `release-please-config.json`.

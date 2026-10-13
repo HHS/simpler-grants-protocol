@@ -51,7 +51,7 @@ poetry run ruff check .
 
 #### Type Checking
 
-Verify types with pyright (basic mode; tests are excluded from the gate — see `pyrightconfig.json`):
+Verify types with pyright (basic mode; tests are excluded from the gate; see `pyrightconfig.json`):
 ```bash
 poetry run pyright
 ```

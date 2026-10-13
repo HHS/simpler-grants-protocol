@@ -39,5 +39,6 @@ Run `pnpm install` once from the repo root. Then run these from `website/`, or f
 | `pnpm run check:format`   | Check formatting, fail if issues are found                 |
 | `pnpm run check:lint`     | Check linting, fail if issues are found                    |
 | `pnpm run check:spelling` | Check spelling, fail if issues are found                   |
+| `pnpm run check:types`    | Check TypeScript types, fail if issues are found           |
 | `pnpm run check:astro`    | Check Astro build and type safety                          |
 | `pnpm run checks`         | Run all CI checks listed above                             |

@@ -37,7 +37,7 @@ Follow these steps when adding a new model that supports `customFields`:
    - Add the model name to `ExtensibleSchemaName` in `src/extensions/types.ts`
    - Add a corresponding entry in `EXTENSIBLE_SCHEMA_MAP` in `src/extensions/types.ts` mapping the model name to its Zod schema
 
-3. **Verify** by running `pnpm run test` — the `extensible-schema-coverage` test will catch:
+3. **Verify** by running `pnpm run test`. The `extensible-schema-coverage` test will catch:
    - Schemas with `customFields` that aren't registered in the map
    - Map entries that point to schemas without `customFields`
 
