@@ -15,6 +15,8 @@ import {
   PaginatedSchema,
   FilteredSchema,
   OpportunityBaseSchema,
+  OpportunityDetailFieldsSchema,
+  OpportunityDetailsSchema,
   OppFiltersSchema,
 } from "../../schemas/index.js";
 import { ArrayOperator } from "../../constants.js";
@@ -42,6 +44,14 @@ import { Resource } from "./base.js";
  * on the output type accepts both the base schema and any extended variant.
  */
 type OppSchema = z.ZodType<OpportunityBase, unknown>;
+
+/**
+ * An item type `T` with the detail-only fields (`awards`, `competitions`)
+ * layered on, as `get()`'s default schema does. Keeps `get()`'s inferred
+ * return type reflecting those fields even when `T` is a plugin's custom-field
+ * item type.
+ */
+type WithDetailFields<T> = T & z.infer<typeof OpportunityDetailFieldsSchema>;
 
 // =============================================================================
 // Custom-filter bag typing (routes-driven)
@@ -87,8 +97,11 @@ export type CustomFilterBag<R extends PluginRoutes> = {
 // =============================================================================
 
 /** Options for getting a single opportunity */
-export interface GetOptions<S extends OppSchema = typeof OpportunityBaseSchema> {
-  /** Zod schema to parse and type the response. Defaults to the bound (plugin or base) schema. */
+export interface GetOptions<S extends OppSchema = typeof OpportunityDetailsSchema> {
+  /**
+   * Zod schema to parse and type the response. Defaults to the derived detail
+   * schema (the bound, plugin-or-base schema plus `awards`/`competitions`).
+   */
   schema?: S;
 }
 
@@ -143,6 +156,13 @@ export class Opportunities<
 > extends Resource<TItem> {
   private readonly basePath = "/common-grants/opportunities";
 
+  /**
+   * `get()`'s default schema: the bound (plugin or base) schema intersected
+   * with the detail-only fields. Derived once here so a plugin's custom
+   * fields flow into the detail default automatically.
+   */
+  private readonly detailSchema: z.ZodType<WithDetailFields<TItem>, unknown>;
+
   constructor(client: Client, boundSchema?: z.ZodType<TItem, unknown>, routes?: R) {
     super(
       client,
@@ -153,11 +173,17 @@ export class Opportunities<
     // registration — e.g. a filter named after a default field — throws here
     // instead of silently shadowing the default bucket at classification time.
     if (routes) validateRoutes(routes);
+    this.detailSchema = this.boundSchema.and(OpportunityDetailFieldsSchema);
   }
 
-  /** Per-call override wins; otherwise the bound (plugin or base) schema. */
+  /** Per-call override wins; otherwise the bound (plugin or base) collection schema. */
   private resolveSchema<S extends OppSchema>(override?: S): S {
     return override ?? (this.boundSchema as unknown as S);
+  }
+
+  /** Per-call override wins; otherwise the derived detail default. */
+  private resolveDetailSchema<S extends OppSchema>(override?: S): S {
+    return override ?? (this.detailSchema as unknown as S);
   }
 
   // ############################################################################
@@ -167,21 +193,27 @@ export class Opportunities<
   /**
    * Get a specific opportunity by ID.
    *
+   * Parses the detail shape by default: the bound (plugin or base) schema
+   * plus `awards`/`competitions`, unlike `list()`/`search()`, which stay on
+   * the collection (base) shape. Pass `schema` to override, e.g. with
+   * `OpportunityBaseSchema` to drop detail fields.
+   *
    * A single requested entity that does not parse is a real error, so `get()`
-   * is fail-hard: a malformed response throws.
+   * is fail-hard: a malformed response (including a malformed award entry)
+   * throws.
    *
    * @param id - The opportunity ID
    * @param options - Optional settings; use `schema` for typed custom field access.
-   * @returns The opportunity data
+   * @returns The opportunity detail data, including related `awards` when published
    * @throws {Error} If the request fails or the response does not parse
    *
    * @example
    * ```ts
-   * // Default usage
+   * // Default usage: detail shape, including related awards
    * const opp = await client.opportunities.get("123e4567-e89b-12d3-a456-426614174000");
-   * console.log(opp.title);
+   * console.log(opp.title, opp.awards?.length);
    *
-   * // With a custom-fields schema for typed access
+   * // With a custom-fields schema for typed access (still gets detail fields)
    * const OpportunitySchema = withCustomFields(OpportunityBaseSchema, [
    *   { key: "legacyId", fieldType: "integer", value: z.number().int() },
    * ] as const);
@@ -189,11 +221,11 @@ export class Opportunities<
    * console.log(typed.customFields?.legacyId?.value); // typed as number
    * ```
    */
-  async get<S extends OppSchema = z.ZodType<TItem, unknown>>(
+  async get<S extends OppSchema = z.ZodType<WithDetailFields<TItem>, unknown>>(
     id: string,
     options?: GetOptions<S>
   ): Promise<z.infer<S>> {
-    const schema = this.resolveSchema(options?.schema);
+    const schema = this.resolveDetailSchema(options?.schema);
     const response = await this.client.get(`${this.basePath}/${encodeURIComponent(id)}`);
 
     if (!response.ok) {

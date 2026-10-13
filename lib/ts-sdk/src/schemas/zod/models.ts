@@ -166,8 +166,12 @@ export const OpportunityBaseSchema = z
  * `OpportunityBaseSchema` via intersection rather than `.extend()` so the
  * extensible-schema coverage guard does not treat this as an independently
  * extensible unit (custom fields are declared once, on the Opportunity base).
+ *
+ * Exported so `Opportunities` can derive a per-instance detail default by
+ * intersecting it with whatever schema (base or plugin) is bound to the
+ * resource, rather than re-declaring these fields on every plugin schema.
  */
-const OpportunityDetailFieldsSchema = z.object({
+export const OpportunityDetailFieldsSchema = z.object({
   /**
    * Awards that resulted from this opportunity, as references.
    *
