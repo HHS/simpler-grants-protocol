@@ -167,9 +167,10 @@ export const OpportunityBaseSchema = z
  * extensible-schema coverage guard does not treat this as an independently
  * extensible unit (custom fields are declared once, on the Opportunity base).
  *
- * Exported so `Opportunities` can derive a per-instance detail default by
- * intersecting it with whatever schema (base or plugin) is bound to the
- * resource, rather than re-declaring these fields on every plugin schema.
+ * Exported as a public primitive: `Opportunities` intersects it with whatever
+ * schema (base or plugin) is bound to the resource to derive a per-instance
+ * detail default, and consumers can likewise intersect it onto their own
+ * plugin schema to build a custom detail variant.
  */
 export const OpportunityDetailFieldsSchema = z.object({
   /**

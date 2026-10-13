@@ -96,7 +96,14 @@ export type CustomFilterBag<R extends PluginRoutes> = {
 // Options types (schema in options for consistent API)
 // =============================================================================
 
-/** Options for getting a single opportunity */
+/**
+ * Options for getting a single opportunity.
+ *
+ * The `S` default here is the base detail schema (`OpportunityDetailsSchema`);
+ * it stands in only when `GetOptions` is referenced on its own. `get()` carries
+ * its own plugin-aware default (the bound schema plus `awards`/`competitions`),
+ * so a plugin-bound call infers that richer type regardless of this fallback.
+ */
 export interface GetOptions<S extends OppSchema = typeof OpportunityDetailsSchema> {
   /**
    * Zod schema to parse and type the response. Defaults to the derived detail
@@ -160,6 +167,13 @@ export class Opportunities<
    * `get()`'s default schema: the bound (plugin or base) schema intersected
    * with the detail-only fields. Derived once here so a plugin's custom
    * fields flow into the detail default automatically.
+   *
+   * The bound schema must be strip-mode (the default base schema and every
+   * `withCustomFields()` plugin are). A `.passthrough()` bound schema would
+   * retain raw `awards`/`competitions` values, which Zod cannot reconcile
+   * against the parsed detail-field values, throwing an "Unmergable
+   * intersection" at parse time; such a schema should be passed per call via
+   * `get(id, { schema })` instead of bound to the resource.
    */
   private readonly detailSchema: z.ZodType<WithDetailFields<TItem>, unknown>;
 

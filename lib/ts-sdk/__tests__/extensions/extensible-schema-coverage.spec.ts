@@ -3,7 +3,6 @@ import { z } from "zod";
 import { EXTENSIBLE_SCHEMA_MAP } from "@/extensions/types";
 import * as zodAwards from "@/schemas/zod/awards";
 import * as zodModels from "@/schemas/zod/models";
-import { OpportunityDetailsSchema } from "@/schemas/zod/models";
 
 describe("extensible schema coverage", () => {
   it("every schema with customFields should be in EXTENSIBLE_SCHEMA_MAP", () => {
@@ -35,7 +34,7 @@ describe("extensible schema coverage", () => {
   it("should not register OpportunityDetailsSchema in EXTENSIBLE_SCHEMA_MAP", () => {
     const registeredSchemas = new Set<unknown>(Object.values(EXTENSIBLE_SCHEMA_MAP));
 
-    expect(registeredSchemas.has(OpportunityDetailsSchema)).toBe(false);
+    expect(registeredSchemas.has(zodModels.OpportunityDetailsSchema)).toBe(false);
   });
 
   it("should resolve customFields declared on the base schema when parsing through OpportunityDetailsSchema", () => {
@@ -51,7 +50,7 @@ describe("extensible schema coverage", () => {
       },
     };
 
-    const parsed = OpportunityDetailsSchema.parse(validDetails);
+    const parsed = zodModels.OpportunityDetailsSchema.parse(validDetails);
 
     expect(parsed.customFields?.foo).toEqual({ fieldType: "string", name: "foo", value: "bar" });
   });

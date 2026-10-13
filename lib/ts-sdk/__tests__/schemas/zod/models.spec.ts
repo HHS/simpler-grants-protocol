@@ -485,6 +485,15 @@ describe("OpportunityDetails Schema", () => {
     const parsed = OpportunityDetailsSchema.parse({ ...validOpportunity, competitions });
     expect(parsed.competitions).toEqual(competitions);
   });
+
+  it("should reject a non-array competitions value", () => {
+    expect(() =>
+      OpportunityDetailsSchema.parse({ ...validOpportunity, competitions: { not: "an array" } })
+    ).toThrow();
+    expect(() =>
+      OpportunityDetailsSchema.parse({ ...validOpportunity, competitions: null })
+    ).toThrow();
+  });
 });
 
 // ############################################################################

@@ -420,7 +420,7 @@ All Zod schemas are exported from `@common-grants/sdk/schemas`. See the [schemas
 - [**References**](./zod/references.ts): `AppRefSchema`; organization EIN, UEI, and DUNS identifier schemas; organization collections; opportunity FON and ALN identifier schemas; `OppRefSchema`
 - [**Awards**](./zod/awards.ts): `AwardBaseSchema`, award status, funding, timeline, FAIN identifier, reference, individual-recipient, filter, and sorting schemas
 - [**Award routes**](./zod/award-routes.ts): `AwardsListRequestSchema`, `AwardGetRequestSchema`, `AwdSearchRequestSchema`, `AwardResponseSchema`, `AwardsListResponseSchema`, `AwardsSortedResponseSchema`, `AwardsFilteredResponseSchema`
-- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OpportunityDetailsSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
+- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OpportunityDetailsSchema`, `OpportunityDetailFieldsSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
 - [**Filters**](./zod/filters.ts): String, number, date, and money comparison/range/array filters
 - [**Responses**](./zod/responses.ts): `OkSchema`, `PaginatedSchema`, `SortedSchema`, `FilteredSchema`, `CreatedSchema`, `ErrorSchema`, `UnauthorizedSchema`, `NotFoundSchema`
 - [**Pagination**](./zod/pagination.ts): `PaginatedBodyParamsSchema`, `PaginatedResultsInfoSchema`
