@@ -1,14 +1,14 @@
 ---
 title: Organization relationships
-description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and aliases in the unreleased v0.5.0 model.
+description: Illustrative examples of how an organization records its parents, children, successors, replaced records, other connections, and aliases in the v0.5.0 model.
 sidebar:
   order: 2
 ---
 
-:::caution[Not yet released]
-This page shows the organization relationships decided in [ADR 0030](https://commongrants.org/governance/adr/0030-org-relationships/). The fields are part of protocol v0.5.0, which has not been released, and may change before it is. Every organization, name, and ID on this page is illustrative, not a real record or a classification of a real organization.
+:::note
+This page shows the organization relationships decided in [ADR 0030](https://commongrants.org/governance/adr/0030-org-relationships/), which are part of protocol v0.5.0. Every organization, name, and ID on this page is illustrative, not a real record or a classification of a real organization.
 
-The examples are static documentation, checked against the unreleased schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or model the receiver filling in targets: it echoes any `name` or `identifiers` sent with a target, accepts a target `id` it has no record for, and returns an ID-only relationship write as a snapshot that isn't a valid organization read.
+The examples are static documentation, checked against the v0.5.0 schemas. The mock API behind "Try it out" in the [API reference](/protocol/api-docs) applies a write to a copy of a fixture and echoes the result. It doesn't check the write against the schema or model the receiver filling in targets: it echoes any `name` or `identifiers` sent with a target, accepts a target `id` it has no record for, and returns an ID-only relationship write as a snapshot that isn't a valid organization read.
 :::
 
 An organization can point to other organizations it is related to: the network it is a chapter of, the foundation that fiscally sponsors it, the organizations that carried on its work, or the record that should be used instead of it. These go in [`relationships`](/protocol/models/organization#orgrelationships), in a list for each category and direction. Other names the organization goes by go in `aliases`, not in a relationship.

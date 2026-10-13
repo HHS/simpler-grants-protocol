@@ -114,19 +114,40 @@ Guidance for implementers and consumers moving between protocol versions. Each e
 
 #### v0.5.0
 
-As of September 29, 2026, v0.5.0 introduces no breaking changes to the award schemas, or to any other schema. Every change that has landed is additive and optional. There is one tooling consequence for award consumers, covered under the CLI notes below:
+v0.5.0 renames two fields on competitions and forms, which is a breaking change for anyone who serializes or reads them. Every other change is additive and optional, and the award routes move from experimental to optional.
 
-- `OppRef` gains an optional `identifiers` collection, so the `opportunity` reference carried by `AwardBase` can publish registry-scoped identifiers such as `opp:us:fon` (Federal Opportunity Number) and `opp:us:aln` (Assistance Listing Number) alongside the opportunity's `id` and `title`.
-- `OpportunityDetails` gains an optional `awards` array of `AwdRef`, publishing the opportunity-to-award link in the reverse direction.
+##### Breaking changes
+
+- [`CompetitionBase`](/protocol/models/competition#competitionbase) replaces the required `opportunityId` with a required `opportunity` reference (`OppRef`), which carries the linked opportunity's `id` and `title`, and optionally its `identifiers`. Producers need the opportunity's title when they serialize a competition. See [migrating competitions](/protocol/models/competition#migrating-from-v04).
+- [`FormBase`](/protocol/models/form#formbase) renames the required `name` field to `title`. Form contents, JSON and UI schemas, and mappings are unchanged. See [migrating forms](/protocol/models/form#migrating-from-v04).
+
+The competition and form routes are experimental. Competitions also appear in the optional `competitions` field of `OpportunityDetails`, which the required `GET /opportunities/{oppId}` route returns, so an implementation that populates that field must update the competitions and forms inside it when it moves to v0.5.0. Applications are unaffected: `ApplicationBase` keeps its `competitionId` and `opportunityId` fields.
+
+##### Opportunities
+
+- `OppRef` gains an optional `identifiers` collection, so the `opportunity` reference carried by `AwardBase` and `CompetitionBase` can publish registry-scoped identifiers such as `opp:us:fon` (Federal Opportunity Number) and `opp:us:aln` (Assistance Listing Number) alongside the opportunity's `id` and `title`.
 - `OpportunityBase` gains optional `identifiers` and `funders` collections, which an award consumer encounters when it reads the opportunity that an award points at.
-- [`OrganizationBase`](/protocol/models/organization#organizationbase) gains an optional `aliases` list and an optional [`relationships`](/protocol/models/organization#orgrelationships) object, whose lists record an organization's parents, children, successors, predecessors, replacement records, and other connections. `OrgPatchData` can set or clear both. `aliases` items use a new `Types.nonEmptyString` scalar, and the parent and child kinds gain `dba` for a record that is a name its legal entity does business under. The `OrgRef.name` description is reworded to "The name this organization is known by; for a legal entity, its legal name," which also changes `OrganizationBase.name`; this is description-only. Validators that reject unknown properties need the v0.5.0 schemas before they read these fields, and a consumer that converts records down to v0.4.0 should keep the relationship and `aliases` data somewhere rather than silently drop it, because v0.4.0 has no place for it. Opportunities, awards, and `Award.parent` are unchanged.
+- `OpportunityDetails` gains an optional `awards` array of `AwdRef`, publishing the opportunity-to-award link in the reverse direction.
+- The `agency` custom field is deprecated for opportunities in favor of `funders`. See [migrating from `agency` to `funders`](/custom-fields/overview#migrating-from-agency-to-funders).
 
-Further v0.5.0 changes are still in progress, tracked in issues [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192), [#1223](https://github.com/HHS/simpler-grants-protocol/issues/1223), [#1224](https://github.com/HHS/simpler-grants-protocol/issues/1224), and [#1225](https://github.com/HHS/simpler-grants-protocol/issues/1225), and may add to this list. This section is re-verified against them before v0.5.0 is published, as part of issue [#1235](https://github.com/HHS/simpler-grants-protocol/issues/1235).
+##### Organizations
+
+- [`OrganizationBase`](/protocol/models/organization#organizationbase) gains an optional [`status`](/protocol/models/organization#orgstatus) (`active`, `inactive` or `custom`), which records whether the organization still exists and operates.
+- `OrganizationBase` gains an optional `aliases` list and an optional [`relationships`](/protocol/models/organization#orgrelationships) object, whose lists record an organization's parents, children, successors, predecessors, replacement records, and other connections. `aliases` items use a new `Types.nonEmptyString` scalar, and the parent and child kinds include `dba` for a record that is a name its legal entity does business under. See the [organization relationships guide](/guides/organization-relationships/).
+- `OrgPatchData` can set or clear `status`, `aliases` and `relationships`.
+- The `OrgRef.name` description is reworded to "The name this organization is known by; for a legal entity, its legal name," which also changes `OrganizationBase.name`. This is description-only.
+
+Validators that reject unknown properties need the v0.5.0 schemas before they read these fields. A consumer that converts records down to v0.4.0 should keep the relationship, `aliases` and `status` data somewhere rather than silently drop it, because v0.4.0 has no place for it.
+
+##### Awards
 
 The three award routes move from experimental to optional in v0.5.0. This obliges no implementation to serve them, since optional routes MAY be omitted and the set of required routes is unchanged. It does change their stability guarantee: a breaking change to an award route now requires incrementing the `Major` version under the rules above, instead of being exempt the way changes to experimental routes are.
 
-Two notes for anyone validating an implementation with the CommonGrants CLI:
+##### Validating with the CLI
 
+Three notes for anyone validating an implementation with the CommonGrants CLI:
+
+- The CLI selects a bundled copy of each protocol version's spec, and releases so far bundle versions up to v0.4.0, so `cg check spec --protocol-version 0.5.0` needs a CLI release that bundles v0.5.0. Until then, pass the v0.5.0 OpenAPI document published on this site with `--base`.
 - Route status is an OpenAPI tag, and tags are not versioned, so the v0.4.0 OpenAPI document published on this site also labels the award routes optional. The copy of the v0.4.0 spec bundled with the CommonGrants CLI is unchanged and still labels them experimental, so `cg check spec --protocol-version 0.4.0` behaves as it did before.
 - `cg check spec` classifies a missing optional route as a warning. CLI releases before [#1259](https://github.com/HHS/simpler-grants-protocol/pull/1259) still count that warning in the reported error total and fail the run. From the first `@common-grants/cli` release that includes #1259, a run whose only findings are warnings prints them, marks each one `(warning)`, and passes. This only arises when the base spec being validated against labels the award routes optional, which is true of the v0.5.0 and v0.4.0 documents published on this site. On a CLI release without the fix, `cg check spec --protocol-version 0.4.0` is the workaround, because the v0.4.0 spec bundled with the CLI still labels the award routes experimental. That bundled spec is a generated artifact, so the workaround holds only until the CLI reships it.
 
