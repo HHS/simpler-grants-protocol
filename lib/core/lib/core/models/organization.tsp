@@ -473,7 +473,7 @@ namespace Examples.OrgRelationships {
       id: "01912a8b-7c3d-7892-abcd-ef1234567892",
       name: "Riverside Community Foundation",
       identifiers: #{
-        `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "123456789" },
+        `org:us:ein`: #{ registry: #{ code: "org:us:ein" }, id: "472345678" },
       },
     },
     kind: #{ value: OrgHierarchyKindOptions.fiscalSponsor },
