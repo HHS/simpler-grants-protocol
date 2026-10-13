@@ -132,7 +132,7 @@ examples:
           org:us:ein:
             registry:
               code: org:us:ein
-            id: "123456789"
+            id: "582345679"
     source: https://www.usaspending.gov/award/ASST_NON_H80CS00001
     createdAt: 2026-03-01T00:00:00Z
     lastModifiedAt: 2026-06-01T00:00:00Z
