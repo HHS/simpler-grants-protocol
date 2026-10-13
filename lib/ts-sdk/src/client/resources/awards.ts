@@ -221,7 +221,7 @@ export class Awards<
    * const results = await client.awards.search({ query: "research" });
    *
    * // Search with a standard filter
-   * const awarded = await client.awards.search({ filters: { status: F.in(["active"]) } });
+   * const awarded = await client.awards.search({ filters: { status: F.in(["awarded"]) } });
    *
    * // Get a specific page (disables auto-pagination)
    * const page2 = await client.awards.search({ query: "grants", page: 2, pageSize: 10 });

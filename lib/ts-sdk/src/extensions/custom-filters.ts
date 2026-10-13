@@ -162,9 +162,11 @@ export const F = {
  *
  * Throws `FilterError` on:
  * 1. Unknown `filterType` (not one of the 11 `CustomFilterType` values)
- * 2. A custom filter name that collides with a default-filter field name
- *    (`status`, `closeDateRange`, `totalFundingAvailableRange`,
- *    `minAwardAmountRange`, `maxAwardAmountRange`)
+ * 2. A custom filter name that collides with a default-filter field name on the
+ *    same resource. The reserved names are resource-specific (`DEFAULT_FILTER_NAMES`):
+ *    opportunities reserve `status`, `closeDateRange`, `totalFundingAvailableRange`,
+ *    `minAwardAmountRange`, `maxAwardAmountRange`; awards reserve `status`,
+ *    `opportunityId`, `awardDateRange`, `awardedAmountRange`.
  * 3. Filters declared on a route that does not support custom filters — a
  *    `resource.method` not in `SUPPORTED_CUSTOM_FILTER_ROUTES` (e.g.
  *    `opportunities.list`, whose core operation declares no `filters`)
@@ -326,19 +328,21 @@ export function validateFilterCall(
 // ############################################################################
 
 /**
- * Classifies a flat consumer `filters` object into the ADR-0012 `OppFilters`
- * request body, throwing on the first invalid value instead of dropping it.
+ * Classifies a flat consumer `filters` object into the ADR-0012 request body for
+ * the selected resource (`OppFilters` for opportunities, `AwdFilters` for awards),
+ * throwing on the first invalid value instead of dropping it.
  *
- * Three-bucket classification (defaults → top-level
+ * Three-bucket classification (resource defaults → top-level
  * fields; registered + ad-hoc → `customFilters`), but validation is fail-fast:
  * any invalid value — standard, registered, or ad-hoc — throws before a request
  * body is produced. Well-formed ad-hoc (unregistered) keys still pass through.
+ * The default-field set and schema are chosen per `resourceKey`.
  *
  * @param routes - The `PluginRoutes` from the plugin definition
- * @param resourceKey - The resource name (e.g. `"opportunities"`)
+ * @param resourceKey - The resource name (`"opportunities"` or `"awards"`)
  * @param methodKey - The method name (e.g. `"search"`)
  * @param consumerFilters - The flat consumer-facing filters object
- * @returns The classified `OppFilters` request body
+ * @returns The classified request body (`OppFilters` or `AwdFilters`)
  * @throws FilterError on the first invalid filter value
  */
 export function classifyFilters(

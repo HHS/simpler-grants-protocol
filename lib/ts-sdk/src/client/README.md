@@ -185,7 +185,7 @@ import { F } from "@common-grants/sdk/extensions";
 const awarded = await client.awards.search({
   query: "conservation",
   filters: {
-    status: F.in(["active"]),
+    status: F.in(["awarded"]),
     opportunityId: F.in(["123e4567-e89b-12d3-a456-426614174000"]),
     awardDateRange: F.between("2025-01-01", "2025-12-31"),
     awardedAmountRange: F.between(
