@@ -9,7 +9,11 @@ import type {
   CustomFilterBag,
   ListResult,
 } from "../../src/client/index.js";
-import { AwardBaseSchema, OpportunityBaseSchema } from "../../src/schemas/index.js";
+import {
+  AwardBaseSchema,
+  AwdRecipientIndividualSchema,
+  OpportunityBaseSchema,
+} from "../../src/schemas/index.js";
 import { withCustomFields } from "../../src/extensions/index.js";
 
 const server = setupServer();
@@ -37,6 +41,20 @@ const mockOpp = {
   lastModifiedAt: "2024-06-01T14:22:00Z",
   customFields: {
     programCode: { name: "programCode", fieldType: "string", value: "STEM-ED" },
+  },
+};
+
+const mockAward = {
+  id: "550e8400-e29b-41d4-a716-446655440002",
+  title: "Community Health Center Grant",
+  description: "Supports community health center improvements",
+  status: { value: "awarded" },
+  createdAt: "2024-01-15T10:30:00Z",
+  lastModifiedAt: "2024-06-01T14:22:00Z",
+  recipientIndividual: {
+    customFields: {
+      tier: { name: "tier", fieldType: "string", value: "gold" },
+    },
   },
 };
 
@@ -293,5 +311,181 @@ describe("plugin.getClient", () => {
     // programCode is no longer a typed member of customFields.
     expect(result.items).toHaveLength(1);
     expect(result.items[0].customFields?.legacyId?.value).toBeUndefined();
+  });
+
+  it("binds the plugin's award schema so get, list, and search parse recipientIndividual custom fields", async () => {
+    const awardPlugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          customFields: {
+            tier: { fieldType: "string", value: z.string() },
+          },
+        },
+      },
+    } as const);
+
+    server.use(
+      http.get("/common-grants/awards/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: mockAward })
+      ),
+      http.get("/common-grants/awards", () =>
+        HttpResponse.json({
+          status: 200,
+          message: "Success",
+          items: [mockAward],
+          paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+        })
+      ),
+      http.post("/common-grants/awards/search", () =>
+        HttpResponse.json(searchEnvelope([mockAward]))
+      )
+    );
+
+    const client = awardPlugin.getClient({ baseUrl: "https://api.example.org" });
+
+    const got = await client.awards.get(mockAward.id);
+    expect(got.recipientIndividual?.customFields?.tier?.value).toBe("gold");
+
+    const list = await client.awards.list({ page: 1 });
+    expect(list.items[0].recipientIndividual?.customFields?.tier?.value).toBe("gold");
+
+    const search = await client.awards.search({ page: 1 });
+    expect(search.items[0].recipientIndividual?.customFields?.tier?.value).toBe("gold");
+  });
+
+  it("rejects an award whose recipientIndividual custom field violates the plugin's declared type", async () => {
+    const awardPlugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          customFields: {
+            tier: { fieldType: "string", value: z.string() },
+          },
+        },
+      },
+    } as const);
+
+    const mistypedTierAward = {
+      ...mockAward,
+      recipientIndividual: {
+        customFields: {
+          // Declared as a string field; the response sends a number instead.
+          tier: { name: "tier", fieldType: "string", value: 7 },
+        },
+      },
+    };
+
+    server.use(
+      http.get("/common-grants/awards/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: mistypedTierAward })
+      ),
+      http.get("/common-grants/awards", () =>
+        HttpResponse.json({
+          status: 200,
+          message: "Success",
+          items: [mistypedTierAward],
+          paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+        })
+      ),
+      http.post("/common-grants/awards/search", () =>
+        HttpResponse.json(searchEnvelope([mistypedTierAward]))
+      )
+    );
+
+    const client = awardPlugin.getClient({ baseUrl: "https://api.example.org" });
+
+    // get() fails hard on a single invalid item.
+    await expect(client.awards.get(mistypedTierAward.id)).rejects.toThrow();
+
+    // list() and search() collect per-item parse errors rather than throwing.
+    const list = await client.awards.list({ page: 1 });
+    expect(list.errors).toMatchObject([{ index: 0, raw: mistypedTierAward }]);
+    expect(list.items).toHaveLength(0);
+
+    const search = await client.awards.search({ page: 1 });
+    expect(search.errors).toMatchObject([{ index: 0, raw: mistypedTierAward }]);
+    expect(search.items).toHaveLength(0);
+  });
+
+  it("falls back to the base award schema when the plugin declares no award custom fields", async () => {
+    server.use(
+      http.get("/common-grants/awards/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: mockAward })
+      )
+    );
+
+    // No AwdRecipientIndividual entry at all.
+    const client = plugin.getClient({ baseUrl: "https://api.example.org" });
+    const got = await client.awards.get(mockAward.id);
+
+    // The base schema still parses the untyped customFields record, but it is
+    // not a statically-known member; only presence/shape is guaranteed.
+    expect(got.recipientIndividual?.customFields?.tier).toMatchObject({ value: "gold" });
+  });
+
+  it("keeps award and opportunity custom-field schemas independent on the same plugin", async () => {
+    const mixedPlugin = definePlugin({
+      schemas: {
+        Opportunity: {
+          customFields: { programCode: { fieldType: "string", value: z.string() } },
+        },
+        AwdRecipientIndividual: {
+          customFields: { tier: { fieldType: "string", value: z.string() } },
+        },
+      },
+    } as const);
+
+    server.use(
+      http.get("/common-grants/opportunities/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: mockOpp })
+      ),
+      http.get("/common-grants/awards/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: mockAward })
+      )
+    );
+
+    const client = mixedPlugin.getClient({ baseUrl: "https://api.example.org" });
+
+    const opp = await client.opportunities.get(mockOpp.id);
+    const award = await client.awards.get(mockAward.id);
+
+    expect(opp.customFields?.programCode?.value).toBe("STEM-ED");
+    expect(award.recipientIndividual?.customFields?.tier?.value).toBe("gold");
+  });
+
+  it("per-call schema override wins over the plugin-bound award default", async () => {
+    const awardPlugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          customFields: { tier: { fieldType: "string", value: z.string() } },
+        },
+      },
+    } as const);
+
+    const numericTierAward = {
+      ...mockAward,
+      recipientIndividual: {
+        customFields: {
+          tier: { name: "tier", fieldType: "number", value: 7 },
+        },
+      },
+    };
+
+    server.use(
+      http.get("/common-grants/awards/:id", () =>
+        HttpResponse.json({ status: 200, message: "Success", data: numericTierAward })
+      )
+    );
+
+    const overrideSchema = AwardBaseSchema.extend({
+      recipientIndividual: withCustomFields(AwdRecipientIndividualSchema, {
+        tier: { fieldType: "number", value: z.number() },
+      } as const).optional(),
+    });
+
+    const client = awardPlugin.getClient({ baseUrl: "https://api.example.org" });
+    const result = await client.awards.get(mockAward.id, { schema: overrideSchema });
+
+    // The override's numeric tier wins, not the plugin's default string typing.
+    expect(result.recipientIndividual?.customFields?.tier?.value).toBe(7);
   });
 });

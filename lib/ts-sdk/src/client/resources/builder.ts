@@ -22,6 +22,18 @@ type ResolvedItemType<T extends PluginSchemasInput> = z.infer<
   OpportunityBase;
 
 /**
+ * Award item type: the base award envelope with its `recipientIndividual` key
+ * replaced by the plugin's compiled recipient-individual schema, the only
+ * extensible surface on `AwardBase`.
+ */
+type ResolvedAwardItemType<T extends PluginSchemasInput> = Omit<
+  AwardBase,
+  "recipientIndividual"
+> & {
+  recipientIndividual?: z.infer<Plugin<T>["schemas"]["AwdRecipientIndividual"]["commonSchema"]>;
+};
+
+/**
  * A `Client` whose resource slots carry the plugin's item and filter types:
  * `search({ filters })` autocompletes the registered filter names and
  * responses parse with the plugin's schema by default.
@@ -36,7 +48,7 @@ export type BuiltClient<T extends PluginSchemasInput, TRoutes extends PluginRout
 > & {
   // resource-slot: typed projection per resource
   opportunities: Opportunities<TRoutes, ResolvedItemType<T>>;
-  awards: Awards<TRoutes, AwardBase>;
+  awards: Awards<TRoutes, ResolvedAwardItemType<T>>;
 };
 
 /**
@@ -62,10 +74,18 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
     plugin.routes
   );
 
-  const { resourceClass: AwardResource, baseSchema } = RESOURCE_REGISTRY.awards;
+  // The award envelope has no top-level custom fields; its only extensible
+  // surface is the nested recipientIndividual, so the bound schema composes
+  // the plugin's compiled recipient-individual schema into the base envelope
+  // rather than swapping the envelope schema itself.
+  const { resourceClass: AwardResource, baseSchema, nestedSchemaName } = RESOURCE_REGISTRY.awards;
+  const recipientIndividualSchema = plugin.schemas[nestedSchemaName].commonSchema;
+  const awardSchema = baseSchema.extend({
+    recipientIndividual: recipientIndividualSchema.optional(),
+  }) as z.ZodType<AwardBase, unknown>;
   (client as unknown as { awards: Awards }).awards = new AwardResource(
     client,
-    baseSchema,
+    awardSchema,
     plugin.routes
   );
 
