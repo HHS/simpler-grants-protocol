@@ -121,7 +121,7 @@ export interface FuzzTestOptions {
    * deliberate `.catchall()` (an open record can never be shown to accept an
    * extra key), and it only ever reaches the outermost object (nested closure
    * can never be shown to reject a nested extra key). Set this to `true` to
-   * trust the schema's own object policy at every level instead — seal objects
+   * trust the schema's own object policy at every level instead: seal objects
    * with `.strict()` and leave records open with `z.record()`/`.catchall()`
    * yourself, and the harness compares what you wrote.
    */

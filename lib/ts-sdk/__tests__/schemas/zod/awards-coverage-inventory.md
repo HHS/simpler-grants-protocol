@@ -17,11 +17,11 @@ ticket must newly export, which shapes are inline or record wrappers with no
 
 **Status legend**
 
-- `existing` — already exported from `src/schemas/zod` and reusable as-is.
-- `new (T#)` — a public schema the named ticket introduces.
-- `inline` / `record` — has no standalone emitted `$id`; it is an inline object
+- `existing`: already exported from `src/schemas/zod` and reusable as-is.
+- `new (T#)`: a public schema the named ticket introduces.
+- `inline` / `record`: has no standalone emitted `$id`; it is an inline object
   or an emitter-generated record wrapper that maps onto its owning property.
-- `unresolved` — a shared-schema divergence that blocks parity and is owned by
+- `unresolved`: a shared-schema divergence that blocks parity and is owned by
   another issue; see the bottom section.
 
 ## Object policy in the bundle
@@ -49,9 +49,9 @@ Zod schema themselves and call the harness with `preserveObjectPolicy: true`
 | `decimalString.yaml`          | `Money.amount`                                                           | `DecimalStringSchema`          | existing      | pattern `^-?[0-9]+\.?[0-9]*$`                                                             |
 | `AwdTimeline.yaml`            | `keyDates`                                                               | `AwdTimelineSchema`            | new (T4)      | `awardDate`/`periodOfPerformance` events + `otherDates` record                            |
 | `Event.yaml`                  | `AwdTimeline.awardDate` etc.                                             | `EventSchema`                  | existing (\*) | `anyOf` of the three variants                                                             |
-| `SingleDateEvent.yaml`        | `Event`                                                                  | `SingleDateEventSchema`        | existing (\*) | sealed in bundle; SDK not sealed — see unresolved                                         |
-| `DateRangeEvent.yaml`         | `Event`                                                                  | `DateRangeEventSchema`         | existing (\*) | sealed in bundle; SDK not sealed — see unresolved                                         |
-| `OtherEvent.yaml`             | `Event`                                                                  | `OtherEventSchema`             | existing (\*) | sealed in bundle; SDK not sealed — see unresolved                                         |
+| `SingleDateEvent.yaml`        | `Event`                                                                  | `SingleDateEventSchema`        | existing (\*) | sealed in bundle; SDK not sealed, see unresolved                                          |
+| `DateRangeEvent.yaml`         | `Event`                                                                  | `DateRangeEventSchema`         | existing (\*) | sealed in bundle; SDK not sealed, see unresolved                                          |
+| `OtherEvent.yaml`             | `Event`                                                                  | `OtherEventSchema`             | existing (\*) | sealed in bundle; SDK not sealed, see unresolved                                          |
 | `EventType.yaml`              | `EventBase.eventType`                                                    | `EventTypeEnum`                | existing      | enum                                                                                      |
 | `isoDate.yaml`                | event `date`/`startDate`/`endDate`                                       | `ISODateSchema`                | existing      | format `date`                                                                             |
 | `isoTime.yaml`                | event `time`/`startTime`/`endTime`                                       | `ISOTimeSchema`                | existing      | format `time`                                                                             |
@@ -71,7 +71,7 @@ Zod schema themselves and call the harness with `preserveObjectPolicy: true`
 | `duns.yaml`                   | `OrgIdDuns.id`/`allIds[].id`                                             | `DunsSchema`                   | new (T2)      | pattern `^[0-9]{9}$`                                                                      |
 | `AwdRecipientIndividual.yaml` | `recipientIndividual`                                                    | `AwdRecipientIndividualSchema` | new (T4)      | `customFields` at this supported nested location; sealed; extension-registered            |
 | `Name.yaml`                   | `AwdRecipientIndividual.name`                                            | `NameSchema`                   | new (T1)      | requires `firstName`+`lastName`; sealed                                                   |
-| `CustomField.yaml`            | `AwdRecipientIndividual.customFields[*]`                                 | `CustomFieldSchema`            | existing (\*) | sealed in bundle; SDK not sealed — see unresolved                                         |
+| `CustomField.yaml`            | `AwdRecipientIndividual.customFields[*]`                                 | `CustomFieldSchema`            | existing (\*) | sealed in bundle; SDK not sealed, see unresolved                                          |
 | `CustomFieldType.yaml`        | `CustomField.fieldType`                                                  | `CustomFieldTypeEnum`          | existing      | enum                                                                                      |
 | `AwdRef.yaml`                 | `parent`, and spread into `AwardBase`                                    | `AwdRefSchema`                 | new (T4)      | requires `id`+`title`; sealed                                                             |
 | `AwdIds.yaml`                 | `AwdRef.identifiers`/`AwardBase.identifiers`                             | `AwdIdsSchema`                 | new (T4)      | `IdentifierCollection` + `awd:us:fain`; sealed                                            |
@@ -82,7 +82,7 @@ Zod schema themselves and call the harness with `preserveObjectPolicy: true`
 | `IdentifierStatus.yaml`       | `*.allIds[].status`                                                      | `IdentifierStatusEnum`         | new (T1)      | enum `active`/`archived`; constant `IdentifierStatus`                                     |
 | `SystemMetadata.yaml`         | spread into `AwardBase`                                                  | `SystemMetadataSchema`         | existing      | `createdAt`/`lastModifiedAt`, format `date-time`                                          |
 
-(\*) Reusable but carries a shared-schema divergence — see **Unresolved
+(\*) Reusable but carries a shared-schema divergence, see **Unresolved
 shared-schema dependencies**.
 
 ## Inline and record shapes (no standalone `$id`)
@@ -99,39 +99,73 @@ shared-schema dependencies**.
 
 ## Award routes
 
-| Route operation          | Request references                                                                                                  | Response references                                                          | SDK status                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------ |
-| `GET /awards/`           | `PaginatedQueryParams.yaml` (`PaginatedQueryParamsSchema`, existing)                                                | `Paginated<AwardBase>` (`PaginatedSchema`, existing template)                | new envelope (T6)                    |
-| `GET /awards/{awdId}`    | `awdId` path = `uuid.yaml` (`UuidSchema`, existing)                                                                 | `Ok<AwardBase>` (`OkSchema`) \| `NotFound` (`NotFoundSchema`), both existing | new envelope (T6)                    |
-| `POST /awards/search`    | `search?`, `AwdFilters.yaml`, `AwdSorting.yaml`, `PaginatedBodyParams.yaml` (`PaginatedBodyParamsSchema`, existing) | `Filtered<AwardBase, AwdFilters>` (`FilteredSchema`, existing template)      | new envelope (T6)                    |
-| `AwdFilters.yaml`        | search `filters`                                                                                                    | —                                                                            | new (T5)                             |
-| `AwdDefaultFilters.yaml` | base of `AwdFilters`                                                                                                | —                                                                            | new (T5)                             |
-| `StringArrayFilter.yaml` | `status`, `opportunityId`                                                                                           | —                                                                            | existing (`StringArrayFilterSchema`) |
-| `DateRangeFilter.yaml`   | `awardDateRange`                                                                                                    | —                                                                            | existing (`DateRangeFilterSchema`)   |
-| `MoneyRangeFilter.yaml`  | `awardedAmountRange`                                                                                                | —                                                                            | existing (`MoneyRangeFilterSchema`)  |
-| `DefaultFilter.yaml`     | `customFilters[*]` / `AwdDefaultFilters` catch-all                                                                  | —                                                                            | existing (`DefaultFilterSchema`)     |
-| `AwdSorting.yaml`        | search `sorting`                                                                                                    | —                                                                            | new (T5)                             |
-| `AwdSortBy.yaml`         | `AwdSorting.sortBy`                                                                                                 | —                                                                            | new (T5); constant `AwdSortBy`       |
-| `SortBodyParams.yaml`    | base of `AwdSorting`                                                                                                | —                                                                            | existing (`SortBodyParamsSchema`)    |
+| Emitted `$id`                  | Route or role                         | SDK schema                     | Status            |
+| ------------------------------ | ------------------------------------- | ------------------------------ | ----------------- |
+| `AwardsListRequest.yaml`       | `GET /awards/` query                  | `AwardsListRequestSchema`      | new (T6)          |
+| `AwardGetRequest.yaml`         | `GET /awards/{awdId}` path            | `AwardGetRequestSchema`        | new (T6)          |
+| `AwdSearchRequest.yaml`        | `POST /awards/search` body            | `AwdSearchRequestSchema`       | new (T6)          |
+| `AwardResponse.yaml`           | successful read response              | `AwardResponseSchema`          | new (T6)          |
+| `AwardsListResponse.yaml`      | successful paginated list response    | `AwardsListResponseSchema`     | new (T6)          |
+| `AwardsSortedResponse.yaml`    | paginated award response with sorting | `AwardsSortedResponseSchema`   | new (T6)          |
+| `AwardsFilteredResponse.yaml`  | successful search response            | `AwardsFilteredResponseSchema` | new (T6)          |
+| `NotFound.yaml`                | read error response                   | `NotFoundSchema`               | existing          |
+
+`AwardsListRequestSchema` maps the operation's `PaginatedQueryParams` to the
+protocol-exact local `RoutePaginationInputSchema`. `AwardGetRequestSchema` maps
+the `awdId` path parameter to `UuidSchema`. `AwdSearchRequestSchema` composes
+`search?`, `AwdFiltersSchema`, `AwdSortingSchema`, and the protocol-exact local
+pagination input corresponding to `PaginatedBodyParams`. See Unresolved below
+for why the two shared pagination schemas cannot be reused yet.
+
+### Award filter and sorting references
+
+| Emitted `$id`            | Reached from                                 | SDK schema                    | Status                               |
+| ------------------------ | -------------------------------------------- | ----------------------------- | ------------------------------------ |
+| `AwdFilters.yaml`        | search `filters`                                                                                                     | n/a                                                                                   | new (T5)                             |
+| `AwdDefaultFilters.yaml` | base of `AwdFilters`                                                                                                 | n/a                                                                                   | new (T5)                             |
+| `StringArrayFilter.yaml` | `status`, `opportunityId`                                                                                            | n/a                                                                                   | existing (`StringArrayFilterSchema`) |
+| `DateRangeFilter.yaml`   | `awardDateRange`                                                                                                     | n/a                                                                                   | existing (`DateRangeFilterSchema`)   |
+| `MoneyRangeFilter.yaml`  | `awardedAmountRange`                                                                                                 | n/a                                                                                   | existing (`MoneyRangeFilterSchema`)  |
+| `DefaultFilter.yaml`     | `customFilters[*]` / `AwdDefaultFilters` catch-all                                                                   | n/a                                                                                   | existing (`DefaultFilterSchema`)     |
+| `AwdSorting.yaml`        | search `sorting`                                                                                                     | n/a                                                                                   | new (T5)                             |
+| `AwdSortBy.yaml`         | `AwdSorting.sortBy`                                                                                                  | n/a                                                                                   | new (T5); constant `AwdSortBy`       |
+| `SortBodyParams.yaml`    | base of `AwdSorting`                                                                                                 | n/a                                                                                   | existing (`SortBodyParamsSchema`)    |
 
 `AwdDefaultFilters` is open: it accepts additional `DefaultFilter`-valued keys
 through its `RecordDefaultFilter` catch-all. `AwdFilters` is sealed except for
-its explicit `customFilters` record — inheriting the base catch-all into it
+its explicit `customFilters` record; inheriting the base catch-all into it
 would be wrong. Proving both requires `preserveObjectPolicy: true`.
+
+The route response and request envelopes are concrete local schemas in
+`award-routes.ts`, not the generic `Ok`/`Paginated`/`Sorted`/`Filtered`
+response templates (`responses.ts`) or the shared `PaginatedQueryParamsSchema`/
+`PaginatedBodyParamsSchema` (`pagination.ts`). Those generics reuse the shared
+pagination and sorting schemas, which diverge from the protocol (see
+Unresolved), so building on them would carry the divergence into the award
+routes. The local copies pin `status: 200`, seal every level, bound page and
+page size at int32, and drop `null` where the protocol is non-nullable; they
+collapse back onto the generics once #1192 fixes the shared schemas. Parity is
+asserted two-sided (Zod and AJV) against the emitted route schemas in
+`award-routes.spec.ts`.
 
 ## Unresolved shared-schema dependencies
 
-These block zero-divergence parity for the award models that reuse them. They
-are isolated with self-expiring reproductions in
+Each shared schema below diverges from its emitted contract. The first two
+block zero-divergence parity for the award models that reuse them directly; the
+rest are the pagination and sorting schemas the award routes cannot reuse and so
+fork locally. All are isolated with self-expiring reproductions in
 `__tests__/schemas/zod/shared-defects.spec.ts` and owned by
 [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192) (shared
 models), not #1156.
 
-| Shared schema                                             | Divergence                                                                                        | Blocks                                     |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | optional metadata is `.nullish()` (accepts `null`); objects are not sealed (accept unknown keys)  | `AwdTimeline` (T4)                         |
-| `CustomField` (`CustomFieldSchema`)                       | `schema`/`description` are `.nullish()` (accept `null`); object not sealed (accepts unknown keys) | `AwdRecipientIndividual.customFields` (T4) |
+| Shared schema                                             | Divergence                                                                                        | Award impact                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | optional metadata is `.nullish()` (accepts `null`); objects are not sealed (accept unknown keys)  | blocks `AwdTimeline` parity (T4)                  |
+| `CustomField` (`CustomFieldSchema`)                       | `schema`/`description` are `.nullish()` (accept `null`); object not sealed (accepts unknown keys) | blocks `AwdRecipientIndividual.customFields` (T4) |
+| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()` and unbounded (no int32 `.max()`); objects are not sealed      | forked as `RoutePaginationInputSchema` (T6)       |
+| `PaginatedResultsInfo` (`PaginatedResultsInfoSchema`)     | `pageSize` allows `0` (protocol minimum is `1`); totals are `.nullish()`; object not sealed       | forked as `AwardPaginationInfoSchema` (T6)        |
+| `SortedResultsInfo` (`SortedResultsInfoSchema`)           | `customSortBy`/`errors` are `.nullish()` (accept `null`); object not sealed                       | forked as `AwardSortInfoSchema` (T6)              |
 
 Track any further UUID/URI/date-format or route-metadata differences the same
-way as they are found during T4–T6: isolate the reproduction, name the owning
-issue, and do not mark an unexplained failure as an expected divergence.
+way as they are found during T4 through T6: isolate the reproduction, name the
+owning issue, and do not mark an unexplained failure as an expected divergence.

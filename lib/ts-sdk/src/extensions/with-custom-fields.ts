@@ -127,10 +127,10 @@ export function withCustomFields<
   // customFields is nullish, while AwdRecipientIndividual's is optional only.
   let customFieldsSchema: z.ZodType = z.object(typedFieldSchemas).catchall(CustomFieldSchema);
 
-  if (schemaShape.customFields.safeParse(null).success) {
+  if (schemaShape.customFields.isNullable()) {
     customFieldsSchema = customFieldsSchema.nullable();
   }
-  if (schemaShape.customFields.safeParse(undefined).success) {
+  if (schemaShape.customFields.isOptional()) {
     customFieldsSchema = customFieldsSchema.optional();
   }
 

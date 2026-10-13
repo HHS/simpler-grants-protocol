@@ -591,7 +591,7 @@ describe("wire representation", () => {
 // #########################################################
 
 describe("object policy preservation", () => {
-  // Protocol side: an open record — a required string property plus any
+  // Protocol side: an open record, a required string property plus any
   // number of additional numeric properties.
   const openRecAjv = createAjvFromDefs(
     {
