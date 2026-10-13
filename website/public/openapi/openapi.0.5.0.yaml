@@ -5072,7 +5072,6 @@ components:
       enum:
         - active
         - inactive
-      description: Whether a relationship is in effect, as stated by the provider.
     CommonGrants.Models.OrgRelationships:
       type: object
       properties:
