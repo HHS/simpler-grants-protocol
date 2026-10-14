@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Any, Type, TypeVar
 from pydantic import BaseModel, Field, create_model, ConfigDict
 from ..schemas.pydantic.fields import CustomField, CustomFieldType
+from ..schemas.pydantic._contract import NonNullOptionals
 from ..schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.utils.json import snake
 
@@ -41,8 +42,11 @@ def add_custom_fields(
     # Accumulate all field definitions
     field_defs: dict[str, Any] = create_custom_field_schema(name=name, fields=fields)
 
-    class _CustomFieldsBase(CommonGrantsBaseModel):
-        """Unregistered entries are kept in model_extra, validated as CustomField."""
+    class _CustomFieldsBase(NonNullOptionals, CommonGrantsBaseModel):
+        """Unregistered entries are kept in model_extra, validated as CustomField.
+
+        Registered entries may be omitted but not null.
+        """
 
         model_config = ConfigDict(populate_by_name=True, extra="allow")
 

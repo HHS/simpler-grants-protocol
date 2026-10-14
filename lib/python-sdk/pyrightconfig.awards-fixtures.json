@@ -1,0 +1,5 @@
+{
+  "include": ["examples/typed_awards_failures.py"],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.11"
+}
