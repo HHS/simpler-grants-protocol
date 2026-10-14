@@ -1,12 +1,12 @@
 ---
-title: CommonGrants protocol v0.2.0
+title: CommonGrants protocol v0.5.0
 description: A specification for the CommonGrants protocol.
 ---
 
 :::tip[Version History]
-This is the current specification (v0.2.0). View previous versions:
+This is the current specification (v0.5.0). View previous versions:
 
-- [v0.1.0](/protocol/specification/v0_1_0) - Previous stable version
+- [v0.1.0](/protocol/specification/v0_1_0) - Original draft specification
   :::
 
 This document outlines the technical specification for the CommonGrants protocol, which defines:
@@ -21,7 +21,7 @@ Not interested in the technical details? Check out:
 
 :::note
 
-This specification is currently a draft and we welcome your feedback. View our [Request for Comments](/governance/rfc/) page to provide input on the specification and other aspects of the protocol.
+CommonGrants is pre-1.0 and still evolving. Routes marked experimental may change between releases. We welcome your feedback on our [co-planning board](https://commongrants.fider.io).
 
 :::
 
