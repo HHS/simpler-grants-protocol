@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - lib/cli/**
+      - pnpm-workspace.yaml
       - .github/workflows/ci-lib-cli.yml
 
 defaults:
