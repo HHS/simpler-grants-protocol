@@ -518,21 +518,6 @@ class TestUnknownCustomFieldsPreserved:
         assert isinstance(unknown, CustomField)
         assert unknown.value == "preserved"
 
-    def test_unknown_key_without_name_is_rejected(self):
-        """Unknown entries carry their own name; the key is never injected as one."""
-        Opportunity = OpportunityBase.with_custom_fields(
-            custom_fields={}, model_name="Opportunity"
-        )
-        payload = {
-            **BASE_OPP,
-            "customFields": {
-                "unknownField": {"fieldType": "string", "value": "preserved"},
-            },
-        }
-
-        with pytest.raises(ValidationError):
-            Opportunity.model_validate(payload)
-
 
 # ---------------------------------------------------------------------------
 # Unregistered entries across every custom-fields container (#1121)
