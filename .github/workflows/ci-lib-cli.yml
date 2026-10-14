@@ -6,6 +6,7 @@ on:
     paths:
       - lib/cli/**
       - pnpm-workspace.yaml
+      - pnpm-lock.yaml
       - .github/workflows/ci-lib-cli.yml
 
 defaults:
