@@ -12,7 +12,6 @@ The `@common-grants/sdk/types` and `@common-grants/sdk/constants` modules comple
   - [Type safety](#type-safety)
   - [Opportunity model](#opportunity-model)
   - [Award contracts](#award-contracts)
-  - [Custom fields](#custom-fields)
   - [Opportunity base vs detail](#opportunity-base-vs-detail)
   - [Generic response schemas](#generic-response-schemas)
 - [API reference](#api-reference)
@@ -318,46 +317,6 @@ AwdSearchRequestSchema.parse({
 The response schemas above require status `200` and validate embedded awards
 plus pagination, sorting, and filtering metadata. `NotFoundSchema` validates
 the read route's not-found response.
-
-### Custom fields
-
-`customFields` on `OpportunityBaseSchema` and `AwdRecipientIndividualSchema` maps
-any key to a `CustomFieldSchema` envelope. Schemas extended with
-`withCustomFields()` or a plugin apply the same rule to every key they don't
-register:
-
-- Unregistered entries are kept with their map key and nested `value`
-  unchanged, so they survive `JSON.stringify()` and a re-parse.
-- Each one needs its own `name`, a valid `fieldType`, and a `value`.
-  `value: null` is a valid entry. A `null`, string, or array in place of the
-  whole entry is rejected, as is an invalid `schema` URL.
-- They're typed as the base `CustomField` (`value: unknown`); only registered
-  fields get a typed `value`.
-- This isn't a general passthrough. Unknown keys inside an envelope are
-  dropped, and each model's own object policy still applies.
-- Whether `customFields` itself may be `null` follows the base schema: it's
-  nullable on `OpportunityBaseSchema` and optional only on
-  `AwdRecipientIndividualSchema`.
-
-```ts
-import { withCustomFields } from "@common-grants/sdk/extensions";
-import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
-
-const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
-  programArea: { fieldType: "string" },
-} as const);
-
-const opp = OpportunitySchema.parse({
-  ...opportunityData,
-  customFields: {
-    programArea: { name: "programArea", fieldType: "string", value: "Health" },
-    vendorPayload: { name: "vendorPayload", fieldType: "object", value: { tier: 2 } },
-  },
-});
-
-opp.customFields?.programArea?.value; // string: "Health"
-opp.customFields?.vendorPayload?.value; // unknown: { tier: 2 }
-```
 
 ### Opportunity base vs detail
 
