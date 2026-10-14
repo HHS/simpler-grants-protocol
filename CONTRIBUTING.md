@@ -17,6 +17,7 @@ Before contributing, we encourage you to read our [LICENSE](LICENSE.md) and [REA
   - [Report a bug](#report-a-bug)
   - [Request new functionality](#request-new-functionality)
   - [Contribute to the codebase](#contribute-to-the-codebase)
+  - [Paid contributions](#paid-contributions)
 - [Getting started](#getting-started)
 - [Questions?](#questions)
 
@@ -76,6 +77,8 @@ If you are a state, platform, or organization exploring adoption at any level, w
 
 Plugins extend the CommonGrants SDKs with additional functionality. Adapters translate data from existing grant platforms into the CommonGrants format, so that platforms can adopt the protocol without rebuilding their systems. This can enable your platform to interoperate with others in the ecosystem without changing your internal data model. If you are interested in learning more about building an adapter, reach out on the [forum](https://forum.simpler.grants.gov/c/commongrants/8) and the CommonGrants maintainers can help you get started.
 
+You can build a plugin or adapter on your own at any time. Some of this work is also posted as funded issues. See [Paid contributions](#paid-contributions) for how those work.
+
 How to build a plugin or adapter:
 
 1. Review the plugin framework documentation on [commongrants.org](https://commongrants.org)
@@ -116,6 +119,8 @@ If you don't have specific language or code to submit but would like to suggest 
 
 If you've implemented a new feature, fixed a bug, or made some documentation clearer, we'd love to consider your contribution. Good documentation is just as valuable as code, so if you notice gaps or unclear explanations, a pull request is welcome.
 
+You don't need a funded issue to contribute. Most issues don't carry an award, and contributions to any of them are welcome. If you do pick up a [funded issue](#paid-contributions), claim it on the issue and wait until it's assigned to you before starting substantial work.
+
 1. **Fork the repo:** Create a copy of this repo where you can make your proposed changes by [following the GitHub forking methodology](https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo).
 2. **Find or create an issue:** Before proposing a change, make sure there is a corresponding issue (i.e. Bug Fix, Task, Feature Request) that describes the contribution you'll be making. If there isn't an existing issue, create a new one by selecting and filling out a template from the [issue tab](https://github.com/HHS/simpler-grants-protocol/issues/new/choose).
 3. **Create a feature branch:** Create a feature branch on your forked repository with a descriptive name, ideally one that references the issue number that your contribution is related to (e.g., `issue-10-unit-testing`).
@@ -140,6 +145,18 @@ The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-
 A PR touching two packages bumps both at the title's type. That is usually right, since both packages changed; split the PR when they warrant different bumps, such as a `feat` in `lib/core/` alongside a mechanical regeneration in `lib/ts-sdk/`.
 
 GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. release-please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+
+### Paid contributions
+
+Some CommonGrants issues carry an award of $50 to $500. They're labeled `funded`, and the award amount is at the top of the issue. See the [open funded issues](https://github.com/HHS/simpler-grants-protocol/issues?q=is%3Aissue%20state%3Aopen%20label%3Afunded).
+
+CommonGrants is a shared standard for how grant information moves between systems. It's public infrastructure, and paying for some of the work is one way we're making room for more people to help build it.
+
+Who's eligible, how to claim or propose, and how payment works are all in the [paid contributor terms](PAID_CONTRIBUTOR_TERMS.md).
+
+**Funded issues are currently open to United States persons only.** That is a limit on how we can move money today. If you are outside the US you are welcome on any issue, funded or otherwise, and your contribution gets the same review and the same credit. We are working on it.
+
+Questions go on the issue.
 
 ## Getting started
 

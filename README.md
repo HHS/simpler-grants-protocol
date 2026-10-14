@@ -29,6 +29,7 @@ CommonGrants is an open standard for sharing data about funding opportunities, a
 - Community docs:
   - [Code of conduct](CODE_OF_CONDUCT.md): Our community guidelines.
   - [Contributing](CONTRIBUTING.md): How to contribute to the CommonGrants project.
+  - [Paid contributions](CONTRIBUTING.md#paid-contributions): Some CommonGrants issues carry an award of $50 to $500. See the paid contributions section of CONTRIBUTING.md for how it works.
   - [Security policy](SECURITY.md): How to report a security issue.
   - [DeepWiki link](https://deepwiki.com/HHS/simpler-grants-protocol): Gives a continuously updated view of the entire repo, including diagrams and the ability to interactively search and ask questions about the repo.
 
