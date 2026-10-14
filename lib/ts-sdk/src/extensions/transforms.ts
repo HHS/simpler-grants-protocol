@@ -104,7 +104,12 @@ function validateOutputPaths(
   // output type (e.g. schemas that use .transform()). `unknown` would reject
   // those valid schemas here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonSchema: z.ZodType<unknown, any>
+  commonSchema: z.ZodType<unknown, any>,
+  // Which mapping is being validated. Drives the error label and whether the
+  // `customFields` hint applies. Custom fields are a CommonGrants concept, so
+  // the hint only makes sense for `toCommon` output (validated against the
+  // common schema), not `fromCommon` output (validated against the source).
+  direction: "toCommon" | "fromCommon"
 ): void {
   if (!(commonSchema instanceof z.ZodObject)) return;
   // A `.loose()` / `.passthrough()` / `.catchall(...)` object accepts keys
@@ -118,11 +123,15 @@ function validateOutputPaths(
   const outputKeys = Object.keys(mapping).filter(k => !knownHandlers.has(k));
   const invalid = outputKeys.filter(k => !validNames.has(k));
   if (invalid.length === 0) return;
+  const label = direction === "toCommon" ? "toCommonMapping" : "fromCommonMapping";
+  const hint =
+    direction === "toCommon"
+      ? `If these are custom fields, map them under the top-level "customFields" key ` +
+        `(e.g. { customFields: { yourField: ... } }), not as top-level keys, and declare them in schemas[Object].customFields. ` +
+        `Otherwise check the field name.`
+      : `Check the field name.`;
   throw new Error(
-    `buildTransforms (toCommonMapping): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ` +
-      `If these are custom fields, map them under the top-level "customFields" key ` +
-      `(e.g. { customFields: { yourField: ... } }), not as top-level keys, and declare them in schemas[Object].customFields. ` +
-      `Otherwise check the field name.`
+    `buildTransforms (${label}): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ${hint}`
   );
 }
 
@@ -236,10 +245,10 @@ export function buildTransforms<TSource = unknown, TCommon = unknown>(
   validateMapping(toCommonMapping, known);
   validateMapping(fromCommonMapping, known);
   if (commonSchema !== undefined) {
-    validateOutputPaths(toCommonMapping, known, commonSchema);
+    validateOutputPaths(toCommonMapping, known, commonSchema, "toCommon");
   }
   if (sourceSchema !== undefined) {
-    validateOutputPaths(fromCommonMapping, known, sourceSchema);
+    validateOutputPaths(fromCommonMapping, known, sourceSchema, "fromCommon");
   }
 
   const runMapping = (
