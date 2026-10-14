@@ -34,7 +34,8 @@ CF = te.TypeVar("CF", default="dict[str, CustomField]")
 class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
     """Base model for a funding opportunity, generic over its custom-fields container."""
 
-    model_config = ConfigDict(populate_by_name=True)
+    # Unknown properties are still ignored here; only the inherited metadata closes.
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     id: UUID = Field(..., description="Globally unique id for the opportunity")
     title: str = Field(..., description="Title or name of the funding opportunity")
