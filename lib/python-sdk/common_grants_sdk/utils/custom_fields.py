@@ -178,8 +178,8 @@ def get_custom_field_value(
 
     Works regardless of whether custom fields were registered via
     `add_custom_fields` (Pydantic model) or are unregistered (dict). On a
-    registered container, entries it does not declare are looked up by their
-    exact wire key.
+    registered container, an entry it does not declare is looked up by its
+    exact wire key, and that match takes precedence over a declared field.
 
     Args:
         instance: The model instance containing custom_fields
@@ -203,13 +203,30 @@ def get_custom_field_value(
             return None
         field = fields[key]
     else:
-        # Registered: custom_fields is a Pydantic model with snake_case attributes;
-        # undeclared entries sit in model_extra under their exact key.
-        attr_name = snake(key)
-        if attr_name in type(fields).model_fields:
-            field = getattr(fields, attr_name)
+        # Registered: custom_fields is a Pydantic model. An undeclared entry is
+        # matched by its exact key first, so a normalized declared name never
+        # shadows it; declared fields then match by wire alias or attribute name,
+        # falling back to the snake_case form of the key.
+        extra = fields.model_extra or {}
+        if key in extra:
+            field = extra[key]
         else:
-            field = (fields.model_extra or {}).get(key)
+            declared = type(fields).model_fields
+            attr_name = next(
+                (
+                    name
+                    for name, info in declared.items()
+                    if key
+                    in (
+                        name,
+                        info.alias,
+                        info.validation_alias,
+                        info.serialization_alias,
+                    )
+                ),
+                snake(key),
+            )
+            field = getattr(fields, attr_name) if attr_name in declared else None
         if field is None:
             return None
 

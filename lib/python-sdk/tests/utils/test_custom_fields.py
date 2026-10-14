@@ -713,3 +713,80 @@ def test_get_custom_field_value_uses_exact_unregistered_keys(model):
     assert opp.get_custom_field_value("missingKey", str) is None
     with pytest.raises(ValueError):
         opp.get_custom_field_value("vendorPayload", str)
+
+
+# Exact keys that normalize (snake_case) to the registered ``legacy_id`` attribute.
+COLLIDING_ENTRIES = {
+    "LegacyId": {"name": "LegacyId", "fieldType": "integer", "value": 99},
+    "LEGACY_ID": {"name": "LEGACY_ID", "fieldType": "integer", "value": 7},
+}
+
+
+@pytest.mark.parametrize(
+    "model", REGISTERED_CONTAINERS.values(), ids=REGISTERED_CONTAINERS.keys()
+)
+def test_get_custom_field_value_prefers_exact_unregistered_key(model):
+    opp = model.model_validate(
+        {
+            **WIRE_OPP,
+            "customFields": {"legacyId": REGISTERED_ENTRY, **COLLIDING_ENTRIES},
+        }
+    )
+
+    assert set(opp.custom_fields.model_extra) == {"LegacyId", "LEGACY_ID"}
+    assert opp.get_custom_field_value("LegacyId", int) == 99
+    assert opp.get_custom_field_value("LEGACY_ID", int) == 7
+    assert opp.get_custom_field_value("legacyId", int) == 42
+    assert opp.get_custom_field_value("legacy_id", int) == 42
+
+
+@pytest.mark.parametrize(
+    "model", REGISTERED_CONTAINERS.values(), ids=REGISTERED_CONTAINERS.keys()
+)
+def test_get_custom_field_value_absent_registered_value_is_none(model):
+    opp = model.model_validate({**WIRE_OPP, "customFields": COLLIDING_ENTRIES})
+
+    assert opp.get_custom_field_value("legacyId", int) is None
+    assert opp.get_custom_field_value("legacy_id", int) is None
+    assert opp.get_custom_field_value("LegacyId", int) == 99
+
+
+@pytest.mark.parametrize(
+    "model", REGISTERED_CONTAINERS.values(), ids=REGISTERED_CONTAINERS.keys()
+)
+def test_get_custom_field_value_keeps_normalized_registered_lookup(model):
+    """With no exact entry for the key, a normalized key still finds the field."""
+    opp = model.model_validate(
+        {**WIRE_OPP, "customFields": {"legacyId": REGISTERED_ENTRY}}
+    )
+
+    assert opp.get_custom_field_value("LegacyId", int) == 42
+
+
+class _AliasedFields(CustomFieldSet):
+    program: Optional[CustomField[str]] = Field(default=None, alias="programCode")
+
+
+def test_get_custom_field_value_resolves_an_explicit_alias():
+    opp = OpportunityBase[_AliasedFields].model_validate(
+        {
+            **WIRE_OPP,
+            "customFields": {
+                "programCode": {
+                    "name": "programCode",
+                    "fieldType": "string",
+                    "value": "P-1",
+                },
+                "program_code": {
+                    "name": "program_code",
+                    "fieldType": "string",
+                    "value": "unregistered",
+                },
+            },
+        }
+    )
+
+    assert opp.custom_fields.program.value == "P-1"
+    assert opp.get_custom_field_value("programCode", str) == "P-1"
+    assert opp.get_custom_field_value("program", str) == "P-1"
+    assert opp.get_custom_field_value("program_code", str) == "unregistered"
