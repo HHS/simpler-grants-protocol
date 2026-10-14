@@ -143,6 +143,30 @@ const opportunity = await client.opportunities.get("123e4567-e89b-12d3-a456-4266
 console.log(opportunity.title);
 ```
 
+`get()` parses the **detail** shape by default (the base opportunity fields
+plus `awards` and `competitions`), while `list()` and `search()` stay on the
+base (collection) shape:
+
+```ts
+// Awards that resulted from this opportunity, as references. Omitted means
+// the implementation doesn't publish this link; an empty array means the
+// link is published and no awards are known.
+if (opportunity.awards?.length) {
+  console.log(opportunity.awards.map(award => award.title));
+}
+```
+
+An award reference isn't dereferenceable through this API. To fetch the full
+award record, use `GET /common-grants/awards/{id}` where the server exposes
+it; otherwise join on the reference's `identifiers` against your own records.
+
+Pass `schema` to override the default, e.g. `OpportunityBaseSchema` to parse
+only the base fields:
+
+```ts
+const base = await client.opportunities.get(id, { schema: OpportunityBaseSchema });
+```
+
 See also: [get-opportunity.ts](../../examples/get-opportunity.ts)
 
 ### Award methods
@@ -302,11 +326,11 @@ const response = await client.fetch("/custom/endpoint", {
 
 ### Opportunities resource
 
-| Method                                                                   | Route                                      | Description                                                                             |
-| ------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------- |
-| [`client.opportunities.get(id, options?)`](./resources/opportunities.ts) | `GET /common-grants/opportunities/{id}`    | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
-| [`client.opportunities.list(options?)`](./resources/opportunities.ts)    | `GET /common-grants/opportunities`         | List opportunities with auto-pagination. Pass `page` to fetch a specific page instead.  |
-| [`client.opportunities.search(options?)`](./resources/opportunities.ts)  | `POST /common-grants/opportunities/search` | Search with text query, status filters, and auto-pagination.                            |
+| Method                                                                   | Route                                      | Description                                                                                                                                                   |
+| ------------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`client.opportunities.get(id, options?)`](./resources/opportunities.ts) | `GET /common-grants/opportunities/{id}`    | Fetch a single opportunity by ID, parsed as the detail shape (base fields plus `awards`/`competitions`) by default. Accepts an optional `schema` to override. |
+| [`client.opportunities.list(options?)`](./resources/opportunities.ts)    | `GET /common-grants/opportunities`         | List opportunities with auto-pagination. Pass `page` to fetch a specific page instead.                                                                        |
+| [`client.opportunities.search(options?)`](./resources/opportunities.ts)  | `POST /common-grants/opportunities/search` | Search with text query, status filters, and auto-pagination.                                                                                                  |
 
 ### Awards resource
 
