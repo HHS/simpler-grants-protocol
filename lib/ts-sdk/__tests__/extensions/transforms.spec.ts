@@ -592,6 +592,12 @@ describe("buildTransforms — output key validation (commonSchema provided)", ()
     ).toThrow(/unknown output fields.*"titlee"/);
   });
 
+  it("labels the error for the toCommon direction and includes the customFields hint", () => {
+    expect(() =>
+      buildTransforms({ titlee: { field: "data.title" } }, {}, undefined, OpportunityBaseSchema)
+    ).toThrow(/buildTransforms \(toCommonMapping\):.*map them under the top-level "customFields"/s);
+  });
+
   it("accepts all valid top-level schema field names", () => {
     expect(() =>
       buildTransforms({ title: { field: "data.title" } }, {}, undefined, OpportunityBaseSchema)
@@ -644,6 +650,25 @@ describe("buildTransforms — output key validation (commonSchema provided)", ()
         SourceSchema
       )
     ).toThrow(/unknown output fields.*"notANativeField"/);
+  });
+
+  it("labels the error for the fromCommon direction and omits the customFields hint", () => {
+    const SourceSchema = z.object({ native_title: z.string() });
+    let message = "";
+    try {
+      buildTransforms(
+        {},
+        { notANativeField: { field: "title" } },
+        undefined,
+        undefined,
+        SourceSchema
+      );
+    } catch (exc) {
+      message = (exc as Error).message;
+    }
+    // Custom fields are a CommonGrants concept, so the hint is toCommon-only.
+    expect(message).toMatch(/buildTransforms \(fromCommonMapping\):/);
+    expect(message).not.toMatch(/customFields/);
   });
 
   it("does not validate fromCommonMapping output keys when sourceSchema is absent", () => {

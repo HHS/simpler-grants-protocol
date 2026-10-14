@@ -44,8 +44,17 @@ const GrantsGovOpportunity = z.object({
     // apply" (three-state null). The transforms preserve it as `null` end to end
     // rather than collapsing it to absent.
     source_url: z.url().nullish(),
-    created_at: z.string(),
-    last_modified_at: z.string(),
+    // The declarative `field` handler (Scenario 1) has no date-to-string
+    // conversion, so it plucks `createdAt`/`lastModifiedAt` off the common
+    // side as the `Date` objects the common schema coerced them into. Accept
+    // either shape here and normalize to a string, since that's what a real
+    // grants.gov payload would carry on the wire.
+    created_at: z
+      .union([z.string(), z.date()])
+      .transform(v => (v instanceof Date ? v.toISOString() : v)),
+    last_modified_at: z
+      .union([z.string(), z.date()])
+      .transform(v => (v instanceof Date ? v.toISOString() : v)),
   }),
 });
 type GrantsGovSource = z.infer<typeof GrantsGovOpportunity>;
@@ -224,6 +233,11 @@ const noCustomFieldsPlugin = definePlugin({
             created_at: { field: "createdAt" },
             last_modified_at: { field: "lastModifiedAt" },
             opportunity_status: { const: "posted" },
+            // No custom field carries the legacy ID in this scenario, but the
+            // source schema requires the field; send a placeholder. A plugin
+            // without this data available would instead make the field
+            // optional on its own source schema.
+            opportunity_id: { const: 0 },
           },
         },
       },

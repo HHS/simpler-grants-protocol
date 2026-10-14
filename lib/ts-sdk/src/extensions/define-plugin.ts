@@ -250,7 +250,8 @@ export function definePlugin<
         mappings!.toCommon,
         mappings!.fromCommon,
         undefined,
-        commonSchema
+        commonSchema,
+        sourceSchema
       );
       // The specific (TSource, TCommon) types for this entry were erased when it
       // was stored in PluginSchemasInput above. Cast needed so the compiled transform

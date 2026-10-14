@@ -11,12 +11,25 @@ import { AwardBaseSchema } from "../../schemas/index.js";
 
 type ResourceRegistryEntry =
   | { resourceClass: typeof Opportunities; schemaName: ExtensibleSchemaName }
-  | { resourceClass: typeof Awards; baseSchema: typeof AwardBaseSchema };
+  | {
+      resourceClass: typeof Awards;
+      baseSchema: typeof AwardBaseSchema;
+      /**
+       * Extensible model composed into the base envelope's `recipientIndividual`
+       * key. The award envelope has no top-level custom fields, so unlike
+       * `schemaName` above, this does not replace the bound schema itself.
+       */
+      nestedSchemaName: ExtensibleSchemaName;
+    };
 
 // resource-slot: add an entry per API resource
 export const RESOURCE_REGISTRY = {
   opportunities: { resourceClass: Opportunities, schemaName: "Opportunity" },
-  awards: { resourceClass: Awards, baseSchema: AwardBaseSchema },
+  awards: {
+    resourceClass: Awards,
+    baseSchema: AwardBaseSchema,
+    nestedSchemaName: "AwdRecipientIndividual",
+  },
 } as const satisfies Record<ResourceName, ResourceRegistryEntry>;
 
 /** Compile-time seam guard: `ResourceName` and this registry's keys must not drift. */

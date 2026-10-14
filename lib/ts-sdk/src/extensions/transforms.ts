@@ -86,6 +86,15 @@ function validateMapping(mapping: unknown, knownHandlers: Set<string>, path = ""
  * `ZodObject`s (`.extend()` preserves the concrete type), so the
  * fallback is a safety net, not an expected code path.
  *
+ * Also skips schemas that accept unknown keys via a non-`never` catchall
+ * (`.loose()` / `.passthrough()` / `.catchall(...)`). Those keys are valid by
+ * definition, so
+ * flagging them would be a false positive, common for a source schema that
+ * only models the fields a transform maps and passes the rest through. This
+ * waives build-time key-typo detection for the whole mapping against such a
+ * schema: a mistyped *declared* field name is also accepted by the catchall,
+ * so it is no longer caught here (runtime validation still applies).
+ *
  * @internal
  */
 function validateOutputPaths(
@@ -95,18 +104,34 @@ function validateOutputPaths(
   // output type (e.g. schemas that use .transform()). `unknown` would reject
   // those valid schemas here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  commonSchema: z.ZodType<unknown, any>
+  commonSchema: z.ZodType<unknown, any>,
+  // Which mapping is being validated. Drives the error label and whether the
+  // `customFields` hint applies. Custom fields are a CommonGrants concept, so
+  // the hint only makes sense for `toCommon` output (validated against the
+  // common schema), not `fromCommon` output (validated against the source).
+  direction: "toCommon" | "fromCommon"
 ): void {
   if (!(commonSchema instanceof z.ZodObject)) return;
+  // A `.loose()` / `.passthrough()` / `.catchall(...)` object accepts keys
+  // outside its shape; `.strict()` sets catchall to `z.never()`, which does
+  // not. Skip the former. `.def` is Zod v4's public schema-introspection API
+  // (not a private field); `.def.catchall` is `undefined` for a plain
+  // `z.object()`, so the `!== undefined` guard keeps plain objects validated.
+  const catchall = commonSchema.def.catchall;
+  if (catchall !== undefined && !(catchall instanceof z.ZodNever)) return;
   const validNames = new Set(Object.keys(commonSchema.shape));
   const outputKeys = Object.keys(mapping).filter(k => !knownHandlers.has(k));
   const invalid = outputKeys.filter(k => !validNames.has(k));
   if (invalid.length === 0) return;
+  const label = direction === "toCommon" ? "toCommonMapping" : "fromCommonMapping";
+  const hint =
+    direction === "toCommon"
+      ? `If these are custom fields, map them under the top-level "customFields" key ` +
+        `(e.g. { customFields: { yourField: ... } }), not as top-level keys, and declare them in schemas[Object].customFields. ` +
+        `Otherwise check the field name.`
+      : `Check the field name.`;
   throw new Error(
-    `buildTransforms (toCommonMapping): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ` +
-      `If these are custom fields, map them under the top-level "customFields" key ` +
-      `(e.g. { customFields: { yourField: ... } }), not as top-level keys, and declare them in schemas[Object].customFields. ` +
-      `Otherwise check the field name.`
+    `buildTransforms (${label}): unknown output fields ${JSON.stringify(invalid.sort())} for schema. ${hint}`
   );
 }
 
@@ -220,10 +245,10 @@ export function buildTransforms<TSource = unknown, TCommon = unknown>(
   validateMapping(toCommonMapping, known);
   validateMapping(fromCommonMapping, known);
   if (commonSchema !== undefined) {
-    validateOutputPaths(toCommonMapping, known, commonSchema);
+    validateOutputPaths(toCommonMapping, known, commonSchema, "toCommon");
   }
   if (sourceSchema !== undefined) {
-    validateOutputPaths(fromCommonMapping, known, sourceSchema);
+    validateOutputPaths(fromCommonMapping, known, sourceSchema, "fromCommon");
   }
 
   const runMapping = (
