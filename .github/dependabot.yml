@@ -26,6 +26,7 @@ updates:
           - "starlight-*"
           - "prettier-plugin-astro"
           - "eslint-plugin-astro"
+          - "@bruits/satteri-*"
       tooling:
         patterns:
           - "typescript"
