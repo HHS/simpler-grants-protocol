@@ -33,6 +33,7 @@ from pydantic import (
     AliasGenerator,
     BaseModel,
     ConfigDict,
+    Field,
     ValidationError,
 )
 from pydantic.alias_generators import to_camel
@@ -84,7 +85,15 @@ class CustomFieldSet(_CamelModel):
     description=...)``. ``CustomField[V]`` is the single source of truth: its value
     type ``V`` is the anchor from which ``field_type`` and the inspectable value type
     are derived, so they cannot drift.
+
+    Entries the set does not declare are kept in ``model_extra`` under their exact
+    wire key and validated as a base ``CustomField``, so each must carry its own
+    ``name``, ``fieldType`` and ``value``.
     """
+
+    model_config = ConfigDict(extra="allow")
+
+    __pydantic_extra__: dict[str, CustomField] = Field(init=False)
 
 
 # The extensible-schema registry: the closed set of models a plugin may extend,

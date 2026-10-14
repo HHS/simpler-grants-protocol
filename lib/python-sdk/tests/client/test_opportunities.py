@@ -3,11 +3,12 @@
 import json
 import pytest
 from datetime import datetime, UTC
+from typing import Optional
 from unittest.mock import Mock
 from uuid import uuid4
 
 import httpx
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 
 from common_grants_sdk.client import (
     Client,
@@ -19,6 +20,8 @@ from common_grants_sdk.client import (
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.extensions import (
+    CustomField,
+    CustomFieldSet,
     FilterError,
     PluginMeta,
     PluginRoutes,
@@ -1456,3 +1459,139 @@ class TestOpportunitySearch:
         # httpx encodes json= with the stdlib encoder, which rejects datetime.date.
         json.dumps(body)
         assert body["filters"]["closeDateRange"]["value"]["min"] == "2026-01-01"
+
+
+class _VendorFields(CustomFieldSet):
+    legacy_id: Optional[CustomField[int]] = Field(default=None)
+
+
+VENDOR_PLUGIN = define_plugin(
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[_VendorFields])),
+    meta=PluginMeta(name="test", source_system="test"),
+)
+VENDOR_ENTRY = {
+    "name": "vendorPayload",
+    "fieldType": "object",
+    "value": {"tier": 2, "regions": ["US-CA"]},
+}
+
+
+def _respond(mock_httpx_client, method, payload):
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.text = json.dumps(payload)
+    mock_response.json = Mock(return_value=payload)
+    mock_response.raise_for_status = Mock()
+    setattr(mock_httpx_client, method, Mock(return_value=mock_response))
+
+
+class TestUnregisteredCustomFields:
+    """Every parse path keeps unregistered custom fields and validates them."""
+
+    @pytest.fixture
+    def plugin_client(self, mock_httpx_client):
+        client = VENDOR_PLUGIN.get_client(
+            Config(base_url="https://api.example.com", api_key="test-key")
+        )
+        client.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
+        return client
+
+    @staticmethod
+    def _row(opp, vendor_entry):
+        return {
+            **opp,
+            "customFields": {**opp["customFields"], "vendorPayload": vendor_entry},
+        }
+
+    def test_plugin_get_preserves_unregistered_entry(
+        self, plugin_client, mock_httpx_client, sample_opportunity_response
+    ):
+        data = self._row(sample_opportunity_response["data"], VENDOR_ENTRY)
+        _respond(
+            mock_httpx_client, "get", {**sample_opportunity_response, "data": data}
+        )
+
+        opp = plugin_client.opportunities.get(data["id"])
+
+        assert opp.custom_fields is not None
+        assert opp.custom_fields.legacy_id is not None
+        assert opp.custom_fields.legacy_id.value == 12345
+        assert (
+            opp.get_custom_field_value("vendorPayload", dict) == VENDOR_ENTRY["value"]
+        )
+
+    def test_plugin_get_rejects_malformed_unregistered_entry(
+        self, plugin_client, mock_httpx_client, sample_opportunity_response
+    ):
+        nameless = {k: v for k, v in VENDOR_ENTRY.items() if k != "name"}
+        data = self._row(sample_opportunity_response["data"], nameless)
+        _respond(
+            mock_httpx_client, "get", {**sample_opportunity_response, "data": data}
+        )
+
+        with pytest.raises(ValidationError):
+            plugin_client.opportunities.get(data["id"])
+
+    def test_plugin_list_and_search_partition_malformed_rows(
+        self,
+        plugin_client,
+        mock_httpx_client,
+        sample_list_response,
+        sample_search_response,
+    ):
+        good = self._row(sample_list_response["items"][0], VENDOR_ENTRY)
+        bad = self._row(sample_list_response["items"][0], "not an envelope")
+        _respond(
+            mock_httpx_client, "get", {**sample_list_response, "items": [good, bad]}
+        )
+        _respond(
+            mock_httpx_client, "post", {**sample_search_response, "items": [good, bad]}
+        )
+
+        for result in (
+            plugin_client.opportunities.list(page=1),
+            plugin_client.opportunities.search(search="x", page=1),
+        ):
+            assert len(result.items) == 1
+            assert (
+                result.items[0].get_custom_field_value("vendorPayload", dict)
+                == VENDOR_ENTRY["value"]
+            )
+            assert [(e.index, type(e)) for e in result.errors] == [(1, ParseFailure)]
+
+    def test_unextended_client_preserves_unregistered_entry(
+        self, client, mock_httpx_client, sample_opportunity_response
+    ):
+        data = self._row(sample_opportunity_response["data"], VENDOR_ENTRY)
+        _respond(
+            mock_httpx_client, "get", {**sample_opportunity_response, "data": data}
+        )
+
+        opp = client.opportunities.get(data["id"])
+
+        assert isinstance(opp.custom_fields, dict)
+        assert opp.custom_fields["vendorPayload"].value == VENDOR_ENTRY["value"]
+
+    def test_per_call_schema_overrides_plugin_schema(
+        self, plugin_client, mock_httpx_client, sample_opportunity_response
+    ):
+        data = self._row(sample_opportunity_response["data"], VENDOR_ENTRY)
+        _respond(
+            mock_httpx_client, "get", {**sample_opportunity_response, "data": data}
+        )
+        override = OpportunityBase.with_custom_fields(
+            custom_fields={
+                "vendorPayload": CustomFieldSpec(
+                    field_type=CustomFieldType.OBJECT, value=dict
+                )
+            },
+            model_name="VendorOpportunity",
+        )
+
+        opp = plugin_client.opportunities.get(data["id"], schema=override)
+
+        assert isinstance(opp, override)
+        assert opp.custom_fields.vendor_payload.value == VENDOR_ENTRY["value"]
+        # legacyId is unregistered on the override, so it is kept as an extra.
+        assert opp.custom_fields.model_extra["legacyId"].value == 12345

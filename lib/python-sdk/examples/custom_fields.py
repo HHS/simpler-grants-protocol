@@ -40,7 +40,12 @@ opp_data = {
             "fieldType": "string",
             "value": "TEST_GROUP",
         },
-        "ignoredForNow": {"type": "string", "value": "noop"},
+        # Unregistered entries are kept, but need a complete CustomField envelope
+        "programNote": {
+            "name": "programNote",
+            "fieldType": "string",
+            "value": "kept, untyped",
+        },
     },
 }
 
@@ -49,3 +54,4 @@ opp = Opportunity.model_validate(opp_data)
 
 print(opp.custom_fields.legacy_id.value)
 print(opp.custom_fields.group_name.value)
+print(opp.get_custom_field_value("programNote", str))
