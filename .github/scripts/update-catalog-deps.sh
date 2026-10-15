@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Update catalog-managed dependencies in pnpm-workspace.yaml and regenerate
-# the lockfile. These deps are excluded from Dependabot to avoid lockfile
-# corruption (dependabot-core #14339).
+# Update catalog-managed dependencies in pnpm-workspace.yaml, raise core's
+# matching floor peer ranges, and regenerate the lockfile. These deps are
+# excluded from Dependabot to avoid lockfile corruption (dependabot-core #14339).
 #
 # Two modes, controlled by --majors-only:
 #
@@ -58,6 +58,10 @@ if [[ ! -f "$WORKSPACE_FILE" ]]; then
   echo "ERROR: $WORKSPACE_FILE not found"
   exit 1
 fi
+
+# Core publishes floor peer ranges (">=X.Y.Z <N") but CI builds against the
+# catalog, so each catalog bump raises the matching floor to keep the two equal.
+CORE_PKG="lib/core/package.json"
 
 UPDATED_COUNT=0
 
@@ -152,6 +156,11 @@ check_and_update_dep() {
       # Match: '  <dep_name>: <range>' or '  '<dep_name>': <range>'
       # Also handle 4-space indent for named catalogs
       sed -i.bak "s|\\([ ]*\\)\\(['\"]\\{0,1\\}${dep_name}['\"]\\{0,1\\}\\): *${current_range}|\\1\\2: ${new_range}|" "$WORKSPACE_FILE"
+
+      # Raise core's peer floor only where it uses the floor form; `catalog:`
+      # peers are left alone. The upper bound tracks the new major, so a
+      # --majors-only bump yields e.g. ">=2.0.0 <3".
+      sed -i.bak "/\"peerDependencies\"/,/}/s|\"${dep_name}\": \">=[0-9][0-9.]* <[0-9]*\"|\"${dep_name}\": \">=${latest} <$(( ${latest%%.*} + 1 ))\"|" "$CORE_PKG"
     fi
 
     UPDATED_COUNT=$((UPDATED_COUNT + 1))
@@ -199,7 +208,7 @@ done < <(
 )
 
 # Clean up sed backup files
-rm -f "${WORKSPACE_FILE}.bak"
+rm -f "${WORKSPACE_FILE}.bak" "${CORE_PKG}.bak"
 
 echo ""
 if [[ $UPDATED_COUNT -eq 0 ]]; then
@@ -232,7 +241,7 @@ pnpm install "${install_flags[@]}"
 
 echo ""
 echo "--- Summary of changes ---"
-git diff --stat pnpm-workspace.yaml pnpm-lock.yaml 2>/dev/null || echo "(not in a git repo or no changes)"
+git diff --stat pnpm-workspace.yaml pnpm-lock.yaml "$CORE_PKG" 2>/dev/null || echo "(not in a git repo or no changes)"
 
 echo ""
 echo "=== Catalog dependency update complete ==="
