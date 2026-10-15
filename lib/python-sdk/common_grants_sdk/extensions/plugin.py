@@ -26,7 +26,7 @@ from .schema import (
     SchemaWithTransforms,
     schema,
 )
-from .types import FiltersT, PluginMeta, PluginRoutes, ResourceRoutes
+from .types import AwardFiltersT, FiltersT, PluginMeta, PluginRoutes
 
 if TYPE_CHECKING:
     from ..client.auth import Auth
@@ -76,38 +76,39 @@ class PluginSchemas(Generic[_TOpportunity]):
 
 
 @dataclass(frozen=True)
-class Plugin(Generic[SchemasT, FiltersT]):
+class Plugin(Generic[SchemasT, FiltersT, AwardFiltersT]):
     """The plugin singleton consumers import.
 
     ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
     fully typed (dot access). ``routes`` is the typed custom-filter registration
-    (``PluginRoutes``); its filter TypedDict flows through ``get_client`` to type
-    ``client.opportunities.search(filters=...)``.
+    (``PluginRoutes``); each resource's filter TypedDict flows through
+    ``get_client`` to type ``client.opportunities.search(filters=...)`` and
+    ``client.awards.search(filters=...)``.
     """
 
     schemas: SchemasT
-    routes: PluginRoutes[FiltersT]
+    routes: PluginRoutes[FiltersT, AwardFiltersT]
     meta: PluginMeta
 
     @overload
     def get_client(
-        self: "Plugin[PluginSchemas[SchemaOnly[ItemT]], FiltersT]",
+        self: "Plugin[PluginSchemas[SchemaOnly[ItemT]], FiltersT, AwardFiltersT]",
         config: Optional[Config] = ...,
         auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT]": ...
+    ) -> "Client[FiltersT, ItemT, AwardFiltersT]": ...
 
     @overload
     def get_client(
-        self: "Plugin[PluginSchemas[SchemaWithTransforms[Any, ItemT]], FiltersT]",
+        self: "Plugin[PluginSchemas[SchemaWithTransforms[Any, ItemT]], FiltersT, AwardFiltersT]",
         config: Optional[Config] = ...,
         auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT]": ...
+    ) -> "Client[FiltersT, ItemT, AwardFiltersT]": ...
 
     def get_client(
         self,
         config: "Optional[Config]" = None,
         auth: "Optional[Auth]" = None,
-    ) -> "Client[Any, Any]":
+    ) -> "Client[Any, Any, Any]":
         """Return a client pre-scoped with this plugin's routes and schemas.
 
         Consumers call ``plugin.get_client(config)`` instead of constructing a
@@ -120,7 +121,7 @@ class Plugin(Generic[SchemasT, FiltersT]):
         from ..client.client import Client
 
         # self.schemas/self.routes are opaque here (SchemasT); the overloads above
-        # carry the precise Client[FiltersT, ItemT] the caller sees.
+        # carry the precise Client[FiltersT, ItemT, AwardFiltersT] the caller sees.
         client = Client(config=config, auth=auth)
         client._bind_schemas(cast("Any", self.schemas))
         client._bind_routes(cast("Any", self.routes))
@@ -130,9 +131,9 @@ class Plugin(Generic[SchemasT, FiltersT]):
 def define_plugin(
     schemas: SchemasT,
     *,
-    routes: PluginRoutes[FiltersT] | None = None,
+    routes: PluginRoutes[FiltersT, AwardFiltersT] | None = None,
     meta: PluginMeta,
-) -> Plugin[SchemasT, FiltersT]:
+) -> Plugin[SchemasT, FiltersT, AwardFiltersT]:
     """Assemble the plugin from schema extensions, optional route registrations,
     and metadata.
 
@@ -162,8 +163,8 @@ def define_plugin(
             )
     if errors:
         raise PluginDefinitionError("plugin", errors)
-    resolved_routes: PluginRoutes[Any] = (
-        routes if routes is not None else PluginRoutes(opportunities=ResourceRoutes())
+    resolved_routes: PluginRoutes[Any, Any] = (
+        routes if routes is not None else PluginRoutes()
     )
     # Validate the routes here, when the plugin is defined, so that a plugin author
     # sees an invalid filter registration right away instead of a consumer running

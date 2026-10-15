@@ -9,12 +9,14 @@ The CommonGrants HTTP Client provides a type-safe, Pythonic interface for intera
   - [Authentication](#authentication)
   - [Configuration](#configuration)
   - [Opportunity methods](#opportunity-methods)
+  - [Award methods](#award-methods)
   - [Pagination](#pagination)
   - [Low-level HTTP methods](#low-level-http-methods)
   - [Handling errors](#handling-errors)
 - [API reference](#api-reference)
   - [Client class](#client-class)
   - [Opportunities resource](#opportunities-resource)
+  - [Awards resource](#awards-resource)
   - [Auth class](#auth-class)
 - [See Also](#see-also)
 
@@ -133,6 +135,87 @@ print(opportunity.title)
 print(opportunity.status.value)
 ```
 
+### Award methods
+
+The `client.awards` namespace provides methods for the CommonGrants awards endpoints. Awards parse into `AwardBase` by default; pass `schema=` on any call to parse into another award model, such as one with [typed recipient custom fields](../schemas/README.md#awards).
+
+#### List awards <!-- omit in toc -->
+
+**`GET /common-grants/awards`**
+
+```python
+# Fetch all awards (auto-paginates)
+response = client.awards.list()
+for award in response.items:
+    print(f"{award.id}: {award.title}")
+
+# Fetch a specific page
+response = client.awards.list(page=1, page_size=20)
+```
+
+#### Search awards <!-- omit in toc -->
+
+**`POST /common-grants/awards/search`**
+
+Pass the four standard award filters by their snake_case names; the client sends their camelCase wire names (`opportunityId`, `awardDateRange`, `awardedAmountRange`). Any other key is a custom filter, sent under `customFilters` exactly as named.
+
+```python
+from common_grants_sdk.extensions import f
+
+response = client.awards.search(
+    search="research",
+    filters={
+        "status": f.in_(["awarded"]),
+        "opportunity_id": f.in_(["00000000-0000-4000-8000-000000000001"]),
+        "award_date_range": f.between("2026-01-01", "2026-12-31"),
+        "awarded_amount_range": f.between(
+            {"amount": "10000", "currency": "USD"},
+            {"amount": "500000", "currency": "USD"},
+        ),
+        "experimental_tag": f.eq("pilot"),  # ad-hoc custom filter
+    },
+)
+for award in response.items:
+    print(award.title)
+```
+
+Filters are validated before the request is sent: the standard filters against the Core award filter models (closed objects, both range bounds required, no `null` values), and custom filters against the filter models. An invalid value raises `FilterError` and sends nothing. Supplying both the snake_case and camelCase form of one standard filter also raises.
+
+A plugin registers custom award filters on its own `awards` route, independently of any opportunity filters, and its client types `client.awards.search(filters=...)` with them:
+
+```python
+from common_grants_sdk.extensions import (
+    PluginMeta, PluginRoutes, PluginSchemas, ResourceRoutes, define_plugin, f,
+)
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters, StringArray
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    program_code: StringArray
+
+
+plugin = define_plugin(
+    PluginSchemas(),
+    routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),
+    meta=PluginMeta(name="Example", source_system="example"),
+)
+client = plugin.get_client(config)
+client.awards.search(filters={"program_code": f.in_(["RESEARCH"])})
+```
+
+See [`examples/awards_client.py`](../../examples/awards_client.py) for a runnable version against an offline mock API.
+
+#### Get a single award <!-- omit in toc -->
+
+**`GET /common-grants/awards/{awdId}`**
+
+```python
+award = client.awards.get("01912a8b-7c3d-7894-abcd-ef1234567890")
+print(award.title, award.status.value)
+```
+
+`get` raises if the award does not parse. `list` and `search` never fail a whole page over one bad row: rows that parse are in `.items`, rows that do not are in `.errors` (each a `ParseFailure` with its `index` and `raw` data). Filter feedback from the server is in `search(...).filter_info.errors`.
+
 ### Pagination
 
 List and search methods accept a `page` argument to fetch a specific page. When `page` is omitted, the client fetches all pages up to `list_items_limit` (default: 1000):
@@ -146,6 +229,8 @@ print(f"Retrieved {len(response.items)} total opportunities")
 page2 = client.opportunities.list(page=2, page_size=10)
 print(f"Page {page2.pagination_info.page} of {page2.pagination_info.total_pages}")
 ```
+
+`list` sends the page as `page`/`pageSize` query parameters; `search` sends it in the request body's `pagination`, which is where the protocol reads it.
 
 ### Low-level HTTP methods
 
@@ -194,7 +279,7 @@ except ValidationError as e:
 | `client.post(path, **kwargs)` | Authenticated POST request. Returns `httpx.Response`. |
 | `client.get_item(path, item_id)` | GET `{path}/{item_id}`. Returns an internal `SuccessResponse`. Used by resource methods. |
 | `client.list(path, page?, page_size?, params?)` | Paginated GET. Returns `Paginated[T]`. Fetches all pages when `page=None`. |
-| `client.search(path, request_data, page?, page_size?)` | Paginated POST. Returns `Paginated[T]`. Fetches all pages when `page=None`. |
+| `client.search(path, request_data, page?, page_size?)` | Paginated POST. Sends each page in the body's `pagination`, replacing any `page`/`pageSize` there (`request_data` itself is not modified). Returns `Paginated[T]`. Fetches all pages when `page=None`. |
 | `client.url(path)` | Constructs a full URL from base URL and path. |
 | `client.close()` | Closes the underlying httpx session and releases resources. |
 
@@ -205,6 +290,14 @@ except ValidationError as e:
 | `client.opportunities.get(opp_id, schema?)` | `GET /common-grants/opportunities/{id}` | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
 | `client.opportunities.list(page?, page_size?, schema?)` | `GET /common-grants/opportunities` | List opportunities. Auto-paginates when `page=None`. |
 | `client.opportunities.search(search, status, page?, page_size?, schema?)` | `POST /common-grants/opportunities/search` | Search by text query and status list. Auto-paginates when `page=None`. |
+
+### Awards resource
+
+| Method | Route | Description |
+|---|---|---|
+| `client.awards.get(awd_id, schema?)` | `GET /common-grants/awards/{awdId}` | Fetch a single award by ID. Parses into `AwardBase` or the optional `schema`. |
+| `client.awards.list(page?, page_size?, schema?)` | `GET /common-grants/awards` | List awards. Auto-paginates when `page=None`. |
+| `client.awards.search(search?, page?, page_size?, schema?, filters?)` | `POST /common-grants/awards/search` | Search by text query and standard or custom award filters. Auto-paginates when `page=None`. |
 
 ### Auth class
 

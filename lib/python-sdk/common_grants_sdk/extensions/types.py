@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
     Generic,
     Literal,
     Mapping,
+    cast,
 )
 
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import TypeVar
 
+from ..schemas.pydantic.filters.award import AwardFilters
 from ..schemas.pydantic.filters.opportunity import OpportunityFilters
 
 T = TypeVar("T")
@@ -30,6 +32,10 @@ Handler = Callable[[Any, Any], Any]
 # resource/method is a type error; registered keys are recovered at runtime with
 # ``get_type_hints(route.search)``.
 FiltersT = TypeVar("FiltersT", bound=Mapping[str, Any], default=OpportunityFilters)
+# The awards route's filter TypedDict. Appended after every existing type parameter,
+# with a default, so existing ``PluginRoutes[F]`` / ``Plugin[S, F]`` / ``Client[F, I]``
+# spellings keep their meaning.
+AwardFiltersT = TypeVar("AwardFiltersT", bound=Mapping[str, Any], default=AwardFilters)
 
 
 @dataclass(frozen=True)
@@ -38,20 +44,28 @@ class ResourceRoutes(Generic[FiltersT]):
 
     ``search`` holds the filter TypedDict class an author defined (e.g.
     ``OppSearchFilters``), or ``None`` when the resource registers no custom
-    filters. A single resource (opportunities) is supported today.
+    filters.
     """
 
     search: type[FiltersT] | None = None
 
 
 @dataclass(frozen=True)
-class PluginRoutes(Generic[FiltersT]):
+class PluginRoutes(Generic[FiltersT, AwardFiltersT]):
     """Typed route registration passed to ``define_plugin(routes=...)``.
 
-    One slot per filter-capable resource (opportunities today).
+    One slot per filter-capable resource. Each defaults to no registered filters,
+    so a plugin registers only the resources it extends.
     """
 
-    opportunities: ResourceRoutes[FiltersT]
+    # Narrow casts (as on ``PluginSchemas``): a bare generic default factory does
+    # not solve the slot's type parameter.
+    opportunities: ResourceRoutes[FiltersT] = field(
+        default_factory=lambda: cast("ResourceRoutes[FiltersT]", ResourceRoutes())
+    )
+    awards: ResourceRoutes[AwardFiltersT] = field(
+        default_factory=lambda: cast("ResourceRoutes[AwardFiltersT]", ResourceRoutes())
+    )
 
 
 class PassthroughModel(BaseModel):

@@ -1,11 +1,16 @@
 """Tests for the plugin framework types in common_grants_sdk.extensions.types."""
 
+from typing import get_type_hints
+
 from common_grants_sdk.extensions.types import (
     PassthroughModel,
     PluginMeta,
+    PluginRoutes,
+    ResourceRoutes,
     TransformError,
     TransformResult,
 )
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters, StringArray
 
 # --- TransformError ---
 
@@ -79,3 +84,31 @@ def test_plugin_extensions_meta_populate_by_name():
 def test_passthrough_model_accepts_arbitrary_keys():
     instance = PassthroughModel.model_validate({"data": {"any": "shape"}, "n": 1})
     assert instance.model_dump() == {"data": {"any": "shape"}, "n": 1}
+
+
+# --- PluginRoutes / ResourceRoutes ---
+
+
+def test_plugin_routes_default_to_empty_resource_slots():
+    """Neither resource needs registering: both slots default to empty routes."""
+    routes = PluginRoutes()
+    assert routes.opportunities.search is None
+    assert routes.awards.search is None
+
+
+def test_plugin_routes_register_awards_without_opportunities():
+    class AwardSearchFilters(AwardFilters, total=False):
+        program_code: StringArray
+
+    routes = PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters))
+    assert routes.awards.search is AwardSearchFilters
+    assert routes.opportunities.search is None
+
+
+def test_award_filters_declares_the_four_snake_case_core_keys():
+    assert set(get_type_hints(AwardFilters)) == {
+        "status",
+        "opportunity_id",
+        "award_date_range",
+        "awarded_amount_range",
+    }

@@ -33,7 +33,7 @@ class Opportunities(Generic[FiltersT, ItemT]):
     typed by the registered filters, and responses parse into ``ItemT`` by default.
     """
 
-    def __init__(self, client: "Client[FiltersT, ItemT]"):
+    def __init__(self, client: "Client[FiltersT, ItemT, Any]"):
         """Initialize the Opportunity resource.
 
         Args:
