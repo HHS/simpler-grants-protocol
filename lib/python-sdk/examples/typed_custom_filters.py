@@ -28,14 +28,18 @@ from common_grants_sdk.client import Client, Config, SearchResult
 from common_grants_sdk.extensions import (
     CustomField,
     CustomFieldSet,
+    PassthroughModel,
+    Plugin,
     PluginMeta,
     PluginRoutes,
     PluginSchemas,
     ResourceRoutes,
+    SchemaOnly,
     define_plugin,
     f,
     schema,
 )
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
@@ -90,6 +94,68 @@ def _typecheck() -> None:
             assert_type(
                 fields.program_code.value, str
             )  # typed str from CustomField[str]
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    program_code: StringArray
+
+
+def _typecheck_route_generics() -> None:
+    """Static proof that award filters thread independently (pyright, never run).
+
+    Each resource's filter TypedDict reaches the client on its own type parameter,
+    whichever routes a plugin registers, and the pre-awards two-parameter spellings
+    keep their meaning.
+    """
+    meta = PluginMeta(name="example", source_system="example")
+    both = define_plugin(
+        PluginSchemas(
+            Opportunity=schema(common_schema=OpportunityBase[OppCustomFields])
+        ),
+        routes=PluginRoutes(
+            opportunities=ResourceRoutes(search=OppSearchFilters),
+            awards=ResourceRoutes(search=AwardSearchFilters),
+        ),
+        meta=meta,
+    )
+    assert_type(
+        both.get_client(),
+        Client[OppSearchFilters, OpportunityBase[OppCustomFields], AwardSearchFilters],
+    )
+
+    # Awards only, on a transforms schema (the other get_client overload).
+    transforms = schema(
+        source_schema=PassthroughModel,
+        common_schema=OpportunityBase[OppCustomFields],
+        mappings={"to_common": {}, "from_common": {}},
+    )
+    awards_only = define_plugin(
+        PluginSchemas(Opportunity=transforms),
+        routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),
+        meta=meta,
+    )
+    assert_type(
+        awards_only.get_client(),
+        Client[
+            OpportunityFilters, OpportunityBase[OppCustomFields], AwardSearchFilters
+        ],
+    )
+
+    neither = define_plugin(PluginSchemas(), meta=meta)
+    assert_type(
+        neither.get_client(), Client[OpportunityFilters, OpportunityBase, AwardFilters]
+    )
+
+    # Pre-awards spellings: the trailing award parameter defaults to AwardFilters.
+    _client: Client[OppSearchFilters, OpportunityBase[OppCustomFields]] = (
+        opportunity_plugin.get_client()
+    )
+    _plugin: Plugin[
+        PluginSchemas[SchemaOnly[OpportunityBase[OppCustomFields]]], OppSearchFilters
+    ] = opportunity_plugin
+    _routes: PluginRoutes[OppSearchFilters] = PluginRoutes(
+        opportunities=ResourceRoutes(search=OppSearchFilters)
+    )
 
 
 def demo_invalid_filter_raises() -> None:

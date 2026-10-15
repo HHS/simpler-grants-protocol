@@ -18,6 +18,7 @@ from uuid import UUID
 import typing_extensions as te
 
 from .auth import Auth
+from .awards import Awards
 from .config import Config
 from .response import SuccessResponse
 from .exceptions import raise_api_error
@@ -26,7 +27,7 @@ from .pagination import pagination
 from .types import ItemsT
 from ..extensions.filters import validate_routes
 from ..extensions.plugin import PluginSchemas
-from ..extensions.types import FiltersT, PluginRoutes, ResourceRoutes
+from ..extensions.types import AwardFiltersT, FiltersT, PluginRoutes
 from ..schemas.pydantic.models import OpportunityBase
 from ..schemas.pydantic.responses import Filtered, Paginated
 
@@ -158,11 +159,20 @@ class BaseClient:
         if page_size < 1:
             page_size = self.config.page_size
 
+        # The protocol reads the page from body.pagination, so each page gets a fresh
+        # copy of the caller's body (never mutated) with the effective page set there.
+        body = {
+            **request_data,
+            "pagination": {
+                **(request_data.get("pagination") or {}),
+                "page": page,
+                "pageSize": page_size,
+            },
+        }
+
         try:
             # request_data already includes any filters assembled by the resource method.
-            api_response = self.post(
-                path, json=request_data, params={"page": page, "pageSize": page_size}
-            )
+            api_response = self.post(path, json=body)
             api_response.raise_for_status()
             # Validate into Filtered so the server's sortInfo/filterInfo (incl.
             # filterInfo.errors) survive instead of being dropped.
@@ -193,15 +203,16 @@ class BaseClient:
         self.close()
 
 
-class Client(BaseClient, Generic[FiltersT, ItemT]):
+class Client(BaseClient, Generic[FiltersT, ItemT, AwardFiltersT]):
     """Typed resource facade over :class:`BaseClient`.
 
     Binds a plugin's route filters and Opportunity schema, exposing the typed
-    ``opportunities`` resource. Construct one via ``plugin.get_client(...)``: that
-    binds the plugin's registered filters (``FiltersT``) and Opportunity schema
-    (``ItemT``) so ``opportunities.search`` is typed and responses parse with the
-    plugin's custom fields. Constructing ``Client`` directly leaves those generics
-    unbound (standard filters only, base ``OpportunityBase`` rows).
+    ``opportunities`` and ``awards`` resources. Construct one via ``plugin.get_client(...)``: that
+    binds the plugin's registered filters (``FiltersT`` for opportunities,
+    ``AwardFiltersT`` for awards) and Opportunity schema (``ItemT``) so each
+    resource's ``search`` is typed and responses parse with the plugin's custom
+    fields. Constructing ``Client`` directly leaves those generics unbound
+    (standard filters only, base ``OpportunityBase`` rows).
     """
 
     def __init__(
@@ -216,19 +227,20 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
             auth: Optional Auth instance.
         """
         super().__init__(config=config, auth=auth)
-        self._routes: PluginRoutes[Any] = PluginRoutes(opportunities=ResourceRoutes())
+        self._routes: PluginRoutes[Any, Any] = PluginRoutes()
         self._schemas: Optional[PluginSchemas[Any]] = None
         self._opportunity_schema: type[OpportunityBase] = _resolve_opportunity_schema(
             None
         )
         self.opportunities: Opportunities[FiltersT, ItemT] = Opportunities(client=self)
+        self.awards: Awards[AwardFiltersT] = Awards(client=self)
 
-    def _bind_routes(self, routes: PluginRoutes[Any]) -> None:
+    def _bind_routes(self, routes: PluginRoutes[Any, Any]) -> None:
         """Scope this client to a plugin's registered custom filters.
 
         Internal hook called by ``plugin.get_client``: it validates the route
-        registration and stores it for ``opportunities.search`` to classify
-        registered custom filters. Build scoped clients via ``get_client`` rather
+        registration and stores it for ``opportunities.search`` and
+        ``awards.search`` to classify registered custom filters. Build scoped clients via ``get_client`` rather
         than calling this directly.
 
         Raises:

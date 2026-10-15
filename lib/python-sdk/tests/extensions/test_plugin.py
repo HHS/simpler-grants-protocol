@@ -20,6 +20,7 @@ from common_grants_sdk.extensions import (
     schema,
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
@@ -142,3 +143,25 @@ def test_define_plugin_defaults_routes_to_empty_carrier():
     assert isinstance(plugin.routes, PluginRoutes)
     # The empty carrier registers no custom filters.
     assert plugin.routes.opportunities.search is None
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    """An award route filter TypedDict registering one custom filter."""
+
+    program_code: StringArray
+
+
+def test_define_plugin_threads_awards_only_routes():
+    """Awards register on their own slot; opportunities need no dummy entry."""
+    plugin = define_plugin(
+        PluginSchemas(),
+        routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),
+        meta=_meta(),
+    )
+    assert plugin.routes.awards.search is AwardSearchFilters
+    assert plugin.routes.opportunities.search is None
+
+
+def test_define_plugin_default_carrier_has_an_empty_awards_slot():
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    assert plugin.routes.awards.search is None
