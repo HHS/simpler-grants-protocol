@@ -38,6 +38,8 @@ from common_grants_sdk.schemas.pydantic.filters.opportunity import (
 )
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
 from common_grants_sdk.extensions.specs import CustomFieldSpec
+from common_grants_sdk.schemas import OppIds, OrgRefCollection
+from tests.schemas.opportunity_v05_fixtures import FUNDERS, IDENTIFIERS, wire
 
 
 class OppSearchFilters(OpportunityFilters, total=False):
@@ -1595,3 +1597,164 @@ class TestUnregisteredCustomFields:
         assert opp.custom_fields.vendor_payload.value == VENDOR_ENTRY["value"]
         # legacyId is unregistered on the override, so it is kept as an extra.
         assert opp.custom_fields.model_extra["legacyId"].value == 12345
+
+
+class TestCoreV05Additions:
+    """get/list/search keep the Core v0.5 identifiers and funders on every parse path."""
+
+    @pytest.fixture
+    def v05_data(self, sample_opportunity_data):
+        return {
+            **sample_opportunity_data,
+            "identifiers": IDENTIFIERS,
+            "funders": FUNDERS,
+        }
+
+    @pytest.fixture
+    def plugin_client(self, mock_httpx_client):
+        client = VENDOR_PLUGIN.get_client(
+            Config(base_url="https://api.example.com", api_key="test-key")
+        )
+        client.http = mock_httpx_client
+        client.opportunities.http = mock_httpx_client
+        return client
+
+    @staticmethod
+    def _fetch_all(client, mock_httpx_client, rows, **kwargs):
+        envelope = {
+            "status": 200,
+            "message": "Success",
+            "paginationInfo": {
+                "page": 1,
+                "pageSize": 100,
+                "totalItems": len(rows),
+                "totalPages": 1,
+            },
+        }
+        _respond(mock_httpx_client, "get", {**envelope, "data": rows[0]})
+        got = client.opportunities.get(rows[0]["id"], **kwargs)
+        _respond(mock_httpx_client, "get", {**envelope, "items": rows})
+        listed = client.opportunities.list(page=1, **kwargs)
+        _respond(
+            mock_httpx_client,
+            "post",
+            {
+                **envelope,
+                "items": rows,
+                "sortInfo": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+                "filterInfo": {"filters": {}},
+            },
+        )
+        searched = client.opportunities.search(search="x", page=1, **kwargs)
+        return got, listed, searched
+
+    @staticmethod
+    def _assert_additions(opp):
+        assert isinstance(opp.identifiers, OppIds)
+        assert opp.identifiers.opp_us_fon is not None
+        assert opp.identifiers.opp_us_fon.id == IDENTIFIERS["opp:us:fon"]["id"]
+        assert isinstance(opp.funders, OrgRefCollection)
+        assert opp.funders.other_orgs is not None
+        assert list(opp.funders.other_orgs) == list(FUNDERS["otherOrgs"])
+        data = wire(opp)
+        assert data["identifiers"] == IDENTIFIERS
+        assert data["funders"] == FUNDERS
+
+    def test_unextended_client_keeps_additions(
+        self, client, mock_httpx_client, v05_data
+    ):
+        row = {
+            **v05_data,
+            "customFields": {**v05_data["customFields"], "vendorPayload": VENDOR_ENTRY},
+        }
+        got, listed, searched = self._fetch_all(client, mock_httpx_client, [row])
+
+        for opp in (got, *listed.items, *searched.items):
+            self._assert_additions(opp)
+            assert isinstance(opp.custom_fields, dict)
+            assert opp.custom_fields["vendorPayload"].value == VENDOR_ENTRY["value"]
+
+    def test_plugin_client_keeps_additions_and_typed_custom_fields(
+        self, plugin_client, mock_httpx_client, v05_data
+    ):
+        row = {
+            **v05_data,
+            "customFields": {**v05_data["customFields"], "vendorPayload": VENDOR_ENTRY},
+        }
+        got, listed, searched = self._fetch_all(plugin_client, mock_httpx_client, [row])
+
+        for opp in (got, *listed.items, *searched.items):
+            self._assert_additions(opp)
+            assert opp.custom_fields is not None
+            assert opp.custom_fields.legacy_id is not None
+            assert opp.custom_fields.legacy_id.value == 12345
+            assert (
+                opp.get_custom_field_value("vendorPayload", dict)
+                == VENDOR_ENTRY["value"]
+            )
+
+    def test_per_call_schema_keeps_additions(
+        self, plugin_client, mock_httpx_client, v05_data
+    ):
+        override = OpportunityBase.with_custom_fields(
+            custom_fields={
+                "legacyId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER, value=int
+                )
+            },
+            model_name="V05Opportunity",
+        )
+        got, listed, searched = self._fetch_all(
+            plugin_client, mock_httpx_client, [v05_data], schema=override
+        )
+
+        for opp in (got, *listed.items, *searched.items):
+            assert isinstance(opp, override)
+            self._assert_additions(opp)
+            assert opp.get_custom_field_value("legacy_id", int) == 12345
+
+    def test_null_addition_or_bad_custom_field_rows_fail_per_row(
+        self, plugin_client, mock_httpx_client, v05_data
+    ):
+        null_funders = {**v05_data, "funders": None}
+        bad_custom = {
+            **v05_data,
+            "customFields": {**v05_data["customFields"], "vendorPayload": "nope"},
+        }
+        envelope = {
+            "status": 200,
+            "message": "Success",
+            "paginationInfo": {
+                "page": 1,
+                "pageSize": 100,
+                "totalItems": 3,
+                "totalPages": 1,
+            },
+        }
+
+        _respond(mock_httpx_client, "get", {**envelope, "data": null_funders})
+        with pytest.raises(ValidationError, match="must be omitted, not null"):
+            plugin_client.opportunities.get(v05_data["id"])
+
+        rows = [v05_data, null_funders, bad_custom]
+        _respond(mock_httpx_client, "get", {**envelope, "items": rows})
+        _respond(
+            mock_httpx_client,
+            "post",
+            {
+                **envelope,
+                "items": rows,
+                "sortInfo": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+                "filterInfo": {"filters": {}},
+            },
+        )
+        for result in (
+            plugin_client.opportunities.list(page=1),
+            plugin_client.opportunities.search(search="x", page=1),
+        ):
+            assert len(result.items) == 1
+            self._assert_additions(result.items[0])
+            assert [(e.index, type(e)) for e in result.errors] == [
+                (1, ParseFailure),
+                (2, ParseFailure),
+            ]

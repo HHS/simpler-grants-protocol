@@ -90,3 +90,37 @@ def test_validates_payload_and_exposes_typed_custom_fields(
     assert opp.custom_fields is not None
     assert opp.custom_fields.program_area.value == "Health"
     assert opp.custom_fields.eligibility_types.value == ["nonprofit", "tribal"]
+
+
+# ---------------------------------------------------------------------------
+# Core v0.5 identifiers and funders on runtime-registered schemas
+# ---------------------------------------------------------------------------
+
+
+def test_registered_schema_keeps_identifiers_and_funders(
+    simple_opportunity, sample_payload
+):
+    from tests.schemas.opportunity_v05_fixtures import FUNDERS, IDENTIFIERS, wire
+
+    opp = simple_opportunity.model_validate(
+        {**sample_payload, "identifiers": IDENTIFIERS, "funders": FUNDERS}
+    )
+
+    assert opp.custom_fields.program_area.value == "Health"
+    assert opp.identifiers.opp_us_aln.id == "93.224"
+    assert (
+        opp.funders.other_orgs["coFunder"].name
+        == FUNDERS["otherOrgs"]["coFunder"]["name"]
+    )
+    assert wire(opp)["identifiers"] == IDENTIFIERS
+    assert wire(opp)["funders"] == FUNDERS
+
+
+@pytest.mark.parametrize("field", ["identifiers", "funders"])
+def test_registered_schema_rejects_null_identifiers_and_funders(
+    simple_opportunity, sample_payload, field
+):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="must be omitted, not null"):
+        simple_opportunity.model_validate({**sample_payload, field: None})

@@ -9,6 +9,7 @@ The `common_grants_sdk.schemas.pydantic` module provides [Pydantic v2](https://d
   - [Validation](#validation)
   - [Type safety](#type-safety)
   - [Generic response schemas](#generic-response-schemas)
+- [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)
 - [Awards](#awards)
   - [Typed recipient custom fields](#typed-recipient-custom-fields)
   - [Award routes, filters and sorting](#award-routes-filters-and-sorting)
@@ -177,6 +178,56 @@ Found 1 opportunities
 
 Other generic response schemas include `Sorted[T]` and `Filtered[T, F]`. See the [API reference](#response-schemas) for the full list.
 
+## Opportunity identifiers and funders
+
+`OpportunityBase` carries Core v0.5's optional `identifiers` and `funders`, built from the same shared models awards use:
+
+- `identifiers` is an `OppIds` collection: `opp_us_fon` (`OppIdFon`), `opp_us_aln` (`OppIdAln`), `system_id` and an `other_ids` map.
+- `funders` is an `OrgRefCollection`: a required `primary` `OrgRef` plus an optional `other_orgs` map of `OrgRef`s keyed by an implementation-defined role (`coFunder` below). It is not a list.
+
+```python
+from datetime import UTC, datetime
+from uuid import UUID
+
+from common_grants_sdk.schemas import (
+    OppIdAln, OppIdFon, OppIds, OppStatus, OppStatusOptions,
+    OpportunityBase, OrgRef, OrgRefCollection,
+)
+
+opp = OpportunityBase(
+    id=UUID("01912a8b-7c3d-7894-abcd-ef1234567890"),
+    title="Research grants",
+    description="Support research.",
+    status=OppStatus(value=OppStatusOptions.OPEN),
+    created_at=datetime(2026, 3, 1, tzinfo=UTC),
+    last_modified_at=datetime(2026, 3, 1, tzinfo=UTC),
+    identifiers=OppIds(
+        opp_us_fon=OppIdFon(id="HHS-2026-001"),
+        opp_us_aln=OppIdAln(id="93.575"),
+    ),
+    funders=OrgRefCollection(
+        primary=OrgRef(id=UUID("01912a8b-7c3d-7894-abcd-ef1234567891"), name="Primary agency"),
+        other_orgs={
+            "coFunder": OrgRef(id=UUID("01912a8b-7c3d-7894-abcd-ef1234567892"), name="Partner agency"),
+        },
+    ),
+)
+
+opp.model_dump(mode="json", by_alias=True, exclude_unset=True)
+# {..., "identifiers": {"opp:us:fon": {"id": "HHS-2026-001"}, "opp:us:aln": {"id": "93.575"}},
+#  "funders": {"primary": {...}, "otherOrgs": {"coFunder": {...}}}}
+```
+
+Python attributes are snake_case (`opp_us_fon`, `other_orgs`, `all_ids`); the wire keeps the exact registry codes and camelCase (`opp:us:fon`, `otherOrgs`, `allIds`). Role keys under `otherOrgs` are passed through as-is.
+
+Both fields may be omitted but not `null`: an absent field reads as `None` and stays out of the wire dump, while an explicit `null` (JSON, snake_case key or constructor keyword) raises `optional property must be omitted, not null`. The type is `Optional[...]`, so narrow before use; the `null` check happens at runtime, not in the type checker. Invalid nested values (wrong registry code, malformed UUID, missing `primary`, unknown properties on the closed reference and identifier models) are rejected by the shared models.
+
+Because a supplied `null` is rejected, an opportunity serialized without the wire recipe (`model_dump()`, `dump()`, `dump_json()`) no longer parses back: those write absent fields as `null`. Validating one opportunity instance into another model (`OpportunityBase[Fields].model_validate(opp)`) fails the same way, because unset fields read as `None`. Convert through the wire recipe instead: `OpportunityBase[Fields].model_validate(opp.model_dump(mode="json", by_alias=True, exclude_unset=True))`.
+
+Serialize with the explicit wire recipe in [Serializing to the wire](#serializing-to-the-wire); there is no default dump helper for it, and `dump()` is not a wire serializer. Of `OpportunityBase`'s own optional fields, only these two reject `null`: the older ones (`funding`, `key_dates`, `source`, `custom_fields`, `accepted_applicant_types`) keep accepting it for now ([#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192)).
+
+Typed custom fields work as before (`OpportunityBase[OpportunityFields]`, `schema()`, `PluginSchemas`, `with_custom_fields()`), and both fields survive the opportunity get, list and search responses. [`examples/typed_opportunities_v05.py`](../../examples/typed_opportunities_v05.py) shows the plugin parse path, checked by pyright.
+
 ## Awards
 
 The award models cover everything Core v0.5 `AwardBase` reaches, plus the award route request, response, filter and sorting models. Everything is importable from `common_grants_sdk.schemas` (or `common_grants_sdk.schemas.pydantic` and its category modules):
@@ -305,7 +356,7 @@ The award filters are stricter than the opportunity filters of the same names (s
 
 ### Serializing to the wire
 
-Serialize award models with:
+Serialize award and opportunity models with:
 
 ```python
 award.model_dump(mode="json", by_alias=True, exclude_unset=True)
@@ -375,7 +426,7 @@ These shared models now follow Core more closely. Opportunities and plugins that
 
 | Class | Description |
 |---|---|
-| `OpportunityBase` | Core opportunity model |
+| `OpportunityBase[CF]` | Core opportunity model, generic over its custom-fields container; includes `identifiers` (`OppIds`) and `funders` (`OrgRefCollection`) (see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)) |
 | `OppFunding` | Funding details: total amount available, min/max award, estimated award count |
 | `OppStatus` | Opportunity status with `value`, optional `custom_value` (alias `customValue`, used when `value` is `CUSTOM`), and optional `description` |
 | `OppTimeline` | Key dates: `app_opens`, `app_deadline`, and other milestones |

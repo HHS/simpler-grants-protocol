@@ -1,5 +1,5 @@
 RUNTIME_PREFIX := poetry run
-.PHONY: install format lint test build check-format check-lint check-types check-fixtures check-award-fixtures check-award-schema checks
+.PHONY: install format lint test build check-format check-lint check-types check-fixtures check-award-fixtures check-award-schema check-opportunity-schema checks
 
 install:
 	poetry install
@@ -59,5 +59,13 @@ check-award-schema:
 	$(RUNTIME_PREFIX) python -m tests.schemas.award_fixtures "$$cases" && \
 	node scripts/check-award-fixtures.mjs --schemas $(SCHEMA_DIR) \
 		--route-schemas $(ROUTE_SCHEMAS) --fixtures "$$cases"
+
+# Validates JSON the opportunity models serialize (Core v0.5 identifiers and
+# funders) against the emitted model schemas, with the same AJV checker. These are
+# model-only cases, so no route bundle is needed.
+check-opportunity-schema:
+	@dir=$$(mktemp -d); trap 'rm -rf "$$dir"' EXIT; cases="$$dir/opportunity-cases.json"; \
+	$(RUNTIME_PREFIX) python -m tests.schemas.opportunity_v05_fixtures "$$cases" && \
+	node scripts/check-award-fixtures.mjs --schemas $(SCHEMA_DIR) --fixtures "$$cases"
 
 checks: check-format check-lint check-types check-fixtures check-award-fixtures
