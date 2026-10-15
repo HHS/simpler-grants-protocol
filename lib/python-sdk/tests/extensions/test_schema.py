@@ -481,3 +481,48 @@ def test_validate_into_validates_unregistered_custom_fields():
     bad = validate_into(common, bad_payload)
     assert [e.path for e in bad.errors] == ["customFields.vendorPayload"]
     assert bad.result is bad_payload
+
+
+# ---------------------------------------------------------------------------
+# Core v0.5 identifiers and funders through the extension parse paths
+# ---------------------------------------------------------------------------
+
+
+def _v05_payload() -> dict:
+    from tests.schemas.opportunity_v05_fixtures import FULL_OPPORTUNITY
+
+    return {
+        **FULL_OPPORTUNITY,
+        "customFields": {
+            "legacyId": {"name": "legacyId", "fieldType": "integer", "value": 7},
+            "vendorNote": {"name": "vendorNote", "fieldType": "string", "value": None},
+        },
+    }
+
+
+def test_schema_and_plugin_parse_keep_identifiers_and_funders() -> None:
+    from common_grants_sdk.extensions import PluginMeta, PluginSchemas, define_plugin
+    from common_grants_sdk.schemas import OppIds, OrgRefCollection
+    from tests.schemas.opportunity_v05_fixtures import FUNDERS, IDENTIFIERS, wire
+
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
+    plugin = define_plugin(
+        PluginSchemas(Opportunity=ext),
+        meta=PluginMeta(name="v05", source_system="test"),
+    )
+    for parsed in (
+        ext.parse(_v05_payload()),
+        plugin.schemas.Opportunity.parse(_v05_payload()),
+    ):
+        assert_type(parsed, OpportunityBase[OpportunityFields])
+        assert_type(parsed.identifiers, Optional[OppIds])
+        assert_type(parsed.funders, Optional[OrgRefCollection])
+        assert parsed.funders is not None
+        assert parsed.funders.primary.name == FUNDERS["primary"]["name"]
+        assert parsed.custom_fields is not None
+        assert parsed.custom_fields.legacy_id is not None
+        assert parsed.custom_fields.legacy_id.value == 7
+        data = wire(parsed)
+        assert data["identifiers"] == IDENTIFIERS
+        assert data["funders"] == FUNDERS
+        assert data["customFields"]["vendorNote"]["value"] is None
