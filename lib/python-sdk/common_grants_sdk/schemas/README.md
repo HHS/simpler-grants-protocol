@@ -364,7 +364,7 @@ award.model_dump(mode="json", by_alias=True, exclude_unset=True)
 ```
 
 - `by_alias=True` writes the camelCase and registry-code keys (`recipientIndividual`, `org:us:ein`).
-- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol rejects, and so do these models (apart from the older top-level opportunity fields; see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)). Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
+- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol rejects. The award models and the new opportunity fields reject these nulls; older opportunity properties, including nested ones such as `funding.details`, still accept them (see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)). Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
 
 The base-model convenience methods `dump()` and `dump_json()` use neither flag, so they are not wire serializers.
 
