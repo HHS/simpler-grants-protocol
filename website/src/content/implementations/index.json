@@ -1,0 +1,246 @@
+{
+  "simpler-grants": {
+    "name": "Simpler.Grants.gov API",
+    "description": "Federal grant opportunities from Simpler.Grants.gov, served through CommonGrants routes.",
+    "maintainer": "U.S. Department of Health and Human Services",
+    "scope": ["Federal"],
+    "sources": [
+      {
+        "name": "Grants.gov",
+        "url": "https://www.grants.gov/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://api.simpler.grants.gov/common-grants",
+    "docsUrl": "https://api.simpler.grants.gov/docs",
+    "sourceUrl": "https://github.com/HHS/simpler-grants-gov",
+    "license": "CC0-1.0",
+    "auth": "Free API key",
+    "authUrl": "https://simpler.grants.gov/developers",
+    "customFields": [
+      "legacySerialId",
+      "federalOpportunityNumber",
+      "assistanceListings",
+      "agency",
+      "attachments",
+      "federalFundingSource",
+      "contactInfo",
+      "additionalInfo",
+      "fiscalYear",
+      "costSharing"
+    ],
+    "customFilters": [
+      "agency",
+      "applicantType",
+      "fundingInstrument",
+      "costSharing"
+    ],
+    "plugins": ["ts-cg-grants-gov", "cg-grants-gov"]
+  },
+  "maryland": {
+    "name": "Maryland Community Compass",
+    "description": "Grant programs available in Maryland at the statewide, county, municipal, and regional level, from Maryland Community Compass.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Maryland Community Compass.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Local", "Federal", "Private"],
+    "sources": [
+      {
+        "name": "Maryland Community Compass",
+        "url": "https://compass.maryland.gov/incentives/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://md.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://md.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-md",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Daily",
+    "customFields": ["agency", "contactInfo", "additionalInfo"],
+    "sourceSpecificFields": [
+      "eligibilityCriteria",
+      "attachments",
+      "fundingSource",
+      "fundingInstrument",
+      "lastSyncedAt",
+      "mdCompassId",
+      "mdSlug",
+      "mdDataQuality",
+      "mdGeographicScope",
+      "mdAcceptingApplications",
+      "mdRecurring",
+      "mdAssistanceTypes",
+      "mdEligibleIndustries",
+      "mdEligibleCounties",
+      "mdEligibleMunicipalities",
+      "mdEligibleRegions",
+      "mdEligibleIncentiveAreas",
+      "mdEligibleOrganizationTypes",
+      "mdBusinessStage",
+      "mdApplicationDeadlineRaw",
+      "mdApplicationProcess",
+      "mdProgramAudience",
+      "mdUseOfFunds",
+      "mdGeographicEligibility",
+      "mdRequirements",
+      "mdSourceUrls",
+      "mdSourceCount"
+    ]
+  },
+  "pennsylvania": {
+    "name": "Pennsylvania eGrants",
+    "description": "Grant opportunities from Pennsylvania's eGrants system.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Pennsylvania eGrants.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal"],
+    "sources": [
+      {
+        "name": "Pennsylvania eGrants",
+        "url": "https://www.pa.gov/grants"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://pa.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://pa.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-pa",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 4 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": [
+      "legacySerialId",
+      "fundingSource",
+      "fundingInstrument",
+      "lastSyncedAt",
+      "paSlug",
+      "paCategory",
+      "paGrantCycle",
+      "paRawMinAward",
+      "paRawMaxAward",
+      "paRawTotalFunds",
+      "paRawLinkToApply",
+      "paProcessSteps",
+      "paAdditionalResources",
+      "paFaqs"
+    ]
+  },
+  "california": {
+    "name": "California Grants Portal",
+    "description": "Grant opportunities from the California Grants Portal open dataset.",
+    "note": "Built by Agile Six as a reference implementation, using public data from the California Grants Portal.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal"],
+    "sources": [
+      {
+        "name": "California Grants Portal",
+        "url": "https://data.ca.gov/dataset/california-grants-portal"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://ca.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://ca.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-ca",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 8 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": [
+      "fundingSource",
+      "fundingInstrument",
+      "lastSyncedAt",
+      "caPortalId",
+      "caGrantId",
+      "caCategories",
+      "caLoi",
+      "caApplicantTypeNotes",
+      "caGeography",
+      "caFundingSourceNotes",
+      "caFundingMethod",
+      "caFundingMethodNotes",
+      "caEstAwards",
+      "caEstAmountsRaw",
+      "caRawEstAvailFunds",
+      "caAwardPeriod",
+      "caExpAwardDate",
+      "caElecSubmission",
+      "caAwardStats",
+      "caCategorySuggestion",
+      "caChangeNotes",
+      "caSubscribeUrl",
+      "caGrantEventsUrl"
+    ]
+  },
+  "washington": {
+    "name": "Washington FundHub",
+    "description": "Funding opportunities from Washington FundHub.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Washington FundHub.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal", "Local"],
+    "sources": [
+      {
+        "name": "Washington FundHub",
+        "url": "https://fundhub.wa.gov/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://wa.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://wa.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-wa",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 8 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": [
+      "fundingSource",
+      "fundingInstrument",
+      "lastSyncedAt",
+      "waWordPressId",
+      "waSlug",
+      "waInternalReferenceId",
+      "waExternalReferenceId",
+      "waFeatured",
+      "waPreApplicationRequired",
+      "waPreApplicationRaw",
+      "waCostShareRaw",
+      "waApplicationLinkTitle",
+      "waApplicationLinkUrl",
+      "waApplicationLinkTarget",
+      "waApplicationLinkRaw",
+      "waEligibilityHtml",
+      "waRequirements",
+      "waContactHtml",
+      "waTechnicalAssistanceContact",
+      "waResourcesHtml",
+      "waTaxonomies",
+      "waScore",
+      "waScoreReason",
+      "waNumberOfAwardsRaw",
+      "waTotalAmountRaw",
+      "waMinAwardAmountRaw",
+      "waMaxAwardAmountRaw",
+      "waDisbursementNotes",
+      "waApplicationCloseTime",
+      "waDescriptionHtml"
+    ]
+  }
+}

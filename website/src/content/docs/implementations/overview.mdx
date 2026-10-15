@@ -1,0 +1,64 @@
+---
+title: Implementations overview
+description: Learn about the implementations catalog, the conditions for being listed, and how to add your own implementation.
+---
+
+import { Steps } from "@astrojs/starlight/components";
+
+## About the implementations catalog
+
+The [implementations catalog](/implementations/) lists APIs that are live and serve grant data through CommonGrants routes, so any client built on the CommonGrants SDKs can read from them the same way. Each listing shows the data it covers, the routes it supports, and the custom fields, filters, and plugins that go with it.
+
+## Listing conditions
+
+To be listed in the catalog, an implementation should:
+
+- Serve CommonGrants routes from a public URL. Requiring an API key is fine, as long as anyone can sign up for one.
+- Implement the list and view routes for opportunities (`GET /common-grants/opportunities` and `GET /common-grants/opportunities/{oppId}`), awards (`GET /common-grants/awards` and `GET /common-grants/awards/{awdId}`), or both. Search and other routes are optional. See the [API reference](/protocol/api-docs/).
+- Return data that matches the CommonGrants schemas for protocol v0.4.0 or later. Reviewers check this by reading a sample of records with a CommonGrants SDK.
+- Publish its documentation or OpenAPI spec publicly.
+- Name the organization that maintains it.
+- If the API serves data it does not own, name and link the original source, and make sure the source's terms of use don't prohibit republishing it.
+
+Open source implementations are encouraged. Each listing shows whether its source code is public and under which license.
+
+The protocol specification only requires the opportunity routes. This catalog also lists APIs that serve only awards, so sources with award data but no open opportunities can be included.
+
+We keep this list current. If something's broken or you'd like a listing removed, [open an issue](https://github.com/HHS/simpler-grants-protocol/issues/new).
+
+## Adding an implementation
+
+### How to add
+
+Implementations are added by opening a pull request against the [CommonGrants repository](https://github.com/HHS/simpler-grants-protocol).
+
+<Steps>
+
+1. **Build your API.** If you are starting from scratch, the [Python](/guides/using-python/) and [TypeScript](/guides/using-typescript/) guides walk through building a CommonGrants API. They cover opportunities. For awards, see the [Award model](/protocol/models/award/) and the awards routes in the [API reference](/protocol/api-docs/).
+
+2. **Add an entry.** Add an entry to [`website/src/content/implementations/index.json`](https://github.com/HHS/simpler-grants-protocol/blob/main/website/src/content/implementations/index.json). Use the existing entries as a template, and see the [field reference](#field-reference) below.
+
+3. **Open a pull request.** After you open the pull request, a maintainer checks your API against the [listing conditions](#listing-conditions), including reading a sample of records with the SDK, and replies on the pull request. Ask questions there or in the [CommonGrants forum](https://forum.simpler.grants.gov/c/commongrants/8).
+
+</Steps>
+
+### Field reference
+
+| Field                      | Required | What to put                                                                                                  |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| Entry key                  | Yes      | Short lowercase ID, used in the page URL. Example: `example-foundation`                                      |
+| `name`                     | Yes      | Name of the API                                                                                              |
+| `description`              | Yes      | One sentence on what data it serves                                                                          |
+| `note`                     | No       | A short notice shown under the name, for example if you don't own the data                                   |
+| `maintainer`               | Yes      | Organization that runs the API                                                                               |
+| `scope`                    | Yes      | Who funds the grants. Any of `Federal`, `State`, `Local`, `Private`                                          |
+| `sources`                  | Yes      | Each data source's name and link                                                                             |
+| `routes`                   | Yes      | Each route as method and path. Example: `GET /common-grants/awards`                                          |
+| `apiUrl`                   | Yes      | Base URL, ending in `/common-grants`                                                                         |
+| `docsUrl`                  | Yes      | Public docs or OpenAPI spec                                                                                  |
+| `auth`                     | Yes      | `None` or `Free API key`. Add `authUrl` for the sign-up page                                                 |
+| `refresh`                  | No       | How often the data updates. Example: `Daily`                                                                 |
+| `sourceUrl`, `license`     | No       | Public code repo and its license. Example: `MIT`                                                             |
+| `customFields`             | No       | IDs from the [custom fields catalog](/custom-fields/), only when your field matches the catalog's definition |
+| `sourceSpecificFields`     | No       | Names of all your other custom fields                                                                        |
+| `customFilters`, `plugins` | No       | Filter names, and IDs from the [plugins catalog](/plugins/)                                                  |
