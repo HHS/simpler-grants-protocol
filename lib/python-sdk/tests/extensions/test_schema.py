@@ -19,7 +19,12 @@ from common_grants_sdk.extensions import (
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError, _infer_field_type
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
-from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.models import (
+    AwardBase,
+    AwdRecipientIndividual,
+    OpportunityBase,
+)
+from tests.schemas.award_fixtures import RECIPIENT_INDIVIDUAL, RecipientFields
 
 
 class LegacyRef(BaseModel):
@@ -568,3 +573,256 @@ def test_transformed_plugin_client_get_returns_details() -> None:
     assert not isinstance(ext.parse(data), OpportunityDetails)
     common = ext.to_common(PassthroughModel.model_validate(FLAT_SOURCE)).result
     assert type(common) is OpportunityBase[OpportunityFields]
+
+
+# ---------------------------------------------------------------------------
+# Award individual recipient: the registered home of award custom fields
+# ---------------------------------------------------------------------------
+
+
+def test_recipient_schema_only_is_registered_and_typed() -> None:
+    ext = schema(common_schema=AwdRecipientIndividual[RecipientFields])
+
+    assert isinstance(ext, SchemaOnly)
+    assert ext.schema_name == "AwdRecipientIndividual"
+    spec = ext.custom_fields["scholarship_year"]
+    assert spec.field_type == CustomFieldType.INTEGER
+    assert spec.value is int
+
+    parsed = ext.parse(RECIPIENT_INDIVIDUAL)
+    assert_type(parsed, AwdRecipientIndividual[RecipientFields])
+    assert parsed.custom_fields is not None
+    assert parsed.custom_fields.scholarship_year is not None
+    assert_type(parsed.custom_fields.scholarship_year.value, int)
+    assert parsed.custom_fields.scholarship_year.value == 2026
+    # Unknown entries are kept under their exact wire keys.
+    assert set(parsed.custom_fields.model_extra or {}) == {
+        "mentorNote",
+        "vendor_payload",
+    }
+    wire = parsed.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    assert wire == RECIPIENT_INDIVIDUAL
+
+
+def test_bare_recipient_is_a_registered_schema_only() -> None:
+    ext = schema(common_schema=AwdRecipientIndividual)
+    assert isinstance(ext, SchemaOnly)
+    assert ext.schema_name == "AwdRecipientIndividual"
+    assert ext.custom_fields == {}
+
+
+def test_award_envelope_is_not_an_extensible_schema() -> None:
+    """Award custom fields live on the recipient; the award itself has none."""
+    with pytest.raises(PluginDefinitionError, match="AwardBase is not a registered"):
+        schema(common_schema=AwardBase)
+
+
+TypedRecipient = AwdRecipientIndividual[RecipientFields]
+
+
+class SourceRecipient(BaseModel):
+    """An author's own recipient record, declared as the transform source."""
+
+    given_name: str
+    family_name: str
+    year: str
+
+
+RECIPIENT_MAPPINGS: dict[str, Any] = {
+    "to_common": {
+        "name": {
+            "firstName": {"field": "given_name"},
+            "lastName": {"field": "family_name"},
+        },
+        "customFields": {
+            "scholarshipYear": {
+                "name": "scholarshipYear",
+                "fieldType": "integer",
+                "value": {"stringToNumber": "year"},
+            },
+            # Not declared on RecipientFields: kept under its exact key.
+            "mentorNote": {
+                "name": "mentorNote",
+                "fieldType": "string",
+                "value": {"field": "note"},
+            },
+        },
+    },
+    "from_common": {
+        "given_name": {"field": "name.firstName"},
+        "family_name": {"field": "name.lastName"},
+        "year": {"numberToString": "customFields.scholarshipYear.value"},
+    },
+}
+ADA = SourceRecipient(given_name="Ada", family_name="Lovelace", year="2026")
+
+
+def _recipient_mappings_extension(
+    mappings: Optional[dict[str, Any]] = None,
+) -> SchemaWithTransforms[SourceRecipient, AwdRecipientIndividual[RecipientFields]]:
+    return schema(
+        source_schema=SourceRecipient,
+        common_schema=TypedRecipient,
+        mappings=mappings or RECIPIENT_MAPPINGS,
+    )
+
+
+def test_recipient_mappings_round_trip_typed_fields() -> None:
+    ext = _recipient_mappings_extension()
+    assert ext.schema_name == "AwdRecipientIndividual"
+
+    res = ext.to_common(ADA)
+
+    assert_type(res, TransformResult[AwdRecipientIndividual[RecipientFields]])
+    assert res.errors == []
+    recipient = res.result
+    assert isinstance(recipient, TypedRecipient)
+    assert recipient.name is not None and recipient.name.first_name == "Ada"
+    assert recipient.custom_fields is not None
+    year = recipient.custom_fields.scholarship_year
+    assert year is not None
+    assert_type(year.value, int)
+    assert year.value == 2026
+    note = (recipient.custom_fields.model_extra or {})["mentorNote"]
+    assert isinstance(note, CustomField) and note.value is None
+
+    back = ext.from_common(recipient)
+    assert_type(back, TransformResult[SourceRecipient])
+    assert back.errors == []
+    assert back.result == ADA
+
+
+def test_recipient_mappings_report_invalid_common_output() -> None:
+    res = _recipient_mappings_extension().to_common(
+        ADA.model_copy(update={"year": "2026.5"})
+    )
+
+    assert [e.path for e in res.errors] == ["customFields.scholarshipYear.value"]
+    assert isinstance(res.result, dict)  # the raw output, for inspection
+    assert res.result["customFields"]["scholarshipYear"]["value"] == 2026.5
+
+
+def test_recipient_mappings_report_invalid_source_output() -> None:
+    nameless = TypedRecipient.model_validate(
+        {"customFields": RECIPIENT_INDIVIDUAL["customFields"]}
+    )
+
+    res = _recipient_mappings_extension().from_common(nameless)
+
+    assert sorted(e.path or "" for e in res.errors) == ["family_name", "given_name"]
+    assert isinstance(res.result, dict)
+    assert res.result["year"] == "2026"
+
+
+def test_recipient_mappings_attribute_handler_failures() -> None:
+    res = _recipient_mappings_extension().to_common(
+        ADA.model_copy(update={"year": "2026-27"})
+    )
+
+    [error] = res.errors
+    assert error.handler == "stringToNumber"
+    assert isinstance(error.cause, ValueError)
+    assert error.source_value == ADA.model_copy(update={"year": "2026-27"})
+    assert res.result == {}
+
+
+def test_recipient_mappings_reject_malformed_unregistered_fields() -> None:
+    mappings = json.loads(json.dumps(RECIPIENT_MAPPINGS))
+    del mappings["to_common"]["customFields"]["mentorNote"]["name"]
+
+    res = _recipient_mappings_extension(mappings).to_common(ADA)
+
+    assert [e.path for e in res.errors] == ["customFields.mentorNote.name"]
+    assert isinstance(res.result, dict)
+
+
+def test_recipient_mappings_check_output_fields_at_definition() -> None:
+    with pytest.raises(PluginDefinitionError) as exc:
+        schema(
+            source_schema=SourceRecipient,
+            common_schema=TypedRecipient,
+            mappings={
+                "to_common": {"title": {"field": "given_name"}},
+                "from_common": {"surname": {"field": "name.lastName"}},
+            },
+        )
+    assert exc.value.errors == [
+        "mappings.to_common: unknown output field(s) ['title'] for "
+        f"{TypedRecipient.__name__}",
+        "mappings.from_common: unknown source field(s) ['surname'] for "
+        "SourceRecipient",
+    ]
+
+
+def _to_common(src: SourceRecipient) -> TransformResult[TypedRecipient]:
+    return validate_into(
+        TypedRecipient,
+        {
+            "name": {"firstName": src.given_name, "lastName": src.family_name},
+            "customFields": {
+                "scholarshipYear": {
+                    "name": "scholarshipYear",
+                    "fieldType": "integer",
+                    "value": src.year,
+                }
+            },
+        },
+    )
+
+
+def _from_common(recipient: TypedRecipient) -> TransformResult[SourceRecipient]:
+    name = recipient.name
+    fields = recipient.custom_fields
+    year = fields.scholarship_year if fields is not None else None
+    return validate_into(
+        SourceRecipient,
+        {
+            "given_name": name.first_name if name is not None else None,
+            "family_name": name.last_name if name is not None else None,
+            "year": str(year.value) if year is not None else None,
+        },
+    )
+
+
+def test_recipient_callables_round_trip_with_validate_into() -> None:
+    ext = schema(
+        source_schema=SourceRecipient,
+        common_schema=TypedRecipient,
+        to_common=_to_common,
+        from_common=_from_common,
+    )
+    assert isinstance(ext, SchemaWithTransforms)
+    assert ext.schema_name == "AwdRecipientIndividual"
+
+    res = ext.to_common(ADA)
+    assert res.errors == []
+    assert isinstance(res.result, TypedRecipient)
+    assert res.result.custom_fields is not None
+    assert res.result.custom_fields.scholarship_year is not None
+    assert res.result.custom_fields.scholarship_year.value == 2026
+
+    back = ext.from_common(res.result)
+    assert back.errors == [] and back.result == ADA
+
+    bad = ext.to_common(ADA.model_copy(update={"year": "2026-27"}))
+    assert [e.path for e in bad.errors] == ["customFields.scholarshipYear.value"]
+    nameless = ext.from_common(TypedRecipient())
+    assert sorted(e.path or "" for e in nameless.errors) == [
+        "family_name",
+        "given_name",
+        "year",
+    ]
+
+
+def test_recipient_callable_exceptions_propagate_unchanged() -> None:
+    def explode(_src: SourceRecipient) -> TransformResult[TypedRecipient]:
+        raise RuntimeError("author bug")
+
+    ext = schema(
+        source_schema=SourceRecipient,
+        common_schema=TypedRecipient,
+        to_common=explode,
+        from_common=_from_common,
+    )
+    with pytest.raises(RuntimeError, match="author bug"):
+        ext.to_common(ADA)
