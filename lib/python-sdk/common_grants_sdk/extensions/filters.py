@@ -5,16 +5,18 @@ Provides:
 - ``VALID_FILTER_MODELS`` — the filter models that can be used as registered or
   ad-hoc custom filters (single source of truth for route validation and ad-hoc
   classification).
-- ``DEFAULT_FILTER_NAMES`` — frozenset of all core default-filter field names (snake + alias).
+- ``DEFAULT_FILTER_NAMES`` — frozenset of the opportunity default-filter names (snake +
+  alias). Each filter-capable resource has its own names and models (``_POLICIES``).
 - ``validate_routes(routes)`` — registration-time validator; raises FilterError.
 - ``validate_filter_call(model_cls, filter_name, value)`` — call-time validator.
   Validates against ``model_cls`` (a registered filter's value model) or the
   ``VALID_FILTER_MODELS`` union when ``model_cls`` is ``None``; returns
   ``(wire-ready DefaultFilter, None)`` on success or ``(None, FilterError)``.
 - ``classify_filters(routes, resource, method, consumer_filters)`` — fail-fast classifier
-  producing the ``OppFilters`` search request body; raises ``FilterError`` on the first
-  invalid filter value (standard, registered, or ad-hoc). Registered custom filters are
-  recovered from the route's TypedDict via ``get_type_hints``.
+  producing the resource's search ``filters`` body (``OppFilters`` / ``AwdFilters``);
+  raises ``FilterError`` on the first invalid filter value (standard, registered, or
+  ad-hoc). Registered custom filters are recovered from the route's TypedDict via
+  ``get_type_hints``.
 
 No generate.py / codegen dependency. Correctness is enforced at runtime by Pydantic v2.
 """
@@ -22,12 +24,17 @@ No generate.py / codegen dependency. Correctness is enforced at runtime by Pydan
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import fields
-from typing import Any, Optional, Union, get_type_hints, overload
+from dataclasses import dataclass, fields, replace
+from typing import Any, Literal, Optional, Union, get_type_hints, overload
 
 from pydantic import BaseModel, ValidationError
 
 from common_grants_sdk.schemas.pydantic.base import CommonGrantsBaseModel
+from common_grants_sdk.schemas.pydantic.filters.award import (
+    AwardFilters,
+    AwdDefaultFilters,
+    AwdFilters,
+)
 from common_grants_sdk.schemas.pydantic.filters.base import (
     ArrayOperator,
     ComparisonOperator,
@@ -289,30 +296,82 @@ class _FHelpers:
 f = _FHelpers()
 
 # ---------------------------------------------------------------------------
-# DEFAULT_FILTER_NAMES — must include BOTH snake_case field names AND camelCase aliases
+# Per-resource filter policy — standard names, models, and authoring keys
 # ---------------------------------------------------------------------------
 
-#: All core default-filter names from OppDefaultFilters: snake_case field names PLUS their
-#: camelCase ``alias`` values.  Both forms are needed by BOTH consumers of this set:
-#: ``validate_routes`` must catch a custom filter whose name shadows either form, and the
-#: bucket-1 membership test in ``classify_filters`` must route either key form to a named
-#: field (an alias-only set would silently drop snake_case keys into ``customFilters``).
-DEFAULT_FILTER_NAMES: frozenset[str] = frozenset(
-    list(OppDefaultFilters.model_fields.keys())
-    + [
-        name
-        for v in OppDefaultFilters.model_fields.values()
-        for name in (v.alias, v.validation_alias, v.serialization_alias)
-        if isinstance(name, str)
-    ]
-)
 
-# snake_case field name → camelCase wire alias, for OppFilters construction.
-_SNAKE_TO_ALIAS: dict[str, str] = {
-    field_name: wire_name
-    for field_name, field_info in OppDefaultFilters.model_fields.items()
-    if (wire_name := field_info.serialization_alias or field_info.alias)
+@dataclass(frozen=True)
+class _FilterPolicy:
+    """Everything resource-specific about one resource's search filters.
+
+    ``names`` holds BOTH the snake_case field names AND the camelCase aliases of the
+    resource's standard filters, so the bucket-1 membership test in
+    ``classify_filters`` routes either key form to a named field (an alias-only set
+    would silently drop snake_case keys into ``customFilters``).
+    """
+
+    #: Validates one standard filter, keyed by its wire name.
+    defaults: type[BaseModel]
+    #: The search request's ``filters`` model the classifier returns.
+    body: type[BaseModel]
+    #: The authoring TypedDict's standard keys, as a route TypedDict inherits them.
+    standard_hints: dict[str, Any]
+    names: frozenset[str]
+    #: snake_case field name → camelCase wire alias, for ``body`` construction.
+    snake_to_alias: dict[str, str]
+    #: Standard names a route may not register as custom filters: the classifier
+    #: would send them as the standard filter, ignoring the declared type.
+    reserved_names: frozenset[str] = frozenset()
+
+
+def _policy(
+    defaults: type[BaseModel], body: type[BaseModel], authoring: type
+) -> _FilterPolicy:
+    model_fields = defaults.model_fields
+    return _FilterPolicy(
+        defaults=defaults,
+        body=body,
+        standard_hints=get_type_hints(authoring),
+        names=frozenset(
+            list(model_fields)
+            + [
+                name
+                for v in model_fields.values()
+                for name in (v.alias, v.validation_alias, v.serialization_alias)
+                if isinstance(name, str)
+            ]
+        ),
+        snake_to_alias={
+            field_name: wire_name
+            for field_name, field_info in model_fields.items()
+            if (wire_name := field_info.serialization_alias or field_info.alias)
+        },
+    )
+
+
+_OPPORTUNITY_POLICY = _policy(OppDefaultFilters, OppFilters, OpportunityFilters)
+_AWARD_POLICY = _policy(AwdDefaultFilters, AwdFilters, AwardFilters)
+
+#: One policy per filter-capable resource, keyed by its ``PluginRoutes`` slot name.
+#: Award filters use the strict award models; opportunities keep their looser ones.
+#: Awards also reserve the standard names their authoring keys don't cover (the
+#: camelCase wire aliases); opportunities keep their historical behavior.
+_POLICIES: dict[str, _FilterPolicy] = {
+    "opportunities": _OPPORTUNITY_POLICY,
+    "awards": replace(
+        _AWARD_POLICY,
+        reserved_names=_AWARD_POLICY.names - _AWARD_POLICY.standard_hints.keys(),
+    ),
 }
+
+
+def _policy_for(resource: str) -> _FilterPolicy:
+    # Any other resource name keeps the historical (opportunity) classification.
+    return _POLICIES.get(resource, _OPPORTUNITY_POLICY)
+
+
+#: The opportunity default-filter names (snake_case AND camelCase alias forms).
+DEFAULT_FILTER_NAMES: frozenset[str] = _OPPORTUNITY_POLICY.names
 
 # ---------------------------------------------------------------------------
 # Registered-filter recovery + validate_routes (registration-time validator)
@@ -324,12 +383,15 @@ def _is_filter_model(ann: Any) -> bool:
     return isinstance(ann, type) and issubclass(ann, VALID_FILTER_MODELS)
 
 
-def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
+def _registered_filter_models(
+    route_td: Any, standard_hints: Mapping[str, Any]
+) -> dict[str, type[BaseModel]]:
     """Recover a route's registered custom filters from its filter TypedDict.
 
     ``route_td`` is the TypedDict class an author put in the route slot (e.g.
     ``OppSearchFilters``), or ``None``. Returns ``{filterName: value model}`` for
-    every key the author declared beyond the standard ``OpportunityFilters`` keys.
+    every key the author declared beyond the resource's standard keys
+    (``standard_hints``).
     Non-filter annotations are skipped here; ``validate_routes`` (run at
     ``define_plugin`` and when ``plugin.get_client`` binds routes) rejects them, so
     a caller who invokes ``classify_filters`` directly on unvalidated routes gets
@@ -337,29 +399,32 @@ def _registered_filter_models(route_td: Any) -> dict[str, type[BaseModel]]:
     """
     if route_td is None:
         return {}
-    standard = set(get_type_hints(OpportunityFilters))
     return {
         name: ann
         for name, ann in get_type_hints(route_td).items()
-        if name not in standard and _is_filter_model(ann)
+        if name not in standard_hints and _is_filter_model(ann)
     }
 
 
-def validate_routes(routes: PluginRoutes[Any]) -> None:
+def validate_routes(routes: PluginRoutes[Any, Any]) -> None:
     """Registration-time validator for a plugin's typed route carriers.
 
-    The typed carriers make a misspelled resource/method a *static* error. Two
+    The typed carriers make a misspelled resource/method a *static* error. Three
     runtime checks remain:
 
     1. A registered custom filter's value type must be one of the valid filter
        models (``VALID_FILTER_MODELS``) — a mistyped TypedDict value (e.g.
        ``region: int`` or a non-filter model like ``region: OpportunityBase``)
        would otherwise fail opaquely at call time.
-    2. A route TypedDict must not redeclare a standard ``OpportunityFilters`` key
-       with a different value type. Authors get the standard keys for free; a
-       re-typed standard key (e.g. ``status: StringComparisonFilter``) creates a
-       static/runtime mismatch — the call site sees the override, but
-       classification validates against the real standard field type.
+    2. A route TypedDict must not redeclare one of its resource's standard keys
+       (``OpportunityFilters`` / ``AwardFilters``) with a different value type.
+       Authors get the standard keys for free; a re-typed standard key (e.g.
+       ``status: StringComparisonFilter``) creates a static/runtime mismatch — the
+       call site sees the override, but classification validates against the real
+       standard field type.
+    3. An award route must not register a custom filter under a standard filter's
+       camelCase wire name (e.g. ``opportunityId``): the classifier treats that key
+       as the standard filter, so the declared type would never be checked.
 
     Runs at ``define_plugin`` (so the author catches a bad registration at
     definition) and again when ``plugin.get_client`` binds routes (backstop for
@@ -371,8 +436,9 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
     Raises:
         FilterError: On the first offending declaration.
     """
-    standard_hints = get_type_hints(OpportunityFilters)
     for resource_field in fields(routes):
+        policy = _policy_for(resource_field.name)
+        standard_hints = policy.standard_hints
         resource_routes = getattr(routes, resource_field.name)
         for method_field in fields(resource_routes):
             route_td = getattr(resource_routes, method_field.name)
@@ -381,7 +447,9 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
             path_prefix = f"routes.{resource_field.name}.{method_field.name}"
             for name, ann in get_type_hints(route_td).items():
                 if name in standard_hints:
-                    if ann is not standard_hints[name]:
+                    # Equality, not identity: an equal union is a new object when
+                    # spelled differently, and on every lookup from Python 3.14.
+                    if ann != standard_hints[name]:
                         raise FilterError(
                             f'Filter "{name}" on '
                             f"{resource_field.name}.{method_field.name} redeclares a "
@@ -390,6 +458,15 @@ def validate_routes(routes: PluginRoutes[Any]) -> None:
                             source_value=ann,
                         )
                     continue
+                if name in policy.reserved_names:
+                    raise FilterError(
+                        f'Filter "{name}" on '
+                        f"{resource_field.name}.{method_field.name} uses a reserved "
+                        "core filter name: the client sends it as the standard filter. "
+                        "Register the custom filter under a different name",
+                        path=f"{path_prefix}.{name}",
+                        source_value=ann,
+                    )
                 if not _is_filter_model(ann):
                     raise FilterError(
                         f'Registered filter "{name}" on '
@@ -518,17 +595,20 @@ def validate_filter_call(
 
 
 def _validate_default_field(
+    defaults: type[BaseModel],
     alias_key: str,
     value: Any,
 ) -> tuple[Optional[Any], Optional[FilterError]]:
     """Validate one default filter value against its REAL field type (fail-soft).
 
     Bucket-1 (default) values are validated against the named field's real type
-    on ``OppDefaultFilters`` (e.g. ``status`` → ``StringArrayFilter``) — stricter
-    than the permissive ``DefaultFilter`` shape. Each field is validated in
-    isolation by constructing a single-field ``OppDefaultFilters`` keyed by its
-    alias, so a malformed default can be dropped on its own without discarding
-    the other valid default fields.
+    on the resource's ``defaults`` model (e.g. ``OppDefaultFilters.status`` →
+    ``StringArrayFilter``; the sealed award models for awards) — stricter than the
+    permissive ``DefaultFilter`` shape. Each field is validated in isolation by
+    constructing a single-field ``defaults`` keyed by its alias, so a malformed
+    default can be dropped on its own without discarding the other valid default
+    fields. Filter-value instances (``f.*``, the authoring models) are read by
+    attribute, so they need not be the award models' private subclasses.
 
     Fail-soft: each field is validated on its own, collecting the error and
     skipping the key on failure. Returns ``(value, None)`` when valid (the
@@ -536,7 +616,7 @@ def _validate_default_field(
     or ``(None, FilterError)`` when invalid.
     """
     try:
-        OppDefaultFilters.model_validate({alias_key: value})
+        defaults.model_validate({alias_key: value})
     except ValidationError as exc:
         return None, FilterError(
             f'Default filter "{alias_key}" failed validation: '
@@ -553,20 +633,34 @@ def _validate_default_field(
 # ---------------------------------------------------------------------------
 
 
-# The Opportunity binding (OppDefaultFilters / OppFilters) is a known limitation;
-# deriving both from the declared resource is tracked in
-# https://github.com/HHS/simpler-grants-protocol/issues/896.
+@overload
 def classify_filters(
-    routes: PluginRoutes[Any],
+    routes: PluginRoutes[Any, Any],
+    resource: Literal["awards"],
+    method: str,
+    consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
+) -> AwdFilters: ...
+@overload
+def classify_filters(
+    routes: PluginRoutes[Any, Any],
     resource: str,
     method: str,
     consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
-) -> OppFilters:
-    """Classify consumer filter dict into the ``OppFilters`` search request body.
+) -> OppFilters: ...
+def classify_filters(
+    routes: PluginRoutes[Any, Any],
+    resource: str,
+    method: str,
+    consumer_filters: Mapping[str, Union[BaseModel, dict[str, Any]]],
+) -> BaseModel:
+    """Classify consumer filter dict into the resource's search request ``filters``.
+
+    ``resource`` selects the standard filters and models: ``"awards"`` produces the
+    strict ``AwdFilters``; ``"opportunities"`` (and any other name) ``OppFilters``.
 
     Three-bucket classification:
-    - Bucket 1 (default): key is in ``DEFAULT_FILTER_NAMES`` (snake or camelCase alias) →
-      normalize to the camelCase alias form, land in a named OppFilters field.
+    - Bucket 1 (default): key is one of the resource's standard filter names (snake or
+      camelCase alias) → normalize to the camelCase alias form, land in a named field.
     - Bucket 2 (registered custom): key matches a filter registered on the route's
       TypedDict for the given resource/method → land in ``custom_filters``.
     - Bucket 3 (ad-hoc): any other key → land in ``custom_filters`` passthrough.
@@ -577,18 +671,17 @@ def classify_filters(
     consumer's search. (Registration-time validation in ``validate_routes`` also
     raises.)
 
-    Opportunity-bound — see the limitation note above the function.
-
     Registered specs are looked up by the exact ``(resource, method)`` strings
     declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
     ``resource``) yields no registered bucket at all: every non-default filter is
     then validated against the known-model union, exactly like ad-hoc input. Call
     sites must pass the same resource/method strings the plugin declared.
 
-    Default consumer keys are normalized to the wire alias via ``_SNAKE_TO_ALIAS``
-    before ``OppFilters(**kwargs)`` construction. ``populate_by_name`` would accept
-    either form directly, but normalizing first collapses a snake_case key and its
-    camelCase alias onto one kwarg instead of passing pydantic both.
+    Default consumer keys are normalized to the wire alias via the policy's
+    ``snake_to_alias`` before the body model is constructed. ``populate_by_name`` would
+    accept either form directly, but normalizing first collapses a snake_case key and
+    its camelCase alias onto one kwarg instead of passing pydantic both. Registered and
+    ad-hoc names are sent exactly as given (never camelized).
 
     Args:
         routes: Plugin route declarations (used to identify registered custom filters).
@@ -598,27 +691,30 @@ def classify_filters(
             call site (raw ``{"operator": ..., "value": ...}`` dicts also accepted).
 
     Returns:
-        The ``OppFilters`` request body. Call
-        ``.model_dump(by_alias=True, exclude_none=True, mode="json")`` for the JSON
-        body of the search request — ``mode="json"`` is required because coerced
-        ``date`` objects are not JSON-serializable in the default python mode
-        (operator enums are ``StrEnum`` and serialize fine either way).
+        The ``OppFilters`` / ``AwdFilters`` request body. For the JSON body of the
+        search request call ``.model_dump(by_alias=True, mode="json", ...)`` with
+        ``exclude_none=True`` for ``OppFilters`` and ``exclude_unset=True`` for the
+        non-nullable ``AwdFilters`` (as the client facades do) — ``mode="json"`` is
+        required because coerced ``date`` objects are not JSON-serializable in the
+        default python mode (operator enums are ``StrEnum`` and serialize fine
+        either way).
 
     Raises:
         FilterError: On the first invalid filter value (standard, registered, or ad-hoc).
     """
+    policy = _policy_for(resource)
     route = getattr(routes, resource, None)
     route_td = getattr(route, method, None) if route is not None else None
-    registered = _registered_filter_models(route_td)
+    registered = _registered_filter_models(route_td, policy.standard_hints)
 
     default_fields: dict[str, Any] = {}
     custom_buckets: dict[str, DefaultFilter] = {}
 
     for key, value in consumer_filters.items():
-        if key in DEFAULT_FILTER_NAMES:
+        if key in policy.names:
             # Bucket 1: a standard filter. Validate it against the type declared for
             # that field (for example, "status" is validated as a StringArrayFilter).
-            alias_key = _SNAKE_TO_ALIAS.get(key, key)
+            alias_key = policy.snake_to_alias.get(key, key)
             if alias_key in default_fields:
                 # Snake and camel forms of the same field normalize to one key.
                 raise FilterError(
@@ -627,7 +723,9 @@ def classify_filters(
                     path=f"filters.{alias_key}",
                     source_value=value,
                 )
-            validated, error = _validate_default_field(alias_key, value)
+            validated, error = _validate_default_field(
+                policy.defaults, alias_key, value
+            )
             if error is not None:
                 raise error
             default_fields[alias_key] = validated
@@ -648,7 +746,7 @@ def classify_filters(
                 raise error
             custom_buckets[key] = validated  # type: ignore[assignment]
 
-    return OppFilters(
-        **default_fields,
-        custom_filters=custom_buckets if custom_buckets else None,
-    )
+    # Omit, never null, an empty customFilters: Core award filters are not nullable.
+    if custom_buckets:
+        default_fields["custom_filters"] = custom_buckets
+    return policy.body(**default_fields)

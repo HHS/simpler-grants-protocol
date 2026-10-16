@@ -41,7 +41,7 @@ AWARD_EXPORTS: dict[str, list[str]] = {
         "OrgRef",
         "OrgRefCollection",
     ],
-    "filters": ["AwdDefaultFilters", "AwdFilters"],
+    "filters": ["AwardFilters", "AwdDefaultFilters", "AwdFilters"],
     "requests": ["AwardGetRequest", "AwardsListRequest", "AwdSearchRequest"],
     "responses": [
         "AwardResponse",

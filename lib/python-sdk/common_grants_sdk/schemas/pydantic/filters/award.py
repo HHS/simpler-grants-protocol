@@ -8,11 +8,15 @@ awards use small local compositions instead of changing those models.
 from typing import Optional, Union
 
 from pydantic import AwareDatetime, ConfigDict, Field
+from typing_extensions import TypedDict
 
 from .._contract import SealedModel
+from ..base import CommonGrantsBaseModel
 from ..fields import Money
 from ..types import ISODate
 from .base import DefaultFilter, RangeOperator
+from .date import DateRangeFilter
+from .money import MoneyRangeFilter
 from .string import StringArrayFilter
 
 
@@ -98,7 +102,30 @@ class AwdFilters(_AwdNamedFilters):
     )
 
 
+class AwardFilters(TypedDict, total=False, extra_items=CommonGrantsBaseModel):
+    """Typed authoring surface for award search filters.
+
+    Standard keys are the snake_case names of :class:`AwdFilters`, typed to the
+    shared filter value models; the range keys also take the ``DefaultFilter`` that
+    ``f.between`` builds for date, datetime and money bounds. The client checks each
+    value against the stricter award model and sends its camelCase wire name. A plugin
+    author extends this to register custom award filters for a route::
+
+        class AwardSearchFilters(AwardFilters, total=False):
+            program_code: StringArray
+
+    Open via PEP 728 ``extra_items`` like ``OpportunityFilters``: an unregistered
+    key is an ad-hoc filter sent under ``customFilters``.
+    """
+
+    status: StringArrayFilter
+    opportunity_id: StringArrayFilter
+    award_date_range: Union[DateRangeFilter, DefaultFilter]
+    awarded_amount_range: Union[MoneyRangeFilter, DefaultFilter]
+
+
 __all__ = [
+    "AwardFilters",
     "AwdDefaultFilters",
     "AwdFilters",
 ]

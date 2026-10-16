@@ -4,6 +4,7 @@ __all__ = [  # noqa: RUF022
     # Base Filter
     "DefaultFilter",
     # Award Filters
+    "AwardFilters",
     "AwdDefaultFilters",
     "AwdFilters",
     # Operators
@@ -49,6 +50,7 @@ __all__ = [  # noqa: RUF022
 ]
 
 from .award import (
+    AwardFilters,
     AwdDefaultFilters,
     AwdFilters,
 )

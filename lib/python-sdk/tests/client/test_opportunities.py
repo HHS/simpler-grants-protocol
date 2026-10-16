@@ -790,8 +790,8 @@ class TestOpportunitySearch:
         assert call_args[0][0] == expected_url
         assert call_args[1]["headers"]["X-API-Key"] == "test-key"
         assert call_args[1]["headers"]["Accept"] == "application/json"
-        assert call_args[1]["params"]["page"] == 1
-        assert call_args[1]["params"]["pageSize"] == 100
+        assert call_args[1]["json"]["pagination"]["page"] == 1
+        assert call_args[1]["json"]["pagination"]["pageSize"] == 100
 
     def test_search_partial_parse_partitions_items_and_errors(
         self, client, mock_httpx_client, sample_search_response
@@ -1065,7 +1065,7 @@ class TestOpportunitySearch:
             search="local", status=[OppStatusOptions.OPEN], page=1
         )
         call_args = mock_httpx_client.post.call_args
-        assert call_args[1]["params"]["pageSize"] == 50
+        assert call_args[1]["json"]["pagination"]["pageSize"] == 50
 
     def test_search_opportunities_with_page_size_parameter(
         self, client, mock_httpx_client, sample_search_response
@@ -1083,7 +1083,7 @@ class TestOpportunitySearch:
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=25
         )
         call_args = mock_httpx_client.post.call_args
-        assert call_args[1]["params"]["pageSize"] == 25
+        assert call_args[1]["json"]["pagination"]["pageSize"] == 25
 
     def test_search_opportunities_with_page_size_none(
         self, client, mock_httpx_client, sample_search_response
@@ -1100,7 +1100,7 @@ class TestOpportunitySearch:
             search="local", status=[OppStatusOptions.OPEN], page=1, page_size=None
         )
         call_args = mock_httpx_client.post.call_args
-        assert call_args[1]["params"]["pageSize"] == 100
+        assert call_args[1]["json"]["pagination"]["pageSize"] == 100
 
     def test_search_opportunities_with_page_size_zero(
         self, client, mock_httpx_client, sample_search_response
@@ -1118,7 +1118,7 @@ class TestOpportunitySearch:
         )
         call_args = mock_httpx_client.post.call_args
         assert (
-            call_args[1]["params"]["pageSize"] == 100
+            call_args[1]["json"]["pagination"]["pageSize"] == 100
         )  # config default (page_size < 1)
 
     def test_search_opportunities_with_page_size_negative(
@@ -1137,7 +1137,7 @@ class TestOpportunitySearch:
         )
         call_args = mock_httpx_client.post.call_args
         assert (
-            call_args[1]["params"]["pageSize"] == 100
+            call_args[1]["json"]["pagination"]["pageSize"] == 100
         )  # config default (page_size < 1)
 
     def test_search_opportunities_404(self, client, mock_httpx_client):
@@ -1237,8 +1237,8 @@ class TestOpportunitySearch:
         mock_httpx_client.post.assert_called_once()
         call_args = mock_httpx_client.post.call_args
         assert call_args[0][0] == expected_url
-        assert call_args[1]["params"]["page"] == 1
-        assert call_args[1]["params"]["pageSize"] == 100
+        assert call_args[1]["json"]["pagination"]["page"] == 1
+        assert call_args[1]["json"]["pagination"]["pageSize"] == 100
 
     def test_list_all_opportunities_multiple_pages(
         self, client, mock_httpx_client, sample_opportunity_data
@@ -1301,7 +1301,7 @@ class TestOpportunitySearch:
         }
 
         def mock_post(*args, **kwargs):
-            page = kwargs.get("params", {}).get("page", 1)
+            page = kwargs["json"]["pagination"]["page"]
             mock_resp = Mock()
             mock_resp.raise_for_status = Mock()
             if page == 1:
@@ -1336,9 +1336,9 @@ class TestOpportunitySearch:
         # Verify all 3 pages were requested
         assert mock_httpx_client.post.call_count == 3
         calls = mock_httpx_client.post.call_args_list
-        assert calls[0][1]["params"]["page"] == 1
-        assert calls[1][1]["params"]["page"] == 2
-        assert calls[2][1]["params"]["page"] == 3
+        assert calls[0][1]["json"]["pagination"]["page"] == 1
+        assert calls[1][1]["json"]["pagination"]["page"] == 2
+        assert calls[2][1]["json"]["pagination"]["page"] == 3
 
     def test_search_all_opportunities_empty_result(self, client, mock_httpx_client):
         """Test fetching all opportunities when there are no results."""
@@ -1410,7 +1410,7 @@ class TestOpportunitySearch:
         )
 
         def mock_post(*args, **kwargs):
-            page = kwargs.get("params", {}).get("page", 1)
+            page = kwargs["json"]["pagination"]["page"]
             if page == 1:
                 mock_resp = Mock()
                 mock_resp.status_code = 200
@@ -1595,3 +1595,27 @@ class TestUnregisteredCustomFields:
         assert opp.custom_fields.vendor_payload.value == VENDOR_ENTRY["value"]
         # legacyId is unregistered on the override, so it is kept as an extra.
         assert opp.custom_fields.model_extra["legacyId"].value == 12345
+
+
+class TestOpportunitySearchBodyPagination:
+    """Opportunity search pages travel in ``body.pagination`` (#1243)."""
+
+    def test_page_two_differs_from_page_one(
+        self, client, paged_search, sample_opportunity_data
+    ):
+        page1 = [{**sample_opportunity_data, "id": str(uuid4())} for _ in range(2)]
+        page2 = [{**sample_opportunity_data, "id": str(uuid4())}]
+        seen = paged_search(client, [page1, page2])
+
+        everything = client.opportunities.search(search="local", page_size=2)
+        second = client.opportunities.search(search="local", page=2, page_size=2)
+
+        ids = [str(item.id) for item in everything.items]
+        assert ids == [row["id"] for row in page1 + page2]
+        assert [str(item.id) for item in second.items] == [page2[0]["id"]]
+        assert [json.loads(r.content)["pagination"] for r in seen] == [
+            {"page": 1, "pageSize": 2},
+            {"page": 2, "pageSize": 2},
+            {"page": 2, "pageSize": 2},
+        ]
+        assert all(not r.url.params for r in seen)
