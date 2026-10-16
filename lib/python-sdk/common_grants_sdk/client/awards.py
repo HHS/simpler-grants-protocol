@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Optional, cast
+from typing import TYPE_CHECKING, Any, Generic, Optional, cast, overload
 from uuid import UUID
+
+import typing_extensions as te
 
 from ..extensions.filters import classify_filters
 from ..extensions.types import AwardFiltersT
@@ -16,17 +18,22 @@ from .results import ListResult, SearchResult, parse_batch
 if TYPE_CHECKING:
     from .client import Client
 
+# A per-call ``schema=`` override, independent of the client's bound ``AwardT``.
+SchemaT = te.TypeVar("SchemaT", bound="AwardBase[Any]")
 
-class Awards(Generic[AwardFiltersT]):
+
+class Awards(Generic[AwardFiltersT, AwardT]):
     """Fetch award data from the CommonGrants API.
 
     Bound (via ``plugin.get_client``) to a plugin's registered award filter
-    TypedDict (``AwardFiltersT``), so ``search(filters=...)`` is typed by it.
-    Responses parse into ``AwardBase``, or into the per-call ``schema`` override
-    (e.g. ``AwardBase[AwdRecipientIndividual[RecipientFields]]``).
+    TypedDict (``AwardFiltersT``), so ``search(filters=...)`` is typed by it, and
+    to its award model (``AwardT``): ``AwardBase`` over the plugin's
+    ``AwdRecipientIndividual`` schema, e.g.
+    ``AwardBase[AwdRecipientIndividual[RecipientFields]]``. Responses parse into
+    ``AwardT``, or into the per-call ``schema`` override.
     """
 
-    def __init__(self, client: "Client[Any, Any, AwardFiltersT]"):
+    def __init__(self, client: "Client[Any, Any, AwardFiltersT, AwardT]"):
         """Initialize the Award resource.
 
         Args:
@@ -39,18 +46,48 @@ class Awards(Generic[AwardFiltersT]):
         """Return the API path for awards."""
         return "/common-grants/awards"
 
+    def _schema(self, override: Optional[type[AwardBase[Any]]]) -> type[AwardBase[Any]]:
+        """The schema to parse into: a per-call override, else the bound default."""
+        return override if override is not None else self.client._award_schema
+
+    @overload
     def list(
         self,
         page: int | None = None,
         page_size: int | None = None,
-        schema: Optional[type[AwardT]] = None,
-    ) -> ListResult[AwardT]:
+        schema: None = None,
+    ) -> ListResult[AwardT]: ...
+
+    @overload
+    def list(
+        self,
+        page: int | None = None,
+        page_size: int | None = None,
+        *,
+        schema: type[SchemaT],
+    ) -> ListResult[SchemaT]: ...
+
+    @overload
+    def list(
+        self,
+        page: int | None,
+        page_size: int | None,
+        schema: type[SchemaT],
+    ) -> ListResult[SchemaT]: ...
+
+    def list(
+        self,
+        page: int | None = None,
+        page_size: int | None = None,
+        schema: Optional[type[AwardBase[Any]]] = None,
+    ) -> ListResult[Any]:
         """Fetch a set of awards.
 
         Args:
             page: Page number (1-indexed). If None, fetches all pages.
             page_size: Number of items per page. If None, uses the client default.
-            schema: Per-call parse-schema override; defaults to ``AwardBase``.
+            schema: Per-call parse-schema override; defaults to the plugin's award
+                model (or ``AwardBase`` when unbound).
 
         Returns:
             ``ListResult`` — parsed ``items`` plus per-row parse ``errors``.
@@ -60,24 +97,31 @@ class Awards(Generic[AwardFiltersT]):
         """
         paginated = self.client.list(self.path, page=page, page_size=page_size)
         items, errors = parse_batch(
-            cast("list[dict[str, Any]]", list(paginated.items)), schema or AwardBase
+            cast("list[dict[str, Any]]", list(paginated.items)), self._schema(schema)
         )
         return ListResult(
-            items=cast("list[AwardT]", items),
+            items=items,
             errors=errors,
             pagination_info=paginated.pagination_info,
         )
 
+    @overload
+    def get(self, awd_id: str | UUID, schema: None = None) -> AwardT: ...
+
+    @overload
+    def get(self, awd_id: str | UUID, schema: type[SchemaT]) -> SchemaT: ...
+
     def get(
         self,
         awd_id: str | UUID,
-        schema: Optional[type[AwardT]] = None,
-    ) -> AwardT:
+        schema: Optional[type[AwardBase[Any]]] = None,
+    ) -> AwardBase[Any]:
         """Get a specific award by ID.
 
         Args:
             awd_id: The award ID
-            schema: Per-call parse-schema override; defaults to ``AwardBase``.
+            schema: Per-call parse-schema override; defaults to the plugin's award
+                model (or ``AwardBase`` when unbound).
 
         Returns:
             The parsed award.
@@ -87,25 +131,55 @@ class Awards(Generic[AwardFiltersT]):
             pydantic.ValidationError: If the response is not a valid award
         """
         success_response = self.client.get_item(self.path, awd_id)
-        return cast(
-            "AwardT", (schema or AwardBase).model_validate(success_response.data)
-        )
+        return self._schema(schema).model_validate(success_response.data)
+
+    @overload
+    def search(
+        self,
+        search: str = "",
+        page: int | None = None,
+        page_size: int | None = None,
+        schema: None = None,
+        filters: Optional[AwardFiltersT] = None,
+    ) -> SearchResult[AwardT]: ...
+
+    @overload
+    def search(
+        self,
+        search: str = "",
+        page: int | None = None,
+        page_size: int | None = None,
+        *,
+        schema: type[SchemaT],
+        filters: Optional[AwardFiltersT] = None,
+    ) -> SearchResult[SchemaT]: ...
+
+    @overload
+    def search(
+        self,
+        search: str,
+        page: int | None,
+        page_size: int | None,
+        schema: type[SchemaT],
+        filters: Optional[AwardFiltersT] = None,
+    ) -> SearchResult[SchemaT]: ...
 
     def search(
         self,
         search: str = "",
         page: int | None = None,
         page_size: int | None = None,
-        schema: Optional[type[AwardT]] = None,
+        schema: Optional[type[AwardBase[Any]]] = None,
         filters: Optional[AwardFiltersT] = None,
-    ) -> SearchResult[AwardT]:
+    ) -> SearchResult[Any]:
         """Search for awards.
 
         Args:
             search: The query string; omitted from the request when empty.
             page: Page number (1-indexed). If None, fetches all pages.
             page_size: Number of items per page. If None, uses the client default.
-            schema: Per-call parse-schema override; defaults to ``AwardBase``.
+            schema: Per-call parse-schema override; defaults to the plugin's award
+                model (or ``AwardBase`` when unbound).
             filters: Typed filter dict — the standard award filters (``status``,
                 ``opportunity_id``, ``award_date_range``, ``awarded_amount_range``,
                 snake_case or camelCase) are validated against the award models and
@@ -142,7 +216,7 @@ class Awards(Generic[AwardFiltersT]):
         )
 
         items, parse_errors = parse_batch(
-            cast("list[dict[str, Any]]", list(paginated.items)), schema or AwardBase
+            cast("list[dict[str, Any]]", list(paginated.items)), self._schema(schema)
         )
 
         # As for opportunities: filter_info carries the server's filter feedback only,
@@ -154,7 +228,7 @@ class Awards(Generic[AwardFiltersT]):
         )
 
         return SearchResult(
-            items=cast("list[AwardT]", items),
+            items=items,
             errors=parse_errors,
             pagination_info=paginated.pagination_info,
             filter_info=filter_info,

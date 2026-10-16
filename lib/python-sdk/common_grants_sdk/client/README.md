@@ -137,7 +137,48 @@ print(opportunity.status.value)
 
 ### Award methods
 
-The `client.awards` namespace provides methods for the CommonGrants awards endpoints. Awards parse into `AwardBase` by default; pass `schema=` on any call to parse into another award model, such as one with [typed recipient custom fields](../schemas/README.md#awards).
+The `client.awards` namespace provides methods for the CommonGrants awards endpoints. Each call parses into, in order of precedence:
+
+1. the per-call `schema=`, when given (any `AwardBase` model, such as one with [typed recipient custom fields](../schemas/README.md#awards));
+2. otherwise the plugin's award model, for a client from `plugin.get_client()`: `AwardBase` composed with the plugin's `AwdRecipientIndividual` schema;
+3. otherwise `AwardBase`, for a directly built client or a plugin that registers no recipient.
+
+Award custom fields live on the individual recipient. A plugin that registers them gives every `get`, `list` and `search` result typed access, with no `schema=` argument:
+
+```python
+from typing import Optional
+
+from common_grants_sdk.extensions import (
+    CustomField, CustomFieldSet, PluginMeta, PluginSchemas, define_plugin, schema,
+)
+from common_grants_sdk.schemas.pydantic.models import AwardBase, AwdRecipientIndividual
+
+
+class RecipientFields(CustomFieldSet):
+    scholarship_year: Optional[CustomField[int]] = None
+
+
+plugin = define_plugin(
+    PluginSchemas(
+        AwdRecipientIndividual=schema(
+            common_schema=AwdRecipientIndividual[RecipientFields]
+        )
+    ),
+    meta=PluginMeta(name="Example", source_system="example"),
+)
+client = plugin.get_client(config)
+
+award = client.awards.get(award_id)  # AwardBase[AwdRecipientIndividual[RecipientFields]]
+recipient = award.recipient_individual
+if recipient is not None and recipient.custom_fields is not None:
+    year = recipient.custom_fields.scholarship_year
+    if year is not None:
+        print(year.value)  # typed as int
+
+base = client.awards.get(award_id, schema=AwardBase)  # override: plain AwardBase
+```
+
+The client only validates responses; it never runs a plugin's `to_common` / `from_common` transforms. Recipient custom fields (a schema extension, on the data returned) are independent of custom award filters (a route extension, on the search request sent, below). See the [extensions guide](../extensions/README.md#award-recipient-custom-fields) for registering source schemas, mappings and transforms.
 
 #### List awards <!-- omit in toc -->
 
@@ -297,9 +338,9 @@ except ValidationError as e:
 
 | Method | Route | Description |
 |---|---|---|
-| `client.awards.get(awd_id, schema?)` | `GET /common-grants/awards/{awdId}` | Fetch a single award by ID. Parses into `AwardBase` or the optional `schema`. |
-| `client.awards.list(page?, page_size?, schema?)` | `GET /common-grants/awards` | List awards. Auto-paginates when `page=None`. |
-| `client.awards.search(search?, page?, page_size?, schema?, filters?)` | `POST /common-grants/awards/search` | Search by text query and standard or custom award filters. Auto-paginates when `page=None`. |
+| `client.awards.get(awd_id, schema?)` | `GET /common-grants/awards/{awdId}` | Fetch a single award by ID. Parses into the optional `schema`, else the plugin's award model, else `AwardBase`. |
+| `client.awards.list(page?, page_size?, schema?)` | `GET /common-grants/awards` | List awards, parsed like `get`. Auto-paginates when `page=None`. |
+| `client.awards.search(search?, page?, page_size?, schema?, filters?)` | `POST /common-grants/awards/search` | Search by text query and standard or custom award filters, parsed like `get`. Auto-paginates when `page=None`. |
 
 ### Auth class
 
