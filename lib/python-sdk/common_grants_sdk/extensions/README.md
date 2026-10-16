@@ -17,6 +17,7 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 - [Declaring custom fields](#declaring-custom-fields)
   - [Option 1: Ad hoc with `with_custom_fields()`](#option-1-ad-hoc-with-with_custom_fields)
   - [Option 2: A reusable plugin](#option-2-a-reusable-plugin)
+  - [Unregistered custom fields](#unregistered-custom-fields)
 - [Extracting custom field values](#extracting-custom-field-values)
 - [Plugins](#plugins)
   - [The `schema(...)` factory](#the-schema-factory)
@@ -87,7 +88,7 @@ fields = {
 Opportunity = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 opp = Opportunity.model_validate(opp_data)
-print(opp.custom_fields["legacyId"])
+print(opp.custom_fields.legacy_id.value)
 ```
 
 ### Option 2: A reusable plugin
@@ -133,9 +134,39 @@ opportunity_extensions = define_plugin(
 
 Custom-field keys are camelCase on the wire and snake_case in Python: a `CustomField[V]` named `legacy_grant_id` serializes to `legacyGrantId`. This is handled by an alias generator on the `CustomFieldSet` base, so authors and consumers use snake_case while JSON I/O stays camelCase.
 
+### Unregistered custom fields
+
+Both options keep the entries they don't declare. Unregistered entries land in `custom_fields.model_extra`, keyed exactly as on the wire: neither camelCased nor snake_cased, and with their nested `value` untouched. They serialize back out unchanged, so a parse → `model_dump_json(by_alias=True)` → parse round trip preserves them.
+
+Each unregistered entry is validated as the base `CustomField`, so it must carry its own complete envelope:
+
+- `name`, `fieldType` (one of the six field types), and `value` are required. The map key is never used as a missing `name`.
+- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URL.
+- Its `value` is untyped (`Any`); only registered fields get a typed value. Use [`get_custom_field_value()`](#extracting-custom-field-values) for typed access.
+
+This is not a general passthrough. Unknown top-level keys on the opportunity, and unknown keys inside a `CustomField` envelope, are still dropped.
+
+```python
+opp = OpportunityBase[OpportunityFields].model_validate({
+    **opp_data,
+    "customFields": {
+        "programArea": {"name": "programArea", "fieldType": "string", "value": "CFDA-93.243"},
+        "vendorPayload": {"name": "vendorPayload", "fieldType": "object", "value": {"tier": 2}},
+    },
+})
+
+opp.custom_fields.program_area.value                # "CFDA-93.243" (registered, typed)
+opp.custom_fields.model_extra["vendorPayload"]      # CustomField(name="vendorPayload", ...)
+opp.get_custom_field_value("vendorPayload", dict)   # {"tier": 2}
+```
+
+An invalid unregistered entry fails the same way a registered one does: `model_validate` and `client.opportunities.get()` raise `ValidationError`, `list()` and `search()` return the row as a `ParseFailure` in `result.errors`, and a validating transform reports it in `TransformResult.errors`.
+
+> **Migrating:** `CustomFieldSet` containers used to drop unregistered entries silently; they are now kept. `with_custom_fields()` used to accept an unregistered entry without `fieldType` (or that wasn't an object at all), and filled a missing `name` from its key. Those entries now fail validation, so send the full envelope. Parsing also no longer rewrites the input dictionary.
+
 ## Extracting custom field values
 
-Use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`, e.g. for unregistered fields or programmatic (by-name) access. It returns `None` if the key is absent and raises `ValueError` if a present value cannot be converted.
+Use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`, e.g. for unregistered fields or programmatic (by-name) access. It returns `None` if the key is absent and raises `ValueError` if a present value cannot be converted. A registered field resolves by its wire key or its attribute name; an unregistered entry resolves only by its exact wire key, so `vendorPayload` and `vendor_payload` are different entries.
 
 ```python
 from pydantic import BaseModel

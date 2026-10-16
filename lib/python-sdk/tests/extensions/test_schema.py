@@ -1,9 +1,10 @@
 """Tests for the codegen-free schema(...) factory and its building blocks."""
 
-from typing import Optional, assert_type
+import json
+from typing import Any, Optional, assert_type
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from common_grants_sdk.extensions import (
     CustomField,
@@ -46,9 +47,9 @@ FLAT_SOURCE = {
 }
 
 
-def _mappings_extension() -> (
-    SchemaWithTransforms[PassthroughModel, OpportunityBase[OpportunityFields]]
-):
+def _mappings_extension(
+    **unregistered: Any,
+) -> SchemaWithTransforms[PassthroughModel, OpportunityBase[OpportunityFields]]:
     return schema(
         source_schema=PassthroughModel,
         common_schema=OpportunityBase[OpportunityFields],
@@ -73,7 +74,8 @@ def _mappings_extension() -> (
                         "value": {"field": "agency_code"},
                         "name": {"const": "agencyCode"},
                         "fieldType": {"const": "string"},
-                    }
+                    },
+                    **unregistered,
                 },
             },
             "from_common": {
@@ -345,3 +347,137 @@ def test_validate_into_routes_errors():
     res = validate_into(LegacyRef, {"system": "x"})  # missing id
     assert res.errors
     assert any("id" in (e.path or "") for e in res.errors)
+
+
+# ---------------------------------------------------------------------------
+# Unregistered custom fields: preserved, validated as the base CustomField
+# ---------------------------------------------------------------------------
+
+OPP_WIRE = {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "title": "T",
+    "status": {"value": "open"},
+    "description": "d",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "lastModifiedAt": "2025-01-01T00:00:00Z",
+}
+VENDOR_PAYLOAD = {
+    "name": "vendorPayload",
+    "fieldType": "object",
+    "value": {"camelKey": [1, {"snake_key": None}]},
+}
+SNAKE_KEYED = {
+    "name": "vendor_payload",
+    "fieldType": "string",
+    "value": "snake-cased key",
+}
+VENDOR_MAPPING = {
+    "name": {"const": "vendorPayload"},
+    "fieldType": {"const": "object"},
+    "value": {"field": "vendor_blob"},
+}
+
+
+def test_schema_only_parse_preserves_unregistered_custom_fields() -> None:
+    custom_fields = {
+        "legacyRef": {
+            "name": "legacyRef",
+            "fieldType": "object",
+            "value": {"system": "legacy", "id": 7},
+        },
+        "vendorPayload": VENDOR_PAYLOAD,
+        "vendor_payload": SNAKE_KEYED,
+    }
+    ext = schema(common_schema=OpportunityBase[OpportunityFields])
+
+    parsed = ext.parse({**OPP_WIRE, "customFields": custom_fields})
+
+    assert parsed.custom_fields is not None
+    assert parsed.custom_fields.legacy_ref is not None
+    assert parsed.custom_fields.legacy_ref.value.id == 7
+    extra = parsed.custom_fields.model_extra or {}
+    assert set(extra) == {"vendorPayload", "vendor_payload"}
+    assert all(isinstance(entry, CustomField) for entry in extra.values())
+    # Envelope members use wire aliases; unknown map keys are never re-cased.
+    wire = json.loads(parsed.model_dump_json(by_alias=True, exclude_unset=True))
+    assert wire["customFields"] == custom_fields
+
+
+def test_subclassed_custom_field_set_validates_unregistered_entries() -> None:
+    class ExtendedFields(OpportunityFields):
+        program_code: Optional[CustomField[str]] = Field(default=None)
+
+    ext = schema(common_schema=OpportunityBase[ExtendedFields])
+
+    parsed = ext.parse({**OPP_WIRE, "customFields": {"vendorPayload": VENDOR_PAYLOAD}})
+    assert parsed.custom_fields is not None
+    assert isinstance(
+        (parsed.custom_fields.model_extra or {})["vendorPayload"], CustomField
+    )
+    with pytest.raises(ValidationError):
+        ext.parse(
+            {
+                **OPP_WIRE,
+                "customFields": {"vendorPayload": {"fieldType": "object", "value": 1}},
+            }
+        )
+
+
+def test_custom_field_set_json_schema_types_unregistered_entries():
+    js = OpportunityFields.model_json_schema()
+    ref = js["additionalProperties"]["$ref"].rsplit("/", 1)[-1]
+    assert js["$defs"][ref]["required"] == ["name", "fieldType", "value"]
+
+
+def test_unregistered_entries_are_not_declared_custom_fields():
+    assert set(resolve_custom_field_specs(OpportunityFields)) == {
+        "agency_code",
+        "legacy_id",
+        "legacy_ref",
+        "tags",
+    }
+
+
+def test_mappings_carry_unregistered_custom_fields() -> None:
+    ext = _mappings_extension(vendorPayload=VENDOR_MAPPING)
+    source = {**FLAT_SOURCE, "vendor_blob": {"tier": 2}}
+
+    res = ext.to_common(PassthroughModel.model_validate(source))
+
+    assert res.errors == []
+    assert res.result.custom_fields is not None
+    assert res.result.custom_fields.agency_code is not None
+    assert res.result.custom_fields.agency_code.value == "HHS-123"
+    vendor = (res.result.custom_fields.model_extra or {})["vendorPayload"]
+    assert vendor.field_type == CustomFieldType.OBJECT
+    assert vendor.value == {"tier": 2}
+
+
+def test_mappings_report_malformed_unregistered_custom_fields() -> None:
+    nameless = {k: v for k, v in VENDOR_MAPPING.items() if k != "name"}
+    ext = _mappings_extension(vendorPayload=nameless)
+    source = {**FLAT_SOURCE, "vendor_blob": {"tier": 2}}
+
+    res = ext.to_common(PassthroughModel.model_validate(source))
+
+    # Structured errors with the raw output, not an exception.
+    assert [e.path for e in res.errors] == ["customFields.vendorPayload.name"]
+    assert isinstance(res.result, dict)
+
+
+def test_validate_into_validates_unregistered_custom_fields():
+    common = OpportunityBase[OpportunityFields]
+
+    good = validate_into(
+        common, {**OPP_WIRE, "customFields": {"vendorPayload": VENDOR_PAYLOAD}}
+    )
+    assert good.errors == []
+    assert good.result.custom_fields is not None
+    assert (good.result.custom_fields.model_extra or {})["vendorPayload"].value == {
+        "camelKey": [1, {"snake_key": None}]
+    }
+
+    bad_payload = {**OPP_WIRE, "customFields": {"vendorPayload": "not an envelope"}}
+    bad = validate_into(common, bad_payload)
+    assert [e.path for e in bad.errors] == ["customFields.vendorPayload"]
+    assert bad.result is bad_payload
