@@ -24,7 +24,7 @@ No generate.py / codegen dependency. Correctness is enforced at runtime by Pydan
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from typing import Any, Literal, Optional, Union, get_type_hints, overload
 
 from pydantic import BaseModel, ValidationError
@@ -319,6 +319,9 @@ class _FilterPolicy:
     names: frozenset[str]
     #: snake_case field name → camelCase wire alias, for ``body`` construction.
     snake_to_alias: dict[str, str]
+    #: Standard names a route may not register as custom filters: the classifier
+    #: would send them as the standard filter, ignoring the declared type.
+    reserved_names: frozenset[str] = frozenset()
 
 
 def _policy(
@@ -347,12 +350,18 @@ def _policy(
 
 
 _OPPORTUNITY_POLICY = _policy(OppDefaultFilters, OppFilters, OpportunityFilters)
+_AWARD_POLICY = _policy(AwdDefaultFilters, AwdFilters, AwardFilters)
 
 #: One policy per filter-capable resource, keyed by its ``PluginRoutes`` slot name.
 #: Award filters use the strict award models; opportunities keep their looser ones.
+#: Awards also reserve the standard names their authoring keys don't cover (the
+#: camelCase wire aliases); opportunities keep their historical behavior.
 _POLICIES: dict[str, _FilterPolicy] = {
     "opportunities": _OPPORTUNITY_POLICY,
-    "awards": _policy(AwdDefaultFilters, AwdFilters, AwardFilters),
+    "awards": replace(
+        _AWARD_POLICY,
+        reserved_names=_AWARD_POLICY.names - _AWARD_POLICY.standard_hints.keys(),
+    ),
 }
 
 
@@ -400,7 +409,7 @@ def _registered_filter_models(
 def validate_routes(routes: PluginRoutes[Any, Any]) -> None:
     """Registration-time validator for a plugin's typed route carriers.
 
-    The typed carriers make a misspelled resource/method a *static* error. Two
+    The typed carriers make a misspelled resource/method a *static* error. Three
     runtime checks remain:
 
     1. A registered custom filter's value type must be one of the valid filter
@@ -413,6 +422,9 @@ def validate_routes(routes: PluginRoutes[Any, Any]) -> None:
        ``status: StringComparisonFilter``) creates a static/runtime mismatch — the
        call site sees the override, but classification validates against the real
        standard field type.
+    3. An award route must not register a custom filter under a standard filter's
+       camelCase wire name (e.g. ``opportunityId``): the classifier treats that key
+       as the standard filter, so the declared type would never be checked.
 
     Runs at ``define_plugin`` (so the author catches a bad registration at
     definition) and again when ``plugin.get_client`` binds routes (backstop for
@@ -425,7 +437,8 @@ def validate_routes(routes: PluginRoutes[Any, Any]) -> None:
         FilterError: On the first offending declaration.
     """
     for resource_field in fields(routes):
-        standard_hints = _policy_for(resource_field.name).standard_hints
+        policy = _policy_for(resource_field.name)
+        standard_hints = policy.standard_hints
         resource_routes = getattr(routes, resource_field.name)
         for method_field in fields(resource_routes):
             route_td = getattr(resource_routes, method_field.name)
@@ -445,6 +458,15 @@ def validate_routes(routes: PluginRoutes[Any, Any]) -> None:
                             source_value=ann,
                         )
                     continue
+                if name in policy.reserved_names:
+                    raise FilterError(
+                        f'Filter "{name}" on '
+                        f"{resource_field.name}.{method_field.name} uses a reserved "
+                        "core filter name: the client sends it as the standard filter. "
+                        "Register the custom filter under a different name",
+                        path=f"{path_prefix}.{name}",
+                        source_value=ann,
+                    )
                 if not _is_filter_model(ann):
                     raise FilterError(
                         f'Registered filter "{name}" on '

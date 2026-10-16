@@ -203,6 +203,8 @@ client = plugin.get_client(config)
 client.awards.search(filters={"program_code": f.in_(["RESEARCH"])})
 ```
 
+A custom award filter can't use a standard filter's camelCase wire name (`opportunityId`, `awardDateRange`, `awardedAmountRange`): the client always sends that key as the standard filter, so `define_plugin` raises `FilterError` for the registration. Consumers can still pass those wire names as filter keys.
+
 See [`examples/awards_client.py`](../../examples/awards_client.py) for a runnable version against an offline mock API.
 
 #### Get a single award <!-- omit in toc -->
