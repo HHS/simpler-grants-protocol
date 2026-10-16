@@ -22,7 +22,11 @@ from common_grants_sdk.extensions import (
     define_plugin,
     f,
 )
-from common_grants_sdk.schemas.pydantic.filters import AwardFilters, StringArray
+from common_grants_sdk.schemas.pydantic.filters import (
+    AwardFilters,
+    NumberArray,
+    StringArray,
+)
 from common_grants_sdk.schemas.pydantic.filters.opportunity import OpportunityFilters
 from common_grants_sdk.schemas.pydantic.models import AwardBase
 from tests.schemas.award_fixtures import (
@@ -333,6 +337,59 @@ class TestAwardPluginFilters:
         with pytest.raises(FilterError):
             client.awards.search(page=1, filters={"program_code": f.eq("RESEARCH")})
         assert len(seen) == 1
+
+    def test_custom_filter_under_a_core_wire_name_is_rejected(self, client):
+        """Registered as a number array, but ``opportunityId`` is classified as the
+        core string-array filter: reject it at definition and when a client binds."""
+
+        class Collision(AwardFilters, total=False):
+            opportunityId: NumberArray
+
+        routes = PluginRoutes(awards=ResourceRoutes(search=Collision))
+        with pytest.raises(FilterError, match="reserved") as defined:
+            define_plugin(
+                PluginSchemas(),
+                routes=routes,
+                meta=PluginMeta(name="test", source_system="test"),
+            )
+        with pytest.raises(FilterError, match="reserved") as bound:
+            client._bind_routes(routes)
+        assert defined.value.path == "routes.awards.search.opportunityId"
+        assert bound.value.path == "routes.awards.search.opportunityId"
+
+    def test_plugin_client_accepts_core_wire_names_from_consumers(self):
+        plugin = define_plugin(
+            PluginSchemas(),
+            routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),
+            meta=PluginMeta(name="test", source_system="test"),
+        )
+        client = plugin.get_client(Config(base_url=BASE_URL, api_key="k"))
+        seen = _serve(client, lambda r: (200, _search_envelope([])))
+        usd = (
+            {"amount": "1000", "currency": "USD"},
+            {"amount": "5000", "currency": "USD"},
+        )
+
+        client.awards.search(
+            page=1,
+            filters={
+                "opportunityId": f.in_([OPP_ID]),
+                "awardDateRange": f.between("2026-01-01", "2026-12-31"),
+                "awardedAmountRange": f.between(*usd),
+            },
+        )
+
+        assert json.loads(seen[0].content)["filters"] == {
+            "opportunityId": {"operator": "in", "value": [OPP_ID]},
+            "awardDateRange": {
+                "operator": "between",
+                "value": {"min": "2026-01-01", "max": "2026-12-31"},
+            },
+            "awardedAmountRange": {
+                "operator": "between",
+                "value": {"min": usd[0], "max": usd[1]},
+            },
+        }
 
     def test_both_routes_keep_opportunity_filtering_unchanged(self):
         plugin = define_plugin(

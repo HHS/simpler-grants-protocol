@@ -27,6 +27,7 @@ from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyRangeFilter,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
+    NumberArrayFilter,
     NumberComparisonFilter,
     NumberRangeFilter,
 )
@@ -893,6 +894,67 @@ def test_validate_routes_judges_standard_names_per_resource():
         validate_routes(
             PluginRoutes(opportunities=ResourceRoutes(search=OppRouteWithCloseDate))
         )
+
+
+class _OpportunityIdAsNumbers(AwardFilters, total=False):
+    opportunityId: NumberArrayFilter
+
+
+class _OpportunityIdAsStrings(AwardFilters, total=False):
+    opportunityId: StringArrayFilter
+
+
+class _AwardDateRangeAsString(AwardFilters, total=False):
+    awardDateRange: StringComparison
+
+
+class _AwardDateRangeAsDates(AwardFilters, total=False):
+    awardDateRange: DateRangeFilter
+
+
+class _AwardedAmountRangeAsNumbers(AwardFilters, total=False):
+    awardedAmountRange: NumberRangeFilter
+
+
+class _AwardedAmountRangeAsMoney(AwardFilters, total=False):
+    awardedAmountRange: MoneyRangeFilter
+
+
+@pytest.mark.parametrize(
+    ("name", "route_td"),
+    [
+        ("opportunityId", _OpportunityIdAsNumbers),
+        ("opportunityId", _OpportunityIdAsStrings),
+        ("awardDateRange", _AwardDateRangeAsString),
+        ("awardDateRange", _AwardDateRangeAsDates),
+        ("awardedAmountRange", _AwardedAmountRangeAsNumbers),
+        ("awardedAmountRange", _AwardedAmountRangeAsMoney),
+    ],
+)
+def test_validate_routes_rejects_award_wire_names_as_custom_filters(name, route_td):
+    """The classifier sends a standard filter's camelCase wire name as that standard
+    filter, so a custom filter registered under it would never be validated against
+    its declared type. Rejected whatever the type, same family or not."""
+    with pytest.raises(FilterError, match="reserved") as exc:
+        validate_routes(PluginRoutes(awards=ResourceRoutes(search=route_td)))
+    assert exc.value.path == f"routes.awards.search.{name}"
+
+
+def test_validate_routes_accepts_snake_award_standards_and_custom_filters():
+    class SnakeRedeclarations(AwardSearchFilters, total=False):
+        status: StringArrayFilter
+        opportunity_id: StringArrayFilter
+
+    validate_routes(PluginRoutes(awards=ResourceRoutes(search=SnakeRedeclarations)))
+
+
+def test_award_wire_name_reservation_does_not_apply_to_opportunities():
+    class OppRoute(OpportunityFilters, total=False):
+        opportunityId: NumberArrayFilter  # not an opportunity standard filter
+        # Pre-existing opportunity behavior, deliberately unchanged here.
+        close_date_range: StringArray
+
+    validate_routes(PluginRoutes(opportunities=ResourceRoutes(search=OppRoute)))
 
 
 def test_award_standard_filters_accept_the_authoring_value_models():
