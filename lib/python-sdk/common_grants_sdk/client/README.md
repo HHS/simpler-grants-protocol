@@ -131,7 +131,13 @@ for opp in response.items:
 opportunity = client.opportunities.get("123e4567-e89b-12d3-a456-426614174000")
 print(opportunity.title)
 print(opportunity.status.value)
+for award_ref in opportunity.awards or []:
+    print(award_ref.id, award_ref.title)
 ```
+
+`get` returns the detail form, `OpportunityDetails`: the opportunity plus `awards`, references to the awards it resulted in (see [Opportunity details and related awards](../schemas/README.md#opportunity-details-and-related-awards) for what omitted, empty and `null` mean). On a client from `plugin.get_client(...)` whose plugin registers `OpportunityBase[OpportunityFields]`, `get` returns `OpportunityDetails[OpportunityFields]`, so the plugin's custom fields stay typed; plugin authors register nothing extra. `list` and `search` keep returning the registered base model.
+
+A `schema=` argument is used exactly as given and replaces the detail default. `schema=OpportunityBase[OpportunityFields]` returns the base model and drops `awards`; `schema=OpportunityDetails[OpportunityFields]` keeps them. Malformed or `null` awards raise pydantic's `ValidationError` from `get`. On `list` and `search`, an explicit detail schema reports a bad row as a per-row parse error, like any other invalid row.
 
 ### Pagination
 
@@ -202,7 +208,7 @@ except ValidationError as e:
 
 | Method | Route | Description |
 |---|---|---|
-| `client.opportunities.get(opp_id, schema?)` | `GET /common-grants/opportunities/{id}` | Fetch a single opportunity by ID. Accepts an optional `schema` for typed custom fields. |
+| `client.opportunities.get(opp_id, schema?)` | `GET /common-grants/opportunities/{id}` | Fetch a single opportunity by ID, with its details (`OpportunityDetails`, including `awards`). An optional `schema` replaces that default exactly. |
 | `client.opportunities.list(page?, page_size?, schema?)` | `GET /common-grants/opportunities` | List opportunities. Auto-paginates when `page=None`. |
 | `client.opportunities.search(search, status, page?, page_size?, schema?)` | `POST /common-grants/opportunities/search` | Search by text query and status list. Auto-paginates when `page=None`. |
 

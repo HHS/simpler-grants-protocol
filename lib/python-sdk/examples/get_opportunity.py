@@ -9,7 +9,7 @@ import sys
 from common_grants_sdk.client import Client
 from common_grants_sdk.client.config import Config
 from common_grants_sdk.extensions.specs import CustomFieldSpec
-from common_grants_sdk.schemas.pydantic import OpportunityBase, CustomFieldType
+from common_grants_sdk.schemas.pydantic import CustomFieldType, OpportunityDetails
 
 if len(sys.argv) < 2:
     print("Usage: get_opportunity.py <oppId>", file=sys.stderr)
@@ -33,7 +33,11 @@ fields = {
     "groupName": CustomFieldSpec(field_type=CustomFieldType.STRING, value=str),
 }
 
-opp = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
+# An explicit schema replaces get()'s detail default, so extend OpportunityDetails
+# (not OpportunityBase) to keep the opportunity's related awards.
+opp = OpportunityDetails.with_custom_fields(
+    custom_fields=fields, model_name="Opportunity"
+)
 
 
 opportunity = client.opportunities.get(opp_id, schema=opp)
@@ -42,3 +46,5 @@ print(f"Opportunity {opp_id}:")
 print(f"  Title: {opportunity.title}")
 print(f"  ID: {opportunity.id}")
 print(f" Custom Fields: {opportunity.custom_fields}")
+for award_ref in opportunity.awards or []:
+    print(f"  Award: {award_ref.id} ({award_ref.title})")
