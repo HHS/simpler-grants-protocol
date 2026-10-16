@@ -4,7 +4,9 @@ Requests go through a real ``httpx.Client`` on a ``MockTransport``, so each test
 sees the exact URL, query string and JSON body the client sends.
 """
 
+import copy
 import json
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 import httpx
@@ -14,13 +16,18 @@ from pydantic import ValidationError
 from common_grants_sdk.client import Client, Config, ListResult, SearchResult
 from common_grants_sdk.client.exceptions import APIError
 from common_grants_sdk.extensions import (
+    CustomField,
+    CustomFieldSet,
     FilterError,
+    PassthroughModel,
     PluginMeta,
     PluginRoutes,
     PluginSchemas,
     ResourceRoutes,
+    TransformResult,
     define_plugin,
     f,
+    schema,
 )
 from common_grants_sdk.schemas.pydantic.filters import (
     AwardFilters,
@@ -28,11 +35,16 @@ from common_grants_sdk.schemas.pydantic.filters import (
     StringArray,
 )
 from common_grants_sdk.schemas.pydantic.filters.opportunity import OpportunityFilters
-from common_grants_sdk.schemas.pydantic.models import AwardBase
+from common_grants_sdk.schemas.pydantic.models import (
+    AwardBase,
+    AwdRecipientIndividual,
+    OpportunityBase,
+)
 from tests.schemas.award_fixtures import (
     AWARD_ID,
     INDIVIDUAL_ONLY_AWARD,
     MINIMAL_AWARD,
+    RecipientFields,
     TypedAward,
 )
 
@@ -421,4 +433,271 @@ class TestAwardPluginFilters:
         assert opp_body["sorting"] == {"sortBy": "lastModifiedAt", "sortOrder": "desc"}
         assert award_body["filters"] == {
             "customFilters": {"region": {"operator": "eq", "value": "US-CA"}}
+        }
+
+
+# ---------------------------------------------------------------------------
+# Plugin recipient custom fields: the default award parse schema
+# ---------------------------------------------------------------------------
+
+META = PluginMeta(name="test", source_system="test")
+TypedRecipient = AwdRecipientIndividual[RecipientFields]
+
+
+class FloatYearFields(CustomFieldSet):
+    """A different consumer's view of the same recipient field."""
+
+    scholarship_year: Optional[CustomField[float]] = None
+
+
+FloatYearAward = AwardBase[AwdRecipientIndividual[FloatYearFields]]
+
+
+class OppFields(CustomFieldSet):
+    legacy_id: Optional[CustomField[int]] = None
+
+
+OPPORTUNITY = {
+    "id": "00000000-0000-4000-8000-0000000000aa",
+    "title": "Opportunity",
+    "description": "d",
+    "status": {"value": "open"},
+    "createdAt": "2026-01-01T00:00:00Z",
+    "lastModifiedAt": "2026-01-01T00:00:00Z",
+    "customFields": {
+        "legacyId": {"name": "legacyId", "fieldType": "integer", "value": 7}
+    },
+}
+
+
+def _recipient_plugin(**schemas: Any):
+    return define_plugin(
+        PluginSchemas(
+            AwdRecipientIndividual=schema(common_schema=TypedRecipient), **schemas
+        ),
+        meta=META,
+    )
+
+
+def _plugin_client(plugin):
+    return plugin.get_client(Config(base_url=BASE_URL, api_key="k"))
+
+
+def _recipient_award(year: Any = 2026) -> dict[str, Any]:
+    award = copy.deepcopy(INDIVIDUAL_ONLY_AWARD)
+    award["id"] = str(uuid4())
+    award["recipientIndividual"]["customFields"]["scholarshipYear"]["value"] = year
+    return award
+
+
+def _awards_api(items, opportunity=OPPORTUNITY):
+    """Serve get/list/search for awards (and get for one opportunity)."""
+
+    def respond(request):
+        if "/opportunities/" in request.url.path:
+            return 200, {"status": 200, "data": opportunity}
+        if request.method == "POST":
+            return 200, _search_envelope(items)
+        if request.url.path == "/common-grants/awards":
+            return 200, _envelope(items)
+        return 200, {"status": 200, "data": items[0]}
+
+    return respond
+
+
+def _year(award) -> Any:
+    recipient = award.recipient_individual
+    assert recipient is not None and recipient.custom_fields is not None
+    year = recipient.custom_fields.scholarship_year
+    assert year is not None
+    return year.value
+
+
+class TestAwardPluginRecipient:
+    def test_get_list_search_parse_into_the_plugin_recipient_by_default(self):
+        client = _plugin_client(_recipient_plugin())
+        award = _recipient_award()
+        _serve(client, _awards_api([award]))
+
+        got = client.awards.get(AWARD_ID)
+        listed = client.awards.list(page=1)
+        searched = client.awards.search(page=1)
+
+        for item in (got, *listed.items, *searched.items):
+            assert type(item) is TypedAward
+            assert _year(item) == 2026
+            fields = item.recipient_individual.custom_fields
+            assert set(fields.model_extra or {}) == {"mentorNote", "vendor_payload"}
+        assert listed.errors == [] and searched.errors == []
+
+    def test_explicit_none_schema_uses_the_plugin_default(self):
+        client = _plugin_client(_recipient_plugin())
+        _serve(client, _awards_api([_recipient_award()]))
+
+        assert type(client.awards.get(AWARD_ID, schema=None)) is TypedAward
+        assert type(client.awards.list(page=1, schema=None).items[0]) is TypedAward
+        assert type(client.awards.search(page=1, schema=None).items[0]) is TypedAward
+
+    def test_without_a_recipient_extension_awards_parse_into_award_base(self):
+        plugin = define_plugin(
+            PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[OppFields])),
+            meta=META,
+        )
+        client = _plugin_client(plugin)
+        _serve(client, _awards_api([_recipient_award()]))
+
+        got = client.awards.get(AWARD_ID)
+        items = [*client.awards.list(page=1).items, *client.awards.search(page=1).items]
+
+        for item in (got, *items):
+            assert type(item) is AwardBase
+            recipient = item.recipient_individual
+            assert recipient is not None and recipient.custom_fields is not None
+            assert recipient.custom_fields["scholarshipYear"].value == 2026
+
+    def test_per_call_schema_overrides_the_plugin_default(self):
+        client = _plugin_client(_recipient_plugin())
+        _serve(client, _awards_api([_recipient_award()]))
+
+        for schema_, year_type in ((AwardBase, None), (FloatYearAward, float)):
+            got = client.awards.get(AWARD_ID, schema=schema_)
+            listed = client.awards.list(page=1, schema=schema_).items
+            searched = client.awards.search(page=1, schema=schema_).items
+            for item in (got, *listed, *searched):
+                assert type(item) is schema_
+                if year_type is not None:
+                    assert type(_year(item)) is year_type and _year(item) == 2026
+
+    def test_rows_invalid_for_the_plugin_recipient_are_batch_errors(self):
+        client = _plugin_client(_recipient_plugin())
+        good, bad = _recipient_award(), _recipient_award(year="2026-27")
+        _serve(client, _awards_api([good, bad]))
+
+        for result in (client.awards.list(page=1), client.awards.search(page=1)):
+            assert [str(i.id) for i in result.items] == [good["id"]]
+            assert [e.index for e in result.errors] == [1]
+            assert result.errors[0].raw == bad
+            assert "scholarshipYear" in result.errors[0].message
+        # The same row is a valid base award: the plugin default was applied.
+        assert len(client.awards.list(page=1, schema=AwardBase).items) == 2
+
+    def test_empty_batches_parse_cleanly(self):
+        client = _plugin_client(_recipient_plugin())
+        _serve(client, _awards_api([]))
+
+        for result in (client.awards.list(page=1), client.awards.search(page=1)):
+            assert result.items == [] and result.errors == []
+
+    def test_get_with_invalid_recipient_fields_raises(self):
+        client = _plugin_client(_recipient_plugin())
+        _serve(client, _awards_api([_recipient_award(year="2026-27")]))
+
+        with pytest.raises(ValidationError, match="scholarshipYear"):
+            client.awards.get(AWARD_ID)
+        assert type(client.awards.get(AWARD_ID, schema=AwardBase)) is AwardBase
+
+    def test_parsing_never_runs_the_author_transforms(self):
+        calls: list[str] = []
+
+        def to_common(src: PassthroughModel) -> TransformResult[TypedRecipient]:
+            calls.append("to_common")
+            raise AssertionError("parsing must not transform")
+
+        def from_common(rec: TypedRecipient) -> TransformResult[PassthroughModel]:
+            calls.append("from_common")
+            raise AssertionError("parsing must not transform")
+
+        entry = schema(
+            source_schema=PassthroughModel,
+            common_schema=TypedRecipient,
+            to_common=to_common,
+            from_common=from_common,
+        )
+        client = _plugin_client(
+            define_plugin(PluginSchemas(AwdRecipientIndividual=entry), meta=META)
+        )
+        _serve(client, _awards_api([_recipient_award()]))
+
+        assert type(client.awards.get(AWARD_ID)) is TypedAward
+        assert type(client.awards.list(page=1).items[0]) is TypedAward
+        assert type(client.awards.search(page=1).items[0]) is TypedAward
+        assert calls == []
+
+    def test_differently_configured_clients_keep_their_own_defaults(self):
+        typed = _plugin_client(_recipient_plugin())
+        floats = _plugin_client(
+            define_plugin(
+                PluginSchemas(
+                    AwdRecipientIndividual=schema(
+                        common_schema=AwdRecipientIndividual[FloatYearFields]
+                    )
+                ),
+                meta=META,
+            )
+        )
+        direct = Client(config=Config(base_url=BASE_URL, api_key="k"))
+        for client in (typed, floats, direct):
+            _serve(client, _awards_api([_recipient_award()]))
+
+        assert type(typed.awards.get(AWARD_ID)) is TypedAward
+        assert type(floats.awards.get(AWARD_ID)) is FloatYearAward
+        assert type(direct.awards.get(AWARD_ID)) is AwardBase
+
+    def test_opportunities_keep_their_own_schema(self):
+        both = _plugin_client(
+            _recipient_plugin(
+                Opportunity=schema(common_schema=OpportunityBase[OppFields])
+            )
+        )
+        recipient_only = _plugin_client(_recipient_plugin())
+        for client in (both, recipient_only):
+            _serve(client, _awards_api([_recipient_award()]))
+
+        opp = both.opportunities.get(OPPORTUNITY["id"])
+        assert type(opp) is OpportunityBase[OppFields]
+        assert opp.custom_fields is not None and opp.custom_fields.legacy_id is not None
+        assert opp.custom_fields.legacy_id.value == 7
+        assert type(both.awards.get(AWARD_ID)) is TypedAward
+        assert type(recipient_only.opportunities.get(OPPORTUNITY["id"])) is (
+            OpportunityBase
+        )
+
+    def test_recipient_extension_leaves_award_and_opportunity_filters_unchanged(
+        self,
+    ):
+        plugin = define_plugin(
+            PluginSchemas(AwdRecipientIndividual=schema(common_schema=TypedRecipient)),
+            routes=PluginRoutes(
+                opportunities=ResourceRoutes(search=OppSearchFilters),
+                awards=ResourceRoutes(search=AwardSearchFilters),
+            ),
+            meta=META,
+        )
+        assert plugin.routes.awards.search is AwardSearchFilters
+        client = _plugin_client(plugin)
+        seen = _serve(client, lambda r: (200, _search_envelope([_recipient_award()])))
+
+        result = client.awards.search(
+            page=1,
+            filters={
+                "status": f.in_(["awarded"]),
+                "program_code": f.in_(["RESEARCH"]),
+                "region": f.eq("US-CA"),
+            },
+        )
+        client.opportunities.search(page=1, filters={"region": f.in_(["US-CA"])})
+        with pytest.raises(FilterError):
+            client.awards.search(page=1, filters={"program_code": f.eq("X")})
+
+        assert type(result.items[0]) is TypedAward
+        award_body, opp_body = (json.loads(r.content) for r in seen)
+        assert award_body["filters"] == {
+            "status": {"operator": "in", "value": ["awarded"]},
+            "customFilters": {
+                "program_code": {"operator": "in", "value": ["RESEARCH"]},
+                "region": {"operator": "eq", "value": "US-CA"},
+            },
+        }
+        assert opp_body["filters"] == {
+            "customFilters": {"region": {"operator": "in", "value": ["US-CA"]}}
         }

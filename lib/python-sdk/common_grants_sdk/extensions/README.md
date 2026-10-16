@@ -23,6 +23,7 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
   - [The `schema(...)` factory](#the-schema-factory)
   - [Assembling a plugin](#assembling-a-plugin)
   - [Consuming a plugin](#consuming-a-plugin)
+  - [Award recipient custom fields](#award-recipient-custom-fields)
   - [Publishing a plugin](#publishing-a-plugin)
 - [Bidirectional transforms](#bidirectional-transforms)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
@@ -49,8 +50,9 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 | **`CustomField[V]`** | A Pydantic generic that is the single source of truth for a custom field. The static value type `V` anchors the typing; `fieldType` and the inspectable value type are *derived* from `V`, so they cannot drift. |
 | **`CustomFieldSet`** | The base class an author subclasses to declare a schema's custom fields, each as `Optional[CustomField[V]] = Field(default=None, description=...)`. |
 | **`OpportunityBase[CF]`** | The common Opportunity model, a Pydantic generic over its custom-fields container `CF`. `OpportunityBase[OpportunityFields]` is a fully concrete type; `OpportunityBase` is the unextended form. |
+| **`AwdRecipientIndividual[CF]`** | The individual who received an award, generic over its custom-fields container. Award custom fields live on this recipient, not on the award: `AwardBase[AwdRecipientIndividual[RecipientFields]]` is the typed award. |
 | **`schema(...)`** | The factory that builds a schema extension. Overloads enforce, statically: mappings XOR hand-written functions XOR schema-only, and a `source_schema` whenever transforms are present. Returns a `SchemaWithTransforms` or a `SchemaOnly`. |
-| **`PluginSchemas`** | Maps your extensions to the registered extensible schemas, keyed by name (`PluginSchemas(Opportunity=...)`). Schemas you omit fall back to the base schema, never `None`. |
+| **`PluginSchemas`** | Maps your extensions to the registered extensible schemas, keyed by name (`PluginSchemas(Opportunity=..., AwdRecipientIndividual=...)`). Schemas you omit fall back to the base schema, never `None`. |
 | **`define_plugin(...)`** | Assembles a `Plugin` from a `PluginSchemas` and a `PluginMeta`. |
 | **`Plugin`** | The value consumers import. `plugin.schemas.Opportunity` is fully typed dot access. |
 | **`build_transforms()`** | Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Used by `schema(..., mappings=...)` under the hood; also callable directly when you need custom handlers. |
@@ -195,11 +197,11 @@ A plugin bundles custom fields and transforms for the CommonGrants schemas a sou
 - **Mappings** — declarative transforms: `schema(source_schema=Src, common_schema=OpportunityBase[Fields], mappings={...})` returns a `SchemaWithTransforms`.
 - **Functions** — hand-written transforms: `schema(source_schema=Src, common_schema=OpportunityBase[Fields], to_common=fn, from_common=fn)` returns a `SchemaWithTransforms`.
 
-`common_schema` must be a registered extensible schema (`OpportunityBase[...]`); an unregistered base raises `PluginDefinitionError`.
+`common_schema` must be a registered extensible schema (`OpportunityBase[...]` or `AwdRecipientIndividual[...]`); an unregistered base, including `AwardBase` itself, raises `PluginDefinitionError`.
 
 ### Assembling a plugin
 
-`PluginSchemas` maps each extension to a registered schema name; `define_plugin` returns the `Plugin`. Schemas you omit fall back to the base schema (a `SchemaOnly` over `OpportunityBase`), never `None`.
+`PluginSchemas` maps each extension to a registered schema name; `define_plugin` returns the `Plugin`. Schemas you omit fall back to the base schema (a `SchemaOnly` over `OpportunityBase` or `AwdRecipientIndividual`), never `None`. A slot must hold the extension for its own schema: an `Opportunity` extension in the `AwdRecipientIndividual` slot raises `PluginDefinitionError`.
 
 ```python
 plugin = define_plugin(
@@ -221,6 +223,84 @@ print(opp.custom_fields.legacy_grant_id.value)  # typed as int
 for name, spec in plugin.schemas.Opportunity.custom_fields.items():
     print(name, spec.field_type, spec.description)
 ```
+
+### Award recipient custom fields
+
+Core v0.5 puts award custom fields on the award's individual recipient (`recipientIndividual.customFields`), not on the award. A plugin registers them on the `AwdRecipientIndividual` slot, with the same `schema(...)` factory and the same three shapes (schema-only, mappings, or functions):
+
+```python
+from typing import Optional
+
+from pydantic import BaseModel
+
+from common_grants_sdk.extensions import (
+    CustomField, CustomFieldSet, PluginMeta, PluginSchemas, define_plugin, schema,
+)
+from common_grants_sdk.schemas.pydantic.models import AwdRecipientIndividual
+
+
+class RecipientFields(CustomFieldSet):
+    scholarship_year: Optional[CustomField[int]] = None
+
+
+Recipient = AwdRecipientIndividual[RecipientFields]
+
+
+class ScholarshipRecipient(BaseModel):  # your system's own recipient record
+    first_name: str
+    last_name: str
+    award_year: int
+
+
+scholarships = define_plugin(
+    PluginSchemas(
+        AwdRecipientIndividual=schema(
+            source_schema=ScholarshipRecipient,
+            common_schema=Recipient,
+            mappings={
+                "to_common": {
+                    "name": {
+                        "firstName": {"field": "first_name"},
+                        "lastName": {"field": "last_name"},
+                    },
+                    "customFields": {
+                        "scholarshipYear": {
+                            "name": "scholarshipYear",
+                            "fieldType": "integer",
+                            "value": {"field": "award_year"},
+                        },
+                    },
+                },
+                "from_common": {
+                    "first_name": {"field": "name.firstName"},
+                    "last_name": {"field": "name.lastName"},
+                    "award_year": {"field": "customFields.scholarshipYear.value"},
+                },
+            },
+        )
+    ),
+    meta=PluginMeta(name="scholarships", source_system="scholarships.example.org"),
+)
+```
+
+`schema(common_schema=Recipient)` alone registers the custom fields without transforms. Hand-written `to_common` / `from_common` functions work as for opportunities, and typically return `validate_into(Recipient, ...)` / `validate_into(ScholarshipRecipient, ...)` so invalid output lands in `TransformResult.errors`. Transforms keep their [existing error behavior](#error-handling): mapping output is validated in both directions, handler failures carry the handler name, and an exception raised inside a hand-written function propagates to the caller.
+
+Consumers get the typed recipient two ways:
+
+```python
+result = scholarships.schemas.AwdRecipientIndividual.to_common(source_record)
+recipient = result.result  # Recipient on success; check result.errors first
+
+client = scholarships.get_client(config)
+award = client.awards.get(award_id)  # AwardBase[AwdRecipientIndividual[RecipientFields]]
+recipient = award.recipient_individual
+if recipient is not None and recipient.custom_fields is not None:
+    year = recipient.custom_fields.scholarship_year
+    if year is not None:
+        print(year.value)  # typed as int
+```
+
+The recipient, its `custom_fields` and each declared field are optional in the protocol, so narrow them before reading a value. Undeclared entries stay available under their exact wire keys in `recipient.custom_fields.model_extra`. A plugin that leaves the slot out gets the base recipient, whose `custom_fields` is the protocol's untyped `dict[str, CustomField]`. See [Using plugins with the API client](#using-plugins-with-the-api-client) for the default and override rules, and [`examples/awards_client.py`](../../examples/awards_client.py) for a runnable version.
 
 ### Publishing a plugin
 
@@ -523,6 +603,23 @@ define_plugin(
 
 The reason for the split: filter declarations vary per route-method (`opportunities.search` may support different filters than a future `applications.list`), whereas custom fields are a schema-level concern shared by every operation that returns the model.
 
+Awards follow the same split, and the two extension points stay independent. `PluginSchemas(AwdRecipientIndividual=...)` adds custom fields to the award data the client *parses* (on `recipientIndividual.customFields`, for `get`, `list` and `search`); `PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters))` adds custom filters to the search request the client *sends* (under `filters.customFilters`). Registering one never registers, changes or requires the other, and neither affects opportunities. With `Recipient` from [Award recipient custom fields](#award-recipient-custom-fields):
+
+```python
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters, StringArray
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    program_code: StringArray
+
+
+define_plugin(
+    PluginSchemas(AwdRecipientIndividual=schema(common_schema=Recipient)),  # award custom fields
+    routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),  # award custom filters
+    meta=PluginMeta(name="scholarships", source_system="scholarships.example.org"),
+)
+```
+
 ### Declaring custom filters on a route
 
 Subclass `OpportunityFilters` and annotate each custom filter with its value model. That one subclass does double duty — it **registers** the filter (through the route carrier) and **types** the consumer's `search(filters=...)` call site, so there is no second declaration to drift:
@@ -684,7 +781,17 @@ results = client.opportunities.search(
 )
 ```
 
-If you are working with a client you built yourself, pass an extension's `common_schema` per call instead. This parses custom fields but leaves filters untyped, since the client has no route registrations bound:
+Award methods work the same way. `client.awards.get`, `.list` and `.search` parse into `AwardBase` composed with the plugin's `AwdRecipientIndividual` schema (`AwardBase[AwdRecipientIndividual[RecipientFields]]`), or plain `AwardBase` when the plugin does not register a recipient. A per-call `schema=` always wins over that default, and its type is the call's return type:
+
+```python
+award = client.awards.get(award_id)                    # the plugin's typed award
+base = client.awards.get(award_id, schema=AwardBase)   # per-call override: AwardBase
+page = client.awards.list(page=1, schema=OtherAward)   # ListResult[OtherAward]
+```
+
+Parsing validates the response as CommonGrants data; it never runs the plugin's `to_common` / `from_common`. Call those yourself to convert your own records. A response row that does not match the plugin's recipient fields (for example a `scholarshipYear` value that is not a valid integer) raises `ValidationError` from `get` and lands in `.errors` from `list` / `search`, as for any other invalid row.
+
+If you are working with a client you built yourself, pass an extension's `common_schema` per call instead. This parses custom fields but leaves filters untyped, since the client has no route registrations bound. For awards, pass the composed award model (`schema=AwardBase[AwdRecipientIndividual[RecipientFields]]`), not the recipient's `common_schema`:
 
 ```python
 from common_grants_sdk.client import Client, Config
