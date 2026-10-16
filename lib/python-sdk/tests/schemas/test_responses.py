@@ -311,3 +311,71 @@ class TestResponseDeserialization:
         assert response.status == 400
         assert response.message == "Error"
         assert response.errors == [{"detail": "Test error"}]
+
+
+class TestOpportunityResponses:
+    """Opportunity envelopes carry the Core v0.5 identifiers and funders."""
+
+    @staticmethod
+    def _payloads() -> dict:
+        from tests.schemas.opportunity_v05_fixtures import (
+            FULL_OPPORTUNITY,
+            MINIMAL_OPPORTUNITY,
+        )
+
+        items = [FULL_OPPORTUNITY, MINIMAL_OPPORTUNITY]
+        pagination = {"page": 1, "pageSize": 2, "totalItems": 2, "totalPages": 1}
+        return {
+            "get": {"status": 200, "message": "Success", "data": FULL_OPPORTUNITY},
+            "list": {
+                "status": 200,
+                "message": "Success",
+                "items": items,
+                "paginationInfo": pagination,
+            },
+            "search": {
+                "status": 200,
+                "message": "Success",
+                "items": items,
+                "paginationInfo": pagination,
+                "sortInfo": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+                "filterInfo": {"filters": {}},
+            },
+        }
+
+    @staticmethod
+    def _models() -> dict:
+        from common_grants_sdk.schemas import (
+            OpportunitiesListResponse,
+            OpportunitiesSearchResponse,
+            OpportunityResponse,
+        )
+
+        return {
+            "get": OpportunityResponse,
+            "list": OpportunitiesListResponse,
+            "search": OpportunitiesSearchResponse,
+        }
+
+    @pytest.mark.parametrize("route", ["get", "list", "search"])
+    def test_envelope_round_trips_additions(self, route: str) -> None:
+        from tests.schemas.opportunity_v05_fixtures import wire
+
+        payload = self._payloads()[route]
+        response = self._models()[route].model_validate(payload)
+
+        assert wire(response) == payload
+
+    @pytest.mark.parametrize("route", ["get", "list", "search"])
+    def test_envelope_rejects_null_addition(self, route: str) -> None:
+        from tests.schemas.opportunity_v05_fixtures import FULL_OPPORTUNITY
+
+        payload = self._payloads()[route]
+        bad = {**FULL_OPPORTUNITY, "funders": None}
+        if route == "get":
+            payload = {**payload, "data": bad}
+        else:
+            payload = {**payload, "items": [bad]}
+
+        with pytest.raises(ValidationError, match="must be omitted, not null"):
+            self._models()[route].model_validate(payload)

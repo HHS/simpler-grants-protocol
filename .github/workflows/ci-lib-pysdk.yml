@@ -5,8 +5,9 @@ on:
     paths:
       - "lib/python-sdk/**"
       - ".github/workflows/ci-lib-pysdk.yml"
-      # The award schema check validates against the emitted Core contract and the
-      # TS SDK's TypeSpec route bundle, using the TS SDK's locked AJV tooling.
+      # The award and opportunity schema checks validate against the emitted Core
+      # contract using the TS SDK's locked AJV tooling; the award check also uses
+      # the TS SDK's TypeSpec route bundle.
       - "lib/core/**"
       - "website/public/schemas/**"
       - "lib/ts-sdk/lib/**"
@@ -54,20 +55,30 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: make test
 
-      # The schema oracle needs the TS SDK's AJV dependencies and its generated
-      # award route bundle; a missing piece fails the step rather than skipping it.
-      - name: Generate award route schemas
-        id: route-schemas
+      # The schema oracle needs the TS SDK's AJV dependencies; the award check also
+      # needs its generated route bundle. A missing piece fails the step rather
+      # than skipping it.
+      - name: Install schema tooling
+        id: schema-tooling
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         working-directory: .
+        run: pnpm --filter "@common-grants/sdk..." install --frozen-lockfile
+
+      - name: Generate award route schemas
+        id: route-schemas
+        if: ${{ !cancelled() && steps.schema-tooling.outcome == 'success' }}
+        working-directory: .
         run: |
-          pnpm --filter "@common-grants/sdk..." install --frozen-lockfile
           pnpm --filter @common-grants/core run build
           pnpm --filter @common-grants/sdk run typespec
 
       - name: Check award fixtures against emitted schemas
         if: ${{ !cancelled() && steps.route-schemas.outcome == 'success' }}
         run: make check-award-schema
+
+      - name: Check opportunity fixtures against emitted schemas
+        if: ${{ !cancelled() && steps.schema-tooling.outcome == 'success' }}
+        run: make check-opportunity-schema
 
       - name: Build package
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
