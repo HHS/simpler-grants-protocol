@@ -14,9 +14,10 @@ from .opp_base import CF, OpportunityBase
 class OpportunityDetails(OpportunityBase[CF], Generic[CF]):
     """A funding opportunity with its details, such as the awards it resulted in.
 
-    Generic over the same custom-fields container as ``OpportunityBase``. Core's
-    detail ``competitions`` are not modeled yet, so they are ignored like any other
-    unknown property.
+    Generic over the same custom-fields container as ``OpportunityBase``. This
+    model supports related award references. Core also defines ``competitions``:
+    application processes, often with distinct forms and application periods. This
+    model ignores that field like other unknown properties.
     """
 
     awards: Optional[list[AwdRef]] = Field(
