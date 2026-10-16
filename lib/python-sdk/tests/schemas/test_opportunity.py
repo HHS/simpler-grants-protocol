@@ -7,11 +7,15 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
+from common_grants_sdk import schemas
 from common_grants_sdk.schemas import (
+    AwardBase,
+    AwdRef,
     IdentifierStatus,
     OppIdAln,
     OppIdFon,
     OppIds,
+    OpportunityDetails,
     OrgRef,
     OrgRefCollection,
 )
@@ -29,15 +33,22 @@ from common_grants_sdk.schemas.pydantic.models.opp_status import (
 from common_grants_sdk.schemas.pydantic.models.opp_timeline import OppTimeline
 
 from .opportunity_v05_fixtures import (
+    AWARD_REFS,
+    CLEAN_ENERGY_AWARDS,
+    CLEAN_ENERGY_OPPORTUNITY,
+    CUSTOM_FIELDS,
+    DETAILS,
     FULL_OPPORTUNITY,
     FUNDERS,
     IDENTIFIERS,
     INVALID_ADDITIONS,
+    INVALID_AWARDS,
     NULL_OPTIONAL_ADDITIONS,
     without,
     MINIMAL_OPPORTUNITY,
     OPPORTUNITIES,
     OPPORTUNITY_ID,
+    TypedDetails,
     TypedOpportunity,
     wire,
 )
@@ -470,3 +481,209 @@ def test_non_wire_round_trips_and_instances_read_null_additions_as_omitted():
         wire(OpportunityBase.model_validate(payload))
     )
     assert wire(typed) == payload
+
+
+# ############################################################
+# Opportunity details: related awards
+# ############################################################
+
+
+def test_details_are_public_and_extend_the_base():
+    assert schemas.OpportunityDetails is OpportunityDetails
+    assert issubclass(OpportunityDetails, OpportunityBase)
+    assert issubclass(TypedDetails, OpportunityDetails)
+    assert get_args(OpportunityDetails.model_fields["awards"].annotation) == (
+        list[AwdRef],
+        type(None),
+    )
+
+
+@pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
+@pytest.mark.parametrize("payload", DETAILS.values(), ids=DETAILS.keys())
+def test_detail_fixtures_round_trip_unchanged(model, payload):
+    details = model.model_validate(payload)
+
+    assert wire(details) == payload
+    assert (
+        model.model_validate_json(
+            details.model_dump_json(by_alias=True, exclude_unset=True)
+        )
+        == details
+    )
+
+
+@pytest.mark.parametrize("model", [OpportunityBase, TypedOpportunity])
+def test_base_parsing_drops_detail_awards(model):
+    opportunity = model.model_validate(CLEAN_ENERGY_OPPORTUNITY)
+
+    assert not isinstance(opportunity, OpportunityDetails)
+    assert "awards" not in wire(opportunity)
+    assert not hasattr(opportunity, "awards")
+
+
+def test_awards_parse_into_award_references():
+    details = OpportunityDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY)
+
+    assert details.awards is not None
+    assert all(isinstance(ref, AwdRef) for ref in details.awards)
+    assert [ref.id for ref in details.awards] == [UUID(ref["id"]) for ref in AWARD_REFS]
+    first = details.awards[0]
+    assert first.title == "Clean Energy Innovation Demonstration Award"
+    assert first.identifiers is not None
+    assert first.identifiers.awd_us_fain is not None
+    assert first.identifiers.awd_us_fain.id == "DE0000101"
+
+
+def test_omitted_and_empty_awards_stay_distinct():
+    omitted = OpportunityDetails.model_validate(DETAILS["omitted awards"])
+    empty = OpportunityDetails.model_validate(DETAILS["empty awards"])
+
+    assert omitted.awards is None
+    assert "awards" not in omitted.model_fields_set
+    assert "awards" not in wire(omitted)
+    assert empty.awards == []
+    assert "awards" in empty.model_fields_set
+    assert wire(empty)["awards"] == []
+
+
+@pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
+def test_explicit_null_awards_are_rejected(model):
+    snake = _snake_case(CLEAN_ENERGY_OPPORTUNITY)
+    for payload in (INVALID_AWARDS["null awards"], {**snake, "awards": None}):
+        with pytest.raises(ValidationError, match="must be omitted, not null"):
+            model.model_validate(payload)
+    with pytest.raises(ValidationError, match="must be omitted, not null"):
+        model(**snake, awards=None)
+
+
+@pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
+@pytest.mark.parametrize("payload", INVALID_AWARDS.values(), ids=INVALID_AWARDS.keys())
+def test_invalid_awards_are_rejected(model, payload):
+    with pytest.raises(ValidationError):
+        model.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "field", ["funding", "keyDates", "source", "customFields", "acceptedApplicantTypes"]
+)
+def test_details_keep_accepting_null_for_existing_optional_fields(field):
+    details = OpportunityDetails.model_validate(
+        {**CLEAN_ENERGY_OPPORTUNITY, field: None}
+    )
+
+    assert wire(details)[field] is None
+
+
+def test_details_keep_the_scoped_v05_null_checks():
+    for field in ("identifiers", "funders"):
+        with pytest.raises(ValidationError, match="must be omitted, not null"):
+            OpportunityDetails.model_validate({**CLEAN_ENERGY_OPPORTUNITY, field: None})
+
+
+def test_typed_details_keep_custom_fields_and_null_values():
+    payload = {
+        **DETAILS["custom fields with awards"],
+        "customFields": {
+            **CUSTOM_FIELDS,
+            "vendorPayload": {
+                "name": "vendorPayload",
+                "fieldType": "object",
+                "value": {"tier": 2},
+            },
+        },
+    }
+    details = TypedDetails.model_validate(payload)
+
+    assert details.custom_fields is not None
+    assert details.custom_fields.priority_score is not None
+    assert details.custom_fields.priority_score.value == 7
+    assert details.get_custom_field_value("vendorPayload", dict) == {"tier": 2}
+    assert details.awards is not None and len(details.awards) == 2
+    data = wire(details)
+    assert data["customFields"]["reviewNote"]["value"] is None
+    assert data == payload
+
+
+def test_bare_details_keep_the_untyped_custom_field_map():
+    details = OpportunityDetails.model_validate(DETAILS["custom fields with awards"])
+
+    assert isinstance(details.custom_fields, dict)
+    assert details.custom_fields["priorityScore"].value == 7
+    assert details.custom_fields["reviewNote"].value is None
+
+
+def test_award_references_resolve_to_their_paired_award_records():
+    details = OpportunityDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY)
+    awards = {
+        award.id: award for award in map(AwardBase.model_validate, CLEAN_ENERGY_AWARDS)
+    }
+
+    assert details.awards is not None
+    assert {ref.id for ref in details.awards} == set(awards)
+    for ref in details.awards:
+        award = awards[ref.id]
+        assert award.opportunity is not None
+        assert award.opportunity.id == details.id
+        assert award.opportunity.title == details.title
+        assert wire(ref) == {
+            "id": str(award.id),
+            "title": award.title,
+            "identifiers": wire(award.identifiers),
+        }
+    amendment = awards[UUID(AWARD_REFS[1]["id"])]
+    assert amendment.parent is not None
+    assert wire(amendment.parent) == AWARD_REFS[0]
+
+
+def test_details_convert_to_other_models_through_the_wire_recipe():
+    details = TypedDetails.model_validate(DETAILS["omitted awards"])
+
+    with pytest.raises(ValidationError, match="must be omitted, not null"):
+        TypedOpportunity.model_validate(details)
+    base = TypedOpportunity.model_validate(wire(details))
+    assert type(base) is TypedOpportunity
+    assert wire(base) == wire(details)
+    populated = TypedDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY)
+    assert "awards" not in wire(TypedOpportunity.model_validate(wire(populated)))
+
+
+def test_details_accept_runtime_custom_fields():
+    from common_grants_sdk.extensions.specs import CustomFieldSpec
+    from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
+
+    model = OpportunityDetails.with_custom_fields(
+        custom_fields={
+            "priorityScore": CustomFieldSpec(
+                field_type=CustomFieldType.INTEGER, value=int
+            )
+        },
+        model_name="ScoredDetails",
+    )
+    details = model.model_validate(DETAILS["custom fields with awards"])
+
+    assert isinstance(details, OpportunityDetails)
+    assert details.custom_fields.priority_score.value == 7
+    assert details.awards is not None and len(details.awards) == 2
+    assert wire(details) == DETAILS["custom fields with awards"]
+
+
+@pytest.mark.parametrize(
+    "target", [OpportunityDetails, TypedDetails], ids=["bare", "typed"]
+)
+@pytest.mark.parametrize(
+    "source",
+    [
+        lambda: OpportunityBase.model_validate(MINIMAL_OPPORTUNITY),
+        lambda: TypedOpportunity.model_validate(
+            OPPORTUNITIES["custom fields with both additions"]
+        ),
+        lambda: OpportunityDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY),
+    ],
+    ids=["base", "typed base", "details"],
+)
+def test_details_validate_opportunity_instances_keeping_omissions(target, source):
+    opportunity = source()
+    details = target.model_validate(opportunity)
+
+    assert isinstance(details, target)
+    assert wire(details) == wire(opportunity)

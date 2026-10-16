@@ -1,7 +1,8 @@
 """Opportunity v0.5 wire fixtures, shared by the opportunity tests and the schema check.
 
 ``cases()`` turns them into cases for ``scripts/check-award-fixtures.mjs`` (it
-dispatches by schema ``$id``, so it checks ``OpportunityBase.yaml`` as well): every
+dispatches by schema ``$id``, so it checks ``OpportunityBase.yaml``,
+``OpportunityDetails.yaml`` and the related ``AwardBase.yaml`` records too): every
 valid case is the JSON a Python model actually serialized with the wire recipe,
 never the input payload, and the invalid controls are hand-written JSON the oracle
 must reject.
@@ -21,7 +22,13 @@ from typing import Any, Optional
 from pydantic import BaseModel
 
 from common_grants_sdk.extensions import CustomField, CustomFieldSet
-from common_grants_sdk.schemas import OppIds, OpportunityBase, OrgRefCollection
+from common_grants_sdk.schemas import (
+    AwardBase,
+    OppIds,
+    OpportunityBase,
+    OpportunityDetails,
+    OrgRefCollection,
+)
 
 
 class OpportunityFields(CustomFieldSet):
@@ -31,6 +38,7 @@ class OpportunityFields(CustomFieldSet):
 
 
 TypedOpportunity = OpportunityBase[OpportunityFields]
+TypedDetails = OpportunityDetails[OpportunityFields]
 
 
 def wire(model: BaseModel) -> Any:
@@ -234,6 +242,213 @@ NULL_OPTIONAL_ADDITIONS: dict[str, tuple[str, ...]] = {
 }
 
 
+# ############################################################
+# Opportunity details: related awards
+# ############################################################
+
+# The website mock's Clean Energy Innovation opportunity (fixtures.ts) and the two
+# awards it publishes, the base award and its amendment (award-refs.ts). Each kept
+# field is copied exactly as the v0.5 detail route serves it. keyDates is left out
+# because its plain closeDate.time is the #1319 schema discrepancy, competitions is
+# out of scope, and funding and acceptedApplicantTypes are trimmed.
+CLEAN_ENERGY_OPPORTUNITY_ID = "4c5d6e7f-8091-42a3-9d4e-5f6a7b8c9d0e"
+
+AWARD_REFS: list[dict[str, Any]] = [
+    {
+        "id": "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+        "title": "Clean Energy Innovation Demonstration Award",
+        "identifiers": {
+            "systemId": {
+                "registry": {"code": "awd:grants.gov:system"},
+                "id": "01912a8b-7c3d-7894-abcd-ef1234567892",
+            },
+            "awd:us:fain": {
+                "registry": {
+                    "code": "awd:us:fain",
+                    "url": "https://commongrants.org/registries/awd-us-fain",
+                },
+                "id": "DE0000101",
+            },
+        },
+    },
+    {
+        "id": "dd4e5f60-7182-4394-8d0e-1f2031425365",
+        "title": "Clean Energy Innovation Demonstration Award — Amendment 1",
+        "identifiers": {
+            "systemId": {
+                "registry": {"code": "awd:grants.gov:system"},
+                "id": "01912a8b-7c3d-7894-abcd-ef1234567895",
+            },
+            "awd:us:fain": {
+                "registry": {
+                    "code": "awd:us:fain",
+                    "url": "https://commongrants.org/registries/awd-us-fain",
+                },
+                "id": "DE0000101-A1",
+            },
+        },
+    },
+]
+
+CLEAN_ENERGY_OPPORTUNITY: dict[str, Any] = {
+    "id": CLEAN_ENERGY_OPPORTUNITY_ID,
+    "title": "Clean Energy Innovation",
+    "funders": {
+        "primary": {
+            "id": "018f2e77-5c6d-7e3f-8a4b-cdef12345678",
+            "name": "National Science Foundation",
+            "identifiers": {
+                "otherIds": {
+                    "org:grants.gov:agency": {
+                        "registry": {"code": "org:grants.gov:agency"},
+                        "id": "NSF",
+                    }
+                }
+            },
+        }
+    },
+    "status": {"value": "open", "description": "Currently accepting applications"},
+    "description": "Supporting research and deployment of clean energy technologies.",
+    "awards": AWARD_REFS,
+    "createdAt": "2025-03-01T00:00:00Z",
+    "lastModifiedAt": "2025-03-12T00:00:00Z",
+}
+
+# The two award records those references point at, as the v0.5 award route serves
+# them, trimmed to the preview fields, the opportunity backlink, and the
+# amendment's parent. Literal copies, so a drift from the references shows up.
+CLEAN_ENERGY_AWARDS: list[dict[str, Any]] = [
+    {
+        "id": "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+        "title": "Clean Energy Innovation Demonstration Award",
+        "identifiers": {
+            "systemId": {
+                "registry": {"code": "awd:grants.gov:system"},
+                "id": "01912a8b-7c3d-7894-abcd-ef1234567892",
+            },
+            "awd:us:fain": {
+                "registry": {
+                    "code": "awd:us:fain",
+                    "url": "https://commongrants.org/registries/awd-us-fain",
+                },
+                "id": "DE0000101",
+            },
+        },
+        "description": (
+            "Supports a pilot-scale demonstration of a long-duration storage system."
+        ),
+        "status": {
+            "value": "awarded",
+            "description": "Award has been issued and funds are being disbursed.",
+        },
+        "opportunity": {
+            "id": CLEAN_ENERGY_OPPORTUNITY_ID,
+            "title": "Clean Energy Innovation",
+        },
+        "createdAt": "2026-06-10T00:00:00Z",
+        "lastModifiedAt": "2026-06-25T00:00:00Z",
+    },
+    {
+        "id": "dd4e5f60-7182-4394-8d0e-1f2031425365",
+        "title": "Clean Energy Innovation Demonstration Award — Amendment 1",
+        "identifiers": {
+            "systemId": {
+                "registry": {"code": "awd:grants.gov:system"},
+                "id": "01912a8b-7c3d-7894-abcd-ef1234567895",
+            },
+            "awd:us:fain": {
+                "registry": {
+                    "code": "awd:us:fain",
+                    "url": "https://commongrants.org/registries/awd-us-fain",
+                },
+                "id": "DE0000101-A1",
+            },
+        },
+        "description": (
+            "Adds scope for grid-interconnection studies to the base demonstration "
+            "award."
+        ),
+        "status": {
+            "value": "awarded",
+            "description": "Award has been issued and funds are being disbursed.",
+        },
+        "opportunity": {
+            "id": CLEAN_ENERGY_OPPORTUNITY_ID,
+            "title": "Clean Energy Innovation",
+        },
+        "parent": {
+            "id": "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+            "title": "Clean Energy Innovation Demonstration Award",
+            "identifiers": {
+                "systemId": {
+                    "registry": {"code": "awd:grants.gov:system"},
+                    "id": "01912a8b-7c3d-7894-abcd-ef1234567892",
+                },
+                "awd:us:fain": {
+                    "registry": {
+                        "code": "awd:us:fain",
+                        "url": "https://commongrants.org/registries/awd-us-fain",
+                    },
+                    "id": "DE0000101",
+                },
+            },
+        },
+        "createdAt": "2026-06-20T00:00:00Z",
+        "lastModifiedAt": "2026-06-21T00:00:00Z",
+    },
+]
+
+# Detail payloads keyed by fixture name; each must parse and round-trip unchanged.
+DETAILS: dict[str, dict[str, Any]] = {
+    "omitted awards": without(CLEAN_ENERGY_OPPORTUNITY, ("awards",)),
+    "empty awards": {**CLEAN_ENERGY_OPPORTUNITY, "awards": []},
+    "one award": {**CLEAN_ENERGY_OPPORTUNITY, "awards": AWARD_REFS[:1]},
+    "base and amended awards": CLEAN_ENERGY_OPPORTUNITY,
+    "award without identifiers": {
+        **CLEAN_ENERGY_OPPORTUNITY,
+        "awards": [{"id": AWARD_REFS[0]["id"], "title": AWARD_REFS[0]["title"]}],
+    },
+    "custom fields with awards": {
+        **CLEAN_ENERGY_OPPORTUNITY,
+        "identifiers": IDENTIFIERS,
+        "customFields": CUSTOM_FIELDS,
+    },
+}
+
+# Wire JSON that violates the emitted contract for awards. The Python models and
+# the emitted schemas must each reject every one independently.
+INVALID_AWARDS: dict[str, dict[str, Any]] = {
+    "null awards": {**CLEAN_ENERGY_OPPORTUNITY, "awards": None},
+    "awards as an object": {**CLEAN_ENERGY_OPPORTUNITY, "awards": AWARD_REFS[0]},
+    "awards as a string": {**CLEAN_ENERGY_OPPORTUNITY, "awards": "none"},
+    "null award entry": with_value(CLEAN_ENERGY_OPPORTUNITY, ("awards", 1), None),
+    "award missing id": without(CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "id")),
+    "award missing title": without(CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "title")),
+    "malformed award UUID": with_value(
+        CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "id"), "not-a-uuid"
+    ),
+    "non-string award title": with_value(
+        CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "title"), 101
+    ),
+    "null award identifiers": with_value(
+        CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "identifiers"), None
+    ),
+    "wrong FAIN registry code": with_value(
+        CLEAN_ENERGY_OPPORTUNITY,
+        ("awards", 0, "identifiers", "awd:us:fain", "registry", "code"),
+        "awd:us:other",
+    ),
+    "extra award property": with_value(
+        CLEAN_ENERGY_OPPORTUNITY, ("awards", 0, "awardedAmount"), "480000.00"
+    ),
+    "extra FAIN identifier property": with_value(
+        CLEAN_ENERGY_OPPORTUNITY,
+        ("awards", 0, "identifiers", "awd:us:fain", "label"),
+        "FAIN",
+    ),
+}
+
+
 def cases() -> list[dict[str, Any]]:
     """Oracle cases built from what the Python models serialize."""
     out: list[dict[str, Any]] = []
@@ -270,6 +485,28 @@ def cases() -> list[dict[str, Any]]:
     )
     for name, payload in INVALID_ADDITIONS.items():
         case(f"control: {name}", "OpportunityBase.yaml", payload, "invalid")
+    for name, payload in DETAILS.items():
+        case(
+            f"details: {name}",
+            "OpportunityDetails.yaml",
+            wire(OpportunityDetails.model_validate(payload)),
+            "valid",
+        )
+        case(
+            f"typed details: {name}",
+            "OpportunityDetails.yaml",
+            wire(TypedDetails.model_validate(payload)),
+            "valid",
+        )
+    for award in CLEAN_ENERGY_AWARDS:
+        case(
+            f"related award: {award['title']}",
+            "AwardBase.yaml",
+            wire(AwardBase.model_validate(award)),
+            "valid",
+        )
+    for name, payload in INVALID_AWARDS.items():
+        case(f"details control: {name}", "OpportunityDetails.yaml", payload, "invalid")
     return out
 
 
