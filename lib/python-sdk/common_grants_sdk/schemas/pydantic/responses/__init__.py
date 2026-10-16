@@ -1,5 +1,11 @@
 """Response schemas for the CommonGrants API."""
 
+from .award import (
+    AwardResponse,
+    AwardsFilteredResponse,
+    AwardsListResponse,
+    AwardsSortedResponse,
+)
 from .base import DefaultResponse
 from .error import Error
 from .opportunity import (
@@ -16,6 +22,10 @@ from .success import (
 )
 
 __all__ = [
+    "AwardResponse",
+    "AwardsFilteredResponse",
+    "AwardsListResponse",
+    "AwardsSortedResponse",
     "DefaultResponse",
     "Error",
     "Filtered",

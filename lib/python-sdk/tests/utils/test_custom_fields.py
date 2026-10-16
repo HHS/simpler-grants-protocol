@@ -775,3 +775,40 @@ def test_get_custom_field_value_resolves_an_explicit_alias():
     assert opp.get_custom_field_value("programCode", str) == "P-1"
     assert opp.get_custom_field_value("program", str) == "P-1"
     assert opp.get_custom_field_value("program_code", str) == "unregistered"
+
+
+class _InheritedTypedFields(_TypedFields):
+    """A subclassed container still applies the base's registered-entry rules."""
+
+
+NULL_CHECKED_CONTAINERS: dict[str, Any] = {
+    **REGISTERED_CONTAINERS,
+    "inherited CustomFieldSet": OpportunityBase[_InheritedTypedFields],
+}
+
+
+@pytest.mark.parametrize(
+    "model", NULL_CHECKED_CONTAINERS.values(), ids=NULL_CHECKED_CONTAINERS.keys()
+)
+@pytest.mark.parametrize("key", ["legacyId", "legacy_id"])
+def test_explicit_null_registered_entry_is_rejected(model, key):
+    """A registered entry may be omitted, but Core custom-field maps hold no nulls."""
+    payload = {**WIRE_OPP, "customFields": {key: None, **UNREGISTERED_ENTRIES}}
+
+    with pytest.raises(ValidationError) as exc_info:
+        model.model_validate(payload)
+
+    assert [err["loc"][:2] for err in exc_info.value.errors()] == [
+        ("customFields", key)
+    ]
+
+
+@pytest.mark.parametrize(
+    "model", NULL_CHECKED_CONTAINERS.values(), ids=NULL_CHECKED_CONTAINERS.keys()
+)
+def test_omitted_registered_entry_stays_omitted(model):
+    opp = model.model_validate({**WIRE_OPP, "customFields": UNREGISTERED_ENTRIES})
+
+    assert opp.custom_fields.legacy_id is None
+    wire = opp.model_dump(mode="json", by_alias=True, exclude_unset=True)
+    assert wire["customFields"] == UNREGISTERED_ENTRIES
