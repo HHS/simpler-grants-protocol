@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, cast
+import functools
+import types
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, cast, overload
 from uuid import UUID
 
 import typing_extensions as te
 
 from ..extensions.filters import classify_filters
 from ..extensions.types import FilterError, FiltersT
-from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.models import OpportunityBase, OpportunityDetails
 from ..schemas.pydantic.models.opp_status import OppStatusOptions
 from ..schemas.pydantic.requests.opportunity import OpportunitySearchRequest
 from ..schemas.pydantic.responses.success import FilterInfo
@@ -23,6 +25,37 @@ if TYPE_CHECKING:
 ItemT = te.TypeVar(
     "ItemT", bound="OpportunityBase[Any]", default="OpportunityBase[Any]"
 )
+SchemaT = te.TypeVar("SchemaT", bound="OpportunityBase[Any]")
+DetailCF = te.TypeVar("DetailCF")
+
+
+@functools.cache
+def _details_model(bound: type[OpportunityBase]) -> type[OpportunityDetails]:
+    """The detail model ``get`` parses into by default for a bound collection model.
+
+    Subclasses the bound model first, so its custom fields, validators and config
+    win, and the detail model second, which adds ``awards``: ``OpportunityDetails[CF]``
+    for a registered ``OpportunityBase[CF]``, so the result is that advertised type.
+    Registered classes are never modified; each bound model maps to one cached
+    subclass.
+    """
+    if issubclass(bound, OpportunityDetails):
+        return bound
+    if bound is OpportunityBase:
+        return OpportunityDetails
+    meta = bound.__pydantic_generic_metadata__
+    details = (
+        OpportunityDetails[meta["args"][0]]
+        if meta["origin"] is OpportunityBase
+        else OpportunityDetails
+    )
+    return types.new_class(
+        f"{bound.__name__}Details",
+        (bound, details),
+        exec_body=lambda ns: ns.update(
+            __module__=bound.__module__, model_config=bound.model_config
+        ),
+    )
 
 
 class Opportunities(Generic[FiltersT, ItemT]):
@@ -30,7 +63,8 @@ class Opportunities(Generic[FiltersT, ItemT]):
 
     Bound (via ``plugin.get_client``) to a plugin's registered filter TypedDict
     (``FiltersT``) and Opportunity schema (``ItemT``): ``search(filters=...)`` is
-    typed by the registered filters, and responses parse into ``ItemT`` by default.
+    typed by the registered filters. ``list`` and ``search`` parse into ``ItemT`` by
+    default, and ``get`` into its detail form (``OpportunityDetails``).
     """
 
     def __init__(self, client: "Client[FiltersT, ItemT]"):
@@ -83,27 +117,53 @@ class Opportunities(Generic[FiltersT, ItemT]):
             pagination_info=paginated.pagination_info,
         )
 
+    @overload
+    def get(self, opp_id: str | UUID, schema: type[SchemaT]) -> SchemaT: ...
+
+    @overload
+    def get(
+        self: "Opportunities[Any, OpportunityBase[DetailCF]]",
+        opp_id: str | UUID,
+        schema: None = None,
+    ) -> OpportunityDetails[DetailCF]: ...
+
+    # Fallback for an item type the overload above cannot capture a CF from.
+    # It must match that overload's return for OpportunityBase[Any] (the bare
+    # client), or pyright resolves the ambiguous call to Any.
+    @overload
+    def get(
+        self, opp_id: str | UUID, schema: None = None
+    ) -> OpportunityDetails[Any]: ...
+
     def get(
         self,
         opp_id: str | UUID,
         schema: Optional[type[OpportunityBase]] = None,
-    ) -> ItemT:
-        """Get a specific opportunity by ID.
+    ) -> Any:
+        """Get a specific opportunity by ID, with its details.
 
         Args:
             opp_id: The opportunity ID
-            schema: Per-call parse-schema override; defaults to the plugin's
-                Opportunity schema (or ``OpportunityBase`` when unbound).
+            schema: Per-call parse-schema override, used exactly as given. Without
+                one, the response parses into the detail form of the plugin's
+                Opportunity schema (or ``OpportunityDetails`` when unbound), which
+                adds ``awards`` and keeps the plugin's custom fields.
 
         Returns:
-            The parsed opportunity (``ItemT``).
+            The parsed opportunity: ``OpportunityDetails[CF]`` for a plugin
+            registering ``OpportunityBase[CF]``, else the ``schema`` type.
 
         Raises:
             APIError: If the API request fails
+            ValidationError: If the response does not match the schema
         """
-        resolved = self._schema(schema)
+        resolved = (
+            schema
+            if schema is not None
+            else _details_model(self.client._opportunity_schema)
+        )
         success_response = self.client.get_item(self.path, opp_id)
-        return cast("ItemT", resolved.model_validate(success_response.data))
+        return resolved.model_validate(success_response.data)
 
     def search(
         self,

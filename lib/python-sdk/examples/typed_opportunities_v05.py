@@ -39,6 +39,7 @@ from common_grants_sdk.schemas import (
     OppStatusOptions,
     OpportunitiesListResponse,
     OpportunityBase,
+    OpportunityDetails,
     OpportunityResponse,
     OrgRef,
     OrgRefCollection,
@@ -146,11 +147,14 @@ def plugin_parse(data: dict[str, Any]) -> None:
 
 
 def bare_responses(data: dict[str, Any]) -> None:
-    """Bare responses carry both fields with the untyped custom-field map."""
+    """Bare responses carry both fields with the untyped custom-field map.
+
+    The single-opportunity envelope parses the detail form (``awards`` added).
+    """
     got = OpportunityResponse.model_validate(
         {"status": 200, "message": "Success", "data": data}
     )
-    assert_type(got.data, OpportunityBase)
+    assert_type(got.data, OpportunityDetails)
     assert funder_names(got.data) == ["Primary agency", "Partner agency"]
     listed = OpportunitiesListResponse.model_validate(
         {

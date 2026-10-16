@@ -10,6 +10,7 @@ The `common_grants_sdk.schemas.pydantic` module provides [Pydantic v2](https://d
   - [Type safety](#type-safety)
   - [Generic response schemas](#generic-response-schemas)
 - [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)
+- [Opportunity details and related awards](#opportunity-details-and-related-awards)
 - [Awards](#awards)
   - [Typed recipient custom fields](#typed-recipient-custom-fields)
   - [Award routes, filters and sorting](#award-routes-filters-and-sorting)
@@ -228,6 +229,41 @@ Serialize with the explicit wire recipe in [Serializing to the wire](#serializin
 
 Typed custom fields work as before (`OpportunityBase[OpportunityFields]`, `schema()`, `PluginSchemas`, `with_custom_fields()`), and both fields survive the opportunity get, list and search responses. [`examples/typed_opportunities_v05.py`](../../examples/typed_opportunities_v05.py) shows the plugin parse path, checked by pyright.
 
+## Opportunity details and related awards
+
+`OpportunityDetails[CF]` is `OpportunityBase[CF]` plus the detail-only `awards`: the awards that resulted from the opportunity, as `AwdRef` references (`id`, `title`, optional `identifiers`). It takes the same custom-fields parameter, so bare `OpportunityDetails` keeps the untyped `dict[str, CustomField]` map and `OpportunityDetails[OpportunityFields]` keeps typed access. `client.opportunities.get` parses into it by default, while list and search items stay `OpportunityBase` (see the [client README](../client/README.md#get-a-single-opportunity)). `OpportunityResponse.data` is `OpportunityDetails`; the list and search responses keep `OpportunityBase` items.
+
+```python
+from common_grants_sdk.schemas import OpportunityDetails
+
+detail = OpportunityDetails.model_validate({
+    "id": "4c5d6e7f-8091-42a3-9d4e-5f6a7b8c9d0e",
+    "title": "Clean Energy Innovation",
+    "description": "Supporting research and deployment of clean energy technologies.",
+    "status": {"value": "open"},
+    "createdAt": "2025-03-01T00:00:00Z",
+    "lastModifiedAt": "2025-03-12T00:00:00Z",
+    "awards": [
+        {
+            "id": "aa1b2c3d-4e5f-4061-8a7b-8c9d0e1f2032",
+            "title": "Clean Energy Innovation Demonstration Award",
+            "identifiers": {"awd:us:fain": {"id": "DE0000101"}},
+        }
+    ],
+})
+
+for award_ref in detail.awards or []:
+    print(award_ref.id, award_ref.title)
+```
+
+- **Omitted, empty and `null`.** An absent `awards` means the publisher does not publish the link for this record: it reads as `None` and stays out of the wire dump. `[]` means the link is published and no awards are known. An explicit `null` raises `optional property must be omitted, not null`, and a malformed entry raises the usual `AwdRef` validation error. Entries carry no ordering guarantee.
+- **A reference, not the record.** Where an implementation serves the award routes, `GET /awards/{awdId}` returns the canonical award; otherwise the reference's `identifiers`, when supplied, are the key for joining it to another system. Don't assume a reference can be fetched through the same API.
+- **Scope.** Only `awards` rejects `null`; inherited fields follow the [base rules](#opportunity-identifiers-and-funders). Core's detail `competitions` is not modeled yet and is ignored like any other unknown property.
+- **From an opportunity model.** A valid base record is a valid detail record, so `OpportunityDetails` (any parametrization) validates an `OpportunityBase` or other opportunity instance through the wire recipe: unset properties stay omitted, and anything the instance supplies, `awards` included, is still validated. A server can therefore keep building the get envelope from the model it has, `OpportunityResponse(status=200, message="Success", data=opportunity)`; `data` is always `OpportunityDetails`.
+- **Wire conversion.** Serialize with the wire recipe, `model_dump(mode="json", by_alias=True, exclude_unset=True)`, so an omitted `awards` stays omitted and an empty one stays empty. Don't use `exclude_none`, which also drops valid `null` custom-field values. Converting a detail into a *base* model has the same limitation as any opportunity: an unset `identifiers` or `funders` reads as `None` and fails, so validate the wire dump rather than the instance. `TypedOpportunity.model_validate(wire_dump)` gives back the base model without `awards`, because base models ignore unknown properties. Mapping-built `from_common` transforms read a dict, so pass them the wire dump too.
+
+[`examples/typed_opportunity_details.py`](../../examples/typed_opportunity_details.py) runs the client path end to end against a mock transport, checked by pyright.
+
 ## Awards
 
 The award models cover everything Core v0.5 `AwardBase` reaches, plus the award route request, response, filter and sorting models. Everything is importable from `common_grants_sdk.schemas` (or `common_grants_sdk.schemas.pydantic` and its category modules):
@@ -427,6 +463,7 @@ These shared models now follow Core more closely. Opportunities and plugins that
 | Class | Description |
 |---|---|
 | `OpportunityBase[CF]` | Core opportunity model, generic over its custom-fields container; includes `identifiers` (`OppIds`) and `funders` (`OrgRefCollection`) (see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)) |
+| `OpportunityDetails[CF]` | `OpportunityBase[CF]` plus `awards` (`list[AwdRef]`), returned by `client.opportunities.get` (see [Opportunity details and related awards](#opportunity-details-and-related-awards)) |
 | `OppFunding` | Funding details: total amount available, min/max award, estimated award count |
 | `OppStatus` | Opportunity status with `value`, optional `custom_value` (alias `customValue`, used when `value` is `CUSTOM`), and optional `description` |
 | `OppTimeline` | Key dates: `app_opens`, `app_deadline`, and other milestones |
@@ -449,7 +486,7 @@ These shared models now follow Core more closely. Opportunities and plugins that
 | `Sorted[T]` | Paginated list with additional `sort_info` |
 | `Filtered[T, F]` | Sorted list with additional `filter_info` |
 | `FilterInfo[T]` | Filter metadata: `filters` and optional `errors` list |
-| `OpportunityResponse` | Typed success response wrapping a single `OpportunityBase` |
+| `OpportunityResponse` | Typed success response wrapping a single `OpportunityDetails` |
 | `OpportunitiesListResponse` | Typed `Paginated` response for opportunity listings |
 | `OpportunitiesSearchResponse` | Typed `Filtered` response for opportunity search results |
 | `AwardResponse[T]` | `GET /awards/{awdId}` success response; `T` defaults to `AwardBase` |
