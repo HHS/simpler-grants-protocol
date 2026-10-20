@@ -313,13 +313,15 @@ award.model_dump(mode="json", by_alias=True, exclude_unset=True)
 ```
 
 - `by_alias=True` writes the camelCase and registry-code keys (`recipientIndividual`, `org:us:ein`).
-- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol, and these models, reject. Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
+- `exclude_unset=True` keeps defaulted properties (such as a page size) out of the output. No dump writes `null` for an optional property, with or without it: an optional property that is `None`, set or not, is left out. Don't use `exclude_none=True`: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
 
-The base-model convenience methods `dump()` and `dump_json()` use neither flag, so they are not wire serializers.
+The base-model convenience methods `dump()` and `dump_json()` write no `null` optional properties either, but they use field names (`created_at`), so they are not wire serializers.
+
+Validating one SDK model's instance into another model, such as a bare award into a typed one (`AwardBase[AwdRecipientIndividual[RecipientFields]].model_validate(award)`), reads it through the wire recipe above, so its unset properties stay unset.
 
 ### Validation rules shared with awards
 
-**Optional is not nullable.** Core optional properties may be omitted but never sent as `null`. An explicit `null`, whether from JSON, a snake_case key or a constructor keyword (`SingleDateEvent(..., description=None)`), raises a `ValidationError`; leave the property out instead. A custom field's `value` is the exception: it is required, and `null` is a valid value (unless you type it, e.g. `CustomField[int]`). A declared `CustomFieldSet` entry may be omitted but not `null`.
+**Optional is not nullable.** Core optional properties may be omitted but never sent as `null`. An explicit `null`, whether from JSON, a snake_case key or a constructor keyword (`OrgRef(..., identifiers=None)`), raises a `ValidationError`; leave the property out instead. Like the TypeScript SDK, an event's `description`, `time`, `startTime`, `endTime` and `details`, and a custom field's `schema` and `description`, accept `null` and read it as omitted. No model writes `null` for an optional property. A custom field's `value` is the exception: it is required, and `null` is a valid value that is always written (unless you type it, e.g. `CustomField[int]`). A declared `CustomFieldSet` entry may be omitted but not `null`.
 
 **Closed objects reject unknown properties.** Where Core seals an object, an unknown property raises a `ValidationError` instead of being dropped. That covers every award model, `Event`, `CustomField`, `Money` and `SystemMetadata`. Maps stay open: custom-field maps, `other_dates`, `other_orgs`, `other_ids`, `custom_filters`, the root of `AwdDefaultFilters` and the generic `IdentifierCollection`. `OpportunityBase` still ignores unknown properties at its root.
 
@@ -327,7 +329,7 @@ These shared models now follow Core more closely. Opportunities and plugins that
 
 | Type | Behavior |
 |---|---|
-| `Event` (`SingleDateEvent`, `DateRangeEvent`, `OtherEvent`) | `eventType` is always serialized, even when it was defaulted; explicit `null` metadata is rejected; `name` may be empty |
+| `Event` (`SingleDateEvent`, `DateRangeEvent`, `OtherEvent`) | `eventType` is always serialized, even when it was defaulted; explicit `null` metadata reads as omitted and is never written; `name` may be empty |
 | `CustomField` | `schema` accepts any absolute URI (`https`, `ftp`, `urn:`, `mailto:`), not just HTTP URLs; `name` may be empty |
 | `DecimalString` (`Money.amount`) | Matches Core's `^-?[0-9]+\.?[0-9]*$` with ASCII digits: `"1."` is valid, `".5"` is not. Like any Python regex, `$` also accepts one trailing newline, which the JSON Schema pattern does not. |
 | `UTCDateTime` (`created_at`, `last_modified_at`) | Must include a timezone (`Z` or an offset); naive and date-only values are rejected rather than guessed at. Values are normalized to UTC. |

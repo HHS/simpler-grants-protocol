@@ -72,7 +72,7 @@ SORT_INFO = {"sortBy": "lastModifiedAt", "sortOrder": "desc"}
 
 
 def wire(model: Any) -> dict[str, Any]:
-    """The wire recipe: camelCase keys, unset properties omitted, explicit nulls kept."""
+    """The wire recipe: camelCase keys, unset properties omitted."""
     return model.model_dump(mode="json", by_alias=True, exclude_unset=True)
 
 

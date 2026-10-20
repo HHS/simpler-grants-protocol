@@ -136,12 +136,12 @@ Custom-field keys are camelCase on the wire and snake_case in Python: a `CustomF
 
 ### Unregistered custom fields
 
-Both options keep the entries they don't declare. Unregistered entries land in `custom_fields.model_extra`, keyed exactly as on the wire: neither camelCased nor snake_cased, and with their nested `value` untouched. They serialize back out unchanged, so a parse → `model_dump_json(by_alias=True, exclude_unset=True)` → parse round trip preserves them. Keep `exclude_unset=True`: without it, unset optional properties are written as `null`, which Core rejects (see [Serializing to the wire](../schemas/README.md#serializing-to-the-wire)).
+Both options keep the entries they don't declare. Unregistered entries land in `custom_fields.model_extra`, keyed exactly as on the wire: neither camelCased nor snake_cased, and with their nested `value` untouched. They serialize back out unchanged, so a parse → `model_dump_json(by_alias=True)` → parse round trip preserves them. Unset declared entries are left out of every dump, never written as `null` (see [Serializing to the wire](../schemas/README.md#serializing-to-the-wire)).
 
 Each unregistered entry is validated as the base `CustomField`, so it must carry its own complete envelope:
 
 - `name`, `fieldType` (one of the six field types), and `value` are required. The map key is never used as a missing `name`.
-- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URI or a `null` `schema` or `description`.
+- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URI. A `null` `schema` or `description` reads as omitted.
 - Its `value` is untyped (`Any`); only registered fields get a typed value. Use [`get_custom_field_value()`](#extracting-custom-field-values) for typed access.
 
 This is not a general passthrough. Unknown top-level keys on the opportunity are still dropped, and an unknown key inside a `CustomField` envelope is rejected. A registered entry may be omitted, but not sent as `null`.
@@ -293,12 +293,12 @@ Mapping dicts are nested objects where keys are either output field names or reg
 
 | Handler          | Spec shape                                                          | Behavior                                                                                                                                       |
 | ---------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `field`          | `{"field": "dot.notation.path"}`                                   | Extracts a value from the source via dot-notation. Terminal `None` is preserved; absent / intermediate-`None` returns `None`. See [Null handling](#null-handling). |
+| `field`          | `{"field": "dot.notation.path"}`                                   | Extracts a value from the source via dot-notation. Terminal `None` is preserved; an absent path (or an intermediate `None`) leaves the output key out. See [Null handling](#null-handling). |
 | `const`          | `{"const": <literal>}`                                             | Returns the literal value, ignoring source data.                                                                                               |
-| `match`          | `{"match": {"field": "...", "case": {...}, "default": "..."}}`     | Case-based lookup on a source field value. `None` source passes through unchanged; opt-in target-side translation via `case: {"null": ...}`.   |
+| `match`          | `{"match": {"field": "...", "case": {...}, "default": "..."}}`     | Case-based lookup on a source field value. An absent source maps to `default`, or leaves the key out without one. `None` source passes through unchanged; opt-in target-side translation via `case: {"null": ...}`. |
 | `switch`         | Same as `match`                                                     | Convenience alias for `match` — both point at the same handler function.                                                                       |
-| `numberToString` | `{"numberToString": "dot.notation.path"}`                          | Extracts a value and coerces to string. Returns `None` on `None` source ("doesn't apply"); absent → `None`.                                   |
-| `stringToNumber` | `{"stringToNumber": "dot.notation.path"}`                          | Extracts a string and coerces to `int` when possible, falls back to `float`. Returns `None` on `None` source; absent → `None`. Raises on non-numeric input. |
+| `numberToString` | `{"numberToString": "dot.notation.path"}`                          | Extracts a value and coerces to string. Returns `None` on `None` source ("doesn't apply"); an absent path leaves the key out.                  |
+| `stringToNumber` | `{"stringToNumber": "dot.notation.path"}`                          | Extracts a string and coerces to `int` when possible, falls back to `float`. Returns `None` on `None` source; an absent path leaves the key out. Raises on non-numeric input. |
 
 When the source is a real (non-passthrough) model, mapping output keys may use either the model's field names or their camelCase aliases (e.g. `createdAt`). Field paths in `from_common` read from the common model using its camelCase alias names (e.g. `status.value`, `customFields.agencyCode.value`).
 
@@ -324,11 +324,9 @@ Optional values carry three distinct states, each of which should be preserved t
 
 `default` is **not** consulted for `None` source — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from a `None` source to a non-`None` target.
 
-**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `None` for both "not provided" and "doesn't apply" as appropriate — the walker writes `None` returns as a present key, so the output object distinguishes the three states the same way the wire does.
+**For custom-handler authors:** return `None` for "doesn't apply" and a value otherwise. The walker writes a `None` return as a present key.
 
-> **Note:** The coercing handlers (`numberToString`, `stringToNumber`) currently collapse a `None` source into the "not provided" path rather than preserving it as `None`. This is a known divergence; bringing them to full parity is a pending follow-up.
-
-> **Note:** Core's shared field models (events, custom fields, `Money`, and every award model) make optional properties omittable but not nullable, so a `None` written into one of them fails validation of the transform's output. Build those objects without the key, as with any [optional Core property](../schemas/README.md#validation-rules-shared-with-awards).
+> **Note:** Core's shared field models (`Money`, references, identifiers and every award model) make optional properties omittable but not nullable, so a `None` written into one of them fails validation of the transform's output. Map them with the built-in handlers, which leave the key out when the source is absent, or build those objects without the key, as with any [optional Core property](../schemas/README.md#validation-rules-shared-with-awards). Event and custom-field metadata accept `None`, as in the TypeScript SDK. A custom field's required `value` mapped from an absent source is left out too, so validation reports it missing.
 
 ### Custom handlers
 
