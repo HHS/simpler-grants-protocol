@@ -271,6 +271,22 @@ export function validateFilterCall(
   filterName: string,
   filterValue: unknown
 ): FilterError | undefined {
+  const result = parseFilterCall(spec, filterName, filterValue);
+  return result.success ? undefined : result.error;
+}
+
+/**
+ * Validates a single filter value as {@link validateFilterCall} does, and
+ * returns the validated value on success. An ad-hoc filter takes the value
+ * parsed by the first filterType that accepts it.
+ */
+function parseFilterCall(
+  spec: CustomFilterSpec | undefined,
+  filterName: string,
+  filterValue: unknown
+):
+  | { success: true; data: z.infer<typeof DefaultFilterSchema> }
+  | { success: false; error: FilterError } {
   const path = `filters.${filterName}`;
 
   if (spec === undefined) {
@@ -278,49 +294,59 @@ export function validateFilterCall(
     // {operator, value} is well-formed for SOME known filterType. This reuses
     // FILTER_TYPE_SCHEMAS (the single source of truth) rather than a parallel
     // schema, and picks up new filter types automatically.
-    const matchesKnownType = Object.values(FILTER_TYPE_SCHEMAS).some(
-      schema => schema.safeParse(filterValue).success
-    );
-    if (!matchesKnownType) {
-      // Derive a targeted message from the operator rather than surfacing the
-      // combined Zod error across every candidate schema.
-      const operator = (filterValue as { operator?: unknown } | null)?.operator;
-      let detail: string;
-      if (typeof operator !== "string") {
-        detail = "expected a { operator, value } object";
-      } else if (!(operator in AD_HOC_VALUE_EXPECTATION)) {
-        detail = `operator "${operator}" is not a known filter operator`;
-      } else {
-        detail = `operator "${operator}" expects ${AD_HOC_VALUE_EXPECTATION[operator]}`;
+    for (const schema of Object.values(FILTER_TYPE_SCHEMAS)) {
+      const result = schema.safeParse(filterValue);
+      if (result.success) {
+        return { success: true, data: result.data };
       }
-      return new FilterError(
+    }
+
+    // Derive a targeted message from the operator rather than surfacing the
+    // combined Zod error across every candidate schema.
+    const operator = (filterValue as { operator?: unknown } | null)?.operator;
+    let detail: string;
+    if (typeof operator !== "string") {
+      detail = "expected a { operator, value } object";
+    } else if (!(operator in AD_HOC_VALUE_EXPECTATION)) {
+      detail = `operator "${operator}" is not a known filter operator`;
+    } else {
+      detail = `operator "${operator}" expects ${AD_HOC_VALUE_EXPECTATION[operator]}`;
+    }
+    return {
+      success: false,
+      error: new FilterError(
         `Ad-hoc filter "${filterName}" has an invalid operator/value combination: ${detail}`,
         { path, sourceValue: filterValue }
-      );
-    }
-    return undefined;
+      ),
+    };
   }
 
   // Registered filter — validate against the filterType's schema
   const schema = FILTER_TYPE_SCHEMAS[spec.filterType];
   if (!schema) {
     // Should not reach here if validateRoutes was called first, but guard anyway
-    return new FilterError(
-      `Unknown filterType "${spec.filterType}" for registered filter "${filterName}"`,
-      { path, sourceValue: filterValue }
-    );
+    return {
+      success: false,
+      error: new FilterError(
+        `Unknown filterType "${spec.filterType}" for registered filter "${filterName}"`,
+        { path, sourceValue: filterValue }
+      ),
+    };
   }
 
   // One parse validates both the operator enum and the value shape
   const result = schema.safeParse(filterValue);
   if (!result.success) {
-    return new FilterError(
-      `Filter "${filterName}" (filterType: "${spec.filterType}") failed validation: ${result.error.message}`,
-      { path, sourceValue: filterValue }
-    );
+    return {
+      success: false,
+      error: new FilterError(
+        `Filter "${filterName}" (filterType: "${spec.filterType}") failed validation: ${result.error.message}`,
+        { path, sourceValue: filterValue }
+      ),
+    };
   }
 
-  return undefined;
+  return { success: true, data: result.data };
 }
 
 // ############################################################################
@@ -390,15 +416,19 @@ export function classifyFilters(
           }
         );
       }
-      defaultFields[key] = value;
+      // Write the validated value, not the raw one: an explicit `null` the
+      // field accepts parses to `undefined` and stays out of the request body.
+      if (result.data !== undefined) {
+        defaultFields[key] = result.data;
+      }
     } else {
       // Bucket 2 (registered custom) or Bucket 3 (ad-hoc / gov.* namespaced).
       // An invalid value throws — including a malformed ad-hoc shape.
-      const error = validateFilterCall(spec, key, value);
-      if (error) {
-        throw error;
+      const result = parseFilterCall(spec, key, value);
+      if (!result.success) {
+        throw result.error;
       }
-      customFilters[key] = value as z.infer<typeof DefaultFilterSchema>;
+      customFilters[key] = result.data;
     }
   }
 
