@@ -1,8 +1,12 @@
-"""No dump writes null for an optional field; required fields keep theirs."""
+"""No dump writes null for an optional field; required fields keep theirs.
+
+Validating one SDK model's instance into another model reads it through that dump.
+"""
 
 import json
 from typing import Optional
 
+import pytest
 from pydantic import Field
 
 from common_grants_sdk.extensions import CustomFieldSet
@@ -20,6 +24,8 @@ from common_grants_sdk.schemas.pydantic import (
     SortedResultsInfo,
 )
 from common_grants_sdk.utils.custom_fields import create_custom_field_schema
+
+from .award_fixtures import AWARDS, TypedAward, wire
 
 OPP = {
     "id": "01912a8b-7c3d-7894-abcd-ef1234567890",
@@ -145,3 +151,12 @@ def test_request_and_result_info_models_follow_the_rule():
         "pagination": {"page": 1, "pageSize": 10},
     }
     assert "customSortBy" not in sort_info.model_dump(by_alias=True)
+
+
+@pytest.mark.parametrize("payload", AWARDS.values(), ids=AWARDS.keys())
+def test_another_models_instance_validates_through_its_wire_dump(payload):
+    bare = AwardBase.model_validate(payload)
+
+    typed = TypedAward.model_validate(bare)
+
+    assert wire(typed) == wire(bare) == payload

@@ -1,16 +1,18 @@
-"""Write-side wire policy shared by the SDK's model bases.
+"""Wire policy shared by the SDK's model bases.
 
 Private module: ``base.py`` is star-exported through the schema barrels, so the
 policy lives here to keep it, and the names it imports, off the public surface.
 """
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from pydantic import (
     BaseModel,
+    ModelWrapValidatorHandler,
     SerializationInfo,
     SerializerFunctionWrapHandler,
     model_serializer,
+    model_validator,
 )
 
 
@@ -24,9 +26,22 @@ class OmitNullOptionals(BaseModel):
     a required ``CustomField.value`` still writes ``null``. ``_wire_required_fields``
     names fields Core requires that a subclass may default, which are written even
     when ``None``.
+
+    Validating another SDK model's instance reads it through that wire dump.
     """
 
     _wire_required_fields: ClassVar[frozenset[str]] = frozenset()
+
+    # Another SDK model is read through its wire dump, not its attributes: an
+    # unset optional attribute reads as None, which sealed fields reject.
+    @model_validator(mode="wrap")
+    @classmethod
+    def _from_other_sdk_model(
+        cls, data: Any, handler: ModelWrapValidatorHandler[Any]
+    ) -> Any:
+        if isinstance(data, OmitNullOptionals) and not isinstance(data, cls):
+            data = data.model_dump(mode="json", by_alias=True, exclude_unset=True)
+        return handler(data)
 
     # No return annotation: one would replace this model's serialization JSON
     # schema, and FastAPI's response schemas, with the annotated type.
