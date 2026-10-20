@@ -511,7 +511,7 @@ Mapping objects are nested literals where keys are either output field names or 
 
 ### Null handling
 
-Optional values carry three distinct states on the wire, each preserved through the transform:
+The mapping runtime keeps three states of an optional value distinct:
 
 | State      | Meaning                                                                                  | Handler output |
 | ---------- | ---------------------------------------------------------------------------------------- | -------------- |
@@ -537,9 +537,11 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 `default` is **not** consulted for `null` source values — `default` belongs to "unrecognized value," not to "publisher asserts irrelevant." The opt-in `"null"` case key is the only path from `null` source to a non-`null` target.
 
-**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the output object distinguishes the three states the same way the wire does: absent → key omitted, `null` → present `null`, value → present value. Consumers can check for key presence to tell "not provided" from "doesn't apply."
+**For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `undefined` for "not provided," return `null` for "doesn't apply," return a value otherwise. The walker omits keys whose handler returned `undefined` and writes `null` returns as a real, present `null` — so the mapping output distinguishes the three states: absent → key omitted, `null` → present `null`, value → present value.
 
-> **Cross-SDK note.** The TypeScript SDK preserves the three-state distinction (absent / `null` / value) at the transform layer. The Python SDK currently collapses `None` source into the "not provided" path for the coercing handlers — bringing them to parity is a pending follow-up.
+**Validated output omits `null` where the protocol does.** Core describes most optional fields as absent or a value, never `null`. When mapping output is validated against a CommonGrants schema — `toCommon` from `buildTransforms()` with a `commonSchema`, or from any `definePlugin()` entry — an explicit `null` on such a field is accepted and left out of the result, the same as parsing with an SDK schema. Validated CommonGrants data therefore carries only absent or a value there, and `JSON.stringify` never writes `null` for those fields. `null` survives only where nothing validates it as CommonGrants data: raw `transformFromMapping()` output, and `fromCommon` results whose `sourceSchema` allows `null`.
+
+> **Cross-SDK note.** The Python SDK also keeps absent and `null` distinct in mappings, and both SDKs omit `null` from validated output.
 
 ### Custom handlers
 

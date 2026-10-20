@@ -249,7 +249,7 @@ pnpm example:custom-filters
 
 ### Transforms
 
-Demonstrates bidirectional transforms wired through `definePlugin()`: declarative mappings, hand-written `toCommon` / `fromCommon` callables, a no-custom-fields plugin, and the runtime rejection when both mappings and callables are supplied. Round-trips are asserted, including that a `null` ("doesn't apply") survives in both directions. No server required.
+Demonstrates bidirectional transforms wired through `definePlugin()`: declarative mappings, hand-written `toCommon` / `fromCommon` callables, a no-custom-fields plugin, and the runtime rejection when both mappings and callables are supplied. Round-trips are asserted, including that a source-side `null` ("doesn't apply") is omitted on the CommonGrants side, where the protocol field is optional but not nullable. No server required.
 
 ```bash
 pnpm example:transforms
@@ -263,7 +263,8 @@ pnpm example:transforms
 --- Scenario 1: declarative mappings ---
 ✓ mappings inspectable
 ✓ mappings: opportunity_uuid round-trips
-✓ mappings: source_url null ('doesn't apply') preserved
+✓ mappings: source_url null ('doesn't apply') comes back null or absent
+✓ mappings: common side omits the null source
 ✓ mappings: legacy opportunity_id round-trips
 
 --- Scenario 2: hand-written functions ---

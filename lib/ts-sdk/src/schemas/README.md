@@ -202,11 +202,11 @@ console.log(opportunity.funders?.primary.name); // "Primary Organization"
 console.log(opportunity.identifiers?.["opp:us:fon"]?.id); // "FON-0001"
 ```
 
-Unlike the model's other optional fields, which stay `.nullish()` pending
-[#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192), `funders`
-and `identifiers` are `.optional()`: they may be omitted, but `null` is
-rejected. A `funders` object without `primary`, or an `identifiers` object with
-a top-level key outside the registered registries, is also rejected.
+Unlike the model's other optional fields, which accept `null` on read and omit
+it from parsed output, `funders` and `identifiers` are `.optional()`: they may
+be omitted, but `null` is rejected. A `funders` object without `primary`, or an
+`identifiers` object with a top-level key outside the registered registries, is
+also rejected.
 
 ### Award contracts
 
@@ -270,10 +270,12 @@ arbitrary keys, but every value must satisfy `CustomFieldSchema`. The recipient
 schema is also registered with `withCustomFields()` and the plugin extension
 framework as `AwdRecipientIndividual`.
 
-The award schemas currently inherit two shared-model parity dependencies tracked
-by [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192): event
-variants and `CustomFieldSchema` accept `null` for some optional metadata and do
-not yet reject every unknown nested key that the emitted Core contract rejects.
+Event variants and `CustomFieldSchema` accept `null` for some optional metadata
+on read and omit it from parsed output, so award data parsed by the SDK never
+carries it. The award schemas still inherit one shared-model parity dependency
+tracked by [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192):
+those schemas do not yet reject every unknown nested key that the emitted Core
+contract rejects.
 The award-specific route envelopes avoid the analogous shared pagination and
 sorting differences by using protocol-exact concrete validators.
 

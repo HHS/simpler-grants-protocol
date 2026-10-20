@@ -55,7 +55,9 @@ Follow these steps when adding a new model that supports `customFields`:
 
 1. **Define the Zod schema** in `src/schemas/zod/models.ts`:
    - Name it `<ModelName>Schema` (e.g. `AwardBaseSchema`)
-   - Include `customFields: z.record(CustomFieldSchema).nullish()` in its shape
+   - Include `customFields` in its shape. Core's `customFields` is optional but not nullable:
+     - `z.record(z.string(), CustomFieldSchema).optional()` rejects `null`, as `AwdRecipientIndividualSchema` does
+     - `nullishAsOptional(z.record(z.string(), CustomFieldSchema))` (from `src/schemas/zod/nullish.ts`) accepts `null` on read and omits it from parsed output, as the opportunity models do
 
 2. **Register as extensible** so the plugin framework picks it up:
    - Add the model name to `ExtensibleSchemaName` in `src/extensions/types.ts`

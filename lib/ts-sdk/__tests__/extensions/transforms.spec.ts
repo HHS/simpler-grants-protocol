@@ -356,14 +356,15 @@ describe("buildTransforms — fromCommon", () => {
 });
 
 // ############################################################################
-// Null preservation — three-state contract
+// Null handling — three-state mappings, null omitted after validation
 // ############################################################################
 
-describe("buildTransforms — null preservation (three-state)", () => {
-  // Optional fields carry three distinct states on the wire: absent ("not
-  // provided"), explicit `null` ("doesn't apply"), and a value. The transform
-  // handlers preserve all three so the publisher's assertion survives
-  // end-to-end through `toCommon` / `fromCommon`.
+describe("buildTransforms — null handling (three-state mappings)", () => {
+  // The mapping runtime keeps three states distinct: absent ("not provided"),
+  // explicit `null` ("doesn't apply"), and a value. Without a schema, the
+  // publisher's `null` survives through `toCommon` / `fromCommon`. With a
+  // CommonGrants schema, validation omits `null` where the protocol field is
+  // optional but not nullable.
 
   it("preserves explicit null on the toCommon side (publisher 'doesn't apply')", () => {
     // Source has `description: null` — publisher asserts the field doesn't

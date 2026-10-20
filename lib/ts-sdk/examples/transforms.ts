@@ -14,7 +14,8 @@
  * The mappings scenario validates `toCommon` output against the extended common
  * schema, so date strings are parsed into `Date` objects on the common side.
  * The round-trip checks below therefore assert on fields that survive verbatim
- * (ids, the three-state `source` null), not on the parsed date fields.
+ * (ids) and on the `source` null the common side omits, not on the parsed date
+ * fields.
  */
 
 import { z } from "zod";
@@ -41,8 +42,9 @@ const GrantsGovOpportunity = z.object({
     opportunity_description: z.string(),
     opportunity_status: z.string(),
     // `source_url: null` below is the publisher actively asserting "doesn't
-    // apply" (three-state null). The transforms preserve it as `null` end to end
-    // rather than collapsing it to absent.
+    // apply" (three-state null). The mappings carry it as `null`, but Core's
+    // `source` is optional and not nullable, so the validated common side
+    // omits it.
     source_url: z.url().nullish(),
     // The declarative `field` handler (Scenario 1) has no date-to-string
     // conversion, so it plucks `createdAt`/`lastModifiedAt` off the common
@@ -99,7 +101,8 @@ const mappingsPlugin = definePlugin({
           id: { field: "data.opportunity_uuid" },
           title: { field: "data.opportunity_title" },
           description: { field: "data.opportunity_description" },
-          // Three-state null: a terminal `null` is preserved as a real null.
+          // `field` passes a terminal `null` through; validating against the
+          // common schema then omits it, since `source` is not nullable.
           source: { field: "data.source_url" },
           createdAt: { field: "data.created_at" },
           lastModifiedAt: { field: "data.last_modified_at" },
@@ -319,15 +322,15 @@ function roundTrip(
     `${label}: opportunity_uuid round-trips`,
     back.result.data.opportunity_uuid === SOURCE_DATA.data.opportunity_uuid
   );
-  // The CommonGrants side omits null (the protocol field is optional, not
-  // nullable), so the source field comes back absent, or null where a
+  // The CommonGrants side omits the null (the protocol field is optional, not
+  // nullable), so `source_url` comes back absent, or `null` where a
   // hand-written fromCommon restores it.
   check(
-    `${label}: source_url null ('doesn't apply') not invented`,
+    `${label}: source_url null ('doesn't apply') comes back null or absent`,
     back.result.data.source_url == null
   );
   check(
-    `${label}: common source omitted`,
+    `${label}: common side omits the null source`,
     !("source" in JSON.parse(JSON.stringify(common.result)))
   );
   // The legacy id only round-trips when a custom field carries it across.

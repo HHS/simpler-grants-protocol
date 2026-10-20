@@ -7,8 +7,8 @@
  *
  * ## Null handling (three-state contract)
  *
- * Optional fields carry three distinct states, each preserved through every
- * built-in handler rather than collapsing `null` into `undefined`:
+ * The mapping runtime keeps three states of an optional field distinct, and no
+ * built-in handler collapses `null` into `undefined`:
  *
  * - **absent** — "not provided" (publisher did not supply this data)
  * - **`null`** — "doesn't apply" (publisher actively asserts irrelevant for this record)
@@ -19,6 +19,12 @@
  * return `null` on `null` source. Custom-handler authors should do the same.
  * This is the canonical description — handlers below note only their own
  * departures from it.
+ *
+ * The contract covers mapping output, before any schema runs. Validating that
+ * output against a CommonGrants schema (`buildTransforms()` with a
+ * `commonSchema`, or a `definePlugin()` `toCommon`) omits `null` where the
+ * protocol field is optional but not nullable, so validated CommonGrants data
+ * carries only absent or a value there.
  *
  * @module @common-grants/sdk/utils
  */
@@ -169,7 +175,7 @@ export function numberToString(data: unknown, fieldPath: unknown): string | null
  *   than silently returning a corrupted value. Use a string field or a custom
  *   handler returning `BigInt` for 64-bit IDs.
  * - Empty and whitespace-only strings throw — `Number("")` coerces to `0`,
- *   which would silently corrupt an absent field. Null the field upstream if
+ *   which would silently corrupt an absent field. Remove the field upstream if
  *   you want `undefined` for absent input.
  */
 export function stringToNumber(data: unknown, fieldPath: unknown): number | null | undefined {

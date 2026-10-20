@@ -159,13 +159,18 @@ fork locally. All are isolated with self-expiring reproductions in
 [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192) (shared
 models), not #1156.
 
-| Shared schema                                             | Divergence                                                                                        | Award impact                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | optional metadata is `.nullish()` (accepts `null`); objects are not sealed (accept unknown keys)  | blocks `AwdTimeline` parity (T4)                  |
-| `CustomField` (`CustomFieldSchema`)                       | `schema`/`description` are `.nullish()` (accept `null`); object not sealed (accepts unknown keys) | blocks `AwdRecipientIndividual.customFields` (T4) |
-| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()` and unbounded (no int32 `.max()`); objects are not sealed      | forked as `RoutePaginationInputSchema` (T6)       |
-| `PaginatedResultsInfo` (`PaginatedResultsInfoSchema`)     | `pageSize` allows `0` (protocol minimum is `1`); totals are `.nullish()`; object not sealed       | forked as `AwardPaginationInfoSchema` (T6)        |
-| `SortedResultsInfo` (`SortedResultsInfoSchema`)           | `customSortBy`/`errors` are `.nullish()` (accept `null`); object not sealed                       | forked as `AwardSortInfoSchema` (T6)              |
+Their optional metadata also accepts an explicit `null` where the protocol
+describes an absent-or-value property. That is not a divergence: the SDK accepts
+it on read and omits it from parsed output, and `shared-defects.spec.ts` checks
+those cases as `"normalized"`.
+
+| Shared schema                                             | Divergence                                                                  | Award impact                                      |
+| --------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------- |
+| `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | objects are not sealed (accept unknown keys)                                | blocks `AwdTimeline` parity (T4)                  |
+| `CustomField` (`CustomFieldSchema`)                       | object not sealed (accepts unknown keys)                                    | blocks `AwdRecipientIndividual.customFields` (T4) |
+| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are unbounded (no int32 `.max()`); objects are not sealed | forked as `RoutePaginationInputSchema` (T6)       |
+| `PaginatedResultsInfo` (`PaginatedResultsInfoSchema`)     | `pageSize` allows `0` (protocol minimum is `1`); object not sealed          | forked as `AwardPaginationInfoSchema` (T6)        |
+| `SortedResultsInfo` (`SortedResultsInfoSchema`)           | object not sealed                                                           | forked as `AwardSortInfoSchema` (T6)              |
 
 Track any further UUID/URI/date-format or route-metadata differences the same
 way as they are found during T4 through T6: isolate the reproduction, name the
