@@ -541,8 +541,6 @@ To translate "doesn't apply" into a target-side sentinel (e.g. an `n_a` status t
 
 **Validated output omits `null` where the protocol does.** Core describes most optional fields as absent or a value, never `null`. When mapping output is validated against a CommonGrants schema — `toCommon` from `buildTransforms()` with a `commonSchema`, or from any `definePlugin()` entry — an explicit `null` on such a field is accepted and left out of the result, the same as parsing with an SDK schema. Validated CommonGrants data therefore carries only absent or a value there, and `JSON.stringify` never writes `null` for those fields. `null` survives only where nothing validates it as CommonGrants data: raw `transformFromMapping()` output, and `fromCommon` results whose `sourceSchema` allows `null`.
 
-> **Cross-SDK note.** The Python SDK also keeps absent and `null` distinct in mappings, and both SDKs omit `null` from validated output.
-
 ### Custom handlers
 
 Register additional handlers per `buildTransforms()` call. Name collisions with built-ins raise at call time. Custom handlers should follow the three-state contract from [Null handling](#null-handling) above:
