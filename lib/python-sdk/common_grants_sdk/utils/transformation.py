@@ -33,6 +33,11 @@ def get_from_path(data: dict, path: str, default: Any = None) -> Any:
     return data
 
 
+# Built-in handlers return _ABSENT when their source path is missing; the walker then
+# leaves the output key out instead of writing None.
+_ABSENT: Any = object()
+
+
 def pluck_field_value(data: dict, field_path: str) -> Any:
     """
     Handles a field transformation by extracting a value from the data using the specified field path.
@@ -42,9 +47,10 @@ def pluck_field_value(data: dict, field_path: str) -> Any:
         field_path: A dot-separated string representing the path to the value
 
     Returns:
-        The value from the specified field path in the data
+        The value from the specified field path in the data, or ``_ABSENT`` when the
+        path doesn't exist (an explicit ``None`` is returned as ``None``)
     """
-    return get_from_path(data, field_path)
+    return get_from_path(data, field_path, _ABSENT)
 
 
 def switch_on_value(data: dict, switch_spec: dict) -> Any:
@@ -59,10 +65,19 @@ def switch_on_value(data: dict, switch_spec: dict) -> Any:
             - 'default': (optional) The default value if no match is found
 
     Returns:
-        The transformed value based on the match, or the default value if no match is found
+        The transformed value based on the match, or the default value if no match is
+        found. A missing source returns the default, or ``_ABSENT`` without one. A
+        ``None`` source returns the ``"null"`` case, or ``None`` without one; the
+        default is not used for it.
     """
-    val = get_from_path(data, switch_spec.get("field", ""))
+    val = get_from_path(data, switch_spec.get("field", ""), _ABSENT)
+    if val is _ABSENT:
+        return switch_spec.get("default", _ABSENT)
     lookup = switch_spec.get("case", {})
+    # A None source means "doesn't apply", not an unrecognized value: it maps
+    # through an opt-in "null" case, never the default.
+    if val is None:
+        return lookup.get("null")
     return lookup.get(val, switch_spec.get("default"))
 
 
@@ -89,9 +104,12 @@ def number_to_string(data: dict, field_path: str) -> str | None:
         field_path: A dot-separated string representing the path to the numeric value
 
     Returns:
-        The value at the specified path converted to a string, or None if the path doesn't exist
+        The value at the specified path converted to a string, ``None`` for a ``None``
+        source, or ``_ABSENT`` if the path doesn't exist
     """
-    val = get_from_path(data, field_path)
+    val = get_from_path(data, field_path, _ABSENT)
+    if val is _ABSENT:
+        return _ABSENT
     return str(val) if val is not None else None
 
 
@@ -106,14 +124,15 @@ def string_to_number(data: dict, field_path: str) -> int | float | None:
         field_path: A dot-separated string representing the path to the string value
 
     Returns:
-        The value at the specified path converted to int or float, or None if the path doesn't exist
+        The value at the specified path converted to int or float, ``None`` for a
+        ``None`` source, or ``_ABSENT`` if the path doesn't exist
 
     Raises:
         ValueError: If the extracted value cannot be converted to a number
     """
-    val = get_from_path(data, field_path)
-    if val is None:
-        return None
+    val = get_from_path(data, field_path, _ABSENT)
+    if val is _ABSENT or val is None:
+        return val
     s = str(val)
     try:
         return int(s)
@@ -258,10 +277,13 @@ def transform_from_mapping(
             #   "amount": transform_node({ "field": "opportunity_amount" }, depth + 1)
             # }
             # ```
-            return {k: transform_node(v, depth + 1) for k, v in node.items()}
+            # A child whose source is missing (_ABSENT) is left out of the output.
+            out = {k: transform_node(v, depth + 1) for k, v in node.items()}
+            return {k: v for k, v in out.items() if v is not _ABSENT}
 
         # An empty dict node maps to an empty dict (not None).
         return {}
 
     # Recursively walk the mapping until all nested transformations are applied
-    return transform_node(mapping, depth)
+    result = transform_node(mapping, depth)
+    return {} if result is _ABSENT else result

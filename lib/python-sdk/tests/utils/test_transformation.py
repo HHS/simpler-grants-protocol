@@ -98,17 +98,19 @@ def test_nested_object(input_data):
     }
 
 
-def test_missing_field_returns_none(input_data):
+def test_missing_field_is_left_out(input_data):
     """
     Test behavior when accessing non-existent fields.
 
     Verifies that:
-    - Attempting to access a non-existent field returns None
+    - A non-existent field is absent: its output key is left out, not None
+    - An explicit None in the source is still written as None
     - The transformation continues to work even with missing fields
     """
-    mapping = {"foo": {"field": "nonexistent"}}
-    result = transform_from_mapping(input_data, mapping)
-    assert result == {"foo": None}
+    mapping = {"foo": {"field": "nonexistent"}, "bar": {"nested": {"field": "nope"}}}
+    assert transform_from_mapping(input_data, mapping) == {"bar": {}}
+    assert transform_from_mapping({"x": None}, {"foo": {"field": "x"}}) == {"foo": None}
+    assert transform_from_mapping(input_data, {"field": "nonexistent"}) == {}
 
 
 def test_empty_mapping_returns_empty_dict(input_data):
@@ -279,6 +281,49 @@ def test_match_key_alias(input_data):
     assert result == {"status": "open"}
 
 
+STATUS_MATCH = {
+    "field": "status",
+    "case": {"posted": "open", "archived": "closed"},
+    "default": "custom",
+}
+
+
+def test_match_missing_source_uses_the_default():
+    """A missing source is an unrecognized value: it maps to the default."""
+    result = transform_from_mapping({}, {"status": {"match": STATUS_MATCH}})
+    assert result == {"status": "custom"}
+
+
+def test_match_missing_source_without_a_default_is_left_out():
+    """Without a default, a missing source leaves the key out, not None."""
+    spec = {"field": "status", "case": {"posted": "open"}}
+    assert transform_from_mapping({}, {"status": {"match": spec}}) == {}
+    # An intermediate None is a missing path too.
+    nested = {"field": "summary.status", "case": {"posted": "open"}}
+    assert transform_from_mapping({"summary": None}, {"s": {"match": nested}}) == {}
+
+
+def test_match_none_source_passes_through_without_the_default():
+    """A None source ("doesn't apply") stays None; the default is not consulted."""
+    result = transform_from_mapping(
+        {"status": None}, {"status": {"match": STATUS_MATCH}}
+    )
+    assert result == {"status": None}
+
+
+def test_match_none_source_uses_an_opt_in_null_case():
+    """A "null" case key translates a None source, ahead of the default."""
+    spec = {**STATUS_MATCH, "case": {**STATUS_MATCH["case"], "null": "n_a"}}
+    result = transform_from_mapping({"status": None}, {"status": {"switch": spec}})
+    assert result == {"status": "n_a"}
+
+    # A string "null" source is an ordinary value, not a None source.
+    result = transform_from_mapping(
+        {"status": "null"}, {"status": {"match": STATUS_MATCH}}
+    )
+    assert result == {"status": "custom"}
+
+
 def test_number_to_string(input_data):
     """Test numberToString handler coerces a numeric field to a string."""
     mapping = {"floor_str": {"numberToString": "summary.award_floor"}}
@@ -287,9 +332,15 @@ def test_number_to_string(input_data):
 
 
 def test_number_to_string_missing_field(input_data):
-    """Test numberToString returns None when the field path does not exist."""
+    """Test numberToString leaves the key out when the field path does not exist."""
     mapping = {"x": {"numberToString": "nonexistent.path"}}
     result = transform_from_mapping(input_data, mapping)
+    assert result == {}
+
+
+def test_number_to_string_none_source():
+    """Test numberToString writes None for a None source ("doesn't apply")."""
+    result = transform_from_mapping({"a": None}, {"x": {"numberToString": "a"}})
     assert result == {"x": None}
 
 
@@ -310,9 +361,15 @@ def test_string_to_number_float(input_data):
 
 
 def test_string_to_number_missing_field(input_data):
-    """Test stringToNumber returns None when the field path does not exist."""
+    """Test stringToNumber leaves the key out when the field path does not exist."""
     mapping = {"x": {"stringToNumber": "nonexistent.path"}}
     result = transform_from_mapping(input_data, mapping)
+    assert result == {}
+
+
+def test_string_to_number_none_source():
+    """Test stringToNumber writes None for a None source ("doesn't apply")."""
+    result = transform_from_mapping({"a": None}, {"x": {"stringToNumber": "a"}})
     assert result == {"x": None}
 
 
@@ -372,9 +429,9 @@ def test_pydantic_model_alias_not_snake_case() -> None:
     result = transform_from_mapping(model, {"amount": {"field": "awardFloor"}})
     assert result == {"amount": 10000}
 
-    # snake_case attribute name does NOT resolve (returns None)
+    # snake_case attribute name does NOT resolve (the key is left out)
     result_snake = transform_from_mapping(model, {"amount": {"field": "award_floor"}})
-    assert result_snake == {"amount": None}
+    assert result_snake == {}
 
 
 def test_deeply_nested(input_data):
