@@ -589,6 +589,34 @@ describe("Opportunities", () => {
       expect(customFilters).not.toHaveProperty("status");
     });
 
+    it("sends no null for a null default filter", async () => {
+      let capturedBody: string | undefined;
+
+      server.use(
+        http.post("/common-grants/opportunities/search", async ({ request }) => {
+          capturedBody = await request.text();
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 0, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      // The filter types reject null; cast to exercise what plain-JS and
+      // data-driven callers can still pass.
+      await client.opportunities.search({
+        filters: { status: null } as unknown as CustomFilterBag<PluginRoutes>,
+      });
+
+      expect(capturedBody).toBeDefined();
+      expect(JSON.parse(capturedBody as string).filters).toEqual({});
+      expect(capturedBody).not.toContain("null");
+    });
+
     it("throws FilterError when status is given via both the shorthand and filters", async () => {
       // `status` given via both the `statuses` shorthand and `filters.status` is
       // a conflicting instruction: search() throws before any request is sent.

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { UTCDateTimeSchema } from "../../src/schemas/zod/types.js";
+import { nullishAsOptional } from "../../src/schemas/zod/nullish.js";
 import { createAjvFromDefs } from "./ajv-validator.js";
 import { checkZodMatchesJsonSchema, SAMPLE_SIZE } from "./fuzz-test.js";
 
@@ -522,6 +523,81 @@ describe("tracked divergences", () => {
         cases: [{ label: "n at zero", value: { n: 0 }, expect: "divergent" }],
       })
     ).rejects.toThrow(/must name the issue/i);
+  });
+});
+
+// #########################################################
+// Normalized cases
+//
+// An explicit `null` on an optional, non-nullable property is accepted on read
+// and omitted on write. The protocol rejects the input, so a plain comparison
+// would report a divergence; a normalized case instead checks the output.
+// #########################################################
+
+describe("normalized cases", () => {
+  const optionalAjv = createAjvFromDefs(
+    {
+      Opt: {
+        $id: "Opt.yaml",
+        type: "object",
+        properties: { s: { type: "string" } },
+      },
+    },
+    "synthetic:normalized"
+  );
+
+  const nullCase = { label: "explicit null", value: { s: null }, expect: "normalized" as const };
+
+  it("should pass when Zod accepts the input and its output satisfies the protocol", async () => {
+    const omitsNull = z.object({ s: nullishAsOptional(z.string()) });
+
+    const result = await checkZodMatchesJsonSchema(omitsNull, "Opt.yaml", {
+      ajv: optionalAjv,
+      cases: [nullCase],
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.mismatches).toEqual([]);
+    expect(result.knownDivergences).toEqual([]);
+    expect(result.successCount).toBe(SAMPLE_SIZE + 1);
+  });
+
+  it("should fail when Zod's output still carries the value the protocol rejects", async () => {
+    const keepsNull = z.object({ s: z.string().nullish() });
+
+    const result = await checkZodMatchesJsonSchema(keepsNull, "Opt.yaml", {
+      ajv: optionalAjv,
+      cases: [nullCase],
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.mismatches).toHaveLength(1);
+    expect(result.mismatches[0].reason).toMatch(/output/);
+  });
+
+  it("should fail when Zod rejects the input", async () => {
+    const rejectsNull = z.object({ s: z.string().optional() });
+
+    const result = await checkZodMatchesJsonSchema(rejectsNull, "Opt.yaml", {
+      ajv: optionalAjv,
+      cases: [nullCase],
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.mismatches[0].reason).toMatch(/Zod rejects/);
+  });
+
+  it("should fail when the protocol accepts the input", async () => {
+    // Nothing is normalized, so the entry is mislabeled and has to go.
+    const omitsNull = z.object({ s: nullishAsOptional(z.string()) });
+
+    const result = await checkZodMatchesJsonSchema(omitsNull, "Opt.yaml", {
+      ajv: optionalAjv,
+      cases: [{ label: "a string", value: { s: "x" }, expect: "normalized" }],
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.mismatches[0].reason).toMatch(/protocol accepts/);
   });
 });
 

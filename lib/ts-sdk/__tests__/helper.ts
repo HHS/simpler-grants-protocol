@@ -48,7 +48,8 @@ Mismatch ${i + 1} (${m.source}):
   JSON Schema valid: ${m.jsonSchemaValid}
   Zod valid: ${m.zodValid}
   ${m.jsonSchemaErrors ? `JSON Schema errors: ${m.jsonSchemaErrors.join(", ")}` : ""}
-  ${m.zodError ? `Zod error: ${m.zodError}` : ""}`;
+  ${m.zodError ? `Zod error: ${m.zodError}` : ""}
+  ${m.reason ? `Normalized case failed: ${m.reason}` : ""}`;
       })
       .join("\n");
 

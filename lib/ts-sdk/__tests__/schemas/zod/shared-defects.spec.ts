@@ -14,22 +14,25 @@
  * defines concrete, protocol-exact local copies instead. Those copies collapse
  * back onto the shared generics the moment #1192 fixes the originals.
  *
- * Every schema below diverges from its emitted protocol contract in one or more
- * of the same three ways, none of which an award-only change can fix:
+ * Every schema below diverges from its emitted protocol contract in one or both
+ * of the same two ways, neither of which an award-only change can fix:
  *
- *   1. Optional metadata is `.nullish()`, so the SDK accepts an explicit `null`
- *      where the protocol describes a plain (absent-or-value) property.
- *   2. The objects are never sealed, so the SDK accepts unknown keys the
+ *   1. The objects are never sealed, so the SDK accepts unknown keys the
  *      protocol's `unevaluatedProperties: { not: {} }` rejects.
- *   3. Numeric fields omit the protocol's bounds (`page`/`pageSize` have no
+ *   2. Numeric fields omit the protocol's bounds (`page`/`pageSize` have no
  *      `.max()`; `pageSize` on results info allows `0` below the protocol's
  *      minimum of `1`).
  *
- * All are shared-model concerns owned by #1192, not this assignment. These
- * cases isolate each divergence against the real shared schema so award work
- * cannot claim full parity while they stand, and so the entries expire the
- * moment #1192 lands: {@link checkZodMatchesJsonSchema} fails a tracked
- * divergence that no longer reproduces.
+ * Their optional metadata also accepts an explicit `null` where the protocol
+ * describes a plain (absent-or-value) property. That is not a divergence: the
+ * SDK accepts it on read and omits it on write, so those cases are
+ * `"normalized"` and check that the parsed value satisfies the protocol.
+ *
+ * Both divergences are shared-model concerns owned by #1192, not this
+ * assignment. These cases isolate each divergence against the real shared
+ * schema so award work cannot claim full parity while they stand, and so the
+ * entries expire the moment #1192 lands: {@link checkZodMatchesJsonSchema}
+ * fails a tracked divergence that no longer reproduces.
  *
  * The extra-key divergences are only observable with `preserveObjectPolicy`.
  * Under the default policy the harness forces root `.strict()` on the Zod
@@ -63,7 +66,7 @@ describe("shared-schema defects blocking award parity (owned by #1192)", () => {
       date: "2026-03-01",
     };
 
-    it("accepts a null optional field and an unknown key the protocol rejects", async () => {
+    it("normalizes a null optional field and accepts an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         SingleDateEventSchema,
         "SingleDateEvent.yaml",
@@ -74,8 +77,7 @@ describe("shared-schema defects blocking award parity (owned by #1192)", () => {
           {
             label: "null description",
             value: { ...baseline, description: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
+            expect: "normalized",
           },
           {
             label: "unknown key",
@@ -84,7 +86,7 @@ describe("shared-schema defects blocking award parity (owned by #1192)", () => {
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        2,
+        1,
         true
       );
     });
@@ -101,23 +103,17 @@ describe("shared-schema defects blocking award parity (owned by #1192)", () => {
       value: "Healthcare Innovation",
     };
 
-    it("accepts null optional fields and an unknown key the protocol rejects", async () => {
+    it("normalizes null optional fields and accepts an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         CustomFieldSchema,
         "CustomField.yaml",
         [
           { label: "valid custom field", value: baseline },
-          {
-            label: "null schema",
-            value: { ...baseline, schema: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
-          },
+          { label: "null schema", value: { ...baseline, schema: null }, expect: "normalized" },
           {
             label: "null description",
             value: { ...baseline, description: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
+            expect: "normalized",
           },
           {
             label: "unknown key",
@@ -126,7 +122,7 @@ describe("shared-schema defects blocking award parity (owned by #1192)", () => {
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        3,
+        1,
         true
       );
     });
@@ -144,18 +140,17 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
   ] as const)("%s vs %s", (_name, schema, jsonSchemaId) => {
     const baseline = { page: 1, pageSize: 100 };
 
-    it("accepts null, an out-of-range page, and an unknown key the protocol rejects", async () => {
+    it("normalizes a null page and accepts an out-of-range page and an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         schema,
         jsonSchemaId,
         [
           { label: "valid pagination input", value: baseline },
           {
-            // `.nullish()` accepts null; the protocol integer does not.
+            // Accepted on read and parsed to the default page.
             label: "null page",
             value: { ...baseline, page: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
+            expect: "normalized",
           },
           {
             // No `.max()`; the protocol caps page at int32.
@@ -171,7 +166,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        3,
+        2,
         true
       );
     });
@@ -184,7 +179,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
   describe("PaginatedResultsInfoSchema vs PaginatedResultsInfo.yaml", () => {
     const baseline = { page: 1, pageSize: 20, totalItems: 100, totalPages: 5 };
 
-    it("accepts a zero page size, null totals, and an unknown key the protocol rejects", async () => {
+    it("normalizes null totals and accepts a zero page size and an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         PaginatedResultsInfoSchema,
         "PaginatedResultsInfo.yaml",
@@ -200,8 +195,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
           {
             label: "null totalItems",
             value: { ...baseline, totalItems: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
+            expect: "normalized",
           },
           {
             label: "unknown key",
@@ -210,7 +204,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        3,
+        2,
         true
       );
     });
@@ -223,7 +217,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
   describe("SortedResultsInfoSchema vs SortedResultsInfo.yaml", () => {
     const baseline = { sortBy: "lastModifiedAt", sortOrder: "asc" as const };
 
-    it("accepts null optional fields and an unknown key the protocol rejects", async () => {
+    it("normalizes null optional fields and accepts an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         SortedResultsInfoSchema,
         "SortedResultsInfo.yaml",
@@ -232,15 +226,9 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
           {
             label: "null customSortBy",
             value: { ...baseline, customSortBy: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
+            expect: "normalized",
           },
-          {
-            label: "null errors",
-            value: { ...baseline, errors: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
-          },
+          { label: "null errors", value: { ...baseline, errors: null }, expect: "normalized" },
           {
             label: "unknown key",
             value: { ...baseline, bogus: "x" },
@@ -248,7 +236,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        3,
+        1,
         true
       );
     });

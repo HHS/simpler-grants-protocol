@@ -18,6 +18,8 @@ export interface FuzzTestMismatch {
   zodValid: boolean;
   jsonSchemaErrors?: string[];
   zodError?: string;
+  /** For a `"normalized"` case, which of its three conditions failed. */
+  reason?: string;
 }
 
 /**
@@ -36,6 +38,13 @@ export interface BoundaryCase {
    * - `"divergent"` — they are known to disagree today and the fix is tracked
    *   elsewhere. The disagreement is tolerated, *and the case fails once it
    *   stops disagreeing*, so an entry cannot outlive the fix it is waiting on.
+   * - `"normalized"` — the SDK deliberately accepts on read a value the
+   *   protocol rejects, and parses it to one the protocol accepts: an explicit
+   *   `null` on an optional, non-nullable property is accepted on read and
+   *   omitted on write. The protocol must reject `value`, Zod must accept it,
+   *   and the wire form of Zod's output must satisfy the protocol; the case
+   *   fails if any of the three stops holding. It is the SDK's contract, not a
+   *   defect, so it names no issue and is not counted as a divergence.
    *
    * Known limit of `"divergent"`: it asserts only *that* the two validators
    * disagree, not that they disagree for the reason the label names. If the
@@ -45,7 +54,7 @@ export interface BoundaryCase {
    * agreeing controls that cover that baseline, so a substituted failure
    * surfaces there instead.
    */
-  expect?: "agree" | "divergent";
+  expect?: "agree" | "divergent" | "normalized";
   /** The issue that owns the fix. Required when `expect` is `"divergent"`. */
   issue?: string;
 }
@@ -406,7 +415,54 @@ export async function checkZodMatchesJsonSchema(
     }
   }
 
+  /**
+   * Runs one `"normalized"` case: the protocol rejects the input, Zod accepts
+   * it, and the protocol accepts the wire form of Zod's output.
+   *
+   * @returns The failed condition, or `null` when all three hold.
+   */
+  const compareNormalized = (source: string, sample: unknown): FuzzTestMismatch | null => {
+    validated++;
+
+    const input = validateWithAjv(ajv, jsonSchemaId, toWire(sample));
+    const zodResult = comparisonSchema.safeParse(sample);
+    const failure = {
+      source,
+      sample,
+      jsonSchemaValid: input.isValid,
+      zodValid: zodResult.success,
+      jsonSchemaErrors: input.errors || undefined,
+      zodError: zodResult.success ? undefined : zodResult.error.message,
+    };
+
+    if (input.isValid) {
+      return { ...failure, reason: "the protocol accepts the input, so nothing is normalized" };
+    }
+    if (!zodResult.success) {
+      return { ...failure, reason: "Zod rejects the input" };
+    }
+    const output = validateWithAjv(ajv, jsonSchemaId, toWire(zodResult.data));
+    if (!output.isValid) {
+      return {
+        ...failure,
+        jsonSchemaErrors: output.errors || undefined,
+        reason: "the protocol rejects the wire form of Zod's output",
+      };
+    }
+    return null;
+  };
+
   for (const boundaryCase of cases) {
+    if (boundaryCase.expect === "normalized") {
+      const failure = compareNormalized(boundaryCase.label, boundaryCase.value);
+      if (failure) {
+        mismatches.push(failure);
+      } else {
+        successCount++;
+      }
+      continue;
+    }
+
     const disagreement = compare(boundaryCase.label, boundaryCase.value);
 
     if (boundaryCase.expect !== "divergent") {

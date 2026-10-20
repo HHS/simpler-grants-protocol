@@ -516,4 +516,23 @@ describe("classifyFilters", () => {
     const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {});
     expect(result).toEqual({});
   });
+
+  it("writes validated values and leaves out a null opportunity default filter", () => {
+    // Opportunity default filters accept null on read and parse it to
+    // undefined, so the request body leaves the key out instead of sending null.
+    const result = classifyFilters(grantsGovRoutes, "opportunities", "search", {
+      status: null,
+      closeDateRange: { ...F.between("2025-01-01", "2025-12-31"), extra: true },
+    });
+
+    expect(result).toEqual({
+      closeDateRange: { operator: "between", value: { min: "2025-01-01", max: "2025-12-31" } },
+    });
+    expect(result).not.toHaveProperty("status");
+    expect(JSON.stringify(result)).not.toContain("null");
+  });
+
+  it("still rejects a null award default filter", () => {
+    expect(() => classifyFilters({}, "awards", "search", { status: null })).toThrow(FilterError);
+  });
 });

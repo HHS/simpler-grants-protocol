@@ -398,12 +398,11 @@ describe("buildTransforms — null preservation (three-state)", () => {
     expect(Object.prototype.hasOwnProperty.call(out.result, "description")).toBe(true);
   });
 
-  it("validates a null-bearing toCommon result against a .nullish() Zod schema", () => {
-    // SDKs already accept null on `.nullish()` fields; this
-    // pins it inside the buildTransforms() Zod path so a future schema
-    // change that swapped `.nullish()` for plain `.optional()` would surface
-    // here as a TransformError. `source` is `.nullish()` on OpportunityBaseSchema;
-    // `description` is required (z.string()) so it can't carry the null state.
+  it("accepts a null-bearing toCommon result and omits the null after validation", () => {
+    // `source` accepts null on read but is optional, not nullable, in the
+    // protocol, so the validated result omits it rather than surfacing a
+    // TransformError. `description` is required (z.string()) so it can't
+    // carry the null state.
     const { toCommon } = buildTransforms(
       {
         ...toCommonMapping,
@@ -422,7 +421,8 @@ describe("buildTransforms — null preservation (three-state)", () => {
     });
 
     expect(out.errors).toEqual([]);
-    expect((out.result as { source: string | null }).source).toBeNull();
+    expect((out.result as { source?: string }).source).toBeUndefined();
+    expect(JSON.stringify(out.result)).not.toContain('"source"');
   });
 
   it("preserves null through a full toCommon → fromCommon round trip", () => {

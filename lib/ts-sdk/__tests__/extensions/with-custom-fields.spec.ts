@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { withCustomFields } from "@/extensions";
-import { OpportunityBaseSchema, CustomFieldSchema } from "@/schemas";
+import { OpportunityBaseSchema, CustomFieldSchema, AwdRecipientIndividualSchema } from "@/schemas";
 import { CustomFieldType } from "@/constants";
 
 // ############################################################################
@@ -385,20 +385,6 @@ describe("withCustomFields", () => {
       expect(result.customFields).toBeUndefined();
     });
 
-    it("should handle null customFields", () => {
-      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
-        category: { fieldType: CustomFieldType.string },
-      } as const);
-
-      const result = ExtendedSchema.parse({
-        id: "123",
-        name: "Test",
-        customFields: null,
-      });
-
-      expect(result.customFields).toBeNull();
-    });
-
     it("should validate fieldType literal on registered fields", () => {
       const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
         stringField: { fieldType: CustomFieldType.string },
@@ -609,6 +595,79 @@ describe("withCustomFields", () => {
       });
 
       expect(result.customFields?.category?.description).toBe("Custom description override");
+    });
+  });
+
+  // ############################################################################
+  // Null handling
+  // ############################################################################
+
+  describe("null handling", () => {
+    const validOpp = {
+      id: "573525f2-8e15-4405-83fb-e6523511d893",
+      title: "Test Opportunity",
+      status: { value: "open" },
+      description: "A test opportunity",
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-01T00:00:00Z",
+    };
+
+    it("should omit a null customFields from output on an SDK base schema", () => {
+      // Core's customFields is optional, not nullable: null is accepted on
+      // read and left out of the parsed and serialized output.
+      const ExtendedOppSchema = withCustomFields(OpportunityBaseSchema, {
+        category: { fieldType: CustomFieldType.string },
+      } as const);
+
+      const result = ExtendedOppSchema.parse({ ...validOpp, customFields: null });
+
+      expect(result.customFields).toBeUndefined();
+      expect(JSON.stringify(result)).not.toContain('"customFields"');
+    });
+
+    it("should give a registered field's null description the spec default", () => {
+      const ExtendedOppSchema = withCustomFields(OpportunityBaseSchema, {
+        category: { fieldType: CustomFieldType.string, description: "Grant category" },
+        tag: { fieldType: CustomFieldType.string },
+      } as const);
+
+      const result = ExtendedOppSchema.parse({
+        ...validOpp,
+        customFields: {
+          category: { fieldType: "string", value: "grants", description: null },
+          tag: { fieldType: "string", value: "x", description: null },
+        },
+      });
+
+      expect(result.customFields?.category?.description).toBe("Grant category");
+      // No spec default: the null is omitted like any other optional field.
+      expect(result.customFields?.tag?.description).toBeUndefined();
+      expect(JSON.stringify(result)).not.toContain("null");
+    });
+
+    it("should keep a null customFields when the base schema keeps null", () => {
+      // A consumer base with a plain `.nullish()` keeps its own policy.
+      const ExtendedSchema = withCustomFields(SimpleSchemaWithCustomFields, {
+        category: { fieldType: CustomFieldType.string },
+      } as const);
+
+      const result = ExtendedSchema.parse({
+        id: "123",
+        name: "Test",
+        customFields: null,
+      });
+
+      expect(result.customFields).toBeNull();
+    });
+
+    it("should reject a null customFields when the base schema rejects null", () => {
+      // AwdRecipientIndividual's customFields is optional only.
+      const ExtendedRecipientSchema = withCustomFields(AwdRecipientIndividualSchema, {
+        vendorId: { fieldType: CustomFieldType.string },
+      } as const);
+
+      expect(ExtendedRecipientSchema.safeParse({ customFields: null }).success).toBe(false);
+      expect(ExtendedRecipientSchema.safeParse({}).success).toBe(true);
     });
   });
 

@@ -265,13 +265,12 @@ describe("OpportunityBase Schema", () => {
         // against the wire form.
         { label: "createdAt as a Date instance", value: { ...valid, createdAt: new Date() } },
 
-        // Values the SDK accepts that the protocol does not: these optional
-        // fields are `.nullish()` in Zod, while the protocol declares them
-        // optional but not nullable. This is the disagreement Hono template
-        // verification hit, and ADR 0024 alignment (#1192) owns the fix. The
-        // harness fails if one stops reproducing, so these entries cannot
-        // outlive it. (`funders`/`identifiers` are `.optional()`, not
-        // `.nullish()`, so their `null` cases agree and sit below as controls.)
+        // Values the SDK accepts that the protocol does not: the protocol
+        // declares these fields optional but not nullable, and the SDK accepts
+        // an explicit `null` on read and omits it from its output. Each case
+        // checks that the parsed value serializes to one the protocol accepts.
+        // (`funders`/`identifiers` reject `null`, so their `null` cases agree
+        // and sit below as controls.)
         ...(
           [
             ["funding", { funding: null }],
@@ -281,10 +280,9 @@ describe("OpportunityBase Schema", () => {
             ["acceptedApplicantTypes", { acceptedApplicantTypes: null }],
           ] as const
         ).map(([field, override]) => ({
-          label: `${field} explicitly null (SDK nullish, protocol optional but not nullable)`,
+          label: `${field} explicitly null (accepted on read, omitted on write)`,
           value: { ...valid, ...override },
-          expect: "divergent" as const,
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
+          expect: "normalized" as const,
         })),
 
         // `identifiers` now models `OppIds`, sealed to its base registries plus
@@ -329,17 +327,13 @@ describe("OpportunityBase Schema", () => {
           value: { ...valid, funders: { otherOrgs: {} } },
         },
       ],
-      5
+      0
     );
 
-    // Not full parity: every optional field on this model still accepts null
-    // where the protocol does not. The two newly-modeled fields (`funders`,
-    // `identifiers`) no longer diverge, so the remaining divergences are the
-    // `.nullish()` fields ADR 0024 alignment (#1192) owns. Stated here so a
-    // green test does not read as agreement.
-    expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
-      new Set(["https://github.com/HHS/simpler-grants-protocol/issues/1192"])
-    );
+    // No tracked divergence remains among these cases: the explicit nulls are
+    // normalized on write rather than tolerated. Stated here so dropping a
+    // normalized case back to a divergence has to be a deliberate edit.
+    expect(result.knownDivergences).toEqual([]);
   });
 
   it("should raise an error for an invalid OpportunityBase", () => {

@@ -319,10 +319,16 @@ function roundTrip(
     `${label}: opportunity_uuid round-trips`,
     back.result.data.opportunity_uuid === SOURCE_DATA.data.opportunity_uuid
   );
-  // Three-state null survives both directions as a real null, not undefined.
+  // The CommonGrants side omits null (the protocol field is optional, not
+  // nullable), so the source field comes back absent, or null where a
+  // hand-written fromCommon restores it.
   check(
-    `${label}: source_url null ('doesn't apply') preserved`,
-    back.result.data.source_url === null
+    `${label}: source_url null ('doesn't apply') not invented`,
+    back.result.data.source_url == null
+  );
+  check(
+    `${label}: common source omitted`,
+    !("source" in JSON.parse(JSON.stringify(common.result)))
   );
   // The legacy id only round-trips when a custom field carries it across.
   if (opts.expectLegacyId) {

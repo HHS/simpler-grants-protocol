@@ -165,6 +165,19 @@ describe("PaginatedResultsInfo Schema", () => {
         { label: "required page omitted", value: { pageSize: 20 } },
         { label: "totalItems present and valid", value: { ...valid, totalItems: 100 } },
 
+        // Accepted on read, omitted on write: the protocol totals are
+        // integer-only, and the parsed value leaves an explicit `null` out.
+        {
+          label: "totalItems explicitly null (accepted on read, omitted on write)",
+          value: { ...valid, totalItems: null },
+          expect: "normalized",
+        },
+        {
+          label: "totalPages explicitly null (accepted on read, omitted on write)",
+          value: { ...valid, totalPages: null },
+          expect: "normalized",
+        },
+
         // Values the SDK accepts that the protocol does not. Each names the issue
         // that owns the fix; the harness fails if one stops reproducing, so these
         // cannot outlive the divergence they track. Fixing them here would change
@@ -176,25 +189,13 @@ describe("PaginatedResultsInfo Schema", () => {
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1130",
         },
         {
-          label: "totalItems explicitly null (SDK nullish, protocol integer-only)",
-          value: { ...valid, totalItems: null },
-          expect: "divergent",
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-        },
-        {
-          label: "totalPages explicitly null (SDK nullish, protocol integer-only)",
-          value: { ...valid, totalPages: null },
-          expect: "divergent",
-          issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
-        },
-        {
           label: "page above the protocol's int32 ceiling (SDK safe-integer, protocol int32)",
           value: { ...valid, page: 2147483648 },
           expect: "divergent",
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1196",
         },
       ],
-      4
+      2
     );
 
     // This schema is not at full parity. State what is still outstanding, so a
@@ -203,7 +204,6 @@ describe("PaginatedResultsInfo Schema", () => {
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
       new Set([
         "https://github.com/HHS/simpler-grants-protocol/issues/1130",
-        "https://github.com/HHS/simpler-grants-protocol/issues/1192",
         "https://github.com/HHS/simpler-grants-protocol/issues/1196",
       ])
     );
