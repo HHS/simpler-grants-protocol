@@ -1,7 +1,7 @@
 """Event field types for the CommonGrants API."""
 
 from enum import StrEnum
-from typing import Any, Literal, Optional, Union
+from typing import Any, ClassVar, Literal, Optional, Union
 
 from pydantic import Field
 
@@ -20,7 +20,16 @@ class EventType(StrEnum):
 
 # Event Base
 class EventBase(SealedModel):
-    """Base model for all events."""
+    """Base model for all events.
+
+    Like the TypeScript SDK, an event accepts ``null`` for its optional
+    ``description`` and time or details fields and reads it as omitted; dumps leave
+    them out.
+    """
+
+    _nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"description", "time", "start_time", "end_time", "details"}
+    )
 
     name: str = Field(
         ...,

@@ -3,8 +3,6 @@
 import pytest
 from datetime import date, time, datetime, timezone
 
-from pydantic import ValidationError
-
 from common_grants_sdk.schemas.pydantic.fields import (
     Money,
     EventType,
@@ -99,14 +97,14 @@ def test_single_date_event_validation():
     )
     assert event.name == ""
 
-    # Optional is not nullable: an explicit null is rejected, omission is not
-    with pytest.raises(ValidationError):
-        SingleDateEvent(
-            name="Test Event",
-            event_type=EventType.SINGLE_DATE,
-            date=date(2024, 1, 1),
-            time=None,
-        )
+    # Like the TS SDK, an explicit null time is accepted and never dumped
+    event = SingleDateEvent(
+        name="Test Event",
+        event_type=EventType.SINGLE_DATE,
+        date=date(2024, 1, 1),
+        time=None,
+    )
+    assert "time" not in event.model_dump(by_alias=True)
 
     # With strict=False, date string is coerced to date
     event = SingleDateEvent(

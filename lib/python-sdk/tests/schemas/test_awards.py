@@ -196,7 +196,6 @@ def test_typed_recipient_rejects_a_wrongly_typed_registered_value():
         None,
         {"name": "x", "value": 1},
         {"name": "x", "fieldType": "integer", "value": 1, "extra": True},
-        {"name": "x", "fieldType": "integer", "value": 1, "schema": None},
     ],
 )
 def test_malformed_recipient_custom_field_entries_are_rejected(model, entry):
@@ -244,7 +243,6 @@ NULL_PATHS = [
     ("funding", "details"),
     ("funding", "awardedAmount"),
     ("keyDates", "otherDates"),
-    ("keyDates", "awardDate", "description"),
     ("recipientIndividual", "name"),
     ("recipientIndividual", "identifiers"),
     ("recipientIndividual", "customFields"),

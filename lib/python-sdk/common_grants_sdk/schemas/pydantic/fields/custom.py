@@ -35,15 +35,19 @@ class CustomField(SealedModel, Generic[V]):
     irregular wire name, ``schema_url`` -> ``"schema"``, keeps an explicit
     field-level alias.
 
-    ``value`` is required but may be ``null``; the optional ``schema`` and
-    ``description`` may be omitted but not ``null``.
+    ``value`` is required but may be ``null``. Like the TypeScript SDK, the
+    optional ``schema`` and ``description`` also accept ``null``, read as omitted;
+    dumps leave them out.
     """
 
     model_config = ConfigDict(populate_by_name=True)
 
+    # ``schema`` and ``description`` accept null, as in the TypeScript SDK.
     # Subclasses that make ``value`` optional (the runtime custom-field helper)
     # still let it be null, as Core does...
-    _nullable_fields: ClassVar[frozenset[str]] = frozenset({"value"})
+    _nullable_fields: ClassVar[frozenset[str]] = frozenset(
+        {"value", "schema_url", "description"}
+    )
     # ...and still write a None value: Core requires the key.
     _wire_required_fields: ClassVar[frozenset[str]] = frozenset({"value"})
 

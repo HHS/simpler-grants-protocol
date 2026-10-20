@@ -115,6 +115,7 @@ def test_nested_models_follow_the_rule():
                     "name": "Award",
                     "eventType": "singleDate",
                     "date": "2026-03-01",
+                    "time": None,
                 }
             },
         }
