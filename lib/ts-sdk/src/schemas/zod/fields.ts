@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { nullishAsOptional } from "./nullish.js";
 import { UTCDateTimeSchema, ISODateSchema, ISOTimeSchema, DecimalStringSchema } from "./types.js";
 
 // ############################################################################
@@ -23,7 +24,7 @@ const EventBaseSchema = z.object({
   eventType: EventTypeEnum,
 
   /** Description of what this event represents */
-  description: z.string().nullish(),
+  description: nullishAsOptional(z.string()),
 });
 
 // Single date event schema
@@ -35,7 +36,7 @@ export const SingleDateEventSchema = EventBaseSchema.extend({
   date: ISODateSchema,
 
   /** Time of the event in ISO 8601 format: HH:MM:SS */
-  time: ISOTimeSchema.nullish(),
+  time: nullishAsOptional(ISOTimeSchema),
 });
 
 // Date range event schema
@@ -47,13 +48,13 @@ export const DateRangeEventSchema = EventBaseSchema.extend({
   startDate: ISODateSchema,
 
   /** Start time of the event in ISO 8601 format: HH:MM:SS */
-  startTime: ISOTimeSchema.nullish(),
+  startTime: nullishAsOptional(ISOTimeSchema),
 
   /** End date of the event in ISO 8601 format: YYYY-MM-DD */
   endDate: ISODateSchema,
 
   /** End time of the event in ISO 8601 format: HH:MM:SS */
-  endTime: ISOTimeSchema.nullish(),
+  endTime: nullishAsOptional(ISOTimeSchema),
 });
 
 // Other event schema
@@ -62,10 +63,10 @@ export const OtherEventSchema = EventBaseSchema.extend({
   eventType: z.literal("other"),
 
   /** Details of the event's timeline (e.g. "Every other Tuesday") */
-  details: z.string().nullish(),
+  details: nullishAsOptional(z.string()),
 
   /** Description of the event */
-  description: z.string().nullish(),
+  description: nullishAsOptional(z.string()),
 });
 
 // Discriminated union for all event types
@@ -110,13 +111,13 @@ export const CustomFieldSchema = z.object({
   fieldType: CustomFieldTypeEnum,
 
   /** Link to the full JSON schema */
-  schema: z.url().nullish(),
+  schema: nullishAsOptional(z.url()),
 
   /** Value of the custom field */
   value: z.unknown(),
 
   /** Description of the custom field's purpose */
-  description: z.string().nullish(),
+  description: nullishAsOptional(z.string()),
 });
 
 // ############################################################################

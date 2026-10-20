@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { nullishAsOptional } from "./nullish.js";
 import { EventSchema, MoneySchema, CustomFieldSchema, SystemMetadataSchema } from "./fields.js";
 import {
   StringArrayFilterSchema,
@@ -21,10 +22,10 @@ export const OppStatusSchema = z.object({
   value: OppStatusOptionsEnum,
 
   /** A custom status value */
-  customValue: z.string().nullish(),
+  customValue: nullishAsOptional(z.string()),
 
   /** A human-readable description of the status */
-  description: z.string().nullish(),
+  description: nullishAsOptional(z.string()),
 });
 
 // ############################################################################
@@ -57,10 +58,10 @@ export const ApplicantTypeSchema = z
     value: ApplicantTypeOptionsEnum,
 
     /** The custom value for the applicant type */
-    customValue: z.string().nullish(),
+    customValue: nullishAsOptional(z.string()),
 
     /** The description of the applicant type */
-    description: z.string().nullish(),
+    description: nullishAsOptional(z.string()),
   })
   .strict();
 
@@ -71,25 +72,25 @@ export const ApplicantTypeSchema = z
 export const OppFundingSchema = z
   .object({
     /** Details about the funding available for this opportunity that don't fit other fields */
-    details: z.string().nullish(),
+    details: nullishAsOptional(z.string()),
 
     /** Total amount of funding available */
-    totalAmountAvailable: MoneySchema.nullish(),
+    totalAmountAvailable: nullishAsOptional(MoneySchema),
 
     /** Minimum amount of funding granted per award */
-    minAwardAmount: MoneySchema.nullish(),
+    minAwardAmount: nullishAsOptional(MoneySchema),
 
     /** Maximum amount of funding granted per award */
-    maxAwardAmount: MoneySchema.nullish(),
+    maxAwardAmount: nullishAsOptional(MoneySchema),
 
     /** Minimum number of awards granted */
-    minAwardCount: z.number().int().nullish(),
+    minAwardCount: nullishAsOptional(z.number().int()),
 
     /** Maximum number of awards granted */
-    maxAwardCount: z.number().int().nullish(),
+    maxAwardCount: nullishAsOptional(z.number().int()),
 
     /** Estimated number of awards that will be granted */
-    estimatedAwardCount: z.number().int().nullish(),
+    estimatedAwardCount: nullishAsOptional(z.number().int()),
   })
   .strict();
 
@@ -100,13 +101,13 @@ export const OppFundingSchema = z
 export const OppTimelineSchema = z
   .object({
     /** The date (and time) at which the opportunity is posted */
-    postDate: EventSchema.nullish(),
+    postDate: nullishAsOptional(EventSchema),
 
     /** The date (and time) at which the opportunity closes */
-    closeDate: EventSchema.nullish(),
+    closeDate: nullishAsOptional(EventSchema),
 
     /** An optional map of other key dates or events in the opportunity timeline */
-    otherDates: z.record(z.string(), EventSchema).nullish(),
+    otherDates: nullishAsOptional(z.record(z.string(), EventSchema)),
   })
   .strict();
 
@@ -129,7 +130,7 @@ export const OpportunityBaseSchema = z
     description: z.string(),
 
     /** Details about the funding available */
-    funding: OppFundingSchema.nullish(),
+    funding: nullishAsOptional(OppFundingSchema),
 
     /**
      * Organization(s) offering the funding for this Opportunity: one required
@@ -138,16 +139,16 @@ export const OpportunityBaseSchema = z
     funders: OrgRefCollectionSchema.optional(),
 
     /** Key dates for the Opportunity */
-    keyDates: OppTimelineSchema.nullish(),
+    keyDates: nullishAsOptional(OppTimelineSchema),
 
     /** The type of applicant for the opportunity */
-    acceptedApplicantTypes: z.array(ApplicantTypeSchema).nullish(),
+    acceptedApplicantTypes: nullishAsOptional(z.array(ApplicantTypeSchema)),
 
     /** URL for the original source of the Opportunity */
-    source: z.url().nullish(),
+    source: nullishAsOptional(z.url()),
 
     /** Additional custom fields specific to this Opportunity */
-    customFields: z.record(z.string(), CustomFieldSchema).nullish(),
+    customFields: nullishAsOptional(z.record(z.string(), CustomFieldSchema)),
 
     /**
      * System and registry-specific identifiers for the Opportunity, sealed to
@@ -218,30 +219,30 @@ export const OppSortingSchema = z.object({
   sortBy: OppSortByEnum,
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().nullish(),
+  customSortBy: nullishAsOptional(z.string()),
 
   /** The direction to sort in */
-  sortOrder: z.enum(["asc", "desc"]).nullish(),
+  sortOrder: nullishAsOptional(z.enum(["asc", "desc"])),
 });
 
 export const OppDefaultFiltersSchema = z.object({
   /** Status filter */
-  status: StringArrayFilterSchema.nullish(),
+  status: nullishAsOptional(StringArrayFilterSchema),
 
   /** Close date range filter */
-  closeDateRange: DateRangeFilterSchema.nullish(),
+  closeDateRange: nullishAsOptional(DateRangeFilterSchema),
 
   /** Total funding available range filter */
-  totalFundingAvailableRange: MoneyRangeFilterSchema.nullish(),
+  totalFundingAvailableRange: nullishAsOptional(MoneyRangeFilterSchema),
 
   /** Min award amount range filter */
-  minAwardAmountRange: MoneyRangeFilterSchema.nullish(),
+  minAwardAmountRange: nullishAsOptional(MoneyRangeFilterSchema),
 
   /** Max award amount range filter */
-  maxAwardAmountRange: MoneyRangeFilterSchema.nullish(),
+  maxAwardAmountRange: nullishAsOptional(MoneyRangeFilterSchema),
 });
 
 export const OppFiltersSchema = OppDefaultFiltersSchema.extend({
   /** Additional implementation-defined filters */
-  customFilters: z.record(z.string(), DefaultFilterSchema).nullish(),
+  customFilters: nullishAsOptional(z.record(z.string(), DefaultFilterSchema)),
 });

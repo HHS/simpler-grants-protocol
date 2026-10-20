@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+import { nullishAsOptional } from "./nullish.js";
 
 // ############################################################################
 // Sort Order Enum
@@ -25,10 +26,10 @@ export const SortQueryParamsSchema = z.object({
   sortBy: z.unknown(),
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().nullish(),
+  customSortBy: nullishAsOptional(z.string()),
 
   /** The order to sort by */
-  sortOrder: SortOrderEnum.nullish(),
+  sortOrder: nullishAsOptional(SortOrderEnum),
 });
 
 // ############################################################################
@@ -41,10 +42,10 @@ export const SortBodyParamsSchema = z.object({
   sortBy: z.unknown(),
 
   /** Implementation-defined sort key */
-  customSortBy: z.string().nullish(),
+  customSortBy: nullishAsOptional(z.string()),
 
   /** The order to sort by */
-  sortOrder: SortOrderEnum.nullish(),
+  sortOrder: nullishAsOptional(SortOrderEnum),
 });
 
 // ############################################################################
@@ -57,11 +58,11 @@ export const SortedResultsInfoSchema = z.object({
   sortBy: z.string(),
 
   /** Implementation-defined sort key used to sort the results, if applicable */
-  customSortBy: z.string().nullish(),
+  customSortBy: nullishAsOptional(z.string()),
 
   /** The order in which the results are sorted, e.g. ascending or descending */
   sortOrder: SortOrderEnum,
 
   /** Non-fatal errors that occurred during sorting */
-  errors: z.array(z.string()).nullish(),
+  errors: nullishAsOptional(z.array(z.string())),
 });

@@ -8,6 +8,7 @@
  */
 
 import { z } from "zod";
+import { nullishAsOptional } from "./nullish.js";
 import { PaginatedResultsInfoSchema } from "./pagination.js";
 import { SortedResultsInfoSchema } from "./sorting.js";
 
@@ -134,7 +135,7 @@ export const FilteredSchema = <ItemsT extends z.ZodType, FilterT extends z.ZodTy
         filters: filterSchema,
 
         /** Non-fatal errors that occurred during filtering */
-        errors: z.array(z.string()).nullish(),
+        errors: nullishAsOptional(z.array(z.string())),
       })
       .strict(),
   });
