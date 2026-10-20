@@ -39,6 +39,7 @@ from pydantic import (
 from pydantic.alias_generators import to_camel
 
 from ..schemas.pydantic._contract import NonNullOptionals
+from ..schemas.pydantic._wire import OmitNullOptionals
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
 from ..schemas.pydantic.models import OpportunityBase
 from .specs import PluginCustomFieldSpec
@@ -62,12 +63,13 @@ TCommon = TypeVar("TCommon", bound=BaseModel)
 T = TypeVar("T", bound=BaseModel)
 
 
-class _CamelModel(BaseModel):
+class _CamelModel(OmitNullOptionals):
     """Base model that is camelCase on the wire and snake_case in code.
 
     Authors and consumers use snake_case field names (``field_type``); JSON I/O uses
     camelCase (``fieldType``). Construction by field name type-checks and validation
-    accepts either casing.
+    accepts either casing. Like the protocol models, it never writes ``null`` for an
+    optional field.
     """
 
     model_config = ConfigDict(

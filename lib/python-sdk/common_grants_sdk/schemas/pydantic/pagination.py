@@ -1,11 +1,12 @@
 """Paginated models for the CommonGrants API."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field  # noqa: F401 -- BaseModel stays in the barrel
 
+from ._wire import OmitNullOptionals as _OmitNullOptionals
 from .base import CAMEL_WIRE_CONFIG
 
 
-class PaginatedBase(BaseModel):
+class PaginatedBase(_OmitNullOptionals):
     """Parameters for pagination."""
 
     page: int = Field(

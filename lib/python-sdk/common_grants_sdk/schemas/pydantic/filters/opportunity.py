@@ -4,6 +4,7 @@ from typing import Optional
 
 from typing_extensions import TypedDict
 
+from .._wire import OmitNullOptionals as _OmitNullOptionals
 from ..base import CAMEL_WIRE_CONFIG, CommonGrantsBaseModel
 from .base import DefaultFilter
 from .boolean import BooleanComparisonFilter
@@ -11,7 +12,7 @@ from .date import DateComparisonFilter, DateRangeFilter
 from .money import MoneyComparisonFilter, MoneyRangeFilter
 from .numeric import NumberArrayFilter, NumberComparisonFilter
 from .string import StringArrayFilter, StringComparisonFilter
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 # Clean aliases for the typed authoring DX. A plugin author declaring custom
 # filters reads ``agency: StringArray`` rather than ``agency: StringArrayFilter``;
@@ -29,7 +30,7 @@ BooleanComparison = BooleanComparisonFilter
 # fields are typed with the explicit ``*RangeFilter`` names to avoid the collision.
 
 
-class OppDefaultFilters(BaseModel):
+class OppDefaultFilters(_OmitNullOptionals):
     """Standard filters available for searching opportunities."""
 
     model_config = CAMEL_WIRE_CONFIG

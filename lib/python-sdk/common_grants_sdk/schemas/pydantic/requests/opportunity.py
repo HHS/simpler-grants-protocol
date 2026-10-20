@@ -2,14 +2,15 @@
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from .._wire import OmitNullOptionals as _OmitNullOptionals
 from ..filters.opportunity import OppFilters
 from ..pagination import PaginatedBodyParams
 from ..sorting import OppSortBy, OppSorting
 
 
-class OpportunitySearchRequest(BaseModel):
+class OpportunitySearchRequest(_OmitNullOptionals):
     """Request body for searching opportunities."""
 
     search: Optional[str] = Field(

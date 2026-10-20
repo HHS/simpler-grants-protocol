@@ -1,10 +1,12 @@
 import json
 from typing import Self
 
-from pydantic import AliasGenerator, BaseModel, ConfigDict
+from pydantic import AliasGenerator, ConfigDict
 from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.utils.transformation import transform_from_mapping
+
+from ._wire import OmitNullOptionals as _OmitNullOptionals
 
 # Generated (not field-level) aliases keep snake_case construction type-checking:
 # static checkers fall back to field names when the alias comes from a generator.
@@ -19,7 +21,7 @@ CAMEL_WIRE_CONFIG = ConfigDict(
 )
 
 
-class CommonGrantsBaseModel(BaseModel):
+class CommonGrantsBaseModel(_OmitNullOptionals):
     """Base model with common configuration and methods for CommonGrants models."""
 
     model_config = ConfigDict(

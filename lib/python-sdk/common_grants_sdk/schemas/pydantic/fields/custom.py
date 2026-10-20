@@ -42,8 +42,10 @@ class CustomField(SealedModel, Generic[V]):
     model_config = ConfigDict(populate_by_name=True)
 
     # Subclasses that make ``value`` optional (the runtime custom-field helper)
-    # still let it be null, as Core does.
+    # still let it be null, as Core does...
     _nullable_fields: ClassVar[frozenset[str]] = frozenset({"value"})
+    # ...and still write a None value: Core requires the key.
+    _wire_required_fields: ClassVar[frozenset[str]] = frozenset({"value"})
 
     name: str = Field(
         ...,

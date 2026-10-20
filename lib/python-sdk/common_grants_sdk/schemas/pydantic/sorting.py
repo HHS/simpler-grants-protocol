@@ -3,9 +3,10 @@
 from enum import Enum, StrEnum
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
 
 from ._contract import SealedModel as _SealedModel
+from ._wire import OmitNullOptionals as _OmitNullOptionals
 from .base import CAMEL_WIRE_CONFIG
 
 
@@ -16,7 +17,7 @@ class SortOrder(str, Enum):
     DESC = "desc"
 
 
-class SortBase(BaseModel):
+class SortBase(_OmitNullOptionals):
     """Base class for sorting-related models."""
 
     sort_by: Union[str, None] = Field(
@@ -82,7 +83,7 @@ class OppSortBy(StrEnum):
     CUSTOM = "custom"
 
 
-class OppSorting(BaseModel):
+class OppSorting(_OmitNullOptionals):
     """Sorting options for opportunities."""
 
     sort_by: OppSortBy = Field(
