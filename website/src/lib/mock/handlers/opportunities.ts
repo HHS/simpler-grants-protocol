@@ -8,8 +8,8 @@ import {
   allForVersion,
   getById,
   shapeOpportunityForVersion,
-  type Opportunity,
   type Version,
+  type WireOpportunity,
 } from "../data/fixtures";
 import {
   errorResponse,
@@ -87,7 +87,7 @@ interface SearchRequestBody {
 }
 
 /** Extracts the field an `OppSortBy` wire value sorts on, as a string or number. */
-function sortKey(opp: Opportunity, sortBy: string): string | number {
+function sortKey(opp: WireOpportunity, sortBy: string): string | number {
   switch (sortBy) {
     case "lastModifiedAt":
       return new Date(opp.lastModifiedAt).getTime();

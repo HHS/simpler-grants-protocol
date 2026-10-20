@@ -11,9 +11,9 @@
  */
 
 import { z } from "zod";
-import { OpportunityBaseSchema } from "../src/schemas";
-import { CustomFieldType } from "../src/constants";
-import { withCustomFields, getCustomFieldValue } from "../src/extensions";
+import { OpportunityBaseSchema } from "../src/schemas/index.js";
+import { CustomFieldType } from "../src/constants.js";
+import { withCustomFields, getCustomFieldValue } from "../src/extensions/index.js";
 
 // Define custom value schemas for complex types
 const LegacyIdValueSchema = z.object({

@@ -14,6 +14,15 @@ import { z } from "zod";
 
 export const UuidSchema = z.uuid();
 
+/** Employer Identification Number (EIN), normalized to nine digits. */
+export const EmployerTaxIdSchema = z.string().regex(/^[0-9]{9}$/);
+
+/** Unique Entity Identifier (UEI) issued by SAM.gov. */
+export const SamUeiSchema = z.string().regex(/^[A-HJ-NP-Z0-9]{12}$/);
+
+/** Data Universal Numbering System (DUNS) number, normalized to nine digits. */
+export const DunsSchema = z.string().regex(/^[0-9]{9}$/);
+
 // ############################################################################
 // Numeric types
 // ############################################################################

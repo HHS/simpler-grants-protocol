@@ -5,12 +5,13 @@ import {
   OppFundingSchema,
   OppTimelineSchema,
   OpportunityBaseSchema,
+  OpportunityDetailsSchema,
   OppSortByEnum,
   OppSortingSchema,
   OppDefaultFiltersSchema,
   OppFiltersSchema,
 } from "@/schemas";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 
 // ############################################################################
 // OppStatusOptionsEnum
@@ -174,6 +175,23 @@ describe("OppTimeline Schema", () => {
 describe("OpportunityBase Schema", () => {
   const jsonSchemaId = "OpportunityBase.yaml";
 
+  // Valid v0.5 shapes, shared by the parse test and the fuzz boundary controls:
+  // a funder collection with its required `primary` plus a role-keyed `otherOrgs`,
+  // and an identifier collection carrying both base registries (FON, ALN) alongside
+  // `systemId` and `otherIds`.
+  const validFunders = {
+    primary: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Primary Organization" },
+    otherOrgs: {
+      fiscalSponsor: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Fiscal Sponsor" },
+    },
+  };
+  const validIdentifiers = {
+    systemId: { id: "123e4567-e89b-12d3-a456-426614174000" },
+    otherIds: { custom: { id: "custom-id" } },
+    "opp:us:fon": { registry: { code: "opp:us:fon" }, id: "FON-0001" },
+    "opp:us:aln": { registry: {}, id: "93.123" },
+  };
+
   it("should validate a valid OpportunityBase", () => {
     const validOpportunity = {
       id: "123e4567-e89b-12d3-a456-426614174000",
@@ -199,6 +217,22 @@ describe("OpportunityBase Schema", () => {
       lastModifiedAt: "2025-01-02T00:00:00Z",
     };
     expect(OpportunityBaseSchema.parse(validOpportunity)).toBeDefined();
+  });
+
+  it("should validate v0.5 funders and identifiers shapes", () => {
+    const opportunity = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      funders: validFunders,
+      identifiers: validIdentifiers,
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+    };
+    const parsed = OpportunityBaseSchema.parse(opportunity);
+    expect(parsed.funders).toEqual(validFunders);
+    expect(parsed.identifiers).toEqual(validIdentifiers);
   });
 
   it("should match opportunityBase.yaml", async () => {
@@ -231,11 +265,13 @@ describe("OpportunityBase Schema", () => {
         // against the wire form.
         { label: "createdAt as a Date instance", value: { ...valid, createdAt: new Date() } },
 
-        // Values the SDK accepts that the protocol does not: every optional field
-        // is `.nullish()` in Zod, while the protocol declares it optional but not
-        // nullable. This is the disagreement Hono template verification hit, and
-        // ADR 0024 alignment (#1192) owns the fix. The harness fails if one stops
-        // reproducing, so these entries cannot outlive it.
+        // Values the SDK accepts that the protocol does not: these optional
+        // fields are `.nullish()` in Zod, while the protocol declares them
+        // optional but not nullable. This is the disagreement Hono template
+        // verification hit, and ADR 0024 alignment (#1192) owns the fix. The
+        // harness fails if one stops reproducing, so these entries cannot
+        // outlive it. (`funders`/`identifiers` are `.optional()`, not
+        // `.nullish()`, so their `null` cases agree and sit below as controls.)
         ...(
           [
             ["funding", { funding: null }],
@@ -250,13 +286,57 @@ describe("OpportunityBase Schema", () => {
           expect: "divergent" as const,
           issue: "https://github.com/HHS/simpler-grants-protocol/issues/1192",
         })),
+
+        // `identifiers` now models `OppIds`, sealed to its base registries plus
+        // `systemId` and `otherIds`. Both FON and ALN present is accepted by
+        // both sides; a non-object, a `null`, and an unregistered top-level key
+        // are all rejected by both sides, so every case agrees.
+        {
+          label: "identifiers with both FON and ALN",
+          value: { ...valid, identifiers: validIdentifiers },
+        },
+        {
+          label: "identifiers is not an object",
+          value: { ...valid, identifiers: "not an object" },
+        },
+        {
+          label: "identifiers is null (SDK optional, protocol optional but not nullable)",
+          value: { ...valid, identifiers: null },
+        },
+        {
+          label: "identifiers with an unregistered top-level key (sealed OppIds)",
+          value: { ...valid, identifiers: { "opp:made:up": { id: "x" } } },
+        },
+
+        // `funders` now models `OrgRefCollection`, which requires a `primary`
+        // organization and keys the rest under `otherOrgs`. A collection with
+        // both is accepted by both sides; a non-object, a `null`, and a
+        // collection missing `primary` are all rejected by both sides.
+        {
+          label: "funders with primary and otherOrgs",
+          value: { ...valid, funders: validFunders },
+        },
+        {
+          label: "funders is not an object",
+          value: { ...valid, funders: "not an object" },
+        },
+        {
+          label: "funders is null (SDK optional, protocol optional but not nullable)",
+          value: { ...valid, funders: null },
+        },
+        {
+          label: "funders without primary (OrgRefCollection requires primary)",
+          value: { ...valid, funders: { otherOrgs: {} } },
+        },
       ],
       5
     );
 
     // Not full parity: every optional field on this model still accepts null
-    // where the protocol does not. Stated here so a green test does not read as
-    // agreement.
+    // where the protocol does not. The two newly-modeled fields (`funders`,
+    // `identifiers`) no longer diverge, so the remaining divergences are the
+    // `.nullish()` fields ADR 0024 alignment (#1192) owns. Stated here so a
+    // green test does not read as agreement.
     expect(new Set(result.knownDivergences.map(d => d.issue))).toEqual(
       new Set(["https://github.com/HHS/simpler-grants-protocol/issues/1192"])
     );
@@ -301,6 +381,117 @@ describe("OpportunityBase Schema", () => {
         createdAt: "2025-01-01T00:00:00Z",
         lastModifiedAt: "2025-01-02T00:00:00Z",
       })
+    ).toThrow();
+  });
+
+  it("should reject invalid funders and identifiers shapes", () => {
+    const baseline = {
+      id: "123e4567-e89b-12d3-a456-426614174000",
+      title: "Sample Grant Opportunity",
+      status: { value: "open" },
+      description: "A sample grant opportunity for testing",
+      createdAt: "2025-01-01T00:00:00Z",
+      lastModifiedAt: "2025-01-02T00:00:00Z",
+    };
+
+    // funders missing required 'primary'
+    expect(() =>
+      OpportunityBaseSchema.parse({ ...baseline, funders: { otherOrgs: {} } })
+    ).toThrow();
+    // identifiers with an unregistered top-level key (OppIds is strict)
+    expect(() =>
+      OpportunityBaseSchema.parse({
+        ...baseline,
+        identifiers: { "opp:made:up": { id: "x" } },
+      })
+    ).toThrow();
+    // funders explicitly null
+    expect(() => OpportunityBaseSchema.parse({ ...baseline, funders: null })).toThrow();
+    // identifiers explicitly null
+    expect(() => OpportunityBaseSchema.parse({ ...baseline, identifiers: null })).toThrow();
+  });
+});
+
+// ############################################################################
+// OpportunityDetails Schema
+// ############################################################################
+
+describe("OpportunityDetails Schema", () => {
+  const validOpportunity = {
+    id: "123e4567-e89b-12d3-a456-426614174000",
+    title: "Sample Grant Opportunity",
+    status: { value: "open" },
+    description: "A sample grant opportunity for testing",
+    funding: {
+      totalAmountAvailable: { amount: "1000000.00", currency: "USD" },
+    },
+    keyDates: {
+      closeDate: {
+        eventType: "singleDate",
+        date: "2025-12-31",
+        name: "Opportunity Close Date",
+      },
+    },
+    acceptedApplicantTypes: [
+      { value: "individual" },
+      { value: "organization", description: "Any organization type" },
+    ],
+    source: "https://example.com/opportunity",
+    createdAt: "2025-01-01T00:00:00Z",
+    lastModifiedAt: "2025-01-02T00:00:00Z",
+  };
+
+  it("should validate a valid OpportunityDetails and preserve awards", () => {
+    const validDetails = {
+      ...validOpportunity,
+      awards: [
+        {
+          id: "30a12e5e-5940-4c08-921c-17a8960fcf4b",
+          title: "Community Health Center Capital Improvement Grant",
+          identifiers: {
+            "awd:us:fain": { registry: { code: "awd:us:fain" }, id: "H80CS00001" },
+          },
+        },
+      ],
+    };
+    const parsed = OpportunityDetailsSchema.parse(validDetails);
+    expect(parsed.awards?.[0].id).toBe("30a12e5e-5940-4c08-921c-17a8960fcf4b");
+    expect(parsed.awards?.[0].title).toBe("Community Health Center Capital Improvement Grant");
+  });
+
+  it("should raise an error for a malformed award entry", () => {
+    expect(() =>
+      OpportunityDetailsSchema.parse({
+        ...validOpportunity,
+        awards: [{ id: "not-a-uuid", title: "x" }],
+      })
+    ).toThrow();
+  });
+
+  it("should distinguish omitted awards (undefined) from an empty awards list", () => {
+    const withoutAwards = OpportunityDetailsSchema.parse({ ...validOpportunity });
+    expect(withoutAwards.awards).toBeUndefined();
+
+    const withEmptyAwards = OpportunityDetailsSchema.parse({ ...validOpportunity, awards: [] });
+    expect(withEmptyAwards.awards).toEqual([]);
+  });
+
+  it("should raise an error when awards is explicitly null", () => {
+    expect(() => OpportunityDetailsSchema.parse({ ...validOpportunity, awards: null })).toThrow();
+  });
+
+  it("should preserve an arbitrary competitions shape without validating it", () => {
+    const competitions = [{ anything: "goes", nested: { a: 1 } }];
+    const parsed = OpportunityDetailsSchema.parse({ ...validOpportunity, competitions });
+    expect(parsed.competitions).toEqual(competitions);
+  });
+
+  it("should reject a non-array competitions value", () => {
+    expect(() =>
+      OpportunityDetailsSchema.parse({ ...validOpportunity, competitions: { not: "an array" } })
+    ).toThrow();
+    expect(() =>
+      OpportunityDetailsSchema.parse({ ...validOpportunity, competitions: null })
     ).toThrow();
   });
 });

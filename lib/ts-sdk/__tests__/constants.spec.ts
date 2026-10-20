@@ -73,3 +73,13 @@ describe("Field enum constants", () => {
     checkAllValuesMatchType<Types.CustomFieldType>(Constants.CustomFieldType);
   });
 });
+
+// ############################################################################
+// Identifier enum constants
+// ############################################################################
+
+describe("Identifier enum constants", () => {
+  it("should have IdentifierStatus values that match IdentifierStatus type", () => {
+    checkAllValuesMatchType<Types.IdentifierStatus>(Constants.IdentifierStatus);
+  });
+});

@@ -10,6 +10,9 @@ The `@common-grants/sdk/types` and `@common-grants/sdk/constants` modules comple
 - [Usage](#usage)
   - [Validation](#validation)
   - [Type safety](#type-safety)
+  - [Opportunity model](#opportunity-model)
+  - [Award contracts](#award-contracts)
+  - [Opportunity base vs detail](#opportunity-base-vs-detail)
   - [Generic response schemas](#generic-response-schemas)
 - [API reference](#api-reference)
   - [Base schemas](#base-schemas)
@@ -165,6 +168,192 @@ Opportunity is open
 Currently accepting applications
 ```
 
+### Opportunity model
+
+`OpportunityBaseSchema` carries two Core v0.5 fields backed by the shared
+reference schemas: `funders`, an `OrgRefCollectionSchema` with one required
+`primary` organization plus any others keyed by role, and `identifiers`, an
+`OppIdsSchema` sealed to the opportunity's base registries (`opp:us:fon`,
+`opp:us:aln`) alongside `systemId` and `otherIds`:
+
+```ts
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+
+const opportunity = OpportunityBaseSchema.parse({
+  id: "123e4567-e89b-12d3-a456-426614174000",
+  title: "Sample Grant Opportunity",
+  status: { value: "open" },
+  description: "A sample grant opportunity for testing",
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  funders: {
+    primary: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Primary Organization" },
+    otherOrgs: {
+      fiscalSponsor: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Fiscal Sponsor" },
+    },
+  },
+  identifiers: {
+    "opp:us:fon": { registry: { code: "opp:us:fon" }, id: "FON-0001" },
+    "opp:us:aln": { registry: {}, id: "93.123" },
+  },
+});
+
+console.log(opportunity.funders?.primary.name); // "Primary Organization"
+console.log(opportunity.identifiers?.["opp:us:fon"]?.id); // "FON-0001"
+```
+
+Unlike the model's other optional fields, which stay `.nullish()` pending
+[#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192), `funders`
+and `identifiers` are `.optional()`: they may be omitted, but `null` is
+rejected. A `funders` object without `primary`, or an `identifiers` object with
+a top-level key outside the registered registries, is also rejected.
+
+### Award contracts
+
+The SDK exports runtime validators for Core v0.5 award models and the list,
+read, and search route contracts. These are schemas and types only; an awards
+client resource is not available yet.
+
+The canonical award model is `AwardBaseSchema`. The `AwardBase` type is inferred
+from it, and `Award` is a convenience alias for the same type:
+
+```ts
+import { AwardBaseSchema } from "@common-grants/sdk/schemas";
+import { AwdStatusOptions } from "@common-grants/sdk/constants";
+import type { Award } from "@common-grants/sdk/types";
+
+const award: Award = AwardBaseSchema.parse({
+  id: "123e4567-e89b-42d3-a456-426614174000",
+  title: "Community Health Center Grant",
+  description: "Supports community health center improvements.",
+  status: { value: AwdStatusOptions.awarded },
+  createdAt: "2026-03-01T00:00:00Z",
+  lastModifiedAt: "2026-06-01T00:00:00Z",
+  identifiers: {
+    "awd:us:fain": {
+      registry: { code: "awd:us:fain" },
+      id: "FAIN-001",
+    },
+  },
+  opportunity: {
+    id: "018f2e77-3a4b-4c1d-9e2f-abcdef123456",
+    title: "Health Center Capital Improvement Program",
+  },
+  recipientIndividual: {
+    name: { firstName: "Taylor", lastName: "Grant" },
+    customFields: {
+      programArea: {
+        name: "programArea",
+        fieldType: "string",
+        value: "Healthcare Innovation",
+      },
+    },
+  },
+});
+
+console.log(award.createdAt.toISOString()); // "2026-03-01T00:00:00.000Z"
+console.log(JSON.stringify(award)); // Dates return to protocol wire strings
+```
+
+`createdAt` and `lastModifiedAt` accept UTC date-time strings or valid `Date`
+objects and parse to `Date`. Event date fields such as
+`keyDates.awardDate.date` accept `YYYY-MM-DD` strings or valid `Date` objects,
+parse to `Date`, and serialize back to `YYYY-MM-DD`. Award-date filter values
+remain protocol strings: either `YYYY-MM-DD` or an ISO date-time with an offset.
+Invalid `Date` objects are rejected.
+
+For award-specific schemas, an optional property may be omitted; `null` is not
+a substitute for omission unless the referenced schema explicitly permits it.
+Award objects are sealed, and custom fields are supported on
+`recipientIndividual.customFields`, not at the award root. That record may use
+arbitrary keys, but every value must satisfy `CustomFieldSchema`. The recipient
+schema is also registered with `withCustomFields()` and the plugin extension
+framework as `AwdRecipientIndividual`.
+
+The award schemas currently inherit two shared-model parity dependencies tracked
+by [#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192): event
+variants and `CustomFieldSchema` accept `null` for some optional metadata and do
+not yet reject every unknown nested key that the emitted Core contract rejects.
+The award-specific route envelopes avoid the analogous shared pagination and
+sorting differences by using protocol-exact concrete validators.
+
+Award filters have two intentionally different object policies:
+
+- `AwdDefaultFiltersSchema` is open. Alongside its named fields, it accepts and
+  preserves additional root keys whose values satisfy `DefaultFilterSchema`.
+- `AwdFiltersSchema` is sealed. Its root accepts only the named award filters
+  and `customFilters`; implementation-defined filters belong inside the open
+  `customFilters` record.
+
+Use the concrete route schemas when validating award API traffic:
+
+```ts
+import {
+  AwardsListRequestSchema,
+  AwardGetRequestSchema,
+  AwdSearchRequestSchema,
+  AwardResponseSchema,
+  AwardsListResponseSchema,
+  AwardsSortedResponseSchema,
+  AwardsFilteredResponseSchema,
+} from "@common-grants/sdk/schemas";
+
+AwardsListRequestSchema.parse({}); // { page: 1, pageSize: 100 }
+AwardGetRequestSchema.parse({
+  awdId: "123e4567-e89b-42d3-a456-426614174000",
+});
+AwdSearchRequestSchema.parse({
+  filters: {
+    status: { operator: "in", value: ["awarded"] },
+    customFilters: {
+      serviceArea: { operator: "eq", value: "rural" },
+    },
+  },
+  sorting: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+  pagination: {}, // defaults to page 1 with 100 items
+});
+```
+
+The response schemas above require status `200` and validate embedded awards
+plus pagination, sorting, and filtering metadata. `NotFoundSchema` validates
+the read route's not-found response.
+
+### Opportunity base vs detail
+
+`OpportunityBaseSchema` validates list/search rows. `OpportunityDetailsSchema`
+additionally validates the fields only a single-item read returns: `awards`
+(validated against `AwdRefSchema`) and `competitions`.
+
+```ts
+import { OpportunityDetailsSchema } from "@common-grants/sdk/schemas";
+
+const opportunity = OpportunityDetailsSchema.parse({
+  id: "ac201443-5480-4e36-9799-a39765225153",
+  title: "Test Opportunity",
+  description: "This is a test opportunity",
+  status: { value: "open" },
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-01T00:00:00Z",
+  awards: [{ id: "018f2e77-3a4b-4c1d-9e2f-abcdef123456", title: "Community Health Center Grant" }],
+});
+```
+
+`awards` entries are validated; an omitted `awards` key means the implementation
+does not publish the link for this record, while an empty array means the link
+is published with no awards yet. `null` is rejected: only omission or an array
+are valid. Entries carry no ordering guarantee, and a reference is not
+dereferenceable through this API.
+
+`competitions` is preserved on the parsed result but not deeply validated:
+`CompetitionBase` is not yet modeled in the SDK, so entries pass through as
+opaque values rather than being dropped. Full validation is deferred to a
+dedicated competitions ticket.
+
+`OpportunityDetailsSchema` is built as `OpportunityBaseSchema.and(...)`, an
+intersection rather than an extended object, so it is not an independently
+extensible unit: custom fields are declared once, on the base, and flow
+through the intersection automatically.
+
 ### Generic response schemas
 
 The SDK provides generic (parameterized) schemas for validating common API response shapes. Pass any item schema to create a typed response validator:
@@ -227,7 +416,11 @@ Other generic response schemas include `OkSchema(T)`, `SortedSchema(T)`, `Filter
 All Zod schemas are exported from `@common-grants/sdk/schemas`. See the [schemas index](./zod/index.ts) for the full list, organized by module:
 
 - [**Fields**](./zod/fields.ts): `EventSchema`, `MoneySchema`, `CustomFieldSchema`, `SystemMetadataSchema`
-- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
+- [**Identifiers**](./zod/identifiers.ts): `IdentifierSchema`, `SystemIdSchema`, `IdentifierCollectionSchema`, `IdentifierStatusEnum`
+- [**References**](./zod/references.ts): `AppRefSchema`; organization EIN, UEI, and DUNS identifier schemas; organization collections; opportunity FON and ALN identifier schemas; `OppRefSchema`
+- [**Awards**](./zod/awards.ts): `AwardBaseSchema`, award status, funding, timeline, FAIN identifier, reference, individual-recipient, filter, and sorting schemas
+- [**Award routes**](./zod/award-routes.ts): `AwardsListRequestSchema`, `AwardGetRequestSchema`, `AwdSearchRequestSchema`, `AwardResponseSchema`, `AwardsListResponseSchema`, `AwardsSortedResponseSchema`, `AwardsFilteredResponseSchema`
+- [**Models**](./zod/models.ts): `OpportunityBaseSchema`, `OpportunityDetailsSchema`, `OpportunityDetailFieldsSchema`, `OppStatusSchema`, `OppFundingSchema`, `OppTimelineSchema`, `ApplicantTypeSchema`, `OppSortingSchema`, `OppFiltersSchema`
 - [**Filters**](./zod/filters.ts): String, number, date, and money comparison/range/array filters
 - [**Responses**](./zod/responses.ts): `OkSchema`, `PaginatedSchema`, `SortedSchema`, `FilteredSchema`, `CreatedSchema`, `ErrorSchema`, `UnauthorizedSchema`, `NotFoundSchema`
 - [**Pagination**](./zod/pagination.ts): `PaginatedBodyParamsSchema`, `PaginatedResultsInfoSchema`
@@ -237,16 +430,22 @@ All Zod schemas are exported from `@common-grants/sdk/schemas`. See the [schemas
 
 All TypeScript types are inferred from schemas using `z.infer<>` and exported from `@common-grants/sdk/types`. See [types.ts](../types.ts) for the full list, including:
 
-- Model types: `OpportunityBase`, `OppStatus`, `OppFunding`, `OppTimeline`
+- Model types: `OpportunityBase`, `OpportunityDetails`, `OppStatus`, `OppFunding`, `OppTimeline`
+- Award model types: `AwardBase` (`Award` is an alias), `AwdStatus`, `AwdFunding`, `AwdTimeline`, `AwdRecipientIndividual`, `AwdSorting`, `AwdDefaultFilters`, `AwdFilters`
+- Identifier and reference types: `Identifier`, `SystemId`, `IdentifierCollection`, `AwdIdFain`, `AwdIds`, `AwdRef`, `AppRef`, organization identifiers/references, and opportunity identifiers/references
 - Field types: `Event`, `Money`, `CustomField`
 - Response types: `Ok<T>`, `Paginated<T>`, `Sorted<T>`, `Filtered<T, F>`
-- Request types: `OppFilters`, `OppSearchRequest`
+- Award route types: `AwardsListRequest`, `AwardGetRequest`, `AwdSearchRequest`, `AwardResponse`, `AwardsListResponse`, `AwardsSortedResponse`, `AwardsFilteredResponse`
+- Opportunity request types: `OppFilters`, `OppSearchRequest`
 
 ### Constants
 
 Runtime enum constants are exported from `@common-grants/sdk/constants`. See [constants.ts](../constants.ts) for the full list, including:
 
 - `OppStatusOptions`: `open`, `closed`, `forecasted`, `custom`
+- `AwdStatusOptions`: `awarded`, `completed`, `cancelled`, `custom`
+- `AwdSortBy`: award sort field values
+- `IdentifierStatus`: `active`, `archived`
 - `ApplicantTypeOptions`: applicant type values
 - `OppSortBy`: sort field values
 - Filter operators: `EquivalenceOperator`, `ComparisonOperator`, `ArrayOperator`, `StringOperator`, `RangeOperator`

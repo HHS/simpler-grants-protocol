@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { z } from "zod";
-import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch";
-import { Client, Auth, Opportunities, BatchParseError } from "../../src/client";
-import type { CustomFilterBag } from "../../src/client";
-import { OpportunityBaseSchema } from "../../src/schemas";
-import { withCustomFields, F, FilterError, validateRoutes } from "../../src/extensions";
-import type { PluginRoutes } from "../../src/extensions";
-import { CustomFieldType } from "../../src/constants";
+import { http, HttpResponse, setupServer, createPaginatedHandler } from "../utils/mock-fetch.js";
+import { Client, Auth, Opportunities, BatchParseError } from "../../src/client/index.js";
+import type { CustomFilterBag } from "../../src/client/index.js";
+import { OpportunityBaseSchema } from "../../src/schemas/index.js";
+import { withCustomFields, F, FilterError, validateRoutes } from "../../src/extensions/index.js";
+import type { PluginRoutes } from "../../src/extensions/index.js";
+import { CustomFieldType } from "../../src/constants.js";
 
 // =============================================================================
 // Custom schema for testing withCustomFields support
@@ -55,6 +55,7 @@ const createMockOpportunityWithCustomFields = (
 const OPP_UUID_1 = "550e8400-e29b-41d4-a716-446655440001";
 const OPP_UUID_2 = "550e8400-e29b-41d4-a716-446655440002";
 const NOT_FOUND_UUID = "550e8400-e29b-41d4-a716-446655440404";
+const AWARD_UUID = "660e8400-e29b-41d4-a716-446655440001";
 
 // Generate a larger set of mock opportunities for pagination tests
 const generateMockOpportunities = (count: number) => {
@@ -182,6 +183,135 @@ describe("Opportunities", () => {
       expect(opp.title).toBe("Custom Fields Grant");
       expect(opp.customFields?.legacyId?.value).toBe(42);
       expect(opp.customFields?.legacyId?.fieldType).toBe("integer");
+    });
+
+    // =========================================================================
+    // Detail schema: get() parses awards/competitions by default (#1248-T2)
+    // =========================================================================
+
+    describe("detail schema (awards/competitions)", () => {
+      it("preserves awards by default", async () => {
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: {
+                ...createMockOpportunity(params.id as string, "Grant With Award", "open"),
+                awards: [{ id: AWARD_UUID, title: "Resulting Award" }],
+              },
+            });
+          })
+        );
+
+        const opp = await client.opportunities.get(OPP_UUID_1);
+
+        expect(opp.awards?.[0].id).toBe(AWARD_UUID);
+        expect(opp.awards?.[0].title).toBe("Resulting Award");
+      });
+
+      it("distinguishes omitted awards from an empty awards array", async () => {
+        const withoutAwards = await client.opportunities.get(OPP_UUID_1);
+        expect(withoutAwards.awards).toBeUndefined();
+
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: { ...createMockOpportunity(params.id as string, "Grant", "open"), awards: [] },
+            });
+          })
+        );
+
+        const withEmptyAwards = await client.opportunities.get(OPP_UUID_1);
+        expect(withEmptyAwards.awards).toEqual([]);
+      });
+
+      it("preserves an arbitrary competitions shape without validating it", async () => {
+        const competitions = [{ anything: "goes" }];
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: {
+                ...createMockOpportunity(params.id as string, "Grant", "open"),
+                competitions,
+              },
+            });
+          })
+        );
+
+        const opp = await client.opportunities.get(OPP_UUID_1);
+        expect(opp.competitions).toEqual(competitions);
+      });
+
+      it("throws on a malformed award entry in the default detail response", async () => {
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: {
+                ...createMockOpportunity(params.id as string, "Grant", "open"),
+                awards: [{ id: "not-a-uuid", title: "Bad Award" }],
+              },
+            });
+          })
+        );
+
+        await expect(client.opportunities.get(OPP_UUID_1)).rejects.toThrow();
+      });
+
+      it("an explicit base-schema override drops detail fields even when the server returns awards", async () => {
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: {
+                ...createMockOpportunity(params.id as string, "Grant", "open"),
+                awards: [{ id: AWARD_UUID, title: "Resulting Award" }],
+              },
+            });
+          })
+        );
+
+        const opp = await client.opportunities.get(OPP_UUID_1, { schema: OpportunityBaseSchema });
+
+        expect((opp as { awards?: unknown }).awards).toBeUndefined();
+      });
+
+      it("retains both plugin custom fields and awards on a plugin-bound get()", async () => {
+        server.use(
+          http.get("/common-grants/opportunities/:id", ({ params }) => {
+            return HttpResponse.json({
+              status: 200,
+              message: "Success",
+              data: {
+                ...createMockOpportunityWithCustomFields(
+                  params.id as string,
+                  "Plugin Grant",
+                  "open",
+                  7
+                ),
+                awards: [{ id: AWARD_UUID, title: "Resulting Award" }],
+              },
+            });
+          })
+        );
+
+        const pluginOpps = new Opportunities(
+          new Client({ baseUrl: "https://api.example.org", auth: Auth.bearer("test-token") }),
+          OpportunityWithLegacyIdSchema
+        );
+
+        const opp = await pluginOpps.get(OPP_UUID_1);
+
+        expect(opp.customFields?.legacyId?.value).toBe(7);
+        expect(opp.awards?.[0].title).toBe("Resulting Award");
+      });
     });
   });
 
@@ -319,6 +449,28 @@ describe("Opportunities", () => {
       expect(result.items).toHaveLength(2);
       expect(result.items[0].customFields?.legacyId?.value).toBe(100);
       expect(result.items[1].customFields?.legacyId?.value).toBe(200);
+    });
+
+    it("stays on the base collection shape, dropping detail-only fields even when the server sends them (#1248-T2)", async () => {
+      server.use(
+        http.get("/common-grants/opportunities", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              {
+                ...createMockOpportunity(OPP_UUID_1, "Grant A", "open"),
+                awards: [{ id: AWARD_UUID, title: "Resulting Award" }],
+              },
+            ],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+          });
+        })
+      );
+
+      const result = await client.opportunities.list({ page: 1 });
+
+      expect((result.items[0] as { awards?: unknown }).awards).toBeUndefined();
     });
   });
 
@@ -730,6 +882,30 @@ describe("Opportunities", () => {
       expect(result.items[0].title).toBe("Custom Grant");
       expect(result.items[0].customFields?.legacyId?.value).toBe(555);
       expect(result.items[0].customFields?.legacyId?.fieldType).toBe("integer");
+    });
+
+    it("stays on the base collection shape, dropping detail-only fields even when the server sends them (#1248-T2)", async () => {
+      server.use(
+        http.post("/common-grants/opportunities/search", () => {
+          return HttpResponse.json({
+            status: 200,
+            message: "Success",
+            items: [
+              {
+                ...createMockOpportunity(OPP_UUID_1, "Conservation Grant", "open"),
+                awards: [{ id: AWARD_UUID, title: "Resulting Award" }],
+              },
+            ],
+            paginationInfo: { page: 1, pageSize: 25, totalItems: 1, totalPages: 1 },
+            sortInfo: { sortBy: "lastModifiedAt", sortOrder: "desc" },
+            filterInfo: { filters: {} },
+          });
+        })
+      );
+
+      const result = await client.opportunities.search({ query: "conservation" });
+
+      expect((result.items[0] as { awards?: unknown }).awards).toBeUndefined();
     });
 
     // =========================================================================

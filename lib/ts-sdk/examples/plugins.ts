@@ -10,8 +10,8 @@
  */
 
 import { z } from "zod";
-import { CustomFieldType } from "../src/constants";
-import { definePlugin } from "../src/extensions";
+import { CustomFieldType } from "../src/constants.js";
+import { definePlugin } from "../src/extensions/index.js";
 
 // ############################################################################
 // Step 1: Define independent plugins

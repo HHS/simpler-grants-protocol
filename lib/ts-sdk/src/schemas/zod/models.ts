@@ -1,12 +1,14 @@
 import { z } from "zod";
-import { EventSchema, MoneySchema, CustomFieldSchema, SystemMetadataSchema } from "./fields";
+import { EventSchema, MoneySchema, CustomFieldSchema, SystemMetadataSchema } from "./fields.js";
 import {
   StringArrayFilterSchema,
   DateRangeFilterSchema,
   MoneyRangeFilterSchema,
   DefaultFilterSchema,
-} from "./filters";
-import { UuidSchema } from "./types";
+} from "./filters.js";
+import { UuidSchema } from "./types.js";
+import { OrgRefCollectionSchema, OppIdsSchema } from "./references.js";
+import { AwdRefSchema } from "./awards.js";
 
 // ############################################################################
 // Status models
@@ -129,6 +131,12 @@ export const OpportunityBaseSchema = z
     /** Details about the funding available */
     funding: OppFundingSchema.nullish(),
 
+    /**
+     * Organization(s) offering the funding for this Opportunity: one required
+     * primary organization plus any others keyed by role.
+     */
+    funders: OrgRefCollectionSchema.optional(),
+
     /** Key dates for the Opportunity */
     keyDates: OppTimelineSchema.nullish(),
 
@@ -140,8 +148,53 @@ export const OpportunityBaseSchema = z
 
     /** Additional custom fields specific to this Opportunity */
     customFields: z.record(z.string(), CustomFieldSchema).nullish(),
+
+    /**
+     * System and registry-specific identifiers for the Opportunity, sealed to
+     * the base registries (FON, ALN) plus `systemId` and `otherIds`.
+     */
+    identifiers: OppIdsSchema.optional(),
   })
   .extend(SystemMetadataSchema.shape);
+
+// ############################################################################
+// Opportunity details model
+// ############################################################################
+
+/**
+ * Fields only a detail (single-item `get()`) response carries, layered onto
+ * `OpportunityBaseSchema` via intersection rather than `.extend()` so the
+ * extensible-schema coverage guard does not treat this as an independently
+ * extensible unit (custom fields are declared once, on the Opportunity base).
+ *
+ * Exported as a public primitive: `Opportunities` intersects it with whatever
+ * schema (base or plugin) is bound to the resource to derive a per-instance
+ * detail default, and consumers can likewise intersect it onto their own
+ * plugin schema to build a custom detail variant.
+ */
+export const OpportunityDetailFieldsSchema = z.object({
+  /**
+   * Awards that resulted from this opportunity, as references.
+   *
+   * Omitted means the implementation does not publish this link for the
+   * record; an empty array means the link is published and no awards are
+   * known. Entries carry no ordering guarantee, and a reference is not
+   * dereferenceable through this API.
+   */
+  awards: z.array(AwdRefSchema).optional(),
+
+  /**
+   * The competitions associated with the opportunity.
+   *
+   * `CompetitionBase` is not yet modeled in the SDK, so entries are passed
+   * through unvalidated rather than dropped. Deferred to a dedicated
+   * competitions ticket.
+   */
+  competitions: z.array(z.unknown()).optional(),
+});
+
+/** A funding opportunity with additional details, like related awards. */
+export const OpportunityDetailsSchema = OpportunityBaseSchema.and(OpportunityDetailFieldsSchema);
 
 // ############################################################################
 // Search models

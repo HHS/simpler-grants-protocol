@@ -5,20 +5,33 @@
  */
 
 import { z } from "zod";
-import { Client } from "../client";
-import { Opportunities } from "./opportunities";
-import { RESOURCE_REGISTRY } from "./registry";
-import type { PluginRoutes, ResourceName } from "../../extensions/types";
-import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin";
-import type { ClientConfig } from "../config";
-import type { AuthMethod } from "../auth";
-import type { OpportunityBase } from "../../types";
+import { Client } from "../client.js";
+import { Opportunities } from "./opportunities.js";
+import { Awards } from "./awards.js";
+import { RESOURCE_REGISTRY } from "./registry.js";
+import type { PluginRoutes, ResourceName } from "../../extensions/types.js";
+import type { Plugin, PluginSchemasInput } from "../../extensions/define-plugin.js";
+import type { ClientConfig } from "../config.js";
+import type { AuthMethod } from "../auth.js";
+import type { AwardBase, OpportunityBase } from "../../types.js";
 
 /** Item type projected from the plugin's compiled schema for a model. */
 type ResolvedItemType<T extends PluginSchemasInput> = z.infer<
   Plugin<T>["schemas"]["Opportunity"]["commonSchema"]
 > &
   OpportunityBase;
+
+/**
+ * Award item type: the base award envelope with its `recipientIndividual` key
+ * replaced by the plugin's compiled recipient-individual schema, the only
+ * extensible surface on `AwardBase`.
+ */
+type ResolvedAwardItemType<T extends PluginSchemasInput> = Omit<
+  AwardBase,
+  "recipientIndividual"
+> & {
+  recipientIndividual?: z.infer<Plugin<T>["schemas"]["AwdRecipientIndividual"]["commonSchema"]>;
+};
 
 /**
  * A `Client` whose resource slots carry the plugin's item and filter types:
@@ -35,13 +48,13 @@ export type BuiltClient<T extends PluginSchemasInput, TRoutes extends PluginRout
 > & {
   // resource-slot: typed projection per resource
   opportunities: Opportunities<TRoutes, ResolvedItemType<T>>;
+  awards: Awards<TRoutes, ResolvedAwardItemType<T>>;
 };
 
 /**
  * Builds a client from a plugin: constructs the transport `Client`, then
- * overlays each resource slot with a plugin-bound instance (the plugin's
- * compiled schema as the default parse schema, its routes for filter
- * classification).
+ * overlays extensible resource slots with plugin-bound schemas and fixed
+ * resource slots with their base schemas.
  */
 export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes extends PluginRoutes>(
   plugin: Plugin<T, TRoutes>,
@@ -61,7 +74,22 @@ export function buildClientForPlugin<T extends PluginSchemasInput, TRoutes exten
     plugin.routes
   );
 
-  // Second of the two cast points (the slot assignment above is the other):
-  // BuiltClient projects the plugin's item + filter types.
+  // The award envelope has no top-level custom fields; its only extensible
+  // surface is the nested recipientIndividual, so the bound schema composes
+  // the plugin's compiled recipient-individual schema into the base envelope
+  // rather than swapping the envelope schema itself.
+  const { resourceClass: AwardResource, baseSchema, nestedSchemaName } = RESOURCE_REGISTRY.awards;
+  const recipientIndividualSchema = plugin.schemas[nestedSchemaName].commonSchema;
+  const awardSchema = baseSchema.extend({
+    recipientIndividual: recipientIndividualSchema.optional(),
+  }) as z.ZodType<AwardBase, unknown>;
+  (client as unknown as { awards: Awards }).awards = new AwardResource(
+    client,
+    awardSchema,
+    plugin.routes
+  );
+
+  // Final projection cast; the two slot assignments above are the other
+  // documented casts. BuiltClient projects the plugin's item + filter types.
   return client as unknown as BuiltClient<T, TRoutes>;
 }

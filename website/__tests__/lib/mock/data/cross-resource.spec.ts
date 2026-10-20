@@ -22,10 +22,12 @@ import {
   CANONICAL_COMPETITION_ID,
   COMPETITION_FIXTURES,
   getCompetitionById,
+  shapeCompetitionForVersion,
 } from "@/lib/mock/data/competitions";
 import {
   CANONICAL_OPPORTUNITY_ID,
   OPPORTUNITY_FIXTURES,
+  shapeOpportunityForVersion,
 } from "@/lib/mock/data/fixtures";
 import {
   CANONICAL_FORM_ID,
@@ -72,6 +74,20 @@ describe("awards reference records that exist", () => {
       // A reference carrying a stale title is a dangling reference a caller
       // can actually see.
       expect(award.opportunity.title).toBe(opportunity!.title);
+    }
+  });
+
+  it("copies the referenced opportunity's identifiers onto `opportunity.identifiers`, verbatim", () => {
+    for (const award of AWARD_FIXTURES) {
+      if (!award.opportunity) continue;
+
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+
+      // Opportunities without identifiers must not have any invented for the
+      // award's reference either.
+      expect(award.opportunity.identifiers).toEqual(opportunity.identifiers);
     }
   });
 
@@ -199,6 +215,39 @@ describe("awards reference records that exist", () => {
         ).toBeDefined();
       }
     }
+
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const id of orgRefIds(opportunity.funders)) {
+        expect(
+          getOrganizationById(id),
+          `opportunity ${opportunity.id} references organization ${id}`,
+        ).toBeDefined();
+      }
+    }
+  });
+
+  it("agrees with the opportunity it references on the primary funder", () => {
+    const withFunders = AWARD_FIXTURES.filter((award) => {
+      if (!award.opportunity) return false;
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      );
+      return opportunity?.funders !== undefined;
+    });
+
+    // Meaningless without at least one such award to check.
+    expect(withFunders.length).toBeGreaterThan(0);
+
+    for (const award of withFunders) {
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+
+      expect(
+        award.funders?.primary.id,
+        `award ${award.id} references opportunity ${opportunity.id}`,
+      ).toBe(opportunity.funders!.primary.id);
+    }
   });
 
   it("points every `parent` award at a real award, with its real title", () => {
@@ -232,6 +281,20 @@ describe("competitions reference records that exist", () => {
         opportunityIds.has(competition.opportunityId),
         `competition ${competition.id} references opportunity ${competition.opportunityId}`,
       ).toBe(true);
+    }
+  });
+
+  it("gives every v0.5 competition its opportunity's real id and title", () => {
+    for (const competition of COMPETITION_FIXTURES) {
+      const { opportunity } = shapeCompetitionForVersion(competition, "0.5.0");
+      const real = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === competition.opportunityId,
+      );
+
+      expect(opportunity?.id).toBe(real?.id);
+      expect(opportunity?.title, `competition ${competition.id}`).toBe(
+        real?.title,
+      );
     }
   });
 
@@ -341,6 +404,16 @@ describe("organizations and their changes", () => {
 });
 
 describe("opportunities' nested competition previews", () => {
+  it("gives every v0.5 preview its own opportunity's real id and title", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      const shaped = shapeOpportunityForVersion(opportunity, "0.5.0", "detail");
+      for (const preview of shaped.competitions ?? []) {
+        expect(preview.opportunity?.id).toBe(opportunity.id);
+        expect(preview.opportunity?.title).toBe(opportunity.title);
+      }
+    }
+  });
+
   it("keeps every preview's `opportunityId` pointing back at its own opportunity", () => {
     for (const opportunity of OPPORTUNITY_FIXTURES) {
       for (const preview of opportunity.competitions ?? []) {
@@ -349,6 +422,67 @@ describe("opportunities' nested competition previews", () => {
           `competition preview ${preview.id} nested on opportunity ${opportunity.id}`,
         ).toBe(opportunity.id);
       }
+    }
+  });
+});
+
+describe("opportunities' nested award references", () => {
+  it("resolves every nested award reference to a real award that points back at the opportunity", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const entry of opportunity.awards ?? []) {
+        const award = getAwardById(entry.id);
+
+        expect(
+          award,
+          `award ${entry.id} referenced by opportunity ${opportunity.id}`,
+        ).toBeDefined();
+        expect(award!.opportunity?.id).toBe(opportunity.id);
+      }
+    }
+  });
+
+  it("copies the referenced award's title and identifiers onto the reference, verbatim", () => {
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      for (const entry of opportunity.awards ?? []) {
+        const award = getAwardById(entry.id)!;
+
+        expect(entry.title).toBe(award.title);
+        // Awards without identifiers must not have any invented for the
+        // opportunity's reference either.
+        expect(entry.identifiers).toEqual(award.identifiers);
+      }
+    }
+  });
+
+  it("lists every award that references an opportunity on that opportunity", () => {
+    const withOpportunity = AWARD_FIXTURES.filter((award) => award.opportunity);
+
+    // Meaningless without at least one such award to check.
+    expect(withOpportunity.length).toBeGreaterThan(0);
+
+    for (const award of withOpportunity) {
+      const opportunity = OPPORTUNITY_FIXTURES.find(
+        (opp) => opp.id === award.opportunity!.id,
+      )!;
+      const referencedIds = (opportunity.awards ?? []).map((entry) => entry.id);
+
+      expect(
+        referencedIds,
+        `opportunity ${opportunity.id} is missing a back-reference to award ${award.id}`,
+      ).toContain(award.id);
+    }
+  });
+
+  it("lists each award at most once on an opportunity", () => {
+    // The checks above pass a fixture that declares the same award twice,
+    // since every entry still resolves and the award is still listed.
+    for (const opportunity of OPPORTUNITY_FIXTURES) {
+      const referencedIds = (opportunity.awards ?? []).map((entry) => entry.id);
+
+      expect(
+        new Set(referencedIds).size,
+        `opportunity ${opportunity.id} lists an award more than once`,
+      ).toBe(referencedIds.length);
     }
   });
 });

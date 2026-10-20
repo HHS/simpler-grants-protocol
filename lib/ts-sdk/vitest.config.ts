@@ -4,8 +4,9 @@ import path from "path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@tsp-output": path.resolve(__dirname, "./tsp-output"),
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "@tsp-output": path.resolve(import.meta.dirname, "./tsp-output"),
+      "@common-grants/sdk/schemas": path.resolve(import.meta.dirname, "./src/schemas"),
     },
   },
   test: {

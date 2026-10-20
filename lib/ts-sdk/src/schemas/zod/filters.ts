@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 import { z } from "zod";
-import { MoneySchema } from "./fields";
+import { MoneySchema } from "./fields.js";
 
 // ############################################################################
 // Filter operators
@@ -74,7 +74,7 @@ export const NumberArrayFilterSchema = z.object({
 
 const dateSchema = z.union([
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // ISO date
-  z.iso.datetime(), // UTC or offset datetime
+  z.iso.datetime({ offset: true }), // UTC or offset datetime
 ]);
 
 export const DateComparisonFilterSchema = z.object({

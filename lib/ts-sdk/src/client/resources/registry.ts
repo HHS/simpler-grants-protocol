@@ -1,20 +1,35 @@
 /**
  * Resource registry: the single map from resource name to its class and
- * extensible-schema binding. Adding a resource = one entry here plus its
- * typed slots (grep `resource-slot` for the full set).
+ * either an extensible-schema binding or a fixed base schema. Adding a
+ * resource = one entry here plus its typed slots (grep `resource-slot`).
  */
 
-import { Opportunities } from "./opportunities";
-import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types";
+import { Opportunities } from "./opportunities.js";
+import { Awards } from "./awards.js";
+import type { ExtensibleSchemaName, ResourceName } from "../../extensions/types.js";
+import { AwardBaseSchema } from "../../schemas/index.js";
 
-interface ResourceRegistryEntry {
-  resourceClass: typeof Opportunities;
-  schemaName: ExtensibleSchemaName;
-}
+type ResourceRegistryEntry =
+  | { resourceClass: typeof Opportunities; schemaName: ExtensibleSchemaName }
+  | {
+      resourceClass: typeof Awards;
+      baseSchema: typeof AwardBaseSchema;
+      /**
+       * Extensible model composed into the base envelope's `recipientIndividual`
+       * key. The award envelope has no top-level custom fields, so unlike
+       * `schemaName` above, this does not replace the bound schema itself.
+       */
+      nestedSchemaName: ExtensibleSchemaName;
+    };
 
 // resource-slot: add an entry per API resource
 export const RESOURCE_REGISTRY = {
   opportunities: { resourceClass: Opportunities, schemaName: "Opportunity" },
+  awards: {
+    resourceClass: Awards,
+    baseSchema: AwardBaseSchema,
+    nestedSchemaName: "AwdRecipientIndividual",
+  },
 } as const satisfies Record<ResourceName, ResourceRegistryEntry>;
 
 /** Compile-time seam guard: `ResourceName` and this registry's keys must not drift. */

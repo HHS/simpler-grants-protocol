@@ -23,7 +23,7 @@
  * @module @common-grants/sdk/utils
  */
 
-import type { Handler } from "../extensions/types";
+import type { Handler } from "../extensions/types.js";
 
 // ############################################################################
 // Public utilities - getFromPath, handlers, transformFromMapping

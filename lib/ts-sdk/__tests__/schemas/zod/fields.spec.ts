@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   EventTypeEnum,
   SingleDateEventSchema,
@@ -10,7 +10,9 @@ import {
   CustomFieldTypeEnum,
   CustomFieldSchema,
   SystemMetadataSchema,
+  NameSchema,
 } from "@/schemas";
+import type { BoundaryCase } from "../../utils/fuzz-test.js";
 
 // ############################################################################
 // Event type enum
@@ -284,6 +286,52 @@ describe("CustomField Schema", () => {
     expect(() =>
       CustomFieldSchema.parse({ name: "test", fieldType: "invalid", value: "test" })
     ).toThrow();
+  });
+});
+
+// ############################################################################
+// Name schema
+// ############################################################################
+
+describe("Name Schema", () => {
+  const jsonSchemaId = "Name.yaml";
+
+  it("should validate a name with only the required fields", () => {
+    const value = { firstName: "Jane", lastName: "Doe" };
+    expect(NameSchema.parse(value)).toEqual(value);
+  });
+
+  it("should retain every optional name part on parse", () => {
+    const value = {
+      prefix: "Dr.",
+      firstName: "Jane",
+      middleName: "Edward",
+      lastName: "Doe",
+      suffix: "Jr.",
+    };
+    expect(NameSchema.parse(value)).toEqual(value);
+  });
+
+  it("should match Name.yaml", async () => {
+    const cases: BoundaryCase[] = [
+      { label: "required fields only", value: { firstName: "Jane", lastName: "Doe" } },
+      { label: "missing firstName is rejected", value: { lastName: "Doe" } },
+      { label: "missing lastName is rejected", value: { firstName: "Jane" } },
+      {
+        label: "null optional field is rejected",
+        value: { firstName: "Jane", lastName: "Doe", prefix: null },
+      },
+      {
+        label: "extra top-level key is rejected",
+        value: { firstName: "Jane", lastName: "Doe", unexpected: true },
+      },
+    ];
+    await expectZodMatchesJsonSchema(NameSchema, jsonSchemaId, cases, 0, true);
+  });
+
+  it("should reject a name missing a required field", () => {
+    expect(() => NameSchema.parse({ firstName: "Jane" })).toThrow();
+    expect(() => NameSchema.parse({ lastName: "Doe" })).toThrow();
   });
 });
 

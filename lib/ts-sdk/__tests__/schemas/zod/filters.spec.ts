@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expectZodMatchesJsonSchema } from "../../helper";
+import { expectZodMatchesJsonSchema } from "../../helper.js";
 import {
   EquivalenceOperatorsEnum,
   ComparisonOperatorsEnum,

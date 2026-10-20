@@ -26,7 +26,7 @@
  *     for operator/value structure only (no element-type check).
  */
 
-import { definePlugin, F, FilterError } from "../src/extensions";
+import { definePlugin, F, FilterError } from "../src/extensions/index.js";
 
 const BASE_URL = "http://localhost:8000";
 

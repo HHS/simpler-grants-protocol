@@ -8,8 +8,9 @@
  */
 
 import { z } from "zod";
-import type { CustomField, CustomFieldType } from "../types";
-import { OpportunityBaseSchema } from "../schemas/zod/models";
+import type { CustomField, CustomFieldType } from "../types.js";
+import { AwdRecipientIndividualSchema } from "../schemas/zod/awards.js";
+import { OpportunityBaseSchema } from "../schemas/zod/models.js";
 
 // ############################################################################
 // Public type - CustomFieldSpec
@@ -110,7 +111,7 @@ export interface RouteDeclarations {
 }
 
 /** Resource names the SDK exposes. Grows as API resources land. */
-export type ResourceName = "opportunities";
+export type ResourceName = "opportunities" | "awards";
 
 /** Route methods that accept custom filters. Widen only when a method actually takes filters. */
 export type RouteMethod = "search";
@@ -186,7 +187,7 @@ export interface ExtensibleObject {
  * @todo Add schemas here if they support `customFields` extensions and
  *       map them to Zod schemas in `EXTENSIBLE_SCHEMA_MAP`.
  */
-export type ExtensibleSchemaName = "Opportunity";
+export type ExtensibleSchemaName = "Opportunity" | "AwdRecipientIndividual";
 
 /**
  * Maps each `ExtensibleSchemaName` to its base Zod schema constant.
@@ -201,6 +202,7 @@ export type ExtensibleSchemaName = "Opportunity";
  */
 export const EXTENSIBLE_SCHEMA_MAP = {
   Opportunity: OpportunityBaseSchema,
+  AwdRecipientIndividual: AwdRecipientIndividualSchema,
 } as const satisfies Record<ExtensibleSchemaName, HasCustomFields>;
 
 // ############################################################################

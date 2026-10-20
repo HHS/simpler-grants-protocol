@@ -6,8 +6,11 @@ import {
   type PluginMeta,
   type TransformResult,
   type PluginRoutes,
+  type ToCommon,
+  type FromCommon,
 } from "@/extensions";
 import { OpportunityBaseSchema } from "@/schemas/zod/models";
+import { AwdRecipientIndividualSchema } from "@/schemas/zod/awards";
 import { CustomFieldType } from "@/constants";
 
 // ############################################################################
@@ -590,5 +593,338 @@ describe("definePlugin — auto-wiring from mappings", () => {
       schemas: { Opportunity: { mappings: undefined } },
     });
     expect(plugin.schemas.Opportunity.toCommon).toBeUndefined();
+  });
+});
+
+// ############################################################################
+// AwdRecipientIndividual: the nested award extension surface registered by #1156
+// ############################################################################
+
+// A structured custom-field value schema for the recipient individual.
+const ClearanceValueSchema = z.object({
+  level: z.string(),
+  expiresOn: z.string(),
+});
+
+// A valid customFields payload matching the specs declared in the tests below.
+const validRecipientCustomFields = {
+  vendorId: { name: "vendorId", fieldType: "string", value: "V-123" },
+  clearance: {
+    name: "clearance",
+    fieldType: "object",
+    value: { level: "secret", expiresOn: "2030-01-01" },
+  },
+} as const;
+
+// Source-system shape for the recipient transform tests. Only the two name
+// parts are modeled; the recipient has no other required fields.
+const recipientSourceSchema = z.object({
+  given: z.string(),
+  family: z.string(),
+});
+const recipientToCommonMapping = {
+  name: {
+    firstName: { field: "given" },
+    lastName: { field: "family" },
+  },
+};
+const recipientFromCommonMapping = {
+  given: { field: "name.firstName" },
+  family: { field: "name.lastName" },
+};
+
+describe("definePlugin: AwdRecipientIndividual", () => {
+  // ############################################################################
+  // customFields: validation and inferred value types
+  // ############################################################################
+
+  it("validates recipient custom fields and preserves inferred value types", () => {
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          customFields: {
+            vendorId: { fieldType: CustomFieldType.string },
+            clearance: {
+              fieldType: CustomFieldType.object,
+              value: ClearanceValueSchema,
+            },
+          },
+        },
+      },
+    } as const);
+
+    const result = plugin.schemas.AwdRecipientIndividual.commonSchema.parse({
+      customFields: validRecipientCustomFields,
+    });
+
+    expect(result.customFields?.vendorId?.value).toBe("V-123");
+    expect(result.customFields?.clearance?.value.level).toBe("secret");
+    // Compile-time: structured custom-field value is typed, not `unknown`.
+    const level: string = result.customFields?.clearance?.value.level ?? "";
+    expect(level).toBe("secret");
+  });
+
+  it("rejects invalid recipient custom field values via safeParse", () => {
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          customFields: {
+            clearance: {
+              fieldType: CustomFieldType.object,
+              value: ClearanceValueSchema,
+            },
+          },
+        },
+      },
+    } as const);
+
+    const result = plugin.schemas.AwdRecipientIndividual.commonSchema.safeParse({
+      customFields: {
+        clearance: {
+          name: "clearance",
+          fieldType: "object",
+          value: { level: "secret" }, // missing expiresOn
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  // ############################################################################
+  // Base-schema fallback
+  // ############################################################################
+
+  it("falls back to AwdRecipientIndividualSchema when the entry is absent", () => {
+    const plugin = definePlugin({});
+    expect(plugin.schemas.AwdRecipientIndividual.commonSchema).toBe(AwdRecipientIndividualSchema);
+  });
+
+  it("falls back to AwdRecipientIndividualSchema when customFields is empty", () => {
+    const plugin = definePlugin({
+      schemas: { AwdRecipientIndividual: { customFields: {} } },
+    });
+    expect(plugin.schemas.AwdRecipientIndividual.commonSchema).toBe(AwdRecipientIndividualSchema);
+  });
+
+  // ############################################################################
+  // Transforms: both authoring paths, both directions
+  // ############################################################################
+
+  it("runs both transform directions through the mappings path", () => {
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          sourceSchema: recipientSourceSchema,
+          mappings: {
+            toCommon: recipientToCommonMapping,
+            fromCommon: recipientFromCommonMapping,
+          },
+        },
+      },
+    });
+
+    const toCommon = plugin.schemas.AwdRecipientIndividual.toCommon?.({
+      given: "Ada",
+      family: "Lovelace",
+    });
+    expect(toCommon?.errors).toEqual([]);
+    expect(toCommon?.result).toMatchObject({ name: { firstName: "Ada", lastName: "Lovelace" } });
+
+    const fromCommon = plugin.schemas.AwdRecipientIndividual.fromCommon?.({
+      name: { firstName: "Ada", lastName: "Lovelace" },
+    });
+    expect(fromCommon?.errors).toEqual([]);
+    expect(fromCommon?.result).toEqual({ given: "Ada", family: "Lovelace" });
+  });
+
+  it("runs both transform directions through the explicit functions path", () => {
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          sourceSchema: recipientSourceSchema,
+          toCommon: (source): TransformResult<unknown> => ({
+            result: { name: { firstName: source.given, lastName: source.family } },
+            errors: [],
+          }),
+          fromCommon: (common): TransformResult<unknown> => ({
+            result: { given: common.name.firstName, family: common.name.lastName },
+            errors: [],
+          }),
+        },
+      },
+    });
+
+    const toCommon = plugin.schemas.AwdRecipientIndividual.toCommon?.({
+      given: "Ada",
+      family: "Lovelace",
+    });
+    expect(toCommon?.errors).toEqual([]);
+    expect(toCommon?.result).toMatchObject({ name: { firstName: "Ada", lastName: "Lovelace" } });
+
+    const fromCommon = plugin.schemas.AwdRecipientIndividual.fromCommon?.({
+      name: { firstName: "Ada", lastName: "Lovelace" },
+    } as never);
+    expect(fromCommon?.errors).toEqual([]);
+    expect(fromCommon?.result).toEqual({ given: "Ada", family: "Lovelace" });
+  });
+
+  // ############################################################################
+  // Invalid output → TransformError against the appropriate schema
+  // ############################################################################
+
+  it("reports a TransformError when toCommon output fails the common schema", () => {
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          sourceSchema: recipientSourceSchema,
+          mappings: {
+            // firstName is forced to a number, which NameSchema rejects.
+            toCommon: { name: { firstName: { const: 42 }, lastName: { field: "family" } } },
+            fromCommon: recipientFromCommonMapping,
+          },
+        },
+      },
+    });
+
+    const result = plugin.schemas.AwdRecipientIndividual.toCommon?.({
+      given: "Ada",
+      family: "Lovelace",
+    });
+    expect(result?.errors.length ?? 0).toBeGreaterThan(0);
+    expect(result?.errors[0]?.path).toBe("name.firstName");
+  });
+
+  it("does not flag reverse-mapping keys a loose source schema accepts", () => {
+    // A loose source schema models only `given` but accepts any other key. The
+    // reverse mapping also produces `extra`, which the loose catchall permits,
+    // so validateOutputPaths must neither throw at build time nor report an
+    // error when fromCommon runs.
+    const looseSource = z.object({ given: z.string() }).loose();
+
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          sourceSchema: looseSource,
+          mappings: {
+            toCommon: recipientToCommonMapping,
+            fromCommon: {
+              given: { field: "name.firstName" },
+              extra: { const: "x" },
+            },
+          },
+        },
+      },
+    });
+
+    const result = plugin.schemas.AwdRecipientIndividual.fromCommon?.({
+      name: { firstName: "Ada", lastName: "Lovelace" },
+    });
+    expect(result?.errors).toEqual([]);
+    expect(result?.result).toMatchObject({ given: "Ada", extra: "x" });
+  });
+
+  it("reports a TransformError when fromCommon output fails the source schema", () => {
+    // The source schema requires a `region` the reverse mapping never produces,
+    // so fromCommon output is validated against it and flagged. This exercises
+    // the sourceSchema now forwarded to buildTransforms in the mappings path.
+    const strictRecipientSource = z.object({
+      given: z.string(),
+      family: z.string(),
+      region: z.string(),
+    });
+
+    const plugin = definePlugin({
+      schemas: {
+        AwdRecipientIndividual: {
+          sourceSchema: strictRecipientSource,
+          mappings: {
+            toCommon: recipientToCommonMapping,
+            fromCommon: recipientFromCommonMapping,
+          },
+        },
+      },
+    });
+
+    const result = plugin.schemas.AwdRecipientIndividual.fromCommon?.({
+      name: { firstName: "Ada", lastName: "Lovelace" },
+    });
+    expect(result?.errors.length ?? 0).toBeGreaterThan(0);
+    expect(result?.errors.some(e => e.path === "region")).toBe(true);
+  });
+
+  // ############################################################################
+  // Independence from the Opportunity entry
+  // ############################################################################
+
+  it("keeps recipient and opportunity schemas and transforms independent", () => {
+    const plugin = definePlugin({
+      schemas: {
+        Opportunity: {
+          customFields: {
+            legacyId: { fieldType: CustomFieldType.object, value: LegacyIdValueSchema },
+          },
+        },
+        AwdRecipientIndividual: {
+          customFields: {
+            vendorId: { fieldType: CustomFieldType.string },
+            clearance: { fieldType: CustomFieldType.object, value: ClearanceValueSchema },
+          },
+        },
+      },
+    } as const);
+
+    // The opportunity schema still parses its own custom field.
+    const opp = plugin.schemas.Opportunity.commonSchema.parse({
+      ...validOpp,
+      customFields: {
+        legacyId: { name: "legacyId", fieldType: "object", value: { system: "legacy", id: 7 } },
+      },
+    });
+    expect(opp.customFields?.legacyId?.value.id).toBe(7);
+
+    // The recipient schema parses its own custom fields.
+    const recipient = plugin.schemas.AwdRecipientIndividual.commonSchema.parse({
+      customFields: validRecipientCustomFields,
+    });
+    expect(recipient.customFields?.vendorId?.value).toBe("V-123");
+
+    // A recipient custom field is not accepted as an opportunity top-level field,
+    // and vice versa; the two schemas do not share a shape.
+    expect("recipientIndividual" in opp).toBe(false);
+    expect("funding" in recipient).toBe(false);
+  });
+
+  // ############################################################################
+  // Compile-time: ToCommon / FromCommon helpers resolve the recipient types
+  // ############################################################################
+
+  it("types hand-written recipient transforms via the ToCommon/FromCommon helpers", () => {
+    type RecipientTransform = {
+      model: "AwdRecipientIndividual";
+      sourceSchema: typeof recipientSourceSchema;
+      customFields: {
+        vendorId: { fieldType: "string" };
+        clearance: { fieldType: "object"; value: typeof ClearanceValueSchema };
+      };
+    };
+
+    const toCommon: ToCommon<RecipientTransform> = source => ({
+      // `source.given` is typed from recipientSourceSchema; the returned
+      // customFields value types are checked against the specs.
+      result: {
+        name: { firstName: source.given, lastName: source.family },
+        customFields: validRecipientCustomFields,
+      },
+      errors: [],
+    });
+
+    const fromCommon: FromCommon<RecipientTransform> = common => ({
+      result: { given: common.name?.firstName ?? "", family: common.name?.lastName ?? "" },
+      errors: [],
+    });
+
+    expect(typeof toCommon).toBe("function");
+    expect(typeof fromCommon).toBe("function");
   });
 });

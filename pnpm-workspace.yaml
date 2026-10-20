@@ -17,13 +17,13 @@ allowBuilds:
 catalog:
   '@eslint/js': ^10.0.1
   '@types/node': ^22.20.4
-  '@typespec/compiler': ^1.16.0
-  '@typespec/http': ^1.16.0
-  '@typespec/json-schema': ^1.16.0
-  '@typespec/openapi': ^1.16.0
-  '@typespec/openapi3': ^1.16.0
-  '@typespec/rest': ^0.86.0
-  '@typespec/versioning': ^0.86.0
+  '@typespec/compiler': ^1.17.0
+  '@typespec/http': ^1.17.0
+  '@typespec/json-schema': ^1.17.0
+  '@typespec/openapi': ^1.17.0
+  '@typespec/openapi3': ^1.17.0
+  '@typespec/rest': ^0.87.0
+  '@typespec/versioning': ^0.87.0
   '@vitest/coverage-v8': ^4.1.11
   '@vitest/eslint-plugin': ^1.6.27
   eslint: ^10.11.0
@@ -35,7 +35,7 @@ catalog:
   typescript: ^6.0.3
   typescript-eslint: ^8.70.1
   vitest: ^4.1.11
-  zod: ^4.4.3
+  zod: ^4.5.0
 
 catalogs:
   website:
@@ -45,6 +45,3 @@ overrides:
   # No patched postcss-selector-parser 6.x exists, so this crosses postcss-nested's
   # ^6 range on purpose. Delete once the lockfile has no postcss-nested 6.2.0.
   'postcss-nested@6.2.0>postcss-selector-parser': '>=7.1.6 <8'
-  # miniflare (via wrangler) pins sharp exactly, so new sharp advisories land here.
-  # Delete once miniflare's own pin reaches the floor.
-  sharp@<0.35.5: '>=0.35.5 <0.36'

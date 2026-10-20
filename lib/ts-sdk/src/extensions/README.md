@@ -133,6 +133,40 @@ opportunity.customFields?.legacyId?.value.id; // number
 
 See the [Plugins](#plugins) section below for full details on defining, composing, and publishing plugins.
 
+#### The nested award model <!-- omit in toc -->
+
+`Award` has no top-level `customFields`. The only extensible surface on an award is the nested `recipientIndividual`. Award plugins register custom fields under `AwdRecipientIndividual`, not `Award`:
+
+```typescript
+import { definePlugin } from "@common-grants/sdk/extensions";
+
+const awardPlugin = definePlugin({
+  schemas: {
+    AwdRecipientIndividual: {
+      customFields: {
+        tier: {
+          fieldType: "string",
+          description: "Recipient's award tier",
+        },
+      },
+    },
+  },
+} as const);
+
+// Parse a recipient-individual payload directly...
+const recipient = awardPlugin.schemas.AwdRecipientIndividual.commonSchema.parse(
+  data.recipientIndividual
+);
+recipient.customFields?.tier?.value; // string
+
+// ...or, more commonly, bind a client and let `client.awards.get/list/search`
+// compose this schema into the full award envelope automatically; see
+// "Using plugins with the API client" below and the client README's Award
+// methods section.
+```
+
+`AwdRecipientIndividual` custom fields compose independently of `Opportunity` custom fields declared on the same plugin.
+
 ## Extracting custom field values
 
 There are two ways to access custom field values: direct dot notation and the `getCustomFieldValue()` helper.
@@ -414,6 +448,8 @@ for (const err of results.errors) {
 
 The per-call `schema` option is still accepted by `get()`, `list()`, and `search()` and overrides the plugin-bound default. A plain `new Client(...)` (no plugin) keeps working with `OpportunityBaseSchema` defaults (untyped `customFields`, ad-hoc filters only).
 
+`client.awards` binds the same way, composing the plugin's compiled `AwdRecipientIndividual` schema into the base award envelope's `recipientIndividual` field instead of swapping a top-level schema (see [The nested award model](#the-nested-award-model)). See the [client guide's Award methods](../client/README.md#award-methods) for the full `get`/`list`/`search` behavior, schema precedence, and award filters.
+
 ## Plugin transformations
 
 Plugins can declare bidirectional transforms that convert between a source system's native shape and the CommonGrants protocol. `toCommon` maps `native → CommonGrants`; `fromCommon` reverses it. Both directions are author-provided — the SDK does not invert one into the other, because many-to-one handlers (like `match`) are not reversible.
@@ -562,6 +598,8 @@ const out = toCommon(sourceData);
 
 There are two ways to wire transforms into a plugin entry. These are mutually exclusive — you cannot provide both `mappings` and explicit callables on the same entry.
 
+Both paths work identically for any extensible model, keyed by name under `schemas`. The examples below use `Opportunity`; an award's nested recipient wires up the same way under `schemas.AwdRecipientIndividual`, with `data.recipientIndividual` (or the equivalent native field) as the mapping source.
+
 **Option A: Declarative mappings** — pass a `mappings` object and `definePlugin()` compiles `toCommon` / `fromCommon` for you:
 
 ```typescript
@@ -657,7 +695,7 @@ for (const err of out.errors) {
 
 ## Plugin custom filters
 
-Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012): default fields land as named top-level fields; custom and ad-hoc keys land under `customFilters`.
+Plugins can declare custom filter specs per route-method. At search time, a single flat consumer `filters` object is classified into the body of the search request sent to the API (the `OppFilters` shape from ADR-0012, or `AwdFilters` for `awards.search`): default fields land as named top-level fields, validated against the selected resource's default-filter schema; custom and ad-hoc keys land under `customFilters`. The examples below use `opportunities.search`; `awards.search` classifies the same way against the award default filters (`status`, `opportunityId`, `awardDateRange`, `awardedAmountRange`).
 
 ### Routes vs. schemas — a critical distinction
 
@@ -666,12 +704,18 @@ Plugins can declare custom filter specs per route-method. At search time, a sing
 >
 > ```typescript
 > definePlugin({
->   routes: { opportunities: { search: { filters: { ... } } } }, // custom filters (this section)
->   schemas: { Opportunity: { customFields: { ... } } }, // custom fields (see "Build-time with plugins")
+>   routes: {
+>     opportunities: { search: { filters: { ... } } }, // custom filters (this section)
+>     awards: { search: { filters: { ... } } }, // custom filters, same rule for awards
+>   },
+>   schemas: {
+>     Opportunity: { customFields: { ... } }, // custom fields (see "Build-time with plugins")
+>     AwdRecipientIndividual: { customFields: { ... } }, // custom fields, nested under Award.recipientIndividual
+>   },
 > } as const);
 > ```
 >
-> The reason: filter declarations vary per route-method (e.g. `opportunities.search` may support different filters than `applications.list`), whereas custom fields are schema-level concerns shared across all operations that return the model.
+> The reason: filter declarations vary per route-method (e.g. `opportunities.search` may support different filters than `applications.list`), whereas custom fields are schema-level concerns shared across all operations that return the model. Declaring `schemas.AwdRecipientIndividual.customFields` does not register a search filter, and declaring `routes.awards.search.filters` does not add a parsed field to award responses. They are independent extension points that happen to share the `awards` resource name.
 
 ### Declaring custom filters on a route
 
@@ -939,9 +983,9 @@ The tables below list everything exported from `@common-grants/sdk/extensions`, 
 
 ### Shared types
 
-| Export                               | Kind      | Description                                                                                                                 | Demonstrated in               |
-| ------------------------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `value`, and optional `name`/`description`.                      | [Key concepts](#key-concepts) |
-| [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"`.                                    |                               |
-| [`HasCustomFields`](./types.ts)      | type      | A Zod object schema whose shape includes a `customFields` property. Constrains `withCustomFields()` inputs at compile time. |                               |
-| [`ExtensibleObject`](./types.ts)     | interface | An object with an optional `customFields` property. Constrains `getCustomFieldValue()` inputs at compile time.              |                               |
+| Export                               | Kind      | Description                                                                                                                                                                                                               | Demonstrated in               |
+| ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| [`CustomFieldSpec`](./types.ts)      | interface | Describes a single custom field: its `fieldType`, optional `value`, and optional `name`/`description`.                                                                                                                    | [Key concepts](#key-concepts) |
+| [`ExtensibleSchemaName`](./types.ts) | type      | Union of model names that support `customFields` extensions. Currently: `"Opportunity"` and `"AwdRecipientIndividual"` (nested under `Award.recipientIndividual`; see [The nested award model](#the-nested-award-model)). |                               |
+| [`HasCustomFields`](./types.ts)      | type      | A Zod object schema whose shape includes a `customFields` property. Constrains `withCustomFields()` inputs at compile time.                                                                                               |                               |
+| [`ExtensibleObject`](./types.ts)     | interface | An object with an optional `customFields` property. Constrains `getCustomFieldValue()` inputs at compile time.                                                                                                            |                               |
