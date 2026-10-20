@@ -66,19 +66,20 @@ def switch_on_value(data: dict, switch_spec: dict) -> Any:
 
     Returns:
         The transformed value based on the match, or the default value if no match is
-        found. A missing source returns the default, or ``_ABSENT`` without one. A
-        ``None`` source returns the ``"null"`` case, or ``None`` without one; the
-        default is not used for it.
+        found. A missing source is unmatched too. Without a default, an unmatched
+        source returns ``_ABSENT``. A ``None`` source returns the ``"null"`` case, or
+        ``None`` without one; the default is not used for it.
     """
     val = get_from_path(data, switch_spec.get("field", ""), _ABSENT)
+    default = switch_spec.get("default", _ABSENT)
     if val is _ABSENT:
-        return switch_spec.get("default", _ABSENT)
+        return default
     lookup = switch_spec.get("case", {})
     # A None source means "doesn't apply", not an unrecognized value: it maps
     # through an opt-in "null" case, never the default.
     if val is None:
         return lookup.get("null")
-    return lookup.get(val, switch_spec.get("default"))
+    return lookup.get(val, default)
 
 
 def const_value(_data: dict, value: Any) -> Any:

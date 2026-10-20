@@ -303,6 +303,19 @@ def test_match_missing_source_without_a_default_is_left_out():
     assert transform_from_mapping({"summary": None}, {"s": {"match": nested}}) == {}
 
 
+def test_match_unrecognized_value_without_a_default_is_left_out():
+    """An unrecognized value maps to the default, or leaves the key out without one."""
+    spec = {"field": "status", "case": {"posted": "open"}}
+    assert (
+        transform_from_mapping({"status": "forecasted"}, {"s": {"match": spec}}) == {}
+    )
+
+    result = transform_from_mapping(
+        {"status": "forecasted"}, {"status": {"match": STATUS_MATCH}}
+    )
+    assert result == {"status": "custom"}
+
+
 def test_match_none_source_passes_through_without_the_default():
     """A None source ("doesn't apply") stays None; the default is not consulted."""
     result = transform_from_mapping(
