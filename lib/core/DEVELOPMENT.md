@@ -31,7 +31,7 @@ Don't run `npx` inside the repo until [#1288](https://github.com/HHS/simpler-gra
 
 Minor and major core releases go through a hold branch. Follow [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch) for the shared steps. This section covers only the core-specific checks.
 
-Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Before releasing, run the pack-and-install and README quickstart checks from the release review checklist, since both ship in the npm package. If the fix changes a spec, also review it with `cg preview`. Then follow the release checklist.
+Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Before merging the core Release PR, run the pack-and-install and README quickstart checks from the release review checklist on `main`, and note the results on the Release PR. Compile the quickstart at the current protocol version, since a patch doesn't add one. If the fix changes a spec, also review it with `cg preview`. Then [merge the Release PR](../README.md#step-4-merge-the-release-pr-to-publish) and confirm the release notes are accurate and the new version appears on [npm](https://www.npmjs.com/package/@common-grants/core).
 
 ### Development checklist
 

@@ -22,7 +22,7 @@ Run `pnpm install` once from the repo root. Then run these from `lib/ts-sdk/`, o
 | `pnpm run format`        | Format code with Prettier                                        |
 | `pnpm run check:types`   | Check types, fail if issues are found                            |
 | `pnpm run checks`        | Run lint, format and type checks                                 |
-| `pnpm run ci`            | Run the build, checks, tests and package check that CI runs      |
+| `pnpm run ci`            | Run the build, checks, tests, examples and package check (CI)    |
 | `pnpm run prepare`       | Rebuild the publishable ESM artifact from `src`                  |
 
 ## ESM package validation
