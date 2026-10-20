@@ -10,6 +10,7 @@
 import { z } from "zod";
 import type { CustomField, CustomFieldType } from "../types.js";
 import { CustomFieldSchema } from "../schemas/index.js";
+import { nullishAsOptional, nullishWithDefault } from "../schemas/zod/nullish.js";
 import type { CustomFieldSpec, HasCustomFields } from "./types.js";
 
 // ############################################################################
@@ -116,22 +117,29 @@ export function withCustomFields<
       name: z.string().default(spec.name ?? key),
       description:
         spec.description !== undefined
-          ? z.string().nullish().default(spec.description)
-          : z.string().nullish(),
+          ? nullishWithDefault(z.string(), spec.description)
+          : nullishAsOptional(z.string()),
     }).optional();
   }
 
   // Keep unregistered fields extensible, but validate them with the same
   // CustomField contract as the base record rather than accepting arbitrary
   // values. Preserve the base schema's null/undefined policy: Opportunity's
-  // customFields is nullish, while AwdRecipientIndividual's is optional only.
+  // customFields accepts null and parses it to undefined, a consumer base with
+  // a plain `.nullish()` keeps null, and AwdRecipientIndividual's is optional
+  // only. `isNullable()` reports true for the first two, so probe with `null`.
   let customFieldsSchema: z.ZodType = z.object(typedFieldSchemas).catchall(CustomFieldSchema);
 
-  if (schemaShape.customFields.isNullable()) {
-    customFieldsSchema = customFieldsSchema.nullable();
-  }
-  if (schemaShape.customFields.isOptional()) {
-    customFieldsSchema = customFieldsSchema.optional();
+  const fromNull = schemaShape.customFields.safeParse(null);
+  if (fromNull.success && fromNull.data === undefined) {
+    customFieldsSchema = nullishAsOptional(customFieldsSchema);
+  } else {
+    if (fromNull.success) {
+      customFieldsSchema = customFieldsSchema.nullable();
+    }
+    if (schemaShape.customFields.isOptional()) {
+      customFieldsSchema = customFieldsSchema.optional();
+    }
   }
 
   // Extend base schema with new customFields
