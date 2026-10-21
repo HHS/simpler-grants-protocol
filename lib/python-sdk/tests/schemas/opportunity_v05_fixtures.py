@@ -415,8 +415,9 @@ DETAILS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Wire JSON that violates the emitted contract for awards. The Python models and
-# the emitted schemas must each reject every one independently.
+# Wire JSON that violates the emitted contract for awards. The emitted schemas
+# must reject every one; the Python models reject every one except the nulls on
+# optional properties (NULL_OPTIONAL_AWARDS), which read as omitted.
 INVALID_AWARDS: dict[str, dict[str, Any]] = {
     "null awards": {**CLEAN_ENERGY_OPPORTUNITY, "awards": None},
     "awards as an object": {**CLEAN_ENERGY_OPPORTUNITY, "awards": AWARD_REFS[0]},
@@ -446,6 +447,12 @@ INVALID_AWARDS: dict[str, dict[str, Any]] = {
         ("awards", 0, "identifiers", "awd:us:fain", "label"),
         "FAIN",
     ),
+}
+
+# The case name and the path of its null optional property.
+NULL_OPTIONAL_AWARDS: dict[str, tuple[Any, ...]] = {
+    "null awards": ("awards",),
+    "null award identifiers": ("awards", 0, "identifiers"),
 }
 
 

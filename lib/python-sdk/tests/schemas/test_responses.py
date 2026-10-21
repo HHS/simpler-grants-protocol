@@ -419,16 +419,18 @@ class TestOpportunityResponses:
             assert not isinstance(item, OpportunityDetails)
         assert all("awards" not in item for item in wire(response)["items"])
 
-    def test_get_envelope_rejects_null_awards(self) -> None:
-        from tests.schemas.opportunity_v05_fixtures import INVALID_AWARDS
+    def test_get_envelope_reads_null_awards_as_omitted(self) -> None:
+        from tests.schemas.opportunity_v05_fixtures import INVALID_AWARDS, wire
 
         payload = {
             "status": 200,
             "message": "Success",
             "data": INVALID_AWARDS["null awards"],
         }
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            self._models()["get"].model_validate(payload)
+        response = self._models()["get"].model_validate(payload)
+
+        assert response.data.awards is None
+        assert "awards" not in wire(response)["data"]
 
     def test_get_envelope_builds_details_from_opportunity_instances(self) -> None:
         from common_grants_sdk.schemas import OpportunityBase, OpportunityDetails
@@ -476,15 +478,17 @@ class TestOpportunityResponses:
         response = envelope(status=200, message="Success", data=kept)
         assert wire(response)["data"]["awards"] == AWARD_REFS
 
-        for bad, match in (
-            (None, "must be omitted, not null"),
-            ([{"id": "not-a-uuid", "title": "Bad"}], "awards.0.id"),
-        ):
-            data = LegacyOpportunity.model_validate(
-                {**MINIMAL_OPPORTUNITY, "awards": bad}
-            )
-            with pytest.raises(ValidationError, match=match):
-                envelope(status=200, message="Success", data=data)
+        # An instance's null reads as omitted; a malformed value still fails.
+        unset = LegacyOpportunity.model_validate(
+            {**MINIMAL_OPPORTUNITY, "awards": None}
+        )
+        response = envelope(status=200, message="Success", data=unset)
+        assert "awards" not in wire(response)["data"]
+        data = LegacyOpportunity.model_validate(
+            {**MINIMAL_OPPORTUNITY, "awards": [{"id": "not-a-uuid", "title": "Bad"}]}
+        )
+        with pytest.raises(ValidationError, match="awards.0.id"):
+            envelope(status=200, message="Success", data=data)
 
     def test_get_envelope_rejects_malformed_award_references(self) -> None:
         from tests.schemas.opportunity_v05_fixtures import INVALID_AWARDS

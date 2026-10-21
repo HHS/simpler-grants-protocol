@@ -137,7 +137,7 @@ for award_ref in opportunity.awards or []:
 
 `get` returns the detail form, `OpportunityDetails`: the opportunity plus `awards`, references to the awards it resulted in (see [Opportunity details and related awards](../schemas/README.md#opportunity-details-and-related-awards) for what omitted, empty and `null` mean). On a client from `plugin.get_client(...)` whose plugin registers `OpportunityBase[OpportunityFields]`, `get` returns `OpportunityDetails[OpportunityFields]`, so the plugin's custom fields stay typed; plugin authors register nothing extra. `list` and `search` keep returning the registered base model.
 
-A `schema=` argument is used exactly as given and replaces the detail default. `schema=OpportunityBase[OpportunityFields]` returns the base model and drops `awards`; `schema=OpportunityDetails[OpportunityFields]` keeps them. Malformed or `null` awards raise pydantic's `ValidationError` from `get`. On `list` and `search`, an explicit detail schema reports a bad row as a per-row parse error, like any other invalid row.
+A `schema=` argument is used exactly as given and replaces the detail default. `schema=OpportunityBase[OpportunityFields]` returns the base model and drops `awards`; `schema=OpportunityDetails[OpportunityFields]` keeps them. Malformed awards raise pydantic's `ValidationError` from `get`; a `null` `awards` reads as omitted. On `list` and `search`, an explicit detail schema reports a bad row as a per-row parse error, like any other invalid row.
 
 ### Pagination
 

@@ -13,7 +13,7 @@ properties into ``null``.
 
 Each ``awards`` entry is an ``AwdRef``: a reference (id, title, identifiers), not
 the award record. An omitted ``awards`` means the link is not published, ``[]``
-means no awards are known, and ``null`` is rejected. Entries are unordered.
+means no awards are known, and ``null`` reads as omitted. Entries are unordered.
 
 Runs as a self-check against an in-process mock transport, no API or key::
 
@@ -27,7 +27,6 @@ from __future__ import annotations
 from typing import Any, Optional
 
 import httpx
-from pydantic import ValidationError
 from typing_extensions import assert_type
 
 from common_grants_sdk import Client, Config, PluginSchemas, define_plugin, schema
@@ -164,12 +163,8 @@ def omitted_empty_null() -> None:
     assert wire(empty.opportunities.get(OPPORTUNITY["id"]))["awards"] == []
 
     null = plugin_client({**OPPORTUNITY, "awards": None})
-    try:
-        null.opportunities.get(OPPORTUNITY["id"])
-    except ValidationError as exc:
-        assert "optional property must be omitted, not null" in str(exc)
-    else:
-        raise AssertionError("expected a ValidationError for null awards")
+    detail = null.opportunities.get(OPPORTUNITY["id"])
+    assert detail.awards is None and "awards" not in wire(detail)
 
 
 def server_envelope() -> None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, Optional
 
-from pydantic import Field, ModelWrapValidatorHandler, field_validator, model_validator
+from pydantic import Field, ModelWrapValidatorHandler, model_validator
 
 from ..fields import CustomField  # noqa: F401 -- resolves CF's string default
 from .award import AwdRef
@@ -42,10 +42,11 @@ class OpportunityDetails(OpportunityBase[CF], Generic[CF]):
             data = data.model_dump(mode="json", by_alias=True, exclude_unset=True)
         return handler(data)
 
-    # Same Core v0.5 rule as the base additions: omit awards, never send null.
-    @field_validator("awards", mode="before")
+    # Same Core v0.5 rule as the base additions: awards may be omitted but not
+    # null, so a null reads as omitted.
+    @model_validator(mode="before")
     @classmethod
-    def _reject_null_awards(cls, value: Any) -> Any:
-        if value is None:
-            raise ValueError("optional property must be omitted, not null")
-        return value
+    def _null_awards_as_omitted(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "awards" in data and data["awards"] is None:
+            return {k: v for k, v in data.items() if k != "awards"}
+        return data

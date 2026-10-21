@@ -44,6 +44,7 @@ from .opportunity_v05_fixtures import (
     INVALID_ADDITIONS,
     INVALID_AWARDS,
     NULL_OPTIONAL_ADDITIONS,
+    NULL_OPTIONAL_AWARDS,
     without,
     MINIMAL_OPPORTUNITY,
     OPPORTUNITIES,
@@ -547,20 +548,51 @@ def test_omitted_and_empty_awards_stay_distinct():
 
 
 @pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
-def test_explicit_null_awards_are_rejected(model):
-    snake = _snake_case(CLEAN_ENERGY_OPPORTUNITY)
-    for payload in (INVALID_AWARDS["null awards"], {**snake, "awards": None}):
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            model.model_validate(payload)
-    with pytest.raises(ValidationError, match="must be omitted, not null"):
-        model(**snake, awards=None)
+def test_explicit_null_awards_read_as_omitted(model):
+    omitted = without(CLEAN_ENERGY_OPPORTUNITY, ("awards",))
+    snake = {
+        k: v for k, v in _snake_case(CLEAN_ENERGY_OPPORTUNITY).items() if k != "awards"
+    }
+    for details, expected in (
+        (
+            model.model_validate(INVALID_AWARDS["null awards"]),
+            model.model_validate(omitted),
+        ),
+        (model.model_validate({**snake, "awards": None}), model.model_validate(snake)),
+        (model(**snake, awards=None), model(**snake)),
+    ):
+        assert details.awards is None
+        assert "awards" not in details.model_fields_set
+        assert wire(details) == wire(expected)
+
+
+REJECTED_AWARDS = {
+    name: payload
+    for name, payload in INVALID_AWARDS.items()
+    if name not in NULL_OPTIONAL_AWARDS
+}
 
 
 @pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
-@pytest.mark.parametrize("payload", INVALID_AWARDS.values(), ids=INVALID_AWARDS.keys())
+@pytest.mark.parametrize(
+    "payload", REJECTED_AWARDS.values(), ids=REJECTED_AWARDS.keys()
+)
 def test_invalid_awards_are_rejected(model, payload):
     with pytest.raises(ValidationError):
         model.model_validate(payload)
+
+
+@pytest.mark.parametrize("model", [OpportunityDetails, TypedDetails])
+@pytest.mark.parametrize(
+    "name", NULL_OPTIONAL_AWARDS.keys(), ids=NULL_OPTIONAL_AWARDS.keys()
+)
+def test_null_optional_awards_read_as_omitted(model, name):
+    """The emitted schemas reject these nulls; the models read them as omitted."""
+    payload = INVALID_AWARDS[name]
+
+    details = model.model_validate(payload)
+
+    assert wire(details) == without(payload, NULL_OPTIONAL_AWARDS[name])
 
 
 @pytest.mark.parametrize(
@@ -574,10 +606,14 @@ def test_details_keep_accepting_null_for_existing_optional_fields(field):
     assert wire(details)[field] is None
 
 
-def test_details_keep_the_scoped_v05_null_checks():
+def test_details_read_null_v05_additions_as_omitted():
     for field in ("identifiers", "funders"):
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            OpportunityDetails.model_validate({**CLEAN_ENERGY_OPPORTUNITY, field: None})
+        details = OpportunityDetails.model_validate(
+            {**CLEAN_ENERGY_OPPORTUNITY, field: None}
+        )
+
+        assert getattr(details, field) is None
+        assert field not in wire(details)
 
 
 def test_typed_details_keep_custom_fields_and_null_values():
@@ -635,14 +671,15 @@ def test_award_references_resolve_to_their_paired_award_records():
     assert wire(amendment.parent) == AWARD_REFS[0]
 
 
-def test_details_convert_to_other_models_through_the_wire_recipe():
+def test_details_convert_to_other_models():
     details = TypedDetails.model_validate(DETAILS["omitted awards"])
 
-    with pytest.raises(ValidationError, match="must be omitted, not null"):
-        TypedOpportunity.model_validate(details)
-    base = TypedOpportunity.model_validate(wire(details))
-    assert type(base) is TypedOpportunity
-    assert wire(base) == wire(details)
+    for base in (
+        TypedOpportunity.model_validate(details),
+        TypedOpportunity.model_validate(wire(details)),
+    ):
+        assert type(base) is TypedOpportunity
+        assert wire(base) == wire(details)
     populated = TypedDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY)
     assert "awards" not in wire(TypedOpportunity.model_validate(wire(populated)))
 

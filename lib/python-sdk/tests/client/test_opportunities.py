@@ -2009,12 +2009,11 @@ class TestOpportunityDetails:
     @pytest.mark.parametrize(
         "bad_awards, match",
         [
-            (None, "must be omitted, not null"),
             ([{"id": AWARD_REFS[0]["id"]}], "title"),
             ([None], "awards.0"),
             ({"id": AWARD_REFS[0]["id"]}, "awards"),
         ],
-        ids=["null", "missing title", "null entry", "object"],
+        ids=["missing title", "null entry", "object"],
     )
     @pytest.mark.parametrize("bound", ["unbound", "plugin"])
     def test_get_rejects_malformed_awards_with_validation_error(
@@ -2045,6 +2044,16 @@ class TestOpportunityDetails:
                 assert not isinstance(item, OpportunityDetails)
                 assert "awards" not in wire(item)
 
+    @pytest.mark.parametrize("bound", ["unbound", "plugin"])
+    def test_get_reads_null_awards_as_omitted(
+        self, client, plugin_client, mock_httpx_client, detail_row, bound
+    ):
+        target = client if bound == "unbound" else plugin_client
+        opp = self._get(target, mock_httpx_client, {**detail_row, "awards": None})
+
+        assert opp.awards is None
+        assert "awards" not in wire(opp)
+
     def test_detail_collection_override_collects_award_row_errors(
         self, plugin_client, mock_httpx_client, detail_row
     ):
@@ -2060,12 +2069,10 @@ class TestOpportunityDetails:
             rows,
             schema=OpportunityDetails[_VendorFields],
         ):
-            assert len(result.items) == 1
+            assert len(result.items) == 2
             self._assert_awards(result.items[0])
-            assert [(e.index, type(e)) for e in result.errors] == [
-                (1, ParseFailure),
-                (2, ParseFailure),
-            ]
+            assert result.items[1].awards is None
+            assert [(e.index, type(e)) for e in result.errors] == [(2, ParseFailure)]
 
 
 def test_typed_opportunity_details_example_runs():
