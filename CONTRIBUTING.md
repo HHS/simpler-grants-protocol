@@ -148,7 +148,7 @@ GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this ch
 
 ### Paid contributions
 
-Some CommonGrants issues carry an award of $50 to $500. They're labeled `funded`, and the award amount is at the top of the issue. See the [open funded issues](https://github.com/HHS/simpler-grants-protocol/issues?q=is%3Aissue%20state%3Aopen%20label%3Afunded).
+Some CommonGrants issues carry an award of $50 to $500. They're labeled `funded: contribution` or `funded: implementation`, and the award amount is at the top of the issue. See the [open funded issues](https://github.com/HHS/simpler-grants-protocol/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22funded%3A%20contribution%22%2C%22funded%3A%20implementation%22).
 
 CommonGrants is a shared standard for how grant information moves between systems. It's public infrastructure, and paying for some of the work is one way we're making room for more people to help build it.
 

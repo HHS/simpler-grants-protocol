@@ -2,10 +2,8 @@
 name: Internal - Funded contribution issue
 about: A funded issue for work inside a CommonGrants repository (maintainers only)
 type: Task
-labels: ["help wanted"]
+labels: ["help wanted", "funded: contribution"]
 ---
-
-<!-- After posting, add the "funded" label by hand. -->
 
 **Award: $[amount]**
 

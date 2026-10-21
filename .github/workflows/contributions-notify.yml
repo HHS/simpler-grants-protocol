@@ -1,0 +1,94 @@
+name: "Contributions: Notify Slack"
+
+# SAFETY INVARIANT, do not remove.
+# pull_request_target runs with repository secrets in the base repo's context,
+# which is the only way a fork's pull request can reach the Slack webhook. It is
+# safe here only because this workflow never checks out the pull request's code.
+# Never add actions/checkout with the PR head ref to this file. If you need the
+# contents of a PR, write a separate workflow triggered by pull_request.
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+  issue_comment:
+    types: [created]
+  workflow_dispatch: # press Run workflow to post a test message
+
+# Every job reads only the event payload, so no token scopes are needed.
+permissions: {}
+
+jobs:
+  # Anything opened by someone outside the team.
+  opened:
+    if: >-
+      (github.event_name == 'issues' || github.event_name == 'pull_request_target') &&
+      !endsWith(github.event.issue.user.login || github.event.pull_request.user.login, '[bot]') &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.issue.author_association || github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          # Untrusted values go through env, never inlined into the script.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          KIND: ${{ github.event_name == 'issues' && 'issue' || 'pull request' }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+          URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+        run: |
+          jq -n --arg kind "$KIND" --arg author "$AUTHOR" --arg url "$URL" \
+                --arg num "$NUMBER" --arg title "$TITLE" '
+            def esc: gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;");
+            {text: "New \($kind) from @\($author|esc): <\($url)|#\($num) \($title|esc)>"}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+  # Someone outside the team commented on a funded issue: a claim, a proposal,
+  # an extension request, or a question.
+  #
+  # Depends on the labels `funded: contribution` and `funded: implementation`
+  # existing exactly as spelled. contains() over an array is an exact match.
+  funded-comment:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      (contains(github.event.issue.labels.*.name, 'funded: contribution') ||
+       contains(github.event.issue.labels.*.name, 'funded: implementation')) &&
+      !endsWith(github.event.comment.user.login, '[bot]') &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          ISSUE_KIND: "${{ contains(github.event.issue.labels.*.name, 'funded: implementation') && 'implementation' || 'contribution' }}"
+          NUMBER: ${{ github.event.issue.number }}
+          TITLE: ${{ github.event.issue.title }}
+          URL: ${{ github.event.comment.html_url }}
+          AUTHOR: ${{ github.event.comment.user.login }}
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          # First line of the comment, so a claim reads differently from a question.
+          SNIPPET=$(printf '%s' "$BODY" | head -n 1 | cut -c1-140)
+          jq -n --arg kind "$ISSUE_KIND" --arg author "$AUTHOR" --arg url "$URL" \
+                --arg num "$NUMBER" --arg title "$TITLE" --arg snippet "$SNIPPET" '
+            def esc: gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;");
+            {text: "@\($author|esc) on a funded \($kind) issue: <\($url)|#\($num) \($title|esc)>\n> \($snippet|esc)"}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+  # Press "Run workflow" in the Actions tab to confirm the webhook still works.
+  # A working notifier and a dead one both look like silence otherwise.
+  test:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post a test message
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          jq -n '{text: "Test message. The webhook is working."}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
