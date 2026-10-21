@@ -123,7 +123,7 @@ class PluginSchemas(Generic[_TOpportunity, _TRecipient]):
 class Plugin(Generic[_SchemasT_co, FiltersT, AwardFiltersT]):
     """The plugin singleton consumers import.
 
-    ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
+    ``schemas`` is a typed dataclass, so ``plugin.schemas.Opportunity`` is
     fully typed (dot access). ``routes`` is the typed custom-filter registration
     (``PluginRoutes``); each resource's filter TypedDict flows through
     ``get_client`` to type ``client.opportunities.search(filters=...)`` and
