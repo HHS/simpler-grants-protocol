@@ -9,7 +9,7 @@ export interface Props {
 }
 
 const { label, items } = Astro.props;
-const slug = label.toLowerCase().replace(/\s+/g, "-");
+const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 ---
 
 <div class="nav-menu-item">

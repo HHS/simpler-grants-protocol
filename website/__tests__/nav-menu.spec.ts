@@ -54,7 +54,8 @@ describe("navbar dropdowns on the built landing page", () => {
     pageIds = [...html.matchAll(/\sid="([^"]*)"/g)].map(([, id]) => id);
   });
 
-  // Pin the counts so markup that matches nothing can't pass vacuously.
+  // Pin the counts so markup that matches nothing can't pass vacuously. 5 is the number
+  // of dropdowns in navMenuItems in src/components/starlight-overrides/Header.astro.
   it("renders five dropdown buttons and five dropdowns", () => {
     expect(buttons).toHaveLength(5);
     expect(dropdowns).toHaveLength(5);
