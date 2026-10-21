@@ -12,6 +12,7 @@ from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.extensions.filters import (
+    _policy_for,
     classify_filters,
     f,
     validate_filter_call,
@@ -743,6 +744,13 @@ def _award_wire(filters):
     return classify_filters(AWARD_ROUTES, "awards", "search", filters).model_dump(
         by_alias=True, mode="json", exclude_unset=True
     )
+
+
+def test_unknown_resource_name_falls_back_to_the_opportunity_policy():
+    """A resource with no policy of its own, such as a misspelled "award", keeps
+    the opportunity classification rather than raising."""
+    assert _policy_for("award") is _policy_for("opportunities")
+    assert _policy_for("award") is not _policy_for("awards")
 
 
 @pytest.mark.parametrize(
