@@ -55,6 +55,7 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 | **`PluginSchemas`** | Maps your extensions to the registered extensible schemas, keyed by name (`PluginSchemas(Opportunity=..., AwdRecipientIndividual=...)`). Schemas you omit fall back to the base schema, never `None`. |
 | **`define_plugin(...)`** | Assembles a `Plugin` from a `PluginSchemas` and a `PluginMeta`. |
 | **`Plugin`** | The value consumers import. `plugin.schemas.Opportunity` is fully typed dot access. |
+| **`PluginSchemasView`** | The read-only protocol `plugin.get_client()` reads a plugin's schemas through: each slot typed by the common model it parses into, whichever entry kind fills it. Appears in `get_client`'s signature; authors never implement it. |
 | **`build_transforms()`** | Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Used by `schema(..., mappings=...)` under the hood; also callable directly when you need custom handlers. |
 | **`TransformResult`** | The return shape `(result, errors)` of every transform. Errors are non-fatal: a partial result is always returned alongside any errors. |
 | **`PluginCustomFieldSpec`** | The resolved, inspection-only view of a custom field (`field_type`, `value`, `name`, `description`), exposed on `extension.custom_fields`. Derived from `CustomField[V]`; authors never construct it. |

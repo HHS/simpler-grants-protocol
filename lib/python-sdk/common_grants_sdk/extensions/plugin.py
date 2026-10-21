@@ -16,7 +16,7 @@ schema, where award custom fields live.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
-from typing import TYPE_CHECKING, Any, Generic, Optional, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Optional, Protocol, cast
 
 import typing_extensions as te
 
@@ -37,6 +37,37 @@ if TYPE_CHECKING:
     from ..client.config import Config
 
 SchemasT = te.TypeVar("SchemasT")
+# Plugin is frozen, so its schemas parameter can be covariant. That lets
+# get_client's self-type match PluginSchemas structurally against
+# PluginSchemasView, whichever entry kind fills each slot.
+_SchemasT_co = te.TypeVar("_SchemasT_co", covariant=True)
+_TCommon_co = te.TypeVar("_TCommon_co", covariant=True)
+_OppT_co = te.TypeVar("_OppT_co", covariant=True)
+_RecT_co = te.TypeVar("_RecT_co", covariant=True)
+
+
+class _ParsesInto(Protocol[_TCommon_co]):
+    """A schema slot's entry, either kind (``SchemaOnly`` or ``SchemaWithTransforms``),
+    read for the common model it parses into."""
+
+    @property
+    def common_schema(self) -> type[_TCommon_co]: ...
+
+
+class PluginSchemasView(Protocol[_OppT_co, _RecT_co]):
+    """Read-only view of ``PluginSchemas``: one property per extensible schema,
+    typed by the common model that slot parses into.
+
+    ``Plugin.get_client`` reads the plugin's schemas through this view, so its
+    single signature covers every combination of entry kinds. A new extensible
+    schema adds one property here.
+    """
+
+    @property
+    def Opportunity(self) -> _ParsesInto[_OppT_co]: ...
+    @property
+    def AwdRecipientIndividual(self) -> _ParsesInto[_RecT_co]: ...
+
 
 # The item model a get_client()-scoped client parses responses into: the common
 # model bound to the plugin's Opportunity schema slot (OpportunityBase or a
@@ -89,7 +120,7 @@ class PluginSchemas(Generic[_TOpportunity, _TRecipient]):
 
 
 @dataclass(frozen=True)
-class Plugin(Generic[SchemasT, FiltersT, AwardFiltersT]):
+class Plugin(Generic[_SchemasT_co, FiltersT, AwardFiltersT]):
     """The plugin singleton consumers import.
 
     ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
@@ -99,45 +130,17 @@ class Plugin(Generic[SchemasT, FiltersT, AwardFiltersT]):
     ``client.awards.search(filters=...)``.
     """
 
-    schemas: SchemasT
+    schemas: _SchemasT_co
     routes: PluginRoutes[FiltersT, AwardFiltersT]
     meta: PluginMeta
 
-    # One overload per Opportunity x AwdRecipientIndividual entry kind. A union
-    # inside the invariant carriers would not infer, so each pair is spelled out.
-    @overload
+    # One signature for every entry-kind combination: the self-type reads each
+    # slot's common model through PluginSchemasView, whichever entry kind holds it.
     def get_client(
-        self: "Plugin[PluginSchemas[SchemaOnly[ItemT], SchemaOnly[RecipientT]], FiltersT, AwardFiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]": ...
-
-    @overload
-    def get_client(
-        self: "Plugin[PluginSchemas[SchemaOnly[ItemT], SchemaWithTransforms[Any, RecipientT]], FiltersT, AwardFiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]": ...
-
-    @overload
-    def get_client(
-        self: "Plugin[PluginSchemas[SchemaWithTransforms[Any, ItemT], SchemaOnly[RecipientT]], FiltersT, AwardFiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]": ...
-
-    @overload
-    def get_client(
-        self: "Plugin[PluginSchemas[SchemaWithTransforms[Any, ItemT], SchemaWithTransforms[Any, RecipientT]], FiltersT, AwardFiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]": ...
-
-    def get_client(
-        self,
+        self: "Plugin[PluginSchemasView[ItemT, RecipientT], FiltersT, AwardFiltersT]",
         config: "Optional[Config]" = None,
         auth: "Optional[Auth]" = None,
-    ) -> "Client[Any, Any, Any, Any]":
+    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]":
         """Return a client pre-scoped with this plugin's routes and schemas.
 
         Consumers call ``plugin.get_client(config)`` instead of constructing a
@@ -150,13 +153,13 @@ class Plugin(Generic[SchemasT, FiltersT, AwardFiltersT]):
         # module scope here would create a cycle.
         from ..client.client import Client
 
-        # self.schemas/self.routes are opaque here (SchemasT); the overloads above
-        # carry the precise Client[FiltersT, ItemT, AwardFiltersT, AwardBase[...]]
-        # the caller sees.
         client = Client(config=config, auth=auth)
         client._bind_schemas(cast("Any", self.schemas))
         client._bind_routes(cast("Any", self.routes))
-        return client
+        # Client() infers its defaults here; the signature carries the precise type.
+        return cast(
+            "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]", client
+        )
 
 
 def define_plugin(

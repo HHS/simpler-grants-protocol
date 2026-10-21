@@ -5,6 +5,7 @@ from .plugin import (
     Plugin,
     PluginMeta,
     PluginSchemas,
+    PluginSchemasView,
     define_plugin,
 )
 from .schema import (
@@ -50,6 +51,7 @@ __all__ = [
     "PluginDefinitionError",
     "PluginMeta",
     "PluginSchemas",
+    "PluginSchemasView",
     "SchemaExtensions",
     "SchemaOnly",
     "SchemaWithTransforms",
