@@ -2,10 +2,8 @@
 name: Internal - Funded implementation issue
 about: A funded issue for an API or plugin built in the contributor's own repository (maintainers only)
 type: Task
-labels: ["help wanted"]
+labels: ["help wanted", "funded: implementation"]
 ---
-
-<!-- After posting, add the "funded" label by hand. -->
 
 **Award: $[amount]**
 
