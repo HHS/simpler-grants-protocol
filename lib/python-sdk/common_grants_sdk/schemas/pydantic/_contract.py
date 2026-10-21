@@ -5,42 +5,54 @@ Private module: the policies are applied model by model, never through
 their existing behavior.
 """
 
+from functools import cache
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from .base import CommonGrantsBaseModel
 
 
 class NonNullOptionals(BaseModel):
-    """Rejects an explicit null for optional fields: optional is not nullable.
+    """Reads an explicit null for an optional field as omitted.
 
-    Core optional properties may be omitted but are never ``null``. An absent field
-    still defaults to ``None`` (defaults are not validated), so this only fires when
-    a caller supplies ``None`` -- by wire key, field name, or constructor keyword.
-    Required fields keep their own types, so a required ``Any`` such as
-    ``CustomField.value`` still accepts ``null``. ``_nullable_fields`` names optional
-    fields that may be null anyway.
+    Core optional properties may be omitted but are never ``null``. A ``None``
+    supplied for one -- by wire key, field name, or constructor keyword -- is
+    dropped before validation, so the field stays unset and the wire recipe
+    (``exclude_unset=True``) leaves it out. Required fields keep their own types,
+    so a required ``Any`` such as ``CustomField.value`` still accepts ``null``.
+    ``_nullable_fields`` names optional fields whose ``null`` is kept as a value.
     """
 
     _nullable_fields: ClassVar[frozenset[str]] = frozenset()
 
-    @field_validator("*", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def _reject_explicit_null(cls, value: Any, info: ValidationInfo) -> Any:
-        name = info.field_name
-        if (
-            value is None
-            and name is not None
-            and name not in cls._nullable_fields
-            and not cls.model_fields[name].is_required()
-        ):
-            raise ValueError("optional property must be omitted, not null")
-        return value
+    def _null_as_omitted(cls, data: Any) -> Any:
+        if isinstance(data, dict) and any(value is None for value in data.values()):
+            keys = _omittable_keys(cls)
+            return {k: v for k, v in data.items() if v is not None or k not in keys}
+        return data
+
+
+@cache
+def _omittable_keys(cls: type[NonNullOptionals]) -> frozenset[str]:
+    """Field names and wire keys of the optional fields whose null reads as omitted."""
+    keys: set[str] = set()
+    for name, field in cls.model_fields.items():
+        if field.is_required() or name in cls._nullable_fields:
+            continue
+        keys.add(name)
+        keys.update(
+            alias
+            for alias in (field.alias, field.validation_alias)
+            if isinstance(alias, str)
+        )
+    return frozenset(keys)
 
 
 class SealedModel(NonNullOptionals, CommonGrantsBaseModel):
-    """A closed Core object: unknown properties are rejected, not dropped, and
-    optional properties may be omitted but not null."""
+    """A closed Core object: unknown properties are rejected, not dropped, and an
+    explicit null on an optional property reads as omitted."""
 
     model_config = ConfigDict(extra="forbid")

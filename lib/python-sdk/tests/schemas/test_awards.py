@@ -193,10 +193,8 @@ def test_typed_recipient_rejects_a_wrongly_typed_registered_value():
 @pytest.mark.parametrize(
     "entry",
     [
-        None,
         {"name": "x", "value": 1},
         {"name": "x", "fieldType": "integer", "value": 1, "extra": True},
-        {"name": "x", "fieldType": "integer", "value": 1, "schema": None},
     ],
 )
 def test_malformed_recipient_custom_field_entries_are_rejected(model, entry):
@@ -206,6 +204,31 @@ def test_malformed_recipient_custom_field_entries_are_rejected(model, entry):
         )
         with pytest.raises(ValidationError):
             model.model_validate(payload)
+
+
+@pytest.mark.parametrize("model", [AwardBase, TypedAward], ids=["bare", "typed"])
+def test_null_recipient_custom_field_entry(model):
+    """Only a declared entry is an optional field, so only its null reads as omitted."""
+    for key in ("scholarshipYear", "unknownKey"):
+        path = ("recipientIndividual", "customFields", key)
+        payload = _with(INDIVIDUAL_ONLY_AWARD, path, None)
+        if model is TypedAward and key == "scholarshipYear":
+            assert wire(model.model_validate(payload)) == _without(payload, path)
+        else:
+            with pytest.raises(ValidationError):
+                model.model_validate(payload)
+
+
+@pytest.mark.parametrize("model", [AwardBase, TypedAward], ids=["bare", "typed"])
+def test_null_recipient_custom_field_schema_reads_as_omitted(model):
+    entry = {"name": "x", "fieldType": "integer", "value": 1}
+    for key in ("scholarshipYear", "unknownKey"):
+        path = ("recipientIndividual", "customFields", key)
+        award = model.model_validate(
+            _with(INDIVIDUAL_ONLY_AWARD, path, {**entry, "schema": None})
+        )
+
+        assert wire(award) == _with(INDIVIDUAL_ONLY_AWARD, path, entry)
 
 
 @pytest.mark.parametrize("model", [AwardBase, TypedAward], ids=["bare", "typed"])
@@ -258,26 +281,18 @@ NULL_PATHS = [
 
 @pytest.mark.parametrize("model", [AwardBase, TypedAward], ids=["bare", "typed"])
 @pytest.mark.parametrize("path", NULL_PATHS, ids=[".".join(p) for p in NULL_PATHS])
-def test_explicit_null_optional_properties_are_rejected(model, path):
-    payload = _with(
-        {
-            **FULL_AWARD,
-            "recipientIndividual": {
-                **RECIPIENT_INDIVIDUAL,
-                "name": {"firstName": "Ada", "middleName": "A", "lastName": "Lovelace"},
-            },
+def test_explicit_null_optional_properties_read_as_omitted(model, path):
+    full = {
+        **FULL_AWARD,
+        "recipientIndividual": {
+            **RECIPIENT_INDIVIDUAL,
+            "name": {"firstName": "Ada", "middleName": "A", "lastName": "Lovelace"},
         },
-        path,
-        None,
-    )
+    }
 
-    with pytest.raises(ValidationError) as exc_info:
-        model.model_validate(payload)
-    # Event union errors add the member name (``SingleDateEvent``) to the location.
-    assert any(
-        err["loc"][: len(path) - 1] == path[:-1] and err["loc"][-1] == path[-1]
-        for err in exc_info.value.errors()
-    )
+    award = model.model_validate(_with(full, path, None))
+
+    assert wire(award) == _without(full, path)
 
 
 @pytest.mark.parametrize(

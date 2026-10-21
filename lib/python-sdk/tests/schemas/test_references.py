@@ -129,17 +129,29 @@ def test_required_reference_fields_are_enforced(model, payload):
 
 
 @pytest.mark.parametrize(
+    ("model", "payload", "key"),
+    [
+        (OppRef, OPP_REF, "identifiers"),
+        (OrgRef, FUNDER, "identifiers"),
+        (OrgRefCollection, {"primary": FUNDER}, "otherOrgs"),
+        (Name, {"firstName": "Ada", "lastName": "Lovelace"}, "middleName"),
+    ],
+)
+def test_explicit_null_optional_properties_read_as_omitted(model, payload, key):
+    expected = {k: v for k, v in payload.items() if k != key}
+
+    assert wire(model.model_validate({**payload, key: None})) == expected
+
+
+@pytest.mark.parametrize(
     ("model", "payload"),
     [
-        (OppRef, {**OPP_REF, "identifiers": None}),
-        (OrgRef, {**FUNDER, "identifiers": None}),
-        (OrgRefCollection, {"primary": FUNDER, "otherOrgs": None}),
+        # A map entry and a required property have no omitted state.
         (OrgRefCollection, {"primary": FUNDER, "otherOrgs": {"agent": None}}),
-        (Name, {"firstName": "Ada", "lastName": "Lovelace", "middleName": None}),
         (Name, {"firstName": None, "lastName": "Lovelace"}),
     ],
 )
-def test_explicit_nulls_are_rejected(model, payload):
+def test_null_map_entries_and_required_properties_are_rejected(model, payload):
     with pytest.raises(ValidationError):
         model.model_validate(payload)
 

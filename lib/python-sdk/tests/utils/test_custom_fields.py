@@ -791,16 +791,15 @@ NULL_CHECKED_CONTAINERS: dict[str, Any] = {
     "model", NULL_CHECKED_CONTAINERS.values(), ids=NULL_CHECKED_CONTAINERS.keys()
 )
 @pytest.mark.parametrize("key", ["legacyId", "legacy_id"])
-def test_explicit_null_registered_entry_is_rejected(model, key):
-    """A registered entry may be omitted, but Core custom-field maps hold no nulls."""
+def test_explicit_null_registered_entry_reads_as_omitted(model, key):
+    """Core custom-field maps hold no nulls, so a registered entry's null is omitted."""
     payload = {**WIRE_OPP, "customFields": {key: None, **UNREGISTERED_ENTRIES}}
 
-    with pytest.raises(ValidationError) as exc_info:
-        model.model_validate(payload)
+    opp = model.model_validate(payload)
 
-    assert [err["loc"][:2] for err in exc_info.value.errors()] == [
-        ("customFields", key)
-    ]
+    assert opp.custom_fields.legacy_id is None
+    wire = json.loads(opp.model_dump_json(by_alias=True, exclude_unset=True))
+    assert wire["customFields"] == UNREGISTERED_ENTRIES
 
 
 @pytest.mark.parametrize(

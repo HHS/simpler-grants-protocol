@@ -141,10 +141,10 @@ Both options keep the entries they don't declare. Unregistered entries land in `
 Each unregistered entry is validated as the base `CustomField`, so it must carry its own complete envelope:
 
 - `name`, `fieldType` (one of the six field types), and `value` are required. The map key is never used as a missing `name`.
-- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URI or a `null` `schema` or `description`.
+- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URI. A `null` `schema` or `description` reads as omitted.
 - Its `value` is untyped (`Any`); only registered fields get a typed value. Use [`get_custom_field_value()`](#extracting-custom-field-values) for typed access.
 
-This is not a general passthrough. Unknown top-level keys on the opportunity are still dropped, and an unknown key inside a `CustomField` envelope is rejected. A registered entry may be omitted, but not sent as `null`.
+This is not a general passthrough. Unknown top-level keys on the opportunity are still dropped, and an unknown key inside a `CustomField` envelope is rejected. A registered entry may be omitted, and a `null` one reads as omitted.
 
 ```python
 opp = OpportunityBase[OpportunityFields].model_validate({
@@ -328,7 +328,7 @@ Optional values carry three distinct states, each of which should be preserved t
 
 > **Note:** The coercing handlers (`numberToString`, `stringToNumber`) currently collapse a `None` source into the "not provided" path rather than preserving it as `None`. This is a known divergence; bringing them to full parity is a pending follow-up.
 
-> **Note:** Core's shared field models (events, custom fields, `Money`, and every award model) make optional properties omittable but not nullable, so a `None` written into one of them fails validation of the transform's output. Build those objects without the key, as with any [optional Core property](../schemas/README.md#validation-rules-shared-with-awards).
+> **Note:** Core's shared field models (events, custom fields, `Money`, and every award model) read a `None` on an optional property as omitted, so the transform's validated output leaves it out of the wire recipe, as with any [optional Core property](../schemas/README.md#validation-rules-shared-with-awards).
 
 ### Custom handlers
 

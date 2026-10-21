@@ -110,19 +110,17 @@ NULLABLE_EVENT_METADATA = [
 
 
 @pytest.mark.parametrize(("base", "alias", "attr"), NULLABLE_EVENT_METADATA)
-def test_explicit_null_event_metadata_is_rejected(base, alias, attr):
-    with pytest.raises(ValidationError) as wire_err:
-        EVENT.validate_python({**base, alias: None})
-    assert any(e["loc"][-1] == alias for e in wire_err.value.errors())
-
-    with pytest.raises(ValidationError):
-        EVENT.validate_json(json.dumps({**base, alias: None}))
-
+def test_explicit_null_event_metadata_reads_as_omitted(base, alias, attr):
     model = type(EVENT.validate_python(base))
-    with pytest.raises(ValidationError):
-        model.model_validate({**base, attr: None})  # snake_case key
-    with pytest.raises(ValidationError):
-        model(**{**base, attr: None})  # native construction
+    for event in (
+        EVENT.validate_python({**base, alias: None}),
+        EVENT.validate_json(json.dumps({**base, alias: None})),
+        model.model_validate({**base, attr: None}),  # snake_case key
+        model(**{**base, attr: None}),  # native construction
+    ):
+        assert getattr(event, attr) is None
+        assert attr not in event.model_fields_set
+        assert wire(event) == base
 
 
 @pytest.mark.parametrize(("base", "alias", "attr"), NULLABLE_EVENT_METADATA)
@@ -172,13 +170,19 @@ def test_typed_custom_value_rejects_null():
 @pytest.mark.parametrize(
     ("alias", "attr"), [("schema", "schema_url"), ("description", "description")]
 )
-def test_explicit_null_custom_field_metadata_is_rejected(model, alias, attr):
-    with pytest.raises(ValidationError):
-        model.model_validate({**ENVELOPE, alias: None})
-    with pytest.raises(ValidationError):
-        model.model_validate({**ENVELOPE, attr: None})
-    with pytest.raises(ValidationError):
-        model(name="x", field_type=CustomFieldType.INTEGER, value=1, **{attr: None})
+def test_explicit_null_custom_field_metadata_reads_as_omitted(model, alias, attr):
+    for field in (
+        model.model_validate({**ENVELOPE, alias: None}),
+        model.model_validate({**ENVELOPE, attr: None}),
+        model(
+            name="scholarshipYear",
+            field_type=CustomFieldType.INTEGER,
+            value=2026,
+            **{attr: None},
+        ),
+    ):
+        assert getattr(field, attr) is None
+        assert wire(field) == ENVELOPE
 
 
 def test_empty_custom_field_name_is_allowed():

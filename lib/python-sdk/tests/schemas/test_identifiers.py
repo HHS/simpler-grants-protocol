@@ -193,18 +193,17 @@ def test_identifier_status_values():
 
 
 @pytest.mark.parametrize(
-    "payload",
+    ("payload", "expected"),
     [
-        {"id": None},
-        {"registry": None},
-        {"allIds": None},
-        {"registry": {"code": None}},
-        {"registry": {"url": None}},
+        ({"id": None}, {}),
+        ({"registry": None}, {}),
+        ({"allIds": None}, {}),
+        ({"registry": {"code": None}}, {"registry": {}}),
+        ({"registry": {"url": None}}, {"registry": {}}),
     ],
 )
-def test_explicit_null_identifier_properties_are_rejected(payload):
-    with pytest.raises(ValidationError):
-        Identifier.model_validate(payload)
+def test_explicit_null_identifier_properties_read_as_omitted(payload, expected):
+    assert wire(Identifier.model_validate(payload)) == expected
 
 
 @pytest.mark.parametrize(

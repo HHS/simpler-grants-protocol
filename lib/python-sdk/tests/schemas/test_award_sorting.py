@@ -49,11 +49,16 @@ def test_sorting_parses_enums_and_omits_defaults():
         {"sortBy": "keyDates.closeDate"},  # an opportunity key
         {"sortBy": None},
         {"sortBy": "title", "sortOrder": "up"},
-        {"sortBy": "title", "sortOrder": None},
-        {"sortBy": "title", "customSortBy": None},
         {"sortBy": "title", "unknown": 1},
     ],
 )
 def test_invalid_sorting_is_rejected(payload):
     with pytest.raises(ValidationError):
         AwdSorting.model_validate(payload)
+
+
+@pytest.mark.parametrize("key", ["sortOrder", "customSortBy"])
+def test_explicit_null_sorting_options_read_as_omitted(key):
+    sorting = AwdSorting.model_validate({"sortBy": "title", key: None})
+
+    assert wire(sorting) == {"sortBy": "title"}

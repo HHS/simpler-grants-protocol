@@ -65,7 +65,6 @@ def test_list_request_defaults_to_core_pagination_and_omits_it():
         {"pageSize": 0},
         {"page": INT32_MAX + 1},
         {"pageSize": INT32_MAX + 1},
-        {"page": None},
         {"page": 1.5},
         {"page": 1, "unknown": 1},
     ],
@@ -73,6 +72,13 @@ def test_list_request_defaults_to_core_pagination_and_omits_it():
 def test_invalid_list_requests_are_rejected(payload):
     with pytest.raises(ValidationError):
         AwardsListRequest.model_validate(payload)
+
+
+def test_list_request_reads_null_as_the_default():
+    request = AwardsListRequest.model_validate({"page": None, "pageSize": None})
+
+    assert (request.page, request.page_size) == (1, 100)
+    assert wire(request) == {}
 
 
 def test_get_request_uses_the_awd_id_path_parameter():
@@ -120,10 +126,6 @@ def test_search_request_accepts_typed_parts():
 @pytest.mark.parametrize(
     "payload",
     [
-        {"search": None},
-        {"filters": None},
-        {"sorting": None},
-        {"pagination": None},
         {"pagination": {"page": 0}},
         {"sorting": {}},
         {"filters": {"region": {"operator": "eq", "value": 1}}},
@@ -133,6 +135,11 @@ def test_search_request_accepts_typed_parts():
 def test_invalid_search_requests_are_rejected(payload):
     with pytest.raises(ValidationError):
         AwdSearchRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize("key", ["search", "filters", "sorting", "pagination"])
+def test_explicit_null_search_request_parts_read_as_omitted(key):
+    assert wire(AwdSearchRequest.model_validate({key: None})) == {}
 
 
 # ############################################################
@@ -167,13 +174,6 @@ def test_invalid_award_responses_are_rejected(payload):
         ),
         (
             AwardsListResponse,
-            {
-                **LIST_RESPONSE,
-                "paginationInfo": {**PAGINATION_INFO, "totalItems": None},
-            },
-        ),
-        (
-            AwardsListResponse,
             {**LIST_RESPONSE, "paginationInfo": {**PAGINATION_INFO, "unknown": 1}},
         ),
         (AwardsListResponse, {**LIST_RESPONSE, "unknown": 1}),
@@ -185,18 +185,10 @@ def test_invalid_award_responses_are_rejected(payload):
         ),
         (
             AwardsSortedResponse,
-            {**SORTED_RESPONSE, "sortInfo": {**SORT_INFO, "errors": None}},
-        ),
-        (
-            AwardsSortedResponse,
             {**SORTED_RESPONSE, "sortInfo": {**SORT_INFO, "unknown": 1}},
         ),
         (AwardsFilteredResponse, SORTED_RESPONSE),  # filterInfo required
         (AwardsFilteredResponse, {**FILTERED_RESPONSE, "filterInfo": {}}),
-        (
-            AwardsFilteredResponse,
-            {**FILTERED_RESPONSE, "filterInfo": {"filters": {}, "errors": None}},
-        ),
         (
             AwardsFilteredResponse,
             {
@@ -213,6 +205,23 @@ def test_invalid_award_responses_are_rejected(payload):
 def test_invalid_award_list_responses_are_rejected(model, payload):
     with pytest.raises(ValidationError):
         model.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("model", "payload", "path"),
+    [
+        (AwardsListResponse, LIST_RESPONSE, ("paginationInfo", "totalItems")),
+        (AwardsSortedResponse, SORTED_RESPONSE, ("sortInfo", "errors")),
+        (AwardsFilteredResponse, FILTERED_RESPONSE, ("filterInfo", "errors")),
+    ],
+)
+def test_explicit_null_result_info_reads_as_omitted(model, payload, path):
+    outer, key = path
+    expected = {**payload, outer: {k: v for k, v in payload[outer].items() if k != key}}
+
+    response = model.model_validate({**payload, outer: {**payload[outer], key: None}})
+
+    assert wire(response) == expected
 
 
 def test_page_size_has_no_upper_bound_in_results():

@@ -45,7 +45,7 @@ def add_custom_fields(
     class _CustomFieldsBase(NonNullOptionals, CommonGrantsBaseModel):
         """Unregistered entries are kept in model_extra, validated as CustomField.
 
-        Registered entries may be omitted but not null.
+        A registered entry's null reads as omitted.
         """
 
         model_config = ConfigDict(populate_by_name=True, extra="allow")

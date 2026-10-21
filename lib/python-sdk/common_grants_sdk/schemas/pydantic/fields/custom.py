@@ -35,8 +35,8 @@ class CustomField(SealedModel, Generic[V]):
     irregular wire name, ``schema_url`` -> ``"schema"``, keeps an explicit
     field-level alias.
 
-    ``value`` is required but may be ``null``; the optional ``schema`` and
-    ``description`` may be omitted but not ``null``.
+    ``value`` is required but may be ``null``; a ``null`` for the optional
+    ``schema`` or ``description`` reads as omitted.
     """
 
     model_config = ConfigDict(populate_by_name=True)

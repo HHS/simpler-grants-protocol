@@ -313,13 +313,13 @@ award.model_dump(mode="json", by_alias=True, exclude_unset=True)
 ```
 
 - `by_alias=True` writes the camelCase and registry-code keys (`recipientIndividual`, `org:us:ein`).
-- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol, and these models, reject. Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
+- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol rejects. Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
 
 The base-model convenience methods `dump()` and `dump_json()` use neither flag, so they are not wire serializers.
 
 ### Validation rules shared with awards
 
-**Optional is not nullable.** Core optional properties may be omitted but never sent as `null`. An explicit `null`, whether from JSON, a snake_case key or a constructor keyword (`SingleDateEvent(..., description=None)`), raises a `ValidationError`; leave the property out instead. A custom field's `value` is the exception: it is required, and `null` is a valid value (unless you type it, e.g. `CustomField[int]`). A declared `CustomFieldSet` entry may be omitted but not `null`.
+**Optional is not nullable.** Core optional properties may be omitted but never sent as `null`. These models read an explicit `null`, whether from JSON, a snake_case key or a constructor keyword (`SingleDateEvent(..., description=None)`), as omitted: the property stays unset, so the wire recipe leaves it out. A custom field's `value` is the exception: it is required, and `null` is a valid value (unless you type it, e.g. `CustomField[int]`). A `null` for a declared `CustomFieldSet` entry also reads as omitted.
 
 **Closed objects reject unknown properties.** Where Core seals an object, an unknown property raises a `ValidationError` instead of being dropped. That covers every award model, `Event`, `CustomField`, `Money` and `SystemMetadata`. Maps stay open: custom-field maps, `other_dates`, `other_orgs`, `other_ids`, `custom_filters`, the root of `AwdDefaultFilters` and the generic `IdentifierCollection`. `OpportunityBase` still ignores unknown properties at its root.
 
@@ -327,7 +327,7 @@ These shared models now follow Core more closely. Opportunities and plugins that
 
 | Type | Behavior |
 |---|---|
-| `Event` (`SingleDateEvent`, `DateRangeEvent`, `OtherEvent`) | `eventType` is always serialized, even when it was defaulted; explicit `null` metadata is rejected; `name` may be empty |
+| `Event` (`SingleDateEvent`, `DateRangeEvent`, `OtherEvent`) | `eventType` is always serialized, even when it was defaulted; explicit `null` metadata reads as omitted; `name` may be empty |
 | `CustomField` | `schema` accepts any absolute URI (`https`, `ftp`, `urn:`, `mailto:`), not just HTTP URLs; `name` may be empty |
 | `DecimalString` (`Money.amount`) | Matches Core's `^-?[0-9]+\.?[0-9]*$` with ASCII digits: `"1."` is valid, `".5"` is not. Like any Python regex, `$` also accepts one trailing newline, which the JSON Schema pattern does not. |
 | `UTCDateTime` (`created_at`, `last_modified_at`) | Must include a timezone (`Z` or an offset); naive and date-only values are rejected rather than guessed at. Values are normalized to UTC. |

@@ -159,12 +159,10 @@ def test_invalid_filters_are_rejected(key, filter_):
         "customFilters",
     ],
 )
-def test_explicit_null_filters_are_rejected(key):
-    with pytest.raises(ValidationError):
-        AwdFilters.model_validate({key: None})
+def test_explicit_null_filters_read_as_omitted(key):
+    assert wire(AwdFilters.model_validate({key: None})) == {}
     if key != "customFilters":
-        with pytest.raises(ValidationError):
-            AwdDefaultFilters.model_validate({key: None})
+        assert wire(AwdDefaultFilters.model_validate({key: None})) == {}
 
 
 def test_shared_opportunity_filters_are_unchanged():

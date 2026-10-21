@@ -148,15 +148,18 @@ def invalid_values_are_rejected() -> None:
         "value"
     ] = "2026-27"
     root_fields = {**AWARD, "customFields": {}}
-    null_parent = {**AWARD, "parent": None}
 
     AwardBase.model_validate(wrong_type)  # untyped: any value
-    for payload in (wrong_type, root_fields, null_parent):
+    for payload in (wrong_type, root_fields):
         try:
             TypedAward.model_validate(payload)
         except ValidationError:
             continue
         raise AssertionError("expected a ValidationError")
+
+    # An explicit null on an optional property reads as omitted.
+    null_parent = TypedAward.model_validate({**AWARD, "parent": None})
+    assert "parent" not in wire(null_parent)
 
 
 def main() -> None:

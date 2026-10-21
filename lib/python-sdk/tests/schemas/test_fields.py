@@ -3,8 +3,6 @@
 import pytest
 from datetime import date, time, datetime, timezone
 
-from pydantic import ValidationError
-
 from common_grants_sdk.schemas.pydantic.fields import (
     Money,
     EventType,
@@ -99,14 +97,15 @@ def test_single_date_event_validation():
     )
     assert event.name == ""
 
-    # Optional is not nullable: an explicit null is rejected, omission is not
-    with pytest.raises(ValidationError):
-        SingleDateEvent(
-            name="Test Event",
-            event_type=EventType.SINGLE_DATE,
-            date=date(2024, 1, 1),
-            time=None,
-        )
+    # An explicit null on an optional property reads as omitted
+    event = SingleDateEvent(
+        name="Test Event",
+        event_type=EventType.SINGLE_DATE,
+        date=date(2024, 1, 1),
+        time=None,
+    )
+    assert event.time is None
+    assert "time" not in event.model_dump(by_alias=True, exclude_unset=True)
 
     # With strict=False, date string is coerced to date
     event = SingleDateEvent(
