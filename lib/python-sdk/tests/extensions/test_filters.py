@@ -494,23 +494,18 @@ def test_classify_all_valid_mixed_buckets_returns_all_keys():
     assert "legacyTag" in result.custom_filters
 
 
-@pytest.mark.parametrize(
-    ("resource", "method"),
-    [
-        ("opportunities", "list"),  # method not declared in routes
-        ("opportunity", "search"),  # resource near-miss (pluralization)
-    ],
-)
-def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, method):
-    """A (resource, method) pair with no routes entry has no registered bucket.
+def test_classify_unmatched_route_treats_registered_name_as_adhoc():
+    """A declared resource with an undeclared method has no registered bucket.
 
-    "agency" is registered as a stringArray under opportunities.search only. Via any
-    other pair it is validated as an ad-hoc filter, so f.eq("NSF") (a valid string
-    comparison) passes through to customFilters. This exercises both levels of the
-    routes lookup: a mis-keyed lookup would either apply the spec where it should
-    not, or skip it where it should apply.
+    "agency" is registered as a stringArray under opportunities.search only. Via
+    opportunities.list it is validated as an ad-hoc filter, so f.eq("NSF") (a valid
+    string comparison) passes through to customFilters. A mis-keyed lookup would
+    either apply the spec where it should not, or skip it where it should apply.
+    (An unknown resource raises; see test_unknown_resource_name_raises_key_error.)
     """
-    result = classify_filters(SAMPLE_ROUTES, resource, method, {"agency": f.eq("NSF")})
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "list", {"agency": f.eq("NSF")}
+    )
     assert result.custom_filters is not None
     assert result.custom_filters["agency"].value == "NSF"
 
@@ -746,11 +741,16 @@ def _award_wire(filters):
     )
 
 
-def test_unknown_resource_name_falls_back_to_the_opportunity_policy():
-    """A resource with no policy of its own, such as a misspelled "award", keeps
-    the opportunity classification rather than raising."""
-    assert _policy_for("award") is _policy_for("opportunities")
-    assert _policy_for("award") is not _policy_for("awards")
+def test_unknown_resource_name_raises_key_error():
+    """A resource with no filter policy, such as a misspelled "award", raises
+    instead of borrowing the opportunity classification."""
+    with pytest.raises(KeyError, match="'award'.*'opportunities', 'awards'"):
+        _policy_for("award")
+    with pytest.raises(KeyError, match="'award'.*'opportunities', 'awards'"):
+        classify_filters(
+            AWARD_ROUTES, "award", "search", {"status": f.in_(["awarded"])}
+        )
+    assert _policy_for("opportunities") is not _policy_for("awards")
 
 
 @pytest.mark.parametrize(

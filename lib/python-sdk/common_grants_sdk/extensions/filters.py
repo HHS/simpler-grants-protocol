@@ -366,8 +366,13 @@ _POLICIES: dict[str, _FilterPolicy] = {
 
 
 def _policy_for(resource: str) -> _FilterPolicy:
-    # Any other resource name keeps the historical (opportunity) classification.
-    return _POLICIES.get(resource, _OPPORTUNITY_POLICY)
+    try:
+        return _POLICIES[resource]
+    except KeyError:
+        valid = ", ".join(repr(name) for name in _POLICIES)
+        raise KeyError(
+            f"no filter policy for resource {resource!r}; expected one of {valid}"
+        ) from None
 
 
 #: The opportunity default-filter names (snake_case AND camelCase alias forms).
@@ -672,10 +677,11 @@ def classify_filters(
     raises.)
 
     Registered specs are looked up by the exact ``(resource, method)`` strings
-    declared in ``routes``. A non-matching pair (e.g. a pluralization typo in
-    ``resource``) yields no registered bucket at all: every non-default filter is
-    then validated against the known-model union, exactly like ad-hoc input. Call
-    sites must pass the same resource/method strings the plugin declared.
+    declared in ``routes``. A ``resource`` with no filter policy (e.g. a
+    pluralization typo such as ``"award"``) raises ``KeyError``. A ``method`` the
+    routes do not declare yields no registered bucket at all: every non-default
+    filter is then validated against the known-model union, exactly like ad-hoc
+    input. Call sites must pass the same resource/method strings the plugin declared.
 
     Default consumer keys are normalized to the wire alias via the policy's
     ``snake_to_alias`` before the body model is constructed. ``populate_by_name`` would
@@ -701,6 +707,8 @@ def classify_filters(
 
     Raises:
         FilterError: On the first invalid filter value (standard, registered, or ad-hoc).
+        KeyError: If ``resource`` is not a filter-capable resource
+            (``"opportunities"`` or ``"awards"``).
     """
     policy = _policy_for(resource)
     route = getattr(routes, resource, None)
