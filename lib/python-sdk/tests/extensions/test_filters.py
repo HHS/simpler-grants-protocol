@@ -808,13 +808,16 @@ def test_award_both_forms_of_one_standard_filter_raises():
             {"operator": "between", "value": {"max": USD_RANGE[1]}},
         ),
         ("status", {"operator": "in", "value": ["awarded"], "extra": True}),
-        ("status", None),  # optional is not nullable
     ],
 )
 def test_award_standard_filter_uses_the_strict_award_model(key, value):
     with pytest.raises(FilterError) as exc:
         _award_wire({key: value})
     assert exc.value.path == f"filters.{to_camel(key)}"
+
+
+def test_award_standard_filter_reads_null_as_omitted():
+    assert _award_wire({"status": None}) == {}
 
 
 def test_award_registered_filter_is_coerced_and_kept_literal():
