@@ -367,15 +367,18 @@ class TestOpportunityResponses:
         assert wire(response) == payload
 
     @pytest.mark.parametrize("route", ["get", "list", "search"])
-    def test_envelope_rejects_null_addition(self, route: str) -> None:
-        from tests.schemas.opportunity_v05_fixtures import FULL_OPPORTUNITY
+    def test_envelope_reads_null_addition_as_omitted(self, route: str) -> None:
+        from tests.schemas.opportunity_v05_fixtures import FULL_OPPORTUNITY, wire
 
         payload = self._payloads()[route]
-        bad = {**FULL_OPPORTUNITY, "funders": None}
+        null_funders = {**FULL_OPPORTUNITY, "funders": None}
         if route == "get":
-            payload = {**payload, "data": bad}
+            payload = {**payload, "data": null_funders}
         else:
-            payload = {**payload, "items": [bad]}
+            payload = {**payload, "items": [null_funders]}
 
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            self._models()[route].model_validate(payload)
+        response = self._models()[route].model_validate(payload)
+
+        data = wire(response)
+        item = data["data"] if route == "get" else data["items"][0]
+        assert "funders" not in item

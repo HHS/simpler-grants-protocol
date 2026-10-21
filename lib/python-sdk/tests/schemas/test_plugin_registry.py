@@ -117,10 +117,10 @@ def test_registered_schema_keeps_identifiers_and_funders(
 
 
 @pytest.mark.parametrize("field", ["identifiers", "funders"])
-def test_registered_schema_rejects_null_identifiers_and_funders(
+def test_registered_schema_reads_null_identifiers_and_funders_as_omitted(
     simple_opportunity, sample_payload, field
 ):
-    from pydantic import ValidationError
+    opportunity = simple_opportunity.model_validate({**sample_payload, field: None})
 
-    with pytest.raises(ValidationError, match="must be omitted, not null"):
-        simple_opportunity.model_validate({**sample_payload, field: None})
+    assert getattr(opportunity, field) is None
+    assert field not in opportunity.model_fields_set

@@ -33,6 +33,8 @@ from .opportunity_v05_fixtures import (
     FUNDERS,
     IDENTIFIERS,
     INVALID_ADDITIONS,
+    NULL_OPTIONAL_ADDITIONS,
+    without,
     MINIMAL_OPPORTUNITY,
     OPPORTUNITIES,
     OPPORTUNITY_ID,
@@ -375,24 +377,44 @@ def test_absent_additions_default_to_none_and_stay_omitted(payload, absent):
 
 @pytest.mark.parametrize("model", [OpportunityBase, TypedOpportunity])
 @pytest.mark.parametrize("field", ["identifiers", "funders"])
-def test_explicit_null_additions_are_rejected(model, field):
-    for payload in (
-        {**MINIMAL_OPPORTUNITY, field: None},
-        {**_snake_case(MINIMAL_OPPORTUNITY), field: None},
+def test_explicit_null_additions_read_as_omitted(model, field):
+    for opportunity in (
+        model.model_validate({**MINIMAL_OPPORTUNITY, field: None}),
+        model.model_validate({**_snake_case(MINIMAL_OPPORTUNITY), field: None}),
+        model(**_snake_case(MINIMAL_OPPORTUNITY), **{field: None}),
     ):
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            model.model_validate(payload)
-    with pytest.raises(ValidationError, match="must be omitted, not null"):
-        model(**_snake_case(MINIMAL_OPPORTUNITY), **{field: None})
+        assert getattr(opportunity, field) is None
+        assert field not in opportunity.model_fields_set
+        assert wire(opportunity) == MINIMAL_OPPORTUNITY
+
+
+REJECTED_ADDITIONS = {
+    name: payload
+    for name, payload in INVALID_ADDITIONS.items()
+    if name not in NULL_OPTIONAL_ADDITIONS
+}
 
 
 @pytest.mark.parametrize("model", [OpportunityBase, TypedOpportunity])
 @pytest.mark.parametrize(
-    "payload", INVALID_ADDITIONS.values(), ids=INVALID_ADDITIONS.keys()
+    "payload", REJECTED_ADDITIONS.values(), ids=REJECTED_ADDITIONS.keys()
 )
 def test_invalid_additions_are_rejected(model, payload):
     with pytest.raises(ValidationError):
         model.model_validate(payload)
+
+
+@pytest.mark.parametrize("model", [OpportunityBase, TypedOpportunity])
+@pytest.mark.parametrize(
+    "name", NULL_OPTIONAL_ADDITIONS.keys(), ids=NULL_OPTIONAL_ADDITIONS.keys()
+)
+def test_null_optional_additions_read_as_omitted(model, name):
+    """The emitted schemas reject these nulls; the models read them as omitted."""
+    payload = INVALID_ADDITIONS[name]
+
+    opportunity = model.model_validate(payload)
+
+    assert wire(opportunity) == without(payload, NULL_OPTIONAL_ADDITIONS[name])
 
 
 @pytest.mark.parametrize(
@@ -434,16 +456,13 @@ def test_typed_opportunities_example_runs():
     main()
 
 
-def test_non_wire_round_trips_reject_and_the_wire_recipe_converts():
+def test_non_wire_round_trips_and_instances_read_null_additions_as_omitted():
     opp = OpportunityBase.model_validate(MINIMAL_OPPORTUNITY)
 
-    for attempt in (
-        lambda: OpportunityBase.model_validate(opp.model_dump()),
-        lambda: OpportunityBase.from_json(opp.dump_json()),
-        lambda: TypedOpportunity.model_validate(opp),
-    ):
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            attempt()
+    # The non-wire dumps write the unset additions as null, which reads as omitted.
+    assert OpportunityBase.model_validate(opp.model_dump()) == opp
+    assert OpportunityBase.from_json(opp.dump_json()) == opp
+    assert wire(TypedOpportunity.model_validate(opp)) == wire(opp)
 
     assert OpportunityBase.model_validate(wire(opp)) == opp
     payload = OPPORTUNITIES["custom fields with both additions"]

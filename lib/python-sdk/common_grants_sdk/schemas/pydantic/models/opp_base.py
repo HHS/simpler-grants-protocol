@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Generic, Optional, Type, TypeVar
 from uuid import UUID
 
 import typing_extensions as te
-from pydantic import ConfigDict, Field, HttpUrl, field_validator
+from pydantic import ConfigDict, Field, HttpUrl, model_validator
 
 from ..base import CommonGrantsBaseModel
 from ..fields import CustomField, OppIds, SystemMetadata
@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     from common_grants_sdk.extensions.specs import CustomFieldSpec
 
 V = TypeVar("V")  # Unbound to support both BaseModel subclasses and primitives
+
+# Field and wire names of the Core v0.5 additions (they are the same).
+_V05_ADDITIONS = frozenset({"identifiers", "funders"})
 
 # The opportunity's custom-fields container. Defaults to the protocol's untyped
 # representation (``dict[str, CustomField]``), so the bare ``OpportunityBase``
@@ -74,14 +77,20 @@ class OpportunityBase(SystemMetadata, CommonGrantsBaseModel, Generic[CF]):
         description="The type of applicant for the opportunity",
     )
 
-    # Core v0.5 additions may be omitted but not null. Scoped to these fields so the
-    # older optional fields keep accepting null (#1192 owns that repair).
-    @field_validator("identifiers", "funders", mode="before")
+    # Core v0.5 additions may be omitted but not null, so a null reads as omitted.
+    # Scoped to these fields so the older optional fields keep a null as a value.
+    @model_validator(mode="before")
     @classmethod
-    def _reject_null_v05_additions(cls, value: Any) -> Any:
-        if value is None:
-            raise ValueError("optional property must be omitted, not null")
-        return value
+    def _null_v05_additions_as_omitted(cls, data: Any) -> Any:
+        if isinstance(data, dict) and any(
+            data.get(key, ...) is None for key in _V05_ADDITIONS
+        ):
+            return {
+                k: v
+                for k, v in data.items()
+                if v is not None or k not in _V05_ADDITIONS
+            }
+        return data
 
     @classmethod
     def with_custom_fields(

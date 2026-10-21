@@ -220,11 +220,9 @@ opp.model_dump(mode="json", by_alias=True, exclude_unset=True)
 
 Python attributes are snake_case (`opp_us_fon`, `other_orgs`, `all_ids`); the wire keeps the exact registry codes and camelCase (`opp:us:fon`, `otherOrgs`, `allIds`). Role keys under `otherOrgs` are passed through as-is.
 
-Both fields may be omitted but not `null`: an absent field reads as `None` and stays out of the wire dump, while an explicit `null` (JSON, snake_case key or constructor keyword) raises `optional property must be omitted, not null`. The type is `Optional[...]`, so narrow before use; the `null` check happens at runtime, not in the type checker. Invalid nested values (wrong registry code, malformed UUID, missing `primary`, unknown properties on the closed reference and identifier models) are rejected by the shared models.
+Both fields may be omitted, and Core never sends them as `null`: an absent field reads as `None` and stays out of the wire dump, and an explicit `null` (JSON, snake_case key or constructor keyword) reads the same way, as omitted. The type is `Optional[...]`, so narrow before use. Invalid nested values (wrong registry code, malformed UUID, missing `primary`, unknown properties on the closed reference and identifier models) are rejected by the shared models.
 
-Because a supplied `null` is rejected, an opportunity serialized without the wire recipe (`model_dump()`, `dump()`, `dump_json()`) no longer parses back: those write absent fields as `null`. Validating one opportunity instance into another model (`OpportunityBase[Fields].model_validate(opp)`) fails the same way, because unset fields read as `None`. Convert through the wire recipe instead: `OpportunityBase[Fields].model_validate(opp.model_dump(mode="json", by_alias=True, exclude_unset=True))`.
-
-Serialize with the explicit wire recipe in [Serializing to the wire](#serializing-to-the-wire); there is no default dump helper for it, and `dump()` is not a wire serializer. Of `OpportunityBase`'s own optional fields, only these two reject `null`: the older ones (`funding`, `key_dates`, `source`, `custom_fields`, `accepted_applicant_types`) keep accepting it for now ([#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192)).
+Serialize with the explicit wire recipe in [Serializing to the wire](#serializing-to-the-wire); there is no default dump helper for it, and `dump()` is not a wire serializer. Of `OpportunityBase`'s own optional fields, only these two read `null` as omitted: the older ones (`funding`, `key_dates`, `source`, `custom_fields`, `accepted_applicant_types`) keep a `null` as a value, which the wire recipe writes back ([#1192](https://github.com/HHS/simpler-grants-protocol/issues/1192)).
 
 Typed custom fields work as before (`OpportunityBase[OpportunityFields]`, `schema()`, `PluginSchemas`, `with_custom_fields()`), and both fields survive the opportunity get, list and search responses. [`examples/typed_opportunities_v05.py`](../../examples/typed_opportunities_v05.py) shows the plugin parse path, checked by pyright.
 
@@ -364,7 +362,7 @@ award.model_dump(mode="json", by_alias=True, exclude_unset=True)
 ```
 
 - `by_alias=True` writes the camelCase and registry-code keys (`recipientIndividual`, `org:us:ein`).
-- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol rejects. The award models read an explicit `null` as omitted and the new opportunity fields reject it; older opportunity properties, including nested ones such as `funding.details`, keep it as a value (see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)). Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
+- `exclude_unset=True` keeps omitted properties omitted. Without it, every absent optional property is written as `null`, which the protocol rejects. The award models and the new opportunity fields read an explicit `null` as omitted; older opportunity properties, including nested ones such as `funding.details`, keep it as a value (see [Opportunity identifiers and funders](#opportunity-identifiers-and-funders)). Don't use `exclude_none=True` instead: a custom field's `value` is required and may be `null`, and `exclude_none` would drop it.
 
 The base-model convenience methods `dump()` and `dump_json()` use neither flag, so they are not wire serializers.
 

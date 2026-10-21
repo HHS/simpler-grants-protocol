@@ -2,8 +2,8 @@
 
 ``OpportunityBase.identifiers`` is the shared ``OppIds`` collection and
 ``OpportunityBase.funders`` is the shared ``OrgRefCollection``: one primary funder
-plus others keyed by an implementation-defined role. Both may be omitted but not
-``null``. Plugin authors keep declaring custom fields the usual way::
+plus others keyed by an implementation-defined role. Both may be omitted, and a
+``null`` for either reads as omitted. Plugin authors keep declaring custom fields the usual way::
 
     TypedOpportunity = OpportunityBase[OpportunityFields]
 
@@ -20,7 +20,6 @@ from datetime import UTC, datetime
 from typing import Any, Optional
 from uuid import UUID
 
-from pydantic import ValidationError
 from typing_extensions import assert_type
 
 from common_grants_sdk.extensions import (
@@ -174,12 +173,8 @@ def omitted_not_null(data: dict[str, Any]) -> None:
     assert parsed.identifiers is None and parsed.funders is None
     assert "identifiers" not in wire(parsed) and "funders" not in wire(parsed)
     for field in ("identifiers", "funders"):
-        try:
-            plugin.schemas.Opportunity.parse({**data, field: None})
-        except ValidationError as exc:
-            assert "optional property must be omitted, not null" in str(exc)
-            continue
-        raise AssertionError(f"expected a ValidationError for null {field}")
+        parsed = plugin.schemas.Opportunity.parse({**data, field: None})
+        assert getattr(parsed, field) is None and field not in wire(parsed)
 
 
 def main() -> None:

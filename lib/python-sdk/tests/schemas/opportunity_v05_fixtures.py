@@ -157,8 +157,9 @@ def without(payload: dict[str, Any], path: tuple[str | int, ...]) -> dict[str, A
 
 FULL_OPPORTUNITY = OPPORTUNITIES["identifiers and funders"]
 
-# Wire JSON that violates the emitted contract for the two additions. The Python
-# models and the emitted schemas must each reject every one independently.
+# Wire JSON that violates the emitted contract for the two additions. The emitted
+# schemas must reject every one; the Python models reject every one except the
+# nulls on optional properties (NULL_OPTIONAL_ADDITIONS), which read as omitted.
 INVALID_ADDITIONS: dict[str, dict[str, Any]] = {
     "null identifiers": {**MINIMAL_OPPORTUNITY, "identifiers": None},
     "null funders": {**MINIMAL_OPPORTUNITY, "funders": None},
@@ -222,6 +223,14 @@ INVALID_ADDITIONS: dict[str, dict[str, Any]] = {
         ("identifiers", "opp:us:fon", "registry", "url"),
         "not a url",
     ),
+}
+
+# The case name and the path of its null optional property.
+NULL_OPTIONAL_ADDITIONS: dict[str, tuple[str, ...]] = {
+    "null identifiers": ("identifiers",),
+    "null funders": ("funders",),
+    "null otherOrgs": ("funders", "otherOrgs"),
+    "null FON": ("identifiers", "opp:us:fon"),
 }
 
 

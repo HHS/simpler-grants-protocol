@@ -1713,7 +1713,7 @@ class TestCoreV05Additions:
             self._assert_additions(opp)
             assert opp.get_custom_field_value("legacy_id", int) == 12345
 
-    def test_null_addition_or_bad_custom_field_rows_fail_per_row(
+    def test_null_addition_reads_as_omitted_and_bad_custom_field_rows_fail_per_row(
         self, plugin_client, mock_httpx_client, v05_data
     ):
         null_funders = {**v05_data, "funders": None}
@@ -1733,8 +1733,7 @@ class TestCoreV05Additions:
         }
 
         _respond(mock_httpx_client, "get", {**envelope, "data": null_funders})
-        with pytest.raises(ValidationError, match="must be omitted, not null"):
-            plugin_client.opportunities.get(v05_data["id"])
+        assert plugin_client.opportunities.get(v05_data["id"]).funders is None
 
         rows = [v05_data, null_funders, bad_custom]
         _respond(mock_httpx_client, "get", {**envelope, "items": rows})
@@ -1752,9 +1751,7 @@ class TestCoreV05Additions:
             plugin_client.opportunities.list(page=1),
             plugin_client.opportunities.search(search="x", page=1),
         ):
-            assert len(result.items) == 1
+            assert len(result.items) == 2
             self._assert_additions(result.items[0])
-            assert [(e.index, type(e)) for e in result.errors] == [
-                (1, ParseFailure),
-                (2, ParseFailure),
-            ]
+            assert result.items[1].funders is None
+            assert [(e.index, type(e)) for e in result.errors] == [(2, ParseFailure)]
