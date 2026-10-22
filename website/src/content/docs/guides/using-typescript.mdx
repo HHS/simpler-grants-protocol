@@ -1,266 +1,146 @@
 ---
-title: Building a TypeScript API
-description: Learn how to implement a CommonGrants API in TypeScript.
+title: Using TypeScript
+description: Start a CommonGrants API in TypeScript from the Hono template repository.
 sidebar:
   order: 1
 ---
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework.
+The [Hono API template](https://github.com/common-grants/cg-api-template-hono) is a working CommonGrants API that you run first and then point at your own data. It serves the opportunity endpoints from bundled sample data, validates every request and response with the published [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) schemas, generates an OpenAPI 3.1 document from those same schemas, and serves Swagger UI to browse it. It's built with [Hono](https://hono.dev) and [`@hono/zod-openapi`](https://github.com/honojs/middleware/tree/main/packages/zod-openapi).
 
-## Quickstart
+## Prerequisites
 
-This guide will walk you through the process of setting up a new project using the CommonGrants Express.js template, and then outline steps for extending this template to meet your specific needs.
+- **Node.js 24.** The template includes an `.nvmrc` file for `nvm` users.
+- **[pnpm](https://pnpm.io) 11.20.0.** The template pins this version in the `packageManager` field of `package.json`.
 
-### Prerequisites
+The template needs no other global packages, credentials, database, or infrastructure.
 
-To follow this guide, you'll need to have the following installed on your machine:
-
-- Node.js 20+ and npm 10+
-- CommonGrants and TypeSpec CLIs
-
-Check your versions by running:
-
-```bash
-node --version
-npm --version
-cg --version
-tsp --version
-```
-
-### First steps
-
-Get a Express.js project up and running with the following steps:
+## Get started
 
 <Steps>
-1. Create a new directory for your project:
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
+1. Open the [template repository](https://github.com/common-grants/cg-api-template-hono) and click **Use this template** to create your own repository from it.
 
-2. Set up your project using the CommonGrants CLI:
+2. Clone your new repository:
 
    ```bash
-   cg init --template express-js
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
 
-3. Install the dependencies:
+3. Check your versions:
 
    ```bash
-   npm install
+   node --version # must report v24.x
+   pnpm --version # must report 11.20.0
    ```
 
-4. Run the project:
+4. Install the dependencies from the lockfile:
 
    ```bash
-   npm run dev
+   pnpm install --frozen-lockfile
    ```
 
-5. Open the API docs:
+5. Check that everything works before you change anything:
 
    ```bash
-   open http://localhost:3000/docs
+   pnpm run ci
    ```
+
+   This runs the lint, format, and type checks, the build, and the test suite with coverage. The template's hosted CI runs the same command, then `pnpm run audit`.
+
+6. Start the server:
+
+   ```bash
+   pnpm run dev
+   ```
+
+   The server listens on port 3000 and reloads when you change a file.
+
+7. Open [http://localhost:3000/docs](http://localhost:3000/docs) to browse the API in Swagger UI and try a request from the browser. Swagger UI loads its assets from the jsDelivr CDN.
+
+8. In another terminal, send a few requests:
+
+   ```bash
+   # A page of opportunities, most recently modified first
+   curl 'http://localhost:3000/common-grants/opportunities?pageSize=2'
+
+   # Filtered and sorted search
+   curl -X POST http://localhost:3000/common-grants/opportunities/search \
+     -H 'Content-Type: application/json' \
+     -d '{"filters":{"status":{"operator":"in","value":["open"]}},"sorting":{"sortBy":"title"}}'
+
+   # The OpenAPI 3.1 document, generated from the same schemas
+   curl http://localhost:3000/openapi.json
+   ```
+
+   The list and search responses use the protocol's response envelopes: `items` and `paginationInfo`, plus `sortInfo` and `filterInfo` for search.
 
 </Steps>
 
-### Project structure
-
-The boilerplate template includes the following files and directories:
+## Project structure
 
 <FileTree>
 
-- package.json # Node.js project configuration and dependencies
-- package-lock.json # Locked versions of dependencies
-- tsconfig.json # TypeScript configuration
-- .eslintrc.js # ESLint configuration
-- .prettierrc # Prettier configuration
-- README.md # Project documentation
 - src/
-  - api/
-    - index.ts # Express application setup and config
-    - controllers/ # Request handlers and controllers
-    - middleware/ # Middleware functions
-    - schemas/ # Schemas for (de)serialization
-    - services/ # Business logic and data operations
-  - typespec/
-    - main.tsp # The main TypeSpec specification
-- tests/
-  - common_grants/
-    - schemas/ # Schema-related tests
-    - services/ # Service-related tests
-    - routes/ # Route-related tests
+  - index.ts Node entrypoint — the only file that knows about Node
+  - app.ts `createApp({ repository })` — runtime-neutral factory
+  - http.ts Shared error shapes
+  - routes/
+    - opportunities.ts Route definitions, handlers, request/response validation
+  - data/
+    - schema.ts The one opportunity schema — extend custom fields here
+    - repository.ts The data seam: list / get / search
+    - fixtures.ts Reference implementation over the bundled sample data
+    - opportunities.json The bundled sample data
+- test/ Vitest suites: fixtures, app, routes, OpenAPI
 
 </FileTree>
 
-## Next steps
+## How the pieces fit
 
-Once you've set up your initial project structure, you can start implementing the API routes and services.
+The template owns HTTP: routing, request and response validation, error bodies, the OpenAPI document, and Swagger UI. The SDK owns the CommonGrants schemas. Every request and response schema the routes use is imported from `@common-grants/sdk/schemas` rather than redefined, so an SDK update brings protocol changes into your API.
 
-### Implementing services
+To carry data the core model doesn't define, extend the opportunity schema with `withCustomFields` in `src/data/schema.ts`. That file is the single definition of the opportunity model, so the response validation, the repository's types, and the OpenAPI document all pick up the change:
 
-The services layer is responsible for implementing the business logic and data operations for the API. It includes the following files:
+```typescript title="src/data/schema.ts"
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+import { withCustomFields } from "@common-grants/sdk/extensions";
+import { z } from "zod";
 
-<FileTree>
-
-- src/api/services/
-  - opportunity.service.ts # Opportunity service
-  - utils.ts # Utility functions
-
-</FileTree>
-
-In particular, you should focus on updating the `opportunity.service.ts` file. This file contains the implementation of the `OpportunityService` class, which is responsible for fetching and processing opportunities from the CommonGrants API.
-
-### Adding custom fields
-
-When adopting the CommonGrants protocol, you may need to include information about a funding opportunity that is not explicitly defined by the CommonGrants model for opportunities. The protocol defines a pattern for supporting these kinds of custom fields through the `custom_fields` property on the `OpportunityBase` model.
-
-For example, let's say you need to add a `legacyId` field to map opportunities to an existing ID system. Here's how to do it:
-
-#### Define the custom field
-
-```typescript models.ts
-// ############################################################################
-// Custom fields
-// ############################################################################
-
-/** Schema for the legacy ID custom field */
-export const legacyIdCustomFieldSchema = customFieldSchema.extend({
-  /** The name of the custom field */
-  name: z.literal("legacyId"),
-
-  /** The type of the custom field */
-  type: z.literal("number"),
-
-  /** The value of the custom field */
-  value: z.number().int(),
-
-  /** Description of the custom field */
-  description: z
-    .string()
-    .optional()
-    .default("Maps to the opportunity_id in the legacy system"),
+const LegacyIdValueSchema = z.object({
+  system: z.string(),
+  id: z.number().int(),
 });
 
-export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
+export const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
+  legacyId: {
+    fieldType: "object",
+    value: LegacyIdValueSchema,
+    description: "Maps to the opportunity_id in the legacy system",
+  },
+  category: {
+    fieldType: "string",
+    description: "Grant category",
+  },
+} as const);
 
-/** Schema for all custom fields in an opportunity */
-export const oppCustomFieldsSchema = z.object({
-  /** Legacy ID mapping to existing system */
-  legacyId: legacyIdCustomFieldSchema.optional(),
-
-  /** Additional custom fields specific to this opportunity */
-  customFields: z.record(customFieldSchema).optional(),
-});
-
-export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
+export type Opportunity = z.output<typeof OpportunitySchema>;
 ```
 
-#### Update the `OpportunityBase` model
+`withCustomFields` extends a schema inside one codebase. When other code needs the same extensions, such as the clients that consume your API or another service that reads the same source system, package them as a plugin with `definePlugin`. A plugin bundles custom fields, custom filters, and transforms between your source system's data and CommonGrants, and its `schemas.Opportunity.commonSchema` can serve as the opportunity schema in `src/data/schema.ts`. See [extensions in the TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for both approaches, the [custom fields overview](/custom-fields/overview/) for how custom fields work across the protocol, and the [plugin catalog](/plugins/) for existing plugins.
 
-:::note
+## Connect your own data
 
-The sample code below skips other imports and fields for brevity.
-
-:::
-
-```typescript models.ts ins={9-10}
-// ############################################################################
-// Base opportunity model
-// ############################################################################
-
-export const opportunityBaseSchema = z
-  .object({
-    // other fields omitted for brevity
-
-    /** Additional custom fields specific to this opportunity */
-    customFields: oppCustomFieldsSchema.optional(),
-  })
-  .extend(systemMetadataSchema.shape);
-
-export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
-```
-
-#### Full example
-
-Here's the full example of defining a custom field within the `models.ts` file.
-
-```typescript models.ts
-// ############################################################################
-// Custom fields
-// ############################################################################
-
-/** Schema for the legacy ID custom field */
-export const legacyIdCustomFieldSchema = customFieldSchema.extend({
-  /** The name of the custom field */
-  name: z.literal("legacyId"),
-
-  /** The type of the custom field */
-  type: z.literal("number"),
-
-  /** The value of the custom field */
-  value: z.number().int(),
-
-  /** Description of the custom field */
-  description: z
-    .string()
-    .optional()
-    .default("Maps to the opportunity_id in the legacy system"),
-});
-
-export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
-
-/** Schema for all custom fields in an opportunity */
-export const oppCustomFieldsSchema = z.object({
-  /** Legacy ID mapping to existing system */
-  legacyId: legacyIdCustomFieldSchema.optional(),
-
-  /** Additional custom fields specific to this opportunity */
-  customFields: z.record(customFieldSchema).optional(),
-});
-
-export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
-
-// ############################################################################
-// Base opportunity model
-// ############################################################################
-
-export const opportunityBaseSchema = z
-  .object({
-    /** Globally unique id for the opportunity */
-    id: z.uuid(),
-
-    /** Title or name of the funding opportunity */
-    title: z.string(),
-
-    /** Status of the opportunity */
-    status: oppStatusSchema,
-
-    /** Description of the opportunity's purpose and scope */
-    description: z.string(),
-
-    /** Details about the funding available */
-    funding: oppFundingSchema,
-
-    /** Key dates for the opportunity */
-    keyDates: oppTimelineSchema,
-
-    /** URL for the original source of the opportunity */
-    source: z.url().optional(),
-
-    /** Additional custom fields specific to this opportunity */
-    customFields: oppCustomFieldsSchema.optional(),
-  })
-  .extend(systemMetadataSchema.shape);
-
-export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
-```
+The bundled sample data sits behind the `OpportunityRepository` interface in `src/data/repository.ts`, which has three methods: `list`, `get`, and `search`. Implement that interface against your database or upstream API, pass your implementation to `createApp` in `src/index.ts`, and the routes, validation, and OpenAPI document keep working unchanged. The template's [porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md) walks through it, including stable UUIDs for your records, dates and money in filters and sorts, which tests to keep, and what to change before you ship.
 
 ## Additional resources
 
-- [TypeSpec](https://typespec.io/docs/)
-- [Zod](https://zod.dev/)
-- [Express.js](https://expressjs.com/)
+- [Hono API template](https://github.com/common-grants/cg-api-template-hono)
+- [Porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md)
+- [Extensions in the TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md)
+- [`@common-grants/sdk` on npm](https://www.npmjs.com/package/@common-grants/sdk)
+- [CommonGrants API reference](/protocol/api-docs/)
+- [Hono](https://hono.dev)
+- [Zod](https://zod.dev)
