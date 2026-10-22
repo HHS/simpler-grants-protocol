@@ -1,236 +1,177 @@
 ---
-title: Building a Python API
-description: Learn how to implement a CommonGrants API in Python.
+title: Using Python
+description: Build a CommonGrants API in Python, starting from the FastAPI template repository.
 sidebar:
   order: 0
 ---
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-Learn how to implement a CommonGrants API in Python using the [FastAPI](https://fastapi.tiangolo.com/) web framework.
+The [CommonGrants FastAPI template](https://github.com/common-grants/cg-api-template-fastapi) is a working CommonGrants API that you run first and then point at your own data. It serves the three opportunity endpoints from bundled sample data, validates every request and response with the [`common-grants-sdk`](https://pypi.org/project/common-grants-sdk/) Pydantic models, and generates an OpenAPI 3.1 document from those same models, browsable in Swagger UI. It is built with [FastAPI](https://fastapi.tiangolo.com/).
 
-## Quickstart
+## Prerequisites
 
-This guide will walk you through the process of setting up a new project using the CommonGrants FastAPI template, and then outline steps for extending this template to meet your specific needs.
+- **Python 3.11 or newer.** The template's CI runs on 3.11, the version in its `.python-version` file.
+- **[Poetry](https://python-poetry.org/) 2.x**, the template's dependency manager.
+- **make**, the command runner. Every target is a thin wrapper around a Poetry command.
 
-### Prerequisites
+No credentials, database, or other infrastructure are required.
 
-To follow this guide, you'll need to have the following installed on your machine:
-
-- Python 3.11+ and Poetry 1.8+
-- Node.js 20+ and npm 10+
-- CommonGrants and TypeSpec CLIs
-
-Check your versions by running:
-
-```bash
-python --version
-poetry --version
-npm --version
-cg --version
-tsp --version
-```
-
-### First steps
-
-Get a FastAPI project up and running with the following steps:
+## Get started
 
 <Steps>
-1. Create a new directory for your project:
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
+1. Open the [template repository](https://github.com/common-grants/cg-api-template-fastapi) on GitHub and click **Use this template** to create your own repository from it.
 
-2. Set up your project using the CommonGrants CLI:
+2. Clone your new repository:
 
    ```bash
-   cg init --template fast-api
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
 
-3. Install the dependencies:
+3. Check your versions:
+
+   ```bash
+   python3 --version # must report 3.11 or newer
+   poetry --version  # must report 2.x
+   ```
+
+4. Install the dependencies:
 
    ```bash
    make install
    ```
 
-4. Run the project:
+   If Poetry picks up an older Python, point it at a newer one first with `poetry env use python3.11`.
+
+5. Check that everything works before you change anything:
+
+   ```bash
+   make ci
+   ```
+
+   This runs the format, lint, and type checks, then the test suite with coverage.
+
+6. Start the server:
 
    ```bash
    make dev
    ```
 
-5. Open the API docs:
+7. Open `http://localhost:8000/docs` to browse the API in Swagger UI and try a request from the browser.
+
+8. Or, in another terminal, make a few requests with `curl`:
 
    ```bash
-   open http://localhost:8000/docs
+   # A page of opportunities, most recently modified first
+   curl 'http://localhost:8000/common-grants/opportunities?pageSize=2'
+
+   # Filtered and sorted search
+   curl -X POST http://localhost:8000/common-grants/opportunities/search \
+     -H 'Content-Type: application/json' \
+     -d '{"filters":{"status":{"operator":"in","value":["open"]}},"sorting":{"sortBy":"title","sortOrder":"asc"}}'
+
+   # The OpenAPI 3.1 document, generated from the same models
+   curl http://localhost:8000/openapi.json
    ```
 
 </Steps>
 
-### Project structure
-
-The boilerplate template includes the following files and directories:
+## Project structure
 
 <FileTree>
 
-- Makefile
-- README.md
-- poetry.lock # Locked versions of dependencies
-- pyproject.toml # Python project configuration
-- src/
-  - common_grants/
-    - api.py # FastAPI application setup and config
-    - routes/ # API route handlers
-    - schemas/ # Schemas for common objects
-    - scripts/ # Helpful scripts
-    - services/ # Business logic and data operations
-- tests/
-  - common_grants/
-    - routes/ # Route-related tests
+- src/common_grants/
+  - api.py # `create_app(repository)`, error shaping and `/health`; `app` is what `fastapi dev` and `fastapi run` serve
+  - constants.py # Your organization domain and the UUID namespace for stable ids
+  - routes/
+    - opportunities.py # Route handlers, SDK request and response models
+  - schemas/
+    - opportunity.py # The one opportunity model — add custom fields here
+  - services/
+    - repository.py # The data seam: list / get / search
+    - fixtures.py # Reference implementation over the bundled sample data
+  - data/
+    - opportunities.json # The bundled sample data
+  - scripts/
+    - generate_openapi.py # The OpenAPI export behind `make gen-openapi`
+- tests/ # pytest suites: app, routes, fixtures, OpenAPI
 
 </FileTree>
 
-## Next steps
+## How the pieces fit
 
-Once you've set up your initial project structure, you can start implementing the API routes and services.
+The template, the SDK, and your extensions each own one layer:
 
-### Implementing services
+- **The template owns HTTP.** The FastAPI routes parse and validate requests, shape error responses, and serve the OpenAPI document at `/openapi.json`.
+- **The SDK owns the schemas.** The request, response, and opportunity models come from `common-grants-sdk`. The routes validate every response body against them before it is sent, and the OpenAPI document is generated from them, so the API and its documentation follow the published protocol.
+- **Custom fields extend the opportunity model in one file.** If your data carries fields the protocol does not define, add them with `with_custom_fields`.
+- **A plugin packages those extensions for reuse.** When other services or clients need the same custom fields and mapping, a plugin carries them.
 
-The services layer is responsible for implementing the business logic and data operations for the API. It includes the following files:
+### Add custom fields
 
-<FileTree>
+`src/common_grants/schemas/opportunity.py` is the single definition of the opportunity model. The response models, the repository's types, and the OpenAPI document all read from it, so extending it extends all of them at once:
 
-- src/common_grants/services/
-  - opportunity.py # Opportunity service
-  - utils.py # Utility functions
+```python title="src/common_grants/schemas/opportunity.py"
+"""
+The single opportunity model this API serves.
 
-</FileTree>
+Every route, response model, fixture parser and test reads `Opportunity` from
+here, so this is the one place to add custom fields. See PORTING.md section 6.
+"""
 
-In particular, you should focus on updating the `opportunity.py` file. This file contains the implementation of the `OpportunityService` class, which is responsible for fetching and processing opportunities for the following CommonGrants API endpoints:
-
-- `GET /common-grants/opportunities`
-- `GET /common-grants/opportunities/{oppId}`
-- `POST /common-grants/opportunities/search`
-
-Some specific changes you should make to this file are:
-
-- Replacing the mock data with a real data source, e.g. a database query or a remote API call.
-- Adding the sorting and filtering logic to the the `OpportunityService.search_opportunities` method.
-
-### Adding custom fields
-
-When adopting the CommonGrants protocol, you may need to include information about a funding opportunity that is not explicitly defined by the CommonGrants model for opportunities. The protocol defines a pattern for supporting these kinds of custom fields through the `custom_fields` property on the `OpportunityBase` model.
-
-For example, let's say you need to add a `legacyId` field to map opportunities to an existing ID system. Here's how to do it:
-
-#### Define the custom field
-
-```python opp_custom_fields.py
-from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
-from pydantic import BaseModel, Field
-from typing import Optional
-
-class LegacyId(CustomField):
-    """Custom field for a legacy opportunity_id."""
-
-    name: str = "legacyId"
-    type: CustomFieldType = CustomFieldType.NUMBER
-    value: Optional[int] = None
-    description: Optional[str] = "Maps to the opportunity_id in the legacy system"
+from common_grants_sdk.extensions.specs import CustomFieldSpec
+from common_grants_sdk.schemas.pydantic import CustomFieldType, OpportunityBase
+from pydantic import BaseModel
 
 
-class OppCustomFields(BaseModel):
-    """Custom fields for a funding opportunity."""
+class LegacyId(BaseModel):
+    """The value of the legacyId custom field."""
 
-    legacy_id: Optional[LegacyId] = Field(
-        default=None,
-        alias="legacyId",
-        description="Maps to the opportunity_id in the legacy system",
-    )
+    system: str
+    id: int
+
+
+class Opportunity(
+    OpportunityBase.with_custom_fields(
+        custom_fields={
+            "legacyId": CustomFieldSpec(
+                field_type=CustomFieldType.OBJECT,
+                value=LegacyId,
+                description="Maps to the opportunity_id in the legacy system",
+            ),
+            "category": CustomFieldSpec(
+                field_type=CustomFieldType.STRING,
+                value=str,
+                description="Grant category",
+            ),
+        },
+        model_name="Opportunity",
+    ),
+):
+    """The opportunity model this API serves."""
 ```
 
-#### Extend the SDK's OpportunityBase model
+A custom field of the wrong type is now rejected when the record is parsed, and both fields appear in the opportunity response definitions in `/openapi.json`. Routes, handlers, and the repository protocol are untouched. Keep the `class` statement rather than assigning the result to `Opportunity`: the class keeps `Opportunity` a type, so the template's type check passes.
 
-Create a subclass that extends the SDK's `OpportunityBase` model with your custom fields:
+For more on defining and reading custom fields, see the [custom fields overview](/custom-fields/overview/).
 
-```python opp_base.py
-from typing import Optional
-from uuid import UUID
+### Share extensions as a plugin
 
-from pydantic import Field, HttpUrl
+`with_custom_fields` extends the one model this API serves. A plugin, built with the SDK's `define_plugin`, packages custom fields, custom search filters, and transforms between your source system's records and CommonGrants models as a typed Python package. Other services built on the same source system, and clients that consume your API, can then import it instead of redefining the same mapping. See the [Python SDK extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) to build and publish one, and the [plugin catalog](/plugins/) for published plugins.
 
-from common_grants_sdk.schemas.models.opp_base import OpportunityBase as SDKOpportunityBase
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
-from .opp_custom_fields import OppCustomFields
+## Connect your own data
 
-
-class OpportunityBase(SDKOpportunityBase):
-    """Extended opportunity model with custom fields."""
-
-    # Override the custom_fields property to use our custom fields model
-    custom_fields: Optional[OppCustomFields] = Field(
-        default=None,
-        alias="customFields",
-        description="Additional custom fields specific to this opportunity",
-    )
-```
-
-#### Full example
-
-Here's a complete example of defining custom fields and extending the SDK's `OpportunityBase`:
-
-```python opp_base.py
-"""Extended models for funding opportunities."""
-
-from typing import Optional
-from uuid import UUID
-
-from pydantic import Field, HttpUrl
-
-from common_grants_sdk.schemas.fields import CustomField, CustomFieldType
-from common_grants_sdk.schemas.models.opp_base import OpportunityBase as SDKOpportunityBase
-from common_grants_sdk.schemas.models.opp_funding import OppFunding
-from common_grants_sdk.schemas.models.opp_status import OppStatus
-from common_grants_sdk.schemas.models.opp_timeline import OppTimeline
-
-
-class LegacyId(CustomField):
-    """Custom field for a legacy opportunity_id."""
-
-    name: str = "legacyId"
-    type: CustomFieldType = CustomFieldType.NUMBER
-    value: Optional[int] = None
-    description: Optional[str] = "Maps to the opportunity_id in the legacy system"
-
-
-class OppCustomFields(BaseModel):
-    """Custom fields for a funding opportunity."""
-
-    legacy_id: Optional[LegacyId] = Field(
-        default=None,
-        alias="legacyId",
-        description="Maps to the opportunity_id in the legacy system",
-    )
-
-
-class OpportunityBase(SDKOpportunityBase):
-    """Extended opportunity model with custom fields."""
-
-    # Override the custom_fields property to use our custom fields model
-    custom_fields: Optional[OppCustomFields] = Field(
-        default=None,
-        alias="customFields",
-        description="Additional custom fields specific to this opportunity",
-    )
-```
-
-This approach allows you to extend the SDK's models with your custom fields while maintaining compatibility with the CommonGrants protocol. Your API can use this extended model for serialization and deserialization, while still being able to convert to and from the standard SDK models when needed.
+The bundled sample data sits behind a three-method repository protocol, `list`, `get`, and `search`, defined in `src/common_grants/services/repository.py`. Implement that protocol against your database or upstream API, wire your class into `src/common_grants/api.py`, and the routes, validation, and OpenAPI document keep working unchanged. The template's [`PORTING.md`](https://github.com/common-grants/cg-api-template-fastapi/blob/main/PORTING.md) is the walkthrough, covering stable ids, date and money handling, custom fields, and which tests to keep.
 
 ## Additional resources
 
+- [FastAPI template repository](https://github.com/common-grants/cg-api-template-fastapi)
+- [`common-grants-sdk` on PyPI](https://pypi.org/project/common-grants-sdk/)
+- [Python SDK extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md)
+- [Custom fields overview](/custom-fields/overview/)
+- [Plugin catalog](/plugins/)
+- [CommonGrants specification](/protocol/specification/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Pydantic](https://docs.pydantic.dev/)
