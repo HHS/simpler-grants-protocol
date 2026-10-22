@@ -2,12 +2,12 @@
 
 from pydantic import Field
 
-from ..base import CommonGrantsBaseModel
+from .._contract import SealedModel
 from ..types import DecimalString
 
 
 # Money
-class Money(CommonGrantsBaseModel):
+class Money(SealedModel):
     """Represents a monetary amount in a specific currency."""
 
     amount: DecimalString = Field(

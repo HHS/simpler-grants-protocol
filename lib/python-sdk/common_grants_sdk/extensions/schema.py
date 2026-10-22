@@ -38,6 +38,7 @@ from pydantic import (
 )
 from pydantic.alias_generators import to_camel
 
+from ..schemas.pydantic._contract import NonNullOptionals
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
 from ..schemas.pydantic.models import OpportunityBase
 from .specs import PluginCustomFieldSpec
@@ -78,7 +79,7 @@ class _CamelModel(BaseModel):
     )
 
 
-class CustomFieldSet(_CamelModel):
+class CustomFieldSet(NonNullOptionals, _CamelModel):
     """Base class an author subclasses to declare a schema's custom fields.
 
     Each field is declared as ``Optional[CustomField[V]] = Field(default=None,
@@ -88,7 +89,8 @@ class CustomFieldSet(_CamelModel):
 
     Entries the set does not declare are kept in ``model_extra`` under their exact
     wire key and validated as a base ``CustomField``, so each must carry its own
-    ``name``, ``fieldType`` and ``value``.
+    ``name``, ``fieldType`` and ``value``. A declared entry may be omitted, and a
+    ``null`` one reads as omitted; an entry's own ``value`` may still be ``null``.
     """
 
     model_config = ConfigDict(extra="allow")
