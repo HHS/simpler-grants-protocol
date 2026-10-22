@@ -32,10 +32,6 @@ const searchTags = [
     maintainer: implementation.maintainer,
   }}
 >
-  <div class="card-maintainer">{implementation.maintainer}</div>
-
-  {implementation.note && <p class="card-note">{implementation.note}</p>}
-
   <div class="card-pills">
     {implementation.tags.map((tag) => <span class="pill">{tag}</span>)}
     {
@@ -47,13 +43,6 @@ const searchTags = [
 </CatalogCard>
 
 <style>
-  .card-maintainer {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--sl-color-white);
-    margin-bottom: 0.5rem;
-  }
-
   .card-pills {
     display: flex;
     flex-wrap: wrap;
@@ -68,13 +57,6 @@ const searchTags = [
     border-radius: 0.375rem;
     font-size: 0.8125rem;
     font-weight: 500;
-  }
-
-  .card-note {
-    font-size: 0.8125rem;
-    line-height: 1.4;
-    color: var(--sl-color-gray-2);
-    margin: 0 0 0.75rem 0;
   }
 
   .pill-scope {

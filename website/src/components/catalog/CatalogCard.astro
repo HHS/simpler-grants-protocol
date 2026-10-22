@@ -1,7 +1,7 @@
 ---
 interface Props {
-  /** URL path for the detail page */
-  href: string;
+  /** URL path for the detail page. Omit for a card with nothing to link to. */
+  href?: string;
   /** Display name shown in the card header */
   title: string;
   /** Card description text */
@@ -11,6 +11,9 @@ interface Props {
 }
 
 const { href, title, description, dataAttributes } = Astro.props;
+
+// Without an href the card renders as plain content: no link, arrow, or hover.
+const Tag = href ? "a" : "div";
 
 // Convert dataAttributes to data-* attributes for the wrapper div
 const dataAttrs = Object.fromEntries(
@@ -22,10 +25,16 @@ const dataAttrs = Object.fromEntries(
 ---
 
 <div class="catalog-card" {...dataAttrs}>
-  <a href={href} class="card-link">
+  <Tag href={href} class:list={["card-link", { "card-static": !href }]}>
     <header class="card-header">
       <span class="card-key">{title}</span>
-      <span class="card-arrow" aria-hidden="true">&rarr;</span>
+      {
+        href && (
+          <span class="card-arrow" aria-hidden="true">
+            &rarr;
+          </span>
+        )
+      }
     </header>
 
     <p class="card-description">
@@ -34,7 +43,7 @@ const dataAttrs = Object.fromEntries(
     </p>
 
     <slot />
-  </a>
+  </Tag>
 </div>
 
 <style>
@@ -60,6 +69,11 @@ const dataAttrs = Object.fromEntries(
   .card-link:hover {
     background: var(--sl-color-gray-7, var(--sl-color-gray-6));
     border-color: var(--sl-color-gray-2);
+  }
+
+  .card-static:hover {
+    background: none;
+    border-color: var(--sl-color-gray-5);
   }
 
   .card-header {

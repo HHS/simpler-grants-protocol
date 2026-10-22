@@ -1,6 +1,9 @@
 ---
 import type { Implementation } from "@/lib/implementations";
-import { LinkButton } from "@astrojs/starlight/components";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
+import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
+import CustomFilterCard from "@/components/plugins/CustomFilterCard.astro";
+import SourceFieldCard from "@/components/implementations/SourceFieldCard.astro";
 
 interface Props {
   implementation: Implementation;
@@ -8,7 +11,9 @@ interface Props {
 
 const { implementation } = Astro.props;
 const customFields = implementation.resolvedFields;
-const sourceSpecificFields = implementation.sourceSpecificFields ?? [];
+const sourceSpecificFields = Object.entries(
+  implementation.sourceSpecificFields ?? {},
+);
 ---
 
 <div class="implementation-details">
@@ -123,23 +128,15 @@ const sourceSpecificFields = implementation.sourceSpecificFields ?? [];
         <h2>Custom fields</h2>
         {customFields.length > 0 && (
           <>
-            <p class="section-description">From the custom fields catalog:</p>
-            <ul class="chip-list">
+            <p class="section-description">
+              This implementation uses {customFields.length} custom fields from
+              the catalog:
+            </p>
+            <CardGrid>
               {customFields.map((field) => (
-                <li>
-                  <a
-                    href={`/custom-fields/${field.id}`}
-                    class="chip"
-                    title={field.deprecatedNote}
-                  >
-                    {field.id}
-                    {field.deprecatedNote && (
-                      <span class="chip-flag">deprecated</span>
-                    )}
-                  </a>
-                </li>
+                <CustomFieldCard field={field} />
               ))}
-            </ul>
+            </CardGrid>
           </>
         )}
         {sourceSpecificFields.length > 0 && (
@@ -147,13 +144,15 @@ const sourceSpecificFields = implementation.sourceSpecificFields ?? [];
             <summary>
               {sourceSpecificFields.length} other fields, not in the catalog
             </summary>
-            <ul class="chip-list">
-              {sourceSpecificFields.map((fieldId) => (
-                <li>
-                  <code class="chip chip-plain">{fieldId}</code>
-                </li>
+            <CardGrid>
+              {sourceSpecificFields.map(([name, field]) => (
+                <SourceFieldCard
+                  name={name}
+                  fieldType={field.fieldType}
+                  description={field.description}
+                />
               ))}
-            </ul>
+            </CardGrid>
           </details>
         )}
       </section>
@@ -162,29 +161,32 @@ const sourceSpecificFields = implementation.sourceSpecificFields ?? [];
 
   <!-- Custom filters -->
   {
-    implementation.resolvedFilters.length > 0 && (
+    (implementation.resolvedFilters.length > 0 ||
+      implementation.unresolvedFilters.length > 0) && (
       <section class="section">
         <h2>Custom filters</h2>
         <p class="section-description">
-          Accepted by the search route, beyond the CommonGrants base filters:
+          This implementation accepts{" "}
+          {implementation.resolvedFilters.length +
+            implementation.unresolvedFilters.length}{" "}
+          custom filters beyond the CommonGrants base filters:
         </p>
-        <ul class="chip-list">
-          {implementation.resolvedFilters.map((filter) => (
-            <li>
-              {filter.docsHref ? (
-                <a
-                  href={filter.docsHref}
-                  class="chip"
-                  title={filter.description}
-                >
-                  {filter.name}
-                </a>
-              ) : (
-                <code class="chip chip-plain">{filter.name}</code>
-              )}
-            </li>
-          ))}
-        </ul>
+        {implementation.resolvedFilters.length > 0 && (
+          <CardGrid>
+            {implementation.resolvedFilters.map((filter) => (
+              <CustomFilterCard filter={filter} />
+            ))}
+          </CardGrid>
+        )}
+        {implementation.unresolvedFilters.length > 0 && (
+          <ul class="chip-list">
+            {implementation.unresolvedFilters.map((name) => (
+              <li>
+                <code class="chip chip-plain">{name}</code>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     )
   }
@@ -339,13 +341,6 @@ const sourceSpecificFields = implementation.sourceSpecificFields ?? [];
     font-family: monospace;
     font-size: 0.8125rem;
     text-decoration: none;
-  }
-
-  .chip-flag {
-    margin-left: 0.375rem;
-    font-family: var(--sl-font);
-    font-size: 0.75rem;
-    color: var(--sl-color-orange-high, var(--sl-color-gray-2));
   }
 
   .chip-plain {

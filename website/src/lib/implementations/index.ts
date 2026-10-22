@@ -1,10 +1,9 @@
 // Types
 export type {
   ImplementationSource,
+  SourceSpecificField,
   ImplementationSourceEntry,
   ResolvedImplementationPlugin,
-  ResolvedImplementationFilter,
-  ResolvedImplementationField,
   Implementation,
   ImplementationFilterOptions,
 } from "./types";

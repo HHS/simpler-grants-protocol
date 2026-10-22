@@ -1,3 +1,14 @@
+import type { CustomField } from "@/lib/custom-fields";
+import type { ResolvedPluginFilter } from "@/lib/plugins";
+
+/** A custom field that isn't in the catalog, described in the entry itself. */
+export interface SourceSpecificField {
+  /** JSON schema type of the value: string, number, integer, boolean, object, or array */
+  fieldType: string;
+  /** What the field holds */
+  description: string;
+}
+
 /** A data source an implementation draws on. */
 export interface ImplementationSource {
   /** Human-readable source name (e.g. "Washington FundHub") */
@@ -41,8 +52,8 @@ export interface ImplementationSourceEntry {
   refresh?: string;
   /** Custom field IDs from the custom fields catalog */
   customFields?: string[];
-  /** Custom fields specific to this implementation, not in the catalog */
-  sourceSpecificFields?: string[];
+  /** Custom fields specific to this implementation, not in the catalog, keyed by name */
+  sourceSpecificFields?: Record<string, SourceSpecificField>;
   /** Custom filter names accepted by the search route */
   customFilters?: string[];
   /** Plugin IDs from the plugins catalog that work with this API */
@@ -55,22 +66,6 @@ export interface ResolvedImplementationPlugin {
   label: string;
 }
 
-/** A catalog custom field, with its deprecation notice when it has one. */
-export interface ResolvedImplementationField {
-  id: string;
-  /** Deprecation note from the catalog, when the field is deprecated */
-  deprecatedNote?: string;
-}
-
-/** A custom filter resolved against the filters its plugins declare. */
-export interface ResolvedImplementationFilter {
-  name: string;
-  /** Filter description from the plugin, when a linked plugin declares it */
-  description?: string;
-  /** Link to the filter type's protocol docs, when known */
-  docsHref?: string;
-}
-
 /** A fully resolved implementation: source metadata plus derived fields. */
 export interface Implementation extends ImplementationSourceEntry {
   id: string;
@@ -78,10 +73,12 @@ export interface Implementation extends ImplementationSourceEntry {
   tags: string[];
   /** Plugins resolved to their catalog labels */
   resolvedPlugins: ResolvedImplementationPlugin[];
-  /** Custom filters resolved against the linked plugins' declarations */
-  resolvedFilters: ResolvedImplementationFilter[];
-  /** Catalog custom fields, with any deprecation notice from the catalog */
-  resolvedFields: ResolvedImplementationField[];
+  /** Custom filters its linked plugins declare, in the plugin catalog's shape */
+  resolvedFilters: ResolvedPluginFilter[];
+  /** Custom filter names no linked plugin declares, shown without a card */
+  unresolvedFilters: string[];
+  /** Catalog custom fields, in the custom field catalog's shape */
+  resolvedFields: CustomField[];
 }
 
 /** Filter dropdown options returned by getFilterOptions(). */

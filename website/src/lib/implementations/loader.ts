@@ -7,9 +7,9 @@ import type {
   ImplementationSourceEntry,
   ImplementationFilterOptions,
   ResolvedImplementationPlugin,
-  ResolvedImplementationFilter,
-  ResolvedImplementationField,
 } from "./types";
+import type { CustomField } from "@/lib/custom-fields";
+import type { ResolvedPluginFilter } from "@/lib/plugins";
 
 // =============================================================================
 // PRIVATE HELPERS
@@ -65,12 +65,14 @@ interface PluginFilterSpec {
 
 /**
  * Resolves filter names against the filters the implementation's plugins
- * declare, so each one can link to its filter type docs.
+ * declare, in the same shape the plugin pages render, so the detail page can
+ * reuse the plugin catalog's filter cards. Names no plugin declares come back
+ * separately, since there is no filter type to build a card from.
  */
 function resolveFilters(
   filterNames: string[] = [],
   pluginIds: string[] = [],
-): ResolvedImplementationFilter[] {
+): { resolved: ResolvedPluginFilter[]; unresolved: string[] } {
   const plugins = pluginsIndex as Record<
     string,
     {
@@ -80,28 +82,36 @@ function resolveFilters(
       >;
     }
   >;
-  const declared = new Map<string, PluginFilterSpec>();
+  const declared = new Map<string, ResolvedPluginFilter>();
   for (const pluginId of pluginIds) {
-    for (const methods of Object.values(plugins[pluginId]?.filters ?? {})) {
-      for (const filters of Object.values(methods)) {
+    const resources = plugins[pluginId]?.filters ?? {};
+    for (const [resource, methods] of Object.entries(resources)) {
+      for (const [method, filters] of Object.entries(methods)) {
         for (const [name, spec] of Object.entries(filters)) {
-          if (!declared.has(name)) declared.set(name, spec);
+          if (declared.has(name) || !isCustomFilterType(spec.filterType)) {
+            continue;
+          }
+          declared.set(name, {
+            name,
+            filterType: spec.filterType,
+            description: spec.description ?? "",
+            resource,
+            method,
+            docsHref: filterDocsHref(spec.filterType),
+          });
         }
       }
     }
   }
 
-  return filterNames.map((name) => {
-    const spec = declared.get(name);
-    return {
-      name,
-      description: spec?.description,
-      docsHref:
-        spec && isCustomFilterType(spec.filterType)
-          ? filterDocsHref(spec.filterType)
-          : undefined,
-    };
-  });
+  const resolved: ResolvedPluginFilter[] = [];
+  const unresolved: string[] = [];
+  for (const name of filterNames) {
+    const filter = declared.get(name);
+    if (filter) resolved.push(filter);
+    else unresolved.push(name);
+  }
+  return { resolved, unresolved };
 }
 
 // =============================================================================
@@ -124,7 +134,7 @@ export function loadAllImplementations(): Implementation[] {
 
   implementationsCache = Object.entries(raw)
     .map(([id, entry]) => {
-      const resolvedFields: ResolvedImplementationField[] = [];
+      const resolvedFields: CustomField[] = [];
       for (const fieldId of entry.customFields ?? []) {
         const field = customFields[fieldId];
         if (!field) {
@@ -134,17 +144,16 @@ export function loadAllImplementations(): Implementation[] {
           );
           continue;
         }
-        resolvedFields.push({
-          id: fieldId,
-          deprecatedNote: field.deprecated?.note,
-        });
+        resolvedFields.push(field);
       }
+      const filters = resolveFilters(entry.customFilters, entry.plugins);
       return {
         ...entry,
         id,
         tags: tagsFromRoutes(entry.routes),
         resolvedPlugins: resolvePlugins(id, entry.plugins),
-        resolvedFilters: resolveFilters(entry.customFilters, entry.plugins),
+        resolvedFilters: filters.resolved,
+        unresolvedFilters: filters.unresolved,
         resolvedFields,
       };
     })

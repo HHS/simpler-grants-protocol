@@ -60,6 +60,16 @@ const ALLOWED_FIELDS = new Set<string>([
   "plugins",
 ]);
 
+/** Value types a custom field may declare (CustomFieldType in the protocol). */
+const ALLOWED_FIELD_TYPES = new Set([
+  "string",
+  "number",
+  "integer",
+  "boolean",
+  "object",
+  "array",
+]);
+
 /** Funder scope values listed in the field reference. */
 const ALLOWED_SCOPES = new Set(["Federal", "State", "Local", "Private"]);
 
@@ -128,6 +138,16 @@ function filtersDeclaredBy(pluginId: string): Set<string> {
     }
   }
   return names;
+}
+
+/** Reads an entry's source-specific fields, keyed by field name. */
+function sourceSpecificFields(
+  entry: Entry,
+): Record<string, { fieldType?: unknown; description?: unknown }> {
+  const value = entry.sourceSpecificFields;
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, { fieldType?: unknown; description?: unknown }>)
+    : {};
 }
 
 const asStrings = (value: unknown): string[] =>
@@ -208,10 +228,22 @@ describe("implementations catalog", () => {
 
     it("doesn't list a field as both catalog and source-specific", () => {
       const catalogFields = new Set(asStrings(entry.customFields));
-      const both = asStrings(entry.sourceSpecificFields).filter((field) =>
+      const both = Object.keys(sourceSpecificFields(entry)).filter((field) =>
         catalogFields.has(field),
       );
       expect(both).toEqual([]);
+    });
+
+    it("gives every source-specific field a valid type and a description", () => {
+      const incomplete = Object.entries(sourceSpecificFields(entry))
+        .filter(
+          ([, field]) =>
+            !ALLOWED_FIELD_TYPES.has(String(field?.fieldType)) ||
+            typeof field?.description !== "string" ||
+            field.description.trim() === "",
+        )
+        .map(([name]) => name);
+      expect(incomplete).toEqual([]);
     });
 
     it("references only plugins in the catalog", () => {
