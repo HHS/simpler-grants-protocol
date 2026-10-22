@@ -153,7 +153,7 @@ class Opportunity(
     """The opportunity model this API serves."""
 ```
 
-A custom field of the wrong type is now rejected when the record is parsed, and both fields appear in the opportunity response definitions in `/openapi.json`. Routes, handlers, and the repository protocol are untouched. Keep the `class` statement rather than assigning the result to `Opportunity`: the class keeps `Opportunity` a type, so the template's type check passes. Because `with_custom_fields` builds the model at runtime, a type checker sees the custom fields as `Any` in either form.
+A custom field of the wrong type is now rejected when the record is parsed, and both fields appear in the opportunity response definitions in `/openapi.json`. Routes, handlers, and the repository protocol are untouched. Keep the `class` statement rather than assigning the result to `Opportunity`: the template uses `Opportunity` in type annotations, and Pyright accepts it there only as a class. The class does not give you type checking of the model's fields. Because `with_custom_fields` builds the model at runtime, a type checker treats every `Opportunity` instance as `Any`, so it does not flag a wrong type or a misspelled name on any field, including `title`. For typed fields, package them as a plugin, described next.
 
 For more on defining and reading custom fields, see the [custom fields overview](/custom-fields/overview/). Its Python example assigns the result to `Opportunity`; in the template, keep the `class` form shown above.
 
