@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Any, Type, TypeVar
-from pydantic import BaseModel, Field, create_model, ConfigDict, model_validator
+from pydantic import BaseModel, Field, create_model, ConfigDict
 from ..schemas.pydantic.fields import CustomField, CustomFieldType
 from ..schemas.pydantic.base import CommonGrantsBaseModel
 from common_grants_sdk.utils.json import snake
@@ -42,32 +42,11 @@ def add_custom_fields(
     field_defs: dict[str, Any] = create_custom_field_schema(name=name, fields=fields)
 
     class _CustomFieldsBase(CommonGrantsBaseModel):
+        """Unregistered entries are kept in model_extra, validated as CustomField."""
+
         model_config = ConfigDict(populate_by_name=True, extra="allow")
 
-        @model_validator(mode="before")
-        @classmethod
-        def _parse_extra_as_custom_fields(cls, values: Any) -> Any:
-            """Wrap unknown dict-valued keys as CustomField instances before validation."""
-            if not isinstance(values, dict):
-                return values
-            # Build the set of known keys: both Python attr names and their aliases
-            known: set[str] = set()
-            if hasattr(cls, "model_fields"):
-                for attr, field_info in cls.model_fields.items():
-                    known.add(attr)
-                    for alias in (
-                        getattr(field_info, "alias", None),
-                        getattr(field_info, "validation_alias", None),
-                        getattr(field_info, "serialization_alias", None),
-                    ):
-                        if isinstance(alias, str):
-                            known.add(alias)
-            for key, val in list(values.items()):
-                if key not in known and isinstance(val, dict) and "fieldType" in val:
-                    # Inject the key as the name if not already present
-                    enriched = {"name": key, **val}
-                    values[key] = CustomField.model_validate(enriched)
-            return values
+        __pydantic_extra__: dict[str, CustomField] = Field(init=False)
 
     # Create container with ALL accumulated field definitions,
     # this will be used when we recreate the base pydantic model with the
@@ -190,6 +169,21 @@ def _create_model_name(name: str, key: str) -> str:
     return f"{name}{key[:1].upper()}{key[1:]}Field"
 
 
+def _declared_attr_for(model: type[BaseModel], key: str) -> Optional[str]:
+    """Return the attribute name of the field ``model`` declares for ``key``, if any.
+
+    A declared field matches when ``key`` is its attribute name or one of its
+    wire aliases. Otherwise the snake_case form of ``key`` is used if it names
+    a declared field.
+    """
+    declared = model.model_fields
+    for name, info in declared.items():
+        if key in (name, info.alias, info.validation_alias, info.serialization_alias):
+            return name
+    attr_name = snake(key)
+    return attr_name if attr_name in declared else None
+
+
 def get_custom_field_value(
     instance: BaseModel,
     key: str,
@@ -198,7 +192,9 @@ def get_custom_field_value(
     """Retrieve custom field value from a pydantic model instance.
 
     Works regardless of whether custom fields were registered via
-    `add_custom_fields` (Pydantic model) or are unregistered (dict).
+    `add_custom_fields` (Pydantic model) or are unregistered (dict). On a
+    registered container, an entry it does not declare is looked up by its
+    exact wire key, and that match takes precedence over a declared field.
 
     Args:
         instance: The model instance containing custom_fields
@@ -222,9 +218,16 @@ def get_custom_field_value(
             return None
         field = fields[key]
     else:
-        # Registered: custom_fields is a Pydantic model with snake_case attributes
-        attr_name = snake(key)
-        field = getattr(fields, attr_name, None)
+        # Registered: custom_fields is a Pydantic model. An undeclared entry is
+        # matched by its exact key first, so a normalized declared name never
+        # shadows it; declared fields then match by wire alias or attribute name,
+        # falling back to the snake_case form of the key.
+        extra = fields.model_extra or {}
+        if key in extra:
+            field = extra[key]
+        else:
+            attr_name = _declared_attr_for(type(fields), key)
+            field = getattr(fields, attr_name) if attr_name is not None else None
         if field is None:
             return None
 
