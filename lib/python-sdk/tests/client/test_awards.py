@@ -39,6 +39,7 @@ from common_grants_sdk.schemas.pydantic.models import (
     AwardBase,
     AwdRecipientIndividual,
     OpportunityBase,
+    OpportunityDetails,
 )
 from tests.schemas.award_fixtures import (
     AWARD_ID,
@@ -654,13 +655,13 @@ class TestAwardPluginRecipient:
             _serve(client, _awards_api([_recipient_award()]))
 
         opp = both.opportunities.get(OPPORTUNITY["id"])
-        assert type(opp) is OpportunityBase[OppFields]
+        assert isinstance(opp, OpportunityDetails[OppFields])
+        assert isinstance(opp, OpportunityBase[OppFields])
         assert opp.custom_fields is not None and opp.custom_fields.legacy_id is not None
         assert opp.custom_fields.legacy_id.value == 7
         assert type(both.awards.get(AWARD_ID)) is TypedAward
-        assert type(recipient_only.opportunities.get(OPPORTUNITY["id"])) is (
-            OpportunityBase
-        )
+        untyped = recipient_only.opportunities.get(OPPORTUNITY["id"])
+        assert type(untyped) is OpportunityDetails
 
     def test_recipient_extension_leaves_award_and_opportunity_filters_unchanged(
         self,
