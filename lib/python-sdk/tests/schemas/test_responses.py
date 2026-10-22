@@ -382,3 +382,121 @@ class TestOpportunityResponses:
         data = wire(response)
         item = data["data"] if route == "get" else data["items"][0]
         assert "funders" not in item
+
+    def test_get_envelope_keeps_detail_awards(self) -> None:
+        from common_grants_sdk.schemas import AwdRef, OpportunityDetails
+        from tests.schemas.opportunity_v05_fixtures import (
+            CLEAN_ENERGY_OPPORTUNITY,
+            wire,
+        )
+
+        payload = {
+            "status": 200,
+            "message": "Success",
+            "data": CLEAN_ENERGY_OPPORTUNITY,
+        }
+        response = self._models()["get"].model_validate(payload)
+
+        assert isinstance(response.data, OpportunityDetails)
+        assert response.data.awards is not None
+        assert all(isinstance(ref, AwdRef) for ref in response.data.awards)
+        assert wire(response) == payload
+
+    @pytest.mark.parametrize("route", ["list", "search"])
+    def test_collection_envelopes_stay_base_shaped(self, route: str) -> None:
+        from common_grants_sdk.schemas import OpportunityDetails
+        from tests.schemas.opportunity_v05_fixtures import (
+            CLEAN_ENERGY_OPPORTUNITY,
+            INVALID_AWARDS,
+            wire,
+        )
+
+        items = [CLEAN_ENERGY_OPPORTUNITY, INVALID_AWARDS["null awards"]]
+        payload = {**self._payloads()[route], "items": items}
+        response = self._models()[route].model_validate(payload)
+
+        for item in response.items:
+            assert not isinstance(item, OpportunityDetails)
+        assert all("awards" not in item for item in wire(response)["items"])
+
+    def test_get_envelope_reads_null_awards_as_omitted(self) -> None:
+        from tests.schemas.opportunity_v05_fixtures import INVALID_AWARDS, wire
+
+        payload = {
+            "status": 200,
+            "message": "Success",
+            "data": INVALID_AWARDS["null awards"],
+        }
+        response = self._models()["get"].model_validate(payload)
+
+        assert response.data.awards is None
+        assert "awards" not in wire(response)["data"]
+
+    def test_get_envelope_builds_details_from_opportunity_instances(self) -> None:
+        from common_grants_sdk.schemas import OpportunityBase, OpportunityDetails
+        from tests.schemas.opportunity_v05_fixtures import (
+            CLEAN_ENERGY_OPPORTUNITY,
+            MINIMAL_OPPORTUNITY,
+            OPPORTUNITIES,
+            TypedOpportunity,
+            wire,
+        )
+
+        envelope = self._models()["get"]
+        typed = OPPORTUNITIES["custom fields with both additions"]
+        for data, payload in (
+            (OpportunityBase.model_validate(MINIMAL_OPPORTUNITY), MINIMAL_OPPORTUNITY),
+            (TypedOpportunity.model_validate(typed), typed),
+            (
+                OpportunityDetails.model_validate(CLEAN_ENERGY_OPPORTUNITY),
+                CLEAN_ENERGY_OPPORTUNITY,
+            ),
+        ):
+            response = envelope(status=200, message="Success", data=data)
+
+            assert isinstance(response.data, OpportunityDetails)
+            # Unset properties stay omitted rather than becoming null.
+            assert wire(response)["data"] == payload
+
+    def test_get_envelope_validates_awards_an_instance_supplies(self) -> None:
+        from typing import Any, Optional
+
+        from common_grants_sdk.schemas import CustomField, OpportunityBase  # noqa: F401
+        from tests.schemas.opportunity_v05_fixtures import (
+            AWARD_REFS,
+            MINIMAL_OPPORTUNITY,
+            wire,
+        )
+
+        class LegacyOpportunity(OpportunityBase):
+            awards: Optional[Any] = None
+
+        envelope = self._models()["get"]
+        kept = LegacyOpportunity.model_validate(
+            {**MINIMAL_OPPORTUNITY, "awards": AWARD_REFS}
+        )
+        response = envelope(status=200, message="Success", data=kept)
+        assert wire(response)["data"]["awards"] == AWARD_REFS
+
+        # An instance's null reads as omitted; a malformed value still fails.
+        unset = LegacyOpportunity.model_validate(
+            {**MINIMAL_OPPORTUNITY, "awards": None}
+        )
+        response = envelope(status=200, message="Success", data=unset)
+        assert "awards" not in wire(response)["data"]
+        data = LegacyOpportunity.model_validate(
+            {**MINIMAL_OPPORTUNITY, "awards": [{"id": "not-a-uuid", "title": "Bad"}]}
+        )
+        with pytest.raises(ValidationError, match="awards.0.id"):
+            envelope(status=200, message="Success", data=data)
+
+    def test_get_envelope_rejects_malformed_award_references(self) -> None:
+        from tests.schemas.opportunity_v05_fixtures import INVALID_AWARDS
+
+        payload = {
+            "status": 200,
+            "message": "Success",
+            "data": INVALID_AWARDS["award missing title"],
+        }
+        with pytest.raises(ValidationError, match="title"):
+            self._models()["get"].model_validate(payload)

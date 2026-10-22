@@ -697,6 +697,8 @@ response = client.opportunities.list(schema=schema_cls)
 results = client.opportunities.search(search="health", schema=schema_cls)
 ```
 
+An explicit `schema` replaces `get`'s detail default, so `get(opp_id, schema=schema_cls)` returns the base model without the opportunity's `awards`. To keep them, pass the detail form of your fields instead: `get(opp_id, schema=OpportunityDetails[OpportunityFields])`.
+
 `Config` reads `CG_API_BASE_URL` and `CG_API_KEY` from the environment when you omit them, so `Config()` is enough in a configured deployment.
 
 > The `status=[...]` shorthand on `search()` is deprecated and will be removed in a future release. Pass status through `filters` instead, as shown above.

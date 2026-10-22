@@ -1,8 +1,10 @@
 """Opportunity-specific response schemas for the CommonGrants API."""
 
+from typing import TYPE_CHECKING, Any
+
 from pydantic import Field
 
-from ..models import OpportunityBase
+from ..models import OpportunityBase, OpportunityDetails
 from ..pagination import PaginatedResultsInfo
 from ..sorting import SortedResultsInfo
 from .base import DefaultResponse
@@ -42,6 +44,13 @@ class OpportunitiesSearchResponse(DefaultResponse):
 
 
 class OpportunityResponse(DefaultResponse):
-    """A single opportunity."""
+    """A single opportunity, with its details."""
 
-    data: OpportunityBase = Field(..., description="The opportunity")
+    data: OpportunityDetails = Field(..., description="The opportunity")
+
+    if TYPE_CHECKING:
+        # Validation reads any opportunity model as OpportunityDetails, so the
+        # constructor accepts one; ``data`` is always the detail model.
+        def __init__(
+            self, *, status: int, message: str, data: OpportunityBase[Any]
+        ) -> None: ...

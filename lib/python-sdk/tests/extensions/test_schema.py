@@ -526,3 +526,45 @@ def test_schema_and_plugin_parse_keep_identifiers_and_funders() -> None:
         assert data["identifiers"] == IDENTIFIERS
         assert data["funders"] == FUNDERS
         assert data["customFields"]["vendorNote"]["value"] is None
+
+
+def test_transformed_plugin_client_get_returns_details() -> None:
+    """A transforms registration promotes get() like a schema-only one; the
+    registered model, its parse, and its transforms stay base-shaped."""
+    from unittest.mock import Mock
+
+    from common_grants_sdk.client.config import Config
+    from common_grants_sdk.extensions import PluginMeta, PluginSchemas, define_plugin
+    from common_grants_sdk.schemas import AwdRef, OpportunityDetails
+    from tests.schemas.opportunity_v05_fixtures import CLEAN_ENERGY_OPPORTUNITY
+
+    ext = _mappings_extension()
+    plugin = define_plugin(
+        PluginSchemas(Opportunity=ext),
+        meta=PluginMeta(name="transformed", source_system="test"),
+    )
+    client = plugin.get_client(
+        Config(base_url="https://api.example.com", api_key="test-key")
+    )
+    data = {
+        **CLEAN_ENERGY_OPPORTUNITY,
+        "customFields": {
+            "agencyCode": {"name": "agencyCode", "fieldType": "string", "value": "NSF"}
+        },
+    }
+    response = Mock(status_code=200)
+    response.json.return_value = {"status": 200, "message": "Success", "data": data}
+    client.http = Mock(get=Mock(return_value=response))
+
+    opp = client.opportunities.get(data["id"])
+
+    assert isinstance(opp, OpportunityDetails)
+    assert isinstance(opp, OpportunityBase[OpportunityFields])
+    assert isinstance(opp, OpportunityDetails[OpportunityFields])
+    assert opp.awards is not None and all(isinstance(a, AwdRef) for a in opp.awards)
+    assert opp.custom_fields is not None and opp.custom_fields.agency_code is not None
+    assert opp.custom_fields.agency_code.value == "NSF"
+    assert ext.common_schema is OpportunityBase[OpportunityFields]
+    assert not isinstance(ext.parse(data), OpportunityDetails)
+    common = ext.to_common(PassthroughModel.model_validate(FLAT_SOURCE)).result
+    assert type(common) is OpportunityBase[OpportunityFields]

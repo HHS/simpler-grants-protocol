@@ -1,4 +1,5 @@
-"""The award graph is public through the existing schema barrels, and nothing else moved."""
+"""The award graph and opportunity details are public through the existing schema
+barrels, and nothing else moved."""
 
 import importlib
 
@@ -53,8 +54,12 @@ AWARD_EXPORTS: dict[str, list[str]] = {
 }
 # ``sorting`` has no ``__all__``; its public names reach the barrels by wildcard.
 SORTING_EXPORTS = ["AwdSortBy", "AwdSorting"]
+# The opportunity detail model that carries award references (#1249).
+DETAIL_EXPORTS = ["OpportunityDetails"]
 ADDED = sorted(
-    [name for names in AWARD_EXPORTS.values() for name in names] + SORTING_EXPORTS
+    [name for names in AWARD_EXPORTS.values() for name in names]
+    + SORTING_EXPORTS
+    + DETAIL_EXPORTS
 )
 
 # ``schemas.pydantic.__all__`` before the award models (parent 4b5c1baf). Kept
@@ -86,7 +91,7 @@ BASELINE_ALL = [
 ]  # fmt: skip
 
 
-def test_public_surface_only_gains_the_award_names():
+def test_public_surface_only_gains_the_award_and_detail_names():
     assert sorted(set(pydantic_schemas.__all__) - set(BASELINE_ALL)) == ADDED
     assert set(BASELINE_ALL) <= set(pydantic_schemas.__all__)
 
@@ -94,7 +99,8 @@ def test_public_surface_only_gains_the_award_names():
 @pytest.mark.parametrize(
     ("barrel", "name"),
     [(barrel, name) for barrel, names in AWARD_EXPORTS.items() for name in names]
-    + [("sorting", name) for name in SORTING_EXPORTS],
+    + [("sorting", name) for name in SORTING_EXPORTS]
+    + [("models", name) for name in DETAIL_EXPORTS],
 )
 def test_award_names_resolve_to_one_object_on_every_public_path(barrel, name):
     module = importlib.import_module(f"common_grants_sdk.schemas.pydantic.{barrel}")

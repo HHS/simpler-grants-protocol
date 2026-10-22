@@ -31,6 +31,7 @@ from common_grants_sdk.extensions import (
     schema,
 )
 from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas import AwdRef, OpportunityDetails
 from common_grants_sdk.schemas.pydantic.fields import CustomFieldType
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
@@ -39,7 +40,13 @@ from common_grants_sdk.schemas.pydantic.filters.opportunity import (
 from common_grants_sdk.schemas.pydantic.models.opp_status import OppStatusOptions
 from common_grants_sdk.extensions.specs import CustomFieldSpec
 from common_grants_sdk.schemas import OppIds, OrgRefCollection
-from tests.schemas.opportunity_v05_fixtures import FUNDERS, IDENTIFIERS, wire
+from tests.schemas.opportunity_v05_fixtures import (
+    AWARD_REFS,
+    CLEAN_ENERGY_OPPORTUNITY,
+    FUNDERS,
+    IDENTIFIERS,
+    wire,
+)
 
 
 class OppSearchFilters(OpportunityFilters, total=False):
@@ -1755,3 +1762,320 @@ class TestCoreV05Additions:
             self._assert_additions(result.items[0])
             assert result.items[1].funders is None
             assert [(e.index, type(e)) for e in result.errors] == [(2, ParseFailure)]
+
+
+class _GrantFields(CustomFieldSet):
+    program_area: Optional[CustomField[str]] = Field(default=None)
+
+
+GRANT_PLUGIN = define_plugin(
+    PluginSchemas(Opportunity=schema(common_schema=OpportunityBase[_GrantFields])),
+    meta=PluginMeta(name="grants", source_system="test"),
+)
+ENVELOPE = {
+    "status": 200,
+    "message": "Success",
+    "paginationInfo": {"page": 1, "pageSize": 100, "totalItems": 2, "totalPages": 1},
+}
+
+
+def _scoped(client, mock_httpx_client):
+    client.http = mock_httpx_client
+    client.opportunities.http = mock_httpx_client
+    return client
+
+
+def _collections(client, mock_httpx_client, rows, **kwargs):
+    _respond(mock_httpx_client, "get", {**ENVELOPE, "items": rows})
+    listed = client.opportunities.list(page=1, **kwargs)
+    _respond(
+        mock_httpx_client,
+        "post",
+        {
+            **ENVELOPE,
+            "items": rows,
+            "sortInfo": {"sortBy": "lastModifiedAt", "sortOrder": "desc"},
+            "filterInfo": {"filters": {}},
+        },
+    )
+    searched = client.opportunities.search(search="x", page=1, **kwargs)
+    return listed, searched
+
+
+class TestOpportunityDetails:
+    """get() parses the detail shape (awards) by default; list/search stay base."""
+
+    @pytest.fixture
+    def detail_row(self, sample_opportunity_data):
+        return {
+            **CLEAN_ENERGY_OPPORTUNITY,
+            "identifiers": IDENTIFIERS,
+            "customFields": {
+                **sample_opportunity_data["customFields"],
+                "vendorPayload": VENDOR_ENTRY,
+            },
+        }
+
+    @pytest.fixture
+    def plugin_client(self, mock_httpx_client):
+        config = Config(base_url="https://api.example.com", api_key="test-key")
+        return _scoped(VENDOR_PLUGIN.get_client(config), mock_httpx_client)
+
+    def _get(self, client, mock_httpx_client, data, **kwargs):
+        _respond(mock_httpx_client, "get", {**ENVELOPE, "data": data})
+        return client.opportunities.get(data["id"], **kwargs)
+
+    @staticmethod
+    def _assert_awards(opp):
+        assert isinstance(opp, OpportunityDetails)
+        assert opp.awards is not None
+        assert all(isinstance(ref, AwdRef) for ref in opp.awards)
+        assert [str(ref.id) for ref in opp.awards] == [r["id"] for r in AWARD_REFS]
+
+    def test_unbound_get_returns_details(self, client, mock_httpx_client, detail_row):
+        opp = self._get(client, mock_httpx_client, detail_row)
+
+        self._assert_awards(opp)
+        assert isinstance(opp.identifiers, OppIds)
+        assert isinstance(opp.funders, OrgRefCollection)
+        assert isinstance(opp.custom_fields, dict)
+        assert opp.custom_fields["legacyId"].value == 12345
+        assert opp.custom_fields["vendorPayload"].value == VENDOR_ENTRY["value"]
+        assert wire(opp) == detail_row
+
+    def test_plugin_get_promotes_the_bound_model(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        opp = self._get(plugin_client, mock_httpx_client, detail_row)
+
+        self._assert_awards(opp)
+        assert isinstance(opp, OpportunityBase[_VendorFields])
+        assert isinstance(opp, OpportunityDetails[_VendorFields])
+        assert opp.custom_fields is not None
+        assert opp.custom_fields.legacy_id is not None
+        assert opp.custom_fields.legacy_id.value == 12345
+        assert (
+            opp.get_custom_field_value("vendorPayload", dict) == VENDOR_ENTRY["value"]
+        )
+        assert wire(opp) == detail_row
+
+    def test_plugin_get_still_runs_typed_custom_field_validation(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        bad = {
+            **detail_row,
+            "customFields": {
+                "legacyId": {"name": "legacyId", "fieldType": "integer", "value": "x"}
+            },
+        }
+        with pytest.raises(ValidationError, match="legacy"):
+            self._get(plugin_client, mock_httpx_client, bad)
+
+    def test_get_uses_the_schema_bound_after_construction(
+        self, client, mock_httpx_client, detail_row
+    ):
+        before = self._get(client, mock_httpx_client, detail_row)
+        client._bind_schemas(VENDOR_PLUGIN.schemas)
+        after = self._get(client, mock_httpx_client, detail_row)
+
+        assert isinstance(before.custom_fields, dict)
+        assert isinstance(after, OpportunityBase[_VendorFields])
+        assert after.custom_fields is not None
+        assert after.custom_fields.legacy_id is not None
+        self._assert_awards(after)
+
+    def test_differently_bound_clients_keep_their_own_detail_models(
+        self, mock_httpx_client, detail_row
+    ):
+        config = Config(base_url="https://api.example.com", api_key="test-key")
+        vendor = _scoped(VENDOR_PLUGIN.get_client(config), mock_httpx_client)
+        grants = _scoped(GRANT_PLUGIN.get_client(config), mock_httpx_client)
+        row = {
+            **detail_row,
+            "customFields": {
+                **detail_row["customFields"],
+                "programArea": {
+                    "name": "programArea",
+                    "fieldType": "string",
+                    "value": "energy",
+                },
+            },
+        }
+
+        v1 = self._get(vendor, mock_httpx_client, row)
+        g1 = self._get(grants, mock_httpx_client, row)
+        v2 = self._get(vendor, mock_httpx_client, row)
+
+        for opp in (v1, g1, v2):
+            self._assert_awards(opp)
+        assert type(v1) is type(v2)
+        assert type(v1) is not type(g1)
+        assert isinstance(v1, OpportunityBase[_VendorFields])
+        assert isinstance(v1, OpportunityDetails[_VendorFields])
+        assert isinstance(g1, OpportunityBase[_GrantFields])
+        assert isinstance(g1, OpportunityDetails[_GrantFields])
+        assert not isinstance(v1, OpportunityDetails[_GrantFields])
+        assert v1.custom_fields.legacy_id.value == 12345
+        assert v1.get_custom_field_value("programArea", str) == "energy"
+        assert g1.custom_fields.program_area.value == "energy"
+        assert g1.get_custom_field_value("legacyId", int) == 12345
+
+    def test_registered_model_and_registry_stay_unchanged(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        from common_grants_sdk.extensions import EXTENSIBLE_SCHEMA_MAP
+
+        self._get(plugin_client, mock_httpx_client, detail_row)
+
+        bound = VENDOR_PLUGIN.schemas.Opportunity.common_schema
+        assert bound is OpportunityBase[_VendorFields]
+        assert "awards" not in bound.model_fields
+        assert EXTENSIBLE_SCHEMA_MAP == {"Opportunity": OpportunityBase}
+        assert (
+            "awards" not in VENDOR_PLUGIN.schemas.Opportunity.parse(detail_row).__dict__
+        )
+
+    def test_bound_subclass_keeps_its_fields_validators_and_config(
+        self, client, mock_httpx_client, detail_row
+    ):
+        from pydantic import ConfigDict, field_validator
+
+        class StrictOpportunity(OpportunityBase[_VendorFields]):
+            model_config = ConfigDict(extra="forbid")
+            region: Optional[str] = None
+
+            @field_validator("title")
+            @classmethod
+            def _no_blank_title(cls, value: str) -> str:
+                if not value.strip():
+                    raise ValueError("blank title")
+                return value
+
+        client._bind_schemas(
+            PluginSchemas(Opportunity=schema(common_schema=OpportunityBase))
+        )
+        client._opportunity_schema = StrictOpportunity
+
+        opp = self._get(client, mock_httpx_client, {**detail_row, "region": "west"})
+        self._assert_awards(opp)
+        assert isinstance(opp, StrictOpportunity)
+        assert opp.region == "west"
+        assert opp.custom_fields.legacy_id.value == 12345
+        with pytest.raises(ValidationError, match="blank title"):
+            self._get(client, mock_httpx_client, {**detail_row, "title": " "})
+        with pytest.raises(ValidationError, match="Extra inputs"):
+            self._get(client, mock_httpx_client, {**detail_row, "unknown": 1})
+
+    @pytest.mark.parametrize(
+        "override", [OpportunityBase, OpportunityBase[_VendorFields]]
+    )
+    def test_explicit_base_override_wins_and_drops_awards(
+        self, plugin_client, mock_httpx_client, detail_row, override
+    ):
+        opp = self._get(plugin_client, mock_httpx_client, detail_row, schema=override)
+
+        assert type(opp) is override
+        assert "awards" not in wire(opp)
+
+    def test_explicit_custom_override_wins(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        override = OpportunityBase.with_custom_fields(
+            custom_fields={
+                "legacyId": CustomFieldSpec(
+                    field_type=CustomFieldType.INTEGER, value=int
+                )
+            },
+            model_name="LegacyOpportunity",
+        )
+        opp = self._get(plugin_client, mock_httpx_client, detail_row, schema=override)
+
+        assert type(opp) is override
+        assert opp.custom_fields.legacy_id.value == 12345
+        assert "awards" not in wire(opp)
+
+    def test_explicit_detail_override_validates_awards(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        override = OpportunityDetails[_VendorFields]
+        opp = self._get(plugin_client, mock_httpx_client, detail_row, schema=override)
+
+        assert type(opp) is override
+        self._assert_awards(opp)
+        bad = {**detail_row, "awards": [{"title": "No id"}]}
+        with pytest.raises(ValidationError):
+            self._get(plugin_client, mock_httpx_client, bad, schema=override)
+
+    @pytest.mark.parametrize(
+        "bad_awards, match",
+        [
+            ([{"id": AWARD_REFS[0]["id"]}], "title"),
+            ([None], "awards.0"),
+            ({"id": AWARD_REFS[0]["id"]}, "awards"),
+        ],
+        ids=["missing title", "null entry", "object"],
+    )
+    @pytest.mark.parametrize("bound", ["unbound", "plugin"])
+    def test_get_rejects_malformed_awards_with_validation_error(
+        self,
+        client,
+        plugin_client,
+        mock_httpx_client,
+        detail_row,
+        bad_awards,
+        match,
+        bound,
+    ):
+        target = client if bound == "unbound" else plugin_client
+        with pytest.raises(ValidationError, match=match):
+            self._get(target, mock_httpx_client, {**detail_row, "awards": bad_awards})
+
+    @pytest.mark.parametrize("bound", ["unbound", "plugin"])
+    def test_list_and_search_ignore_awards_by_default(
+        self, client, plugin_client, mock_httpx_client, detail_row, bound
+    ):
+        target = client if bound == "unbound" else plugin_client
+        rows = [detail_row, {**detail_row, "awards": None}]
+
+        for result in _collections(target, mock_httpx_client, rows):
+            assert result.errors == []
+            assert len(result.items) == 2
+            for item in result.items:
+                assert not isinstance(item, OpportunityDetails)
+                assert "awards" not in wire(item)
+
+    @pytest.mark.parametrize("bound", ["unbound", "plugin"])
+    def test_get_reads_null_awards_as_omitted(
+        self, client, plugin_client, mock_httpx_client, detail_row, bound
+    ):
+        target = client if bound == "unbound" else plugin_client
+        opp = self._get(target, mock_httpx_client, {**detail_row, "awards": None})
+
+        assert opp.awards is None
+        assert "awards" not in wire(opp)
+
+    def test_detail_collection_override_collects_award_row_errors(
+        self, plugin_client, mock_httpx_client, detail_row
+    ):
+        rows = [
+            detail_row,
+            {**detail_row, "awards": None},
+            {**detail_row, "awards": [{"id": "not-a-uuid", "title": "Bad"}]},
+        ]
+
+        for result in _collections(
+            plugin_client,
+            mock_httpx_client,
+            rows,
+            schema=OpportunityDetails[_VendorFields],
+        ):
+            assert len(result.items) == 2
+            self._assert_awards(result.items[0])
+            assert result.items[1].awards is None
+            assert [(e.index, type(e)) for e in result.errors] == [(2, ParseFailure)]
+
+
+def test_typed_opportunity_details_example_runs():
+    from examples.typed_opportunity_details import main
+
+    main()
