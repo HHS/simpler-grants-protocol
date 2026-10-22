@@ -153,13 +153,13 @@ class Opportunity(
     """The opportunity model this API serves."""
 ```
 
-A custom field of the wrong type is now rejected when the record is parsed, and both fields appear in the opportunity response definitions in `/openapi.json`. Routes, handlers, and the repository protocol are untouched. Keep the `class` statement rather than assigning the result to `Opportunity`: the class keeps `Opportunity` a type, so the template's type check passes.
+A custom field of the wrong type is now rejected when the record is parsed, and both fields appear in the opportunity response definitions in `/openapi.json`. Routes, handlers, and the repository protocol are untouched. Keep the `class` statement rather than assigning the result to `Opportunity`: the class keeps `Opportunity` a type, so the template's type check passes. Because `with_custom_fields` builds the model at runtime, a type checker sees the custom fields as `Any` in either form.
 
-For more on defining and reading custom fields, see the [custom fields overview](/custom-fields/overview/).
+For more on defining and reading custom fields, see the [custom fields overview](/custom-fields/overview/). Its Python example assigns the result to `Opportunity`; in the template, keep the `class` form shown above.
 
 ### Share extensions as a plugin
 
-`with_custom_fields` extends the one model this API serves. A plugin, built with the SDK's `define_plugin`, packages custom fields, custom search filters, and transforms between your source system's records and CommonGrants models as a typed Python package. Other services built on the same source system, and clients that consume your API, can then import it instead of redefining the same mapping. See the [Python SDK extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) to build and publish one, and the [plugin catalog](/plugins/) for published plugins.
+`with_custom_fields` extends the one model this API serves. A plugin, built with the SDK's `define_plugin`, packages custom fields, custom search filters, and transforms between your source system's records and CommonGrants models as a typed Python package. Unlike `with_custom_fields`, a plugin's custom fields are visible to a type checker, so each value keeps its declared type. Other services built on the same source system, and clients that consume your API, can then import it instead of redefining the same mapping. See the [Python SDK extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) to build and publish one, and the [plugin catalog](/plugins/) for published plugins.
 
 ## Connect your own data
 
