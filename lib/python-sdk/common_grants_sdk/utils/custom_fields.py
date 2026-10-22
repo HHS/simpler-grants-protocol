@@ -169,6 +169,21 @@ def _create_model_name(name: str, key: str) -> str:
     return f"{name}{key[:1].upper()}{key[1:]}Field"
 
 
+def _declared_attr_for(model: type[BaseModel], key: str) -> Optional[str]:
+    """Return the attribute name of the field ``model`` declares for ``key``, if any.
+
+    A declared field matches when ``key`` is its attribute name or one of its
+    wire aliases. Otherwise the snake_case form of ``key`` is used if it names
+    a declared field.
+    """
+    declared = model.model_fields
+    for name, info in declared.items():
+        if key in (name, info.alias, info.validation_alias, info.serialization_alias):
+            return name
+    attr_name = snake(key)
+    return attr_name if attr_name in declared else None
+
+
 def get_custom_field_value(
     instance: BaseModel,
     key: str,
@@ -211,22 +226,8 @@ def get_custom_field_value(
         if key in extra:
             field = extra[key]
         else:
-            declared = type(fields).model_fields
-            attr_name = next(
-                (
-                    name
-                    for name, info in declared.items()
-                    if key
-                    in (
-                        name,
-                        info.alias,
-                        info.validation_alias,
-                        info.serialization_alias,
-                    )
-                ),
-                snake(key),
-            )
-            field = getattr(fields, attr_name) if attr_name in declared else None
+            attr_name = _declared_attr_for(type(fields), key)
+            field = getattr(fields, attr_name) if attr_name is not None else None
         if field is None:
             return None
 
