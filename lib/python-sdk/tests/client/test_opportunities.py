@@ -1924,13 +1924,17 @@ class TestOpportunityDetails:
         self, plugin_client, mock_httpx_client, detail_row
     ):
         from common_grants_sdk.extensions import EXTENSIBLE_SCHEMA_MAP
+        from common_grants_sdk.schemas.pydantic.models import AwdRecipientIndividual
 
         self._get(plugin_client, mock_httpx_client, detail_row)
 
         bound = VENDOR_PLUGIN.schemas.Opportunity.common_schema
         assert bound is OpportunityBase[_VendorFields]
         assert "awards" not in bound.model_fields
-        assert EXTENSIBLE_SCHEMA_MAP == {"Opportunity": OpportunityBase}
+        assert EXTENSIBLE_SCHEMA_MAP == {
+            "Opportunity": OpportunityBase,
+            "AwdRecipientIndividual": AwdRecipientIndividual,
+        }
         assert (
             "awards" not in VENDOR_PLUGIN.schemas.Opportunity.parse(detail_row).__dict__
         )

@@ -212,6 +212,32 @@ poetry run python examples/consumer_search_with_filters.py
 ```
 
 
+# Awards examples
+
+`examples/awards_client.py` is the awards consumer flow against an in-process mock
+API, so it needs no server. One plugin registers both award extension points:
+typed custom fields on the award's individual recipient (a schema extension, the
+default parse model for `client.awards.get` / `list` / `search`) and a custom award
+filter (a route extension, on the search request). It also shows a per-call
+`schema=AwardBase` override and the plugin's explicit `to_common` / `from_common`
+transforms:
+
+```bash
+poetry run python -m examples.awards_client
+```
+
+`examples/typed_awards.py` runs the typed award models as a self-check and pins the
+consumer typing of plugin award clients with `assert_type`:
+
+```bash
+poetry run python -m examples.typed_awards
+```
+
+Its negative type fixtures, `examples/typed_awards_failures.py`, are checked by
+`make check-award-fixtures` (one pyright error per `# EXPECT-ERROR` marker, like
+`make check-fixtures` above).
+
+
 ## Configuration
 
 The example scripts set `base_url` and `api_key` inline when they build their

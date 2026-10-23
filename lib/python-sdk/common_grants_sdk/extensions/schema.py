@@ -40,7 +40,7 @@ from pydantic.alias_generators import to_camel
 
 from ..schemas.pydantic._contract import NonNullOptionals
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
-from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.models import AwdRecipientIndividual, OpportunityBase
 from .specs import PluginCustomFieldSpec
 from .transforms import build_transforms
 from .types import TransformError, TransformResult
@@ -100,9 +100,11 @@ class CustomFieldSet(NonNullOptionals, _CamelModel):
 
 # The extensible-schema registry: the closed set of models a plugin may extend,
 # mapped to their generic base model. Add an entry when a new model gains
-# custom-field support.
+# custom-field support. Award custom fields live on the individual recipient, so
+# the recipient (not AwardBase) is the registered award extension point.
 EXTENSIBLE_SCHEMA_MAP: dict[str, type[BaseModel]] = {
     "Opportunity": OpportunityBase,
+    "AwdRecipientIndividual": AwdRecipientIndividual,
 }
 _BASE_TO_NAME: dict[type[BaseModel], str] = {
     v: k for k, v in EXTENSIBLE_SCHEMA_MAP.items()
