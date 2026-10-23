@@ -638,7 +638,7 @@ The three-bucket classification rule (ADR-0012):
 2. **Registered custom filters** (declared on the route's TypedDict) → the `customFilters` record, validated against the model the plugin declared.
 3. **Ad-hoc filters** (anything else) → `customFilters` passthrough, validated against the union of the models in the [filter-type catalog](#filter-type-catalog-and-the-f-helpers) — so a value that does not fit its operator, such as `{"operator": "in", "value": "grant"}`, is still rejected rather than quietly forwarded.
 
-Registered filters are looked up by the **exact** `(resource, method)` strings the plugin declared. A non-matching pair (a pluralization typo, say) yields no registered bucket at all, and every non-standard filter is then validated as if it were ad-hoc.
+Registered filters are looked up by the **exact** `(resource, method)` strings the plugin declared. A resource with no filter policy (a pluralization typo such as `award`, say) raises `KeyError` naming the valid resources, `opportunities` and `awards`. A method the routes do not declare yields no registered bucket at all, and every non-standard filter is then validated as if it were ad-hoc.
 
 ### Validation — registration time and call time
 

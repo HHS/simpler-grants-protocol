@@ -67,7 +67,7 @@ class Opportunities(Generic[FiltersT, ItemT]):
     default, and ``get`` into its detail form (``OpportunityDetails``).
     """
 
-    def __init__(self, client: "Client[FiltersT, ItemT]"):
+    def __init__(self, client: "Client[FiltersT, ItemT, Any]"):
         """Initialize the Opportunity resource.
 
         Args:
