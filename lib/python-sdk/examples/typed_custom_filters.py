@@ -123,7 +123,7 @@ def _typecheck_route_generics() -> None:
         Client[OppSearchFilters, OpportunityBase[OppCustomFields], AwardSearchFilters],
     )
 
-    # Awards only, on a transforms schema (the other get_client overload).
+    # Awards only, on a transforms schema.
     transforms = schema(
         source_schema=PassthroughModel,
         common_schema=OpportunityBase[OppCustomFields],

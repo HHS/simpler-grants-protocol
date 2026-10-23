@@ -92,7 +92,7 @@ PluginSchemas(Recipient=recipient)  # EXPECT-ERROR: no such slot
 define_plugin(
     PluginSchemas(AwdRecipientIndividual=schema(common_schema=OpportunityBase)),
     meta=META,
-).get_client()  # EXPECT-ERROR: no get_client overload for this slot
+).get_client()  # EXPECT-ERROR: get_client needs an award recipient here
 
 client = define_plugin(
     PluginSchemas(AwdRecipientIndividual=recipient),
