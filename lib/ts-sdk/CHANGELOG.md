@@ -1,5 +1,23 @@
 # @common-grants/sdk
 
+## [0.9.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.8.0...@common-grants/sdk@0.9.0) (2026-10-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ts-sdk:** publish the SDK as ESM ([#1292](https://github.com/HHS/simpler-grants-protocol/issues/1292))
+* **core:** release protocol v0.5.0 ([#1268](https://github.com/HHS/simpler-grants-protocol/issues/1268))
+
+### Features
+
+* **core:** release protocol v0.5.0 ([#1268](https://github.com/HHS/simpler-grants-protocol/issues/1268)) ([1a03d3e](https://github.com/HHS/simpler-grants-protocol/commit/1a03d3ef0acc603b7c82f5ea9a4c6e0efd2acf99))
+* **ts-sdk:** add awards client resource (get, list, search) ([#1294](https://github.com/HHS/simpler-grants-protocol/issues/1294)) ([624046f](https://github.com/HHS/simpler-grants-protocol/commit/624046f2e8e172178ddb1410b09a4470f31c2604))
+* **ts-sdk:** add Zod schemas and types for the award models ([#1290](https://github.com/HHS/simpler-grants-protocol/issues/1290)) ([dac1b76](https://github.com/HHS/simpler-grants-protocol/commit/dac1b76d13a4e67eb80e85bd6a8f624a875d2320))
+* **ts-sdk:** align opportunity funders and identifiers with Core v0.5 ([#1295](https://github.com/HHS/simpler-grants-protocol/issues/1295)) ([07a3b2b](https://github.com/HHS/simpler-grants-protocol/commit/07a3b2bc1059ea1757182a3363ef095fa82833ac))
+* **ts-sdk:** bind award custom fields to the plugin client ([#1299](https://github.com/HHS/simpler-grants-protocol/issues/1299)) ([7e5f086](https://github.com/HHS/simpler-grants-protocol/commit/7e5f086634fa0af65729dd95597ece57d265119a))
+* **ts-sdk:** distinguish opportunity detail responses and support related awards ([#1296](https://github.com/HHS/simpler-grants-protocol/issues/1296)) ([f05a03d](https://github.com/HHS/simpler-grants-protocol/commit/f05a03d0379ecd3cd21440b8ed5957085fb0fe13))
+* **ts-sdk:** publish the SDK as ESM ([#1292](https://github.com/HHS/simpler-grants-protocol/issues/1292)) ([bcdcb49](https://github.com/HHS/simpler-grants-protocol/commit/bcdcb49324d048fe276306a650fc51d2e1e5dae6))
+
 ## [0.8.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.7.2...@common-grants/sdk@0.8.0) (2026-09-24)
 
 
