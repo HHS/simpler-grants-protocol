@@ -92,7 +92,7 @@ Most dependency PRs should stay `chore(deps)`. Use a releasing type only when a 
 
 | Package | Published to | Needs a releasing title when... |
 |---------|-------------|------------------------|
-| `lib/core` (`@common-grants/core`) | npm | New TypeSpec peer floors should ship before the next core release |
+| `lib/core` (`@common-grants/core`) | npm | TypeSpec peer dep ranges change |
 | `lib/cli` (`@common-grants/cli`) | npm | Runtime dep versions change |
 | `lib/ts-sdk` (`@common-grants/sdk`) | npm | Runtime dep versions change |
 | `lib/python-sdk` (`common-grants-sdk`) | PyPI | Runtime dep versions change |
