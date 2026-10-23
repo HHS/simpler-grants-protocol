@@ -1,0 +1,66 @@
+---
+import type { Implementation } from "@/lib/implementations";
+import CatalogCard from "@/components/catalog/CatalogCard.astro";
+
+interface Props {
+  implementation: Implementation;
+}
+
+const { implementation } = Astro.props;
+const detailHref = `/implementations/${implementation.id}`;
+
+// Blob of maintainer, sources, and fields so the free-text search matches on them.
+const searchTags = [
+  implementation.maintainer,
+  ...implementation.tags,
+  ...implementation.scope,
+  ...implementation.sources.map((s) => s.name),
+  ...(implementation.customFields ?? []),
+].join(",");
+---
+
+<CatalogCard
+  href={detailHref}
+  title={implementation.name}
+  description={implementation.description}
+  dataAttributes={{
+    name: implementation.name,
+    description: implementation.description,
+    tags: searchTags,
+    tag: implementation.tags.join(","),
+    scope: implementation.scope.join(","),
+    maintainer: implementation.maintainer,
+  }}
+>
+  <div class="card-pills">
+    {implementation.tags.map((tag) => <span class="pill">{tag}</span>)}
+    {
+      implementation.scope.map((scope) => (
+        <span class="pill pill-scope">{scope}</span>
+      ))
+    }
+  </div>
+</CatalogCard>
+
+<style>
+  .card-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pill {
+    padding: 0.25rem 0.625rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+
+  .pill-scope {
+    background: var(--sl-color-blue-low);
+    color: var(--sl-color-blue-high);
+  }
+</style>

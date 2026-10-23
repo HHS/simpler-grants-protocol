@@ -1,0 +1,74 @@
+---
+import {
+  loadAllImplementations,
+  getFilterOptions,
+} from "@/lib/implementations";
+import CatalogPage from "@/layouts/CatalogPage.astro";
+import ImplementationCard from "@/components/implementations/ImplementationCard.astro";
+
+const implementations = loadAllImplementations();
+const {
+  tags: allTags,
+  scopes: allScopes,
+  maintainers: allMaintainers,
+} = getFilterOptions();
+---
+
+<CatalogPage
+  title="Implementations"
+  description="Live APIs that implement the CommonGrants protocol"
+  searchLabel="Search implementations"
+  searchPlaceholder="Search by name, maintainer, source, or field..."
+  filters={[
+    {
+      id: "tag-filter",
+      label: "Data type",
+      options: allTags,
+      dataAttribute: "tag",
+      placeholder: "Any data type",
+    },
+    {
+      id: "scope-filter",
+      label: "Funder scope",
+      options: allScopes,
+      dataAttribute: "scope",
+      placeholder: "Any scope",
+    },
+    {
+      id: "maintainer-filter",
+      label: "Maintainer",
+      options: allMaintainers,
+      dataAttribute: "maintainer",
+      placeholder: "Any maintainer",
+    },
+  ]}
+  noResultsMessage="No implementations match your search criteria."
+  stats={[
+    { count: implementations.length, label: "implementations" },
+    { count: allScopes.length, label: "funder scopes" },
+    { count: allMaintainers.length, label: "maintainers" },
+  ]}
+>
+  <p slot="intro" class="intro">
+    These APIs are live and serve grant data through CommonGrants routes, so any
+    client built on the CommonGrants SDKs can read from them the same way. Each
+    listing shows the data it covers, the routes it supports, and the custom
+    fields, filters, and plugins that go with it. For the listing conditions and
+    how to add your own implementation, see the <a
+      href="/implementations/overview/">implementations overview</a
+    >.
+  </p>
+
+  {
+    implementations.map((implementation) => (
+      <ImplementationCard implementation={implementation} />
+    ))
+  }
+</CatalogPage>
+
+<style>
+  .intro {
+    margin-bottom: 2rem;
+    color: var(--sl-color-gray-2);
+  }
+</style>

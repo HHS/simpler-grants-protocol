@@ -1,0 +1,528 @@
+{
+  "simpler-grants": {
+    "name": "Simpler.Grants.gov API",
+    "description": "Federal grant opportunities from Simpler.Grants.gov, served through CommonGrants routes.",
+    "maintainer": "U.S. Department of Health and Human Services",
+    "scope": ["Federal"],
+    "sources": [
+      {
+        "name": "Grants.gov",
+        "url": "https://www.grants.gov/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://api.simpler.grants.gov/common-grants",
+    "docsUrl": "https://api.simpler.grants.gov/docs",
+    "sourceUrl": "https://github.com/HHS/simpler-grants-gov",
+    "license": "CC0-1.0",
+    "auth": "Free API key",
+    "authUrl": "https://simpler.grants.gov/developers",
+    "customFields": [
+      "legacySerialId",
+      "federalOpportunityNumber",
+      "assistanceListings",
+      "agency",
+      "attachments",
+      "federalFundingSource",
+      "contactInfo",
+      "additionalInfo",
+      "fiscalYear",
+      "costSharing"
+    ],
+    "customFilters": [
+      "agency",
+      "applicantType",
+      "fundingInstrument",
+      "costSharing"
+    ],
+    "plugins": ["ts-cg-grants-gov", "cg-grants-gov"]
+  },
+  "maryland": {
+    "name": "Maryland Community Compass",
+    "description": "Grant programs available in Maryland at the statewide, county, municipal, and regional level, from Maryland Community Compass.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Maryland Community Compass.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Local", "Federal", "Private"],
+    "sources": [
+      {
+        "name": "Maryland Community Compass",
+        "url": "https://compass.maryland.gov/incentives/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://md.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://md.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-md",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Daily",
+    "customFields": ["agency", "contactInfo", "additionalInfo"],
+    "sourceSpecificFields": {
+      "eligibilityCriteria": {
+        "fieldType": "object",
+        "description": "Source eligibility categories and details"
+      },
+      "attachments": {
+        "fieldType": "array",
+        "description": "Source documents linked by Maryland Compass"
+      },
+      "fundingSource": {
+        "fieldType": "string",
+        "description": "Where the funding originates"
+      },
+      "fundingInstrument": {
+        "fieldType": "string",
+        "description": "Funding instrument type"
+      },
+      "lastSyncedAt": {
+        "fieldType": "string",
+        "description": "ISO 8601 datetime when this record was ingested"
+      },
+      "mdCompassId": {
+        "fieldType": "number",
+        "description": "Compass database record id"
+      },
+      "mdSlug": {
+        "fieldType": "string",
+        "description": "Stable Compass incentive slug"
+      },
+      "mdDataQuality": {
+        "fieldType": "string",
+        "description": "Compass data-quality assessment"
+      },
+      "mdGeographicScope": {
+        "fieldType": "string",
+        "description": "Compass geographic scope"
+      },
+      "mdAcceptingApplications": {
+        "fieldType": "boolean",
+        "description": "Whether applications are open"
+      },
+      "mdRecurring": {
+        "fieldType": "boolean",
+        "description": "Whether the program recurs"
+      },
+      "mdAssistanceTypes": {
+        "fieldType": "array",
+        "description": "Compass assistance types"
+      },
+      "mdEligibleIndustries": {
+        "fieldType": "array",
+        "description": "Eligible industry labels"
+      },
+      "mdEligibleCounties": {
+        "fieldType": "array",
+        "description": "Eligible Maryland counties"
+      },
+      "mdEligibleMunicipalities": {
+        "fieldType": "array",
+        "description": "Eligible Maryland municipalities"
+      },
+      "mdEligibleRegions": {
+        "fieldType": "array",
+        "description": "Eligible Maryland regions"
+      },
+      "mdEligibleIncentiveAreas": {
+        "fieldType": "array",
+        "description": "Eligible incentive areas"
+      },
+      "mdEligibleOrganizationTypes": {
+        "fieldType": "array",
+        "description": "Original eligible organization types"
+      },
+      "mdBusinessStage": {
+        "fieldType": "string",
+        "description": "Eligible business stage"
+      },
+      "mdApplicationDeadlineRaw": {
+        "fieldType": "string",
+        "description": "Original deadline text"
+      },
+      "mdApplicationProcess": {
+        "fieldType": "string",
+        "description": "Application process overview"
+      },
+      "mdProgramAudience": {
+        "fieldType": "string",
+        "description": "Intended program audience"
+      },
+      "mdUseOfFunds": {
+        "fieldType": "string",
+        "description": "Permitted uses of funds"
+      },
+      "mdGeographicEligibility": {
+        "fieldType": "string",
+        "description": "Geographic eligibility details"
+      },
+      "mdRequirements": {
+        "fieldType": "array",
+        "description": "Application and program requirements"
+      },
+      "mdSourceUrls": {
+        "fieldType": "array",
+        "description": "URLs consulted by Compass"
+      },
+      "mdSourceCount": {
+        "fieldType": "number",
+        "description": "Number of source pages consulted"
+      }
+    }
+  },
+  "pennsylvania": {
+    "name": "Pennsylvania eGrants",
+    "description": "Grant opportunities from Pennsylvania's eGrants system.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Pennsylvania eGrants.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal"],
+    "sources": [
+      {
+        "name": "Pennsylvania eGrants",
+        "url": "https://www.pa.gov/grants"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://pa.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://pa.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-pa",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 4 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": {
+      "legacySerialId": {
+        "fieldType": "integer",
+        "description": "An integer ID for the opportunity, needed for compatibility with legacy systems"
+      },
+      "fundingSource": {
+        "fieldType": "string",
+        "description": "Where the funding originates (e.g. \"State\", \"Federal\", \"Federal and State\", \"Other\")"
+      },
+      "fundingInstrument": {
+        "fieldType": "string",
+        "description": "The funding instrument type (e.g. \"Grant\", \"Loan\")"
+      },
+      "lastSyncedAt": {
+        "fieldType": "string",
+        "description": "ISO 8601 datetime when this record was last ingested from its source system"
+      },
+      "paSlug": {
+        "fieldType": "string",
+        "description": "Pennsylvania's URL-friendly opportunity identifier"
+      },
+      "paCategory": {
+        "fieldType": "string",
+        "description": "Pennsylvania's category taxonomy (often mirrors the issuing agency)"
+      },
+      "paGrantCycle": {
+        "fieldType": "string",
+        "description": "PA grant cycle label (e.g. \"Annual\")"
+      },
+      "paRawMinAward": {
+        "fieldType": "string",
+        "description": "Original `minimumAward` string preserved when the value could not be parsed into a numeric amount"
+      },
+      "paRawMaxAward": {
+        "fieldType": "string",
+        "description": "Original `maximumAward` string preserved when the value could not be parsed into a numeric amount"
+      },
+      "paRawTotalFunds": {
+        "fieldType": "string",
+        "description": "Original `totalFundsToBeAwarded` string preserved when the value could not be parsed into a numeric amount"
+      },
+      "paRawLinkToApply": {
+        "fieldType": "string",
+        "description": "Original `linkToApply` string preserved when the value was not a valid absolute URL"
+      },
+      "paProcessSteps": {
+        "fieldType": "array",
+        "description": "PA application process steps (HTML descriptions preserved as-is)"
+      },
+      "paAdditionalResources": {
+        "fieldType": "array",
+        "description": "Links to supporting documents and pages for the opportunity"
+      },
+      "paFaqs": {
+        "fieldType": "array",
+        "description": "Frequently asked questions for the opportunity"
+      }
+    }
+  },
+  "california": {
+    "name": "California Grants Portal",
+    "description": "Grant opportunities from the California Grants Portal open dataset.",
+    "note": "Built by Agile Six as a reference implementation, using public data from the California Grants Portal.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal"],
+    "sources": [
+      {
+        "name": "California Grants Portal",
+        "url": "https://data.ca.gov/dataset/california-grants-portal"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://ca.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://ca.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-ca",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 8 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": {
+      "fundingSource": {
+        "fieldType": "string",
+        "description": "Where the funding originates (e.g. \"State\", \"Federal\", \"Federal and State\", \"Other\")"
+      },
+      "fundingInstrument": {
+        "fieldType": "string",
+        "description": "The funding instrument type (e.g. \"Grant\", \"Loan\")"
+      },
+      "lastSyncedAt": {
+        "fieldType": "string",
+        "description": "ISO 8601 datetime when this record was last ingested from its source system"
+      },
+      "caPortalId": {
+        "fieldType": "string",
+        "description": "California's Grants Portal identifier (the stable source key)"
+      },
+      "caGrantId": {
+        "fieldType": "string",
+        "description": "California's internal grant identifier, when assigned (often absent)"
+      },
+      "caCategories": {
+        "fieldType": "array",
+        "description": "California's category taxonomy (the source `Categories` list, split)"
+      },
+      "caLoi": {
+        "fieldType": "boolean",
+        "description": "Whether a Letter of Intent (LOI) is required before applying"
+      },
+      "caApplicantTypeNotes": {
+        "fieldType": "string",
+        "description": "Free-text notes clarifying applicant eligibility (the standard applicant types are on the native `acceptedApplicantTypes` field)"
+      },
+      "caGeography": {
+        "fieldType": "string",
+        "description": "Geographic scope or restrictions for the opportunity"
+      },
+      "caFundingSourceNotes": {
+        "fieldType": "string",
+        "description": "Free-text notes about the funding source"
+      },
+      "caFundingMethod": {
+        "fieldType": "string",
+        "description": "How funds are disbursed (e.g. \"Reimbursement(s)\", \"Advance(s)\")"
+      },
+      "caFundingMethodNotes": {
+        "fieldType": "string",
+        "description": "Free-text notes about the funding method"
+      },
+      "caEstAwards": {
+        "fieldType": "string",
+        "description": "CA estimate of the number of awards (free-form text)"
+      },
+      "caEstAmountsRaw": {
+        "fieldType": "string",
+        "description": "Original `EstAmounts` range string preserved verbatim (the numeric range is also exposed via `funding.min/maxAwardAmount` when parseable)"
+      },
+      "caRawEstAvailFunds": {
+        "fieldType": "string",
+        "description": "Original `EstAvailFunds` string preserved when the value could not be parsed into a numeric amount"
+      },
+      "caAwardPeriod": {
+        "fieldType": "string",
+        "description": "CA award/performance period (free-form, e.g. \"Expires 3/31/29\")"
+      },
+      "caExpAwardDate": {
+        "fieldType": "string",
+        "description": "CA expected award date (free-form, e.g. \"November 2026\")"
+      },
+      "caElecSubmission": {
+        "fieldType": "string",
+        "description": "Electronic submission instructions / address"
+      },
+      "caAwardStats": {
+        "fieldType": "string",
+        "description": "CA statistics about prior awards, when published"
+      },
+      "caCategorySuggestion": {
+        "fieldType": "string",
+        "description": "Suggested category provided by the source, when present"
+      },
+      "caChangeNotes": {
+        "fieldType": "string",
+        "description": "CA-provided notes describing the latest change to the record"
+      },
+      "caSubscribeUrl": {
+        "fieldType": "string",
+        "description": "URL to subscribe to updates from the issuing agency"
+      },
+      "caGrantEventsUrl": {
+        "fieldType": "string",
+        "description": "URL for grant-related events (webinars, info sessions)"
+      }
+    }
+  },
+  "washington": {
+    "name": "Washington FundHub",
+    "description": "Funding opportunities from Washington FundHub.",
+    "note": "Built by Agile Six as a reference implementation, using public data from Washington FundHub.",
+    "maintainer": "Agile Six",
+    "scope": ["State", "Federal", "Local"],
+    "sources": [
+      {
+        "name": "Washington FundHub",
+        "url": "https://fundhub.wa.gov/"
+      }
+    ],
+    "routes": [
+      "GET /common-grants/opportunities",
+      "GET /common-grants/opportunities/{oppId}",
+      "POST /common-grants/opportunities/search"
+    ],
+    "apiUrl": "https://wa.api.cg.a6lab.ai/common-grants",
+    "docsUrl": "https://wa.api.cg.a6lab.ai/docs",
+    "sourceUrl": "https://github.com/agilesix/cg-api-wa",
+    "license": "MIT",
+    "auth": "None",
+    "refresh": "Every 8 hours",
+    "customFields": ["agency", "contactInfo", "additionalInfo", "costSharing"],
+    "sourceSpecificFields": {
+      "fundingSource": {
+        "fieldType": "string",
+        "description": "Where the funding originates"
+      },
+      "fundingInstrument": {
+        "fieldType": "string",
+        "description": "Funding instrument type"
+      },
+      "lastSyncedAt": {
+        "fieldType": "string",
+        "description": "ISO 8601 datetime when this record was ingested"
+      },
+      "waWordPressId": {
+        "fieldType": "string",
+        "description": "FundHubWA WordPress record id"
+      },
+      "waSlug": {
+        "fieldType": "string",
+        "description": "FundHubWA WordPress slug"
+      },
+      "waInternalReferenceId": {
+        "fieldType": "string",
+        "description": "FundHubWA internal reference id"
+      },
+      "waExternalReferenceId": {
+        "fieldType": "string",
+        "description": "Reference id from the originating system"
+      },
+      "waFeatured": {
+        "fieldType": "boolean",
+        "description": "Whether FundHubWA features the record"
+      },
+      "waPreApplicationRequired": {
+        "fieldType": "boolean",
+        "description": "Whether a pre-application is required"
+      },
+      "waPreApplicationRaw": {
+        "fieldType": "string",
+        "description": "Original FundHubWA pre-application value"
+      },
+      "waCostShareRaw": {
+        "fieldType": "string",
+        "description": "Original FundHubWA cost-sharing value"
+      },
+      "waApplicationLinkTitle": {
+        "fieldType": "string",
+        "description": "Original FundHubWA application-link label"
+      },
+      "waApplicationLinkUrl": {
+        "fieldType": "string",
+        "description": "Original FundHubWA application-link URL"
+      },
+      "waApplicationLinkTarget": {
+        "fieldType": "string",
+        "description": "Original FundHubWA application-link target"
+      },
+      "waApplicationLinkRaw": {
+        "fieldType": "string",
+        "description": "Original string-form FundHubWA application link"
+      },
+      "waEligibilityHtml": {
+        "fieldType": "string",
+        "description": "Original FundHubWA eligibility content, including HTML"
+      },
+      "waRequirements": {
+        "fieldType": "string",
+        "description": "Application requirements"
+      },
+      "waContactHtml": {
+        "fieldType": "string",
+        "description": "Original FundHubWA contact content, including HTML"
+      },
+      "waTechnicalAssistanceContact": {
+        "fieldType": "string",
+        "description": "Technical assistance contact supplied by FundHubWA"
+      },
+      "waResourcesHtml": {
+        "fieldType": "string",
+        "description": "Original FundHubWA resources list, including HTML links"
+      },
+      "waTaxonomies": {
+        "fieldType": "object",
+        "description": "FundHubWA taxonomy labels grouped by taxonomy"
+      },
+      "waScore": {
+        "fieldType": "number",
+        "description": "FundHubWA curation score"
+      },
+      "waScoreReason": {
+        "fieldType": "string",
+        "description": "FundHubWA curation score rationale"
+      },
+      "waNumberOfAwardsRaw": {
+        "fieldType": "string",
+        "description": "Original free-text number-of-awards value"
+      },
+      "waTotalAmountRaw": {
+        "fieldType": "string",
+        "description": "Original total funding value"
+      },
+      "waMinAwardAmountRaw": {
+        "fieldType": "string",
+        "description": "Original minimum award value"
+      },
+      "waMaxAwardAmountRaw": {
+        "fieldType": "string",
+        "description": "Original maximum award value"
+      },
+      "waDisbursementNotes": {
+        "fieldType": "string",
+        "description": "FundHubWA disbursement notes"
+      },
+      "waApplicationCloseTime": {
+        "fieldType": "string",
+        "description": "Original application close time"
+      },
+      "waDescriptionHtml": {
+        "fieldType": "string",
+        "description": "Original description when it contains HTML"
+      }
+    }
+  }
+}
