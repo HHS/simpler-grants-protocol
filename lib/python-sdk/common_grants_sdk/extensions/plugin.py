@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 SchemasT = te.TypeVar("SchemasT")
 # Plugin is frozen, so its schemas parameter can be covariant. That lets
 # get_client's self-type match PluginSchemas structurally against
-# PluginSchemasView, whichever entry kind fills each slot.
+# _PluginSchemasView, whichever entry kind fills each slot.
 _SchemasT_co = te.TypeVar("_SchemasT_co", covariant=True)
 _TCommon_co = te.TypeVar("_TCommon_co", covariant=True)
 _OppT_co = te.TypeVar("_OppT_co", covariant=True)
@@ -54,7 +54,7 @@ class _ParsesInto(Protocol[_TCommon_co]):
     def common_schema(self) -> type[_TCommon_co]: ...
 
 
-class PluginSchemasView(Protocol[_OppT_co, _RecT_co]):
+class _PluginSchemasView(Protocol[_OppT_co, _RecT_co]):
     """Read-only view of ``PluginSchemas``: one property per extensible schema,
     typed by the common model that slot parses into.
 
@@ -135,9 +135,9 @@ class Plugin(Generic[_SchemasT_co, FiltersT, AwardFiltersT]):
     meta: PluginMeta
 
     # One signature for every entry-kind combination: the self-type reads each
-    # slot's common model through PluginSchemasView, whichever entry kind holds it.
+    # slot's common model through _PluginSchemasView, whichever entry kind holds it.
     def get_client(
-        self: "Plugin[PluginSchemasView[ItemT, RecipientT], FiltersT, AwardFiltersT]",
+        self: "Plugin[_PluginSchemasView[ItemT, RecipientT], FiltersT, AwardFiltersT]",
         config: "Optional[Config]" = None,
         auth: "Optional[Auth]" = None,
     ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]":
