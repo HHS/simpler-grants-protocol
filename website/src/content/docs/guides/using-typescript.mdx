@@ -7,7 +7,7 @@ sidebar:
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-The [Hono API template](https://github.com/common-grants/cg-api-template-hono) is a working CommonGrants API that you run first and then point at your own data. It serves the opportunity endpoints from bundled sample data, validates every request and response with the published [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) schemas, generates an OpenAPI 3.1 document from those same schemas, and serves Swagger UI to browse it. It's built with [Hono](https://hono.dev) and [`@hono/zod-openapi`](https://github.com/honojs/middleware/tree/main/packages/zod-openapi).
+The [Hono API template](https://github.com/common-grants/cg-api-template-hono) is a working CommonGrants API. You run it first, then connect it to your own data. It serves the opportunity endpoints from bundled sample data. It validates every request and response with the schemas from the published [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package. It also generates an OpenAPI 3.1 document from those same schemas and serves Swagger UI so you can browse it. The template is built with [Hono](https://hono.dev) and [`@hono/zod-openapi`](https://github.com/honojs/middleware/tree/main/packages/zod-openapi).
 
 ## Prerequisites
 
@@ -75,7 +75,7 @@ The template needs no other global packages, credentials, database, or infrastru
    curl http://localhost:3000/openapi.json
    ```
 
-   The list and search responses use the protocol's response envelopes: `items` and `paginationInfo`, plus `sortInfo` and `filterInfo` for search.
+   Both responses use the protocol's standard response envelopes. A list response contains `items` and `paginationInfo`. A search response also contains `sortInfo` and `filterInfo`.
 
 </Steps>
 
@@ -100,9 +100,17 @@ The template needs no other global packages, credentials, database, or infrastru
 
 ## How the pieces fit
 
-The template owns HTTP: routing, request and response validation, error bodies, the OpenAPI document, and Swagger UI. The SDK owns the CommonGrants schemas. The opportunity model, the filter, sorting, and pagination schemas, and the response envelopes are imported from `@common-grants/sdk/schemas` rather than redefined, so an SDK update brings protocol changes into your API.
+The template and the SDK split the work. The template owns HTTP: routing, request and response validation, error bodies, the OpenAPI document, and Swagger UI. The SDK owns the CommonGrants schemas.
 
-To carry data the core model doesn't define, extend the opportunity schema with `withCustomFields` in `src/data/schema.ts`. That file is the single definition of the opportunity model, so the response validation, the repository's types, and the OpenAPI document all pick up the change:
+The template imports these schemas from `@common-grants/sdk/schemas` instead of defining its own:
+
+- the opportunity model
+- the filter, sorting, and pagination schemas
+- the response envelopes
+
+When you update the SDK, your API picks up the protocol changes in that release.
+
+To add fields that the core opportunity model doesn't define, use `withCustomFields` in `src/data/schema.ts`. This file is the one place to add custom fields. It defines the opportunity model for the whole API, so response validation, the repository's types, and the OpenAPI document all pick up your new fields:
 
 ```typescript title="src/data/schema.ts"
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
@@ -129,11 +137,30 @@ export const OpportunitySchema = withCustomFields(OpportunityBaseSchema, {
 export type Opportunity = z.output<typeof OpportunitySchema>;
 ```
 
-`withCustomFields` extends a schema inside one codebase. When other code needs the same extensions, such as the clients that consume your API or another service that reads the same source system, package them as a plugin with `definePlugin`. A plugin bundles custom fields, custom filters, and transforms between your source system's data and CommonGrants, and its `schemas.Opportunity.commonSchema` can serve as the opportunity schema in `src/data/schema.ts`. That brings in only the plugin's custom fields: the template's search route still ignores custom filters and lists them in `filterInfo.errors`, so supporting them means updating the search route and your repository too. See [extensions in the TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for both approaches, the [custom fields overview](/custom-fields/overview/) for how custom fields work across the protocol, and the [plugin catalog](/plugins/) for existing plugins.
+`withCustomFields` extends a schema inside one codebase. To reuse the same extensions in other code, package them as a plugin with `definePlugin`. That other code might be a client that consumes your API, or another service that reads from the same source system.
+
+A plugin can bundle three things:
+
+- custom fields
+- custom filters
+- transforms between your source system's data and CommonGrants
+
+You can use a plugin's `schemas.Opportunity.commonSchema` as the opportunity schema in `src/data/schema.ts`. This brings in the plugin's custom fields only. The template's search route doesn't apply custom filters. It ignores them and lists them in `filterInfo.errors`. To support a plugin's custom filters, update the search route and your repository.
+
+See [extensions in the TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for both approaches. The [custom fields overview](/custom-fields/overview/) explains how custom fields work across the protocol. The [plugin catalog](/plugins/) lists existing plugins.
 
 ## Connect your own data
 
-The bundled sample data sits behind the `OpportunityRepository` interface in `src/data/repository.ts`, which has three methods: `list`, `get`, and `search`. Implement that interface against your database or upstream API, pass your implementation to `createApp` in `src/index.ts`, and the routes, validation, and OpenAPI document keep working unchanged. The template's [porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md) walks through it, including stable UUIDs for your records, dates and money in filters and sorts, which tests to keep, and what to change before you ship.
+The template reads the bundled sample data through the `OpportunityRepository` interface in `src/data/repository.ts`. The interface has three methods: `list`, `get`, and `search`.
+
+To serve your own data:
+
+1. Implement `OpportunityRepository` against your database or upstream API.
+2. Pass your implementation to `createApp` in `src/index.ts`.
+
+The routes, validation, and OpenAPI document keep working without changes.
+
+The template's [porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md) walks through these steps. It covers stable UUIDs for your records, dates and money in filters and sorts, which tests to keep, and what to change before you ship.
 
 ## Additional resources
 
