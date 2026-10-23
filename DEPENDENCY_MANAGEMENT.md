@@ -92,12 +92,12 @@ Most dependency PRs should stay `chore(deps)`. Use a releasing type only when a 
 
 | Package | Published to | Needs a releasing title when... |
 |---------|-------------|------------------------|
-| `lib/core` (`@common-grants/core`) | npm | TypeSpec peer dep ranges change |
+| `lib/core` (`@common-grants/core`) | npm | New TypeSpec peer floors should ship before the next core release |
 | `lib/cli` (`@common-grants/cli`) | npm | Runtime dep versions change |
 | `lib/ts-sdk` (`@common-grants/sdk`) | npm | Runtime dep versions change |
 | `lib/python-sdk` (`common-grants-sdk`) | PyPI | Runtime dep versions change |
 
-Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't warrant a release. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's manifest, retitle the PR `fix(<package>): ...` before merging. If it's in `devDependencies`, keep `chore(deps)`.
+Dev-only dep bumps (vitest, eslint, type definitions, etc.) don't warrant a release. When in doubt: if the dep appears in `dependencies` or `peerDependencies` in the package's manifest, retitle the PR `fix(<package>): ...` before merging. If it's in `devDependencies`, keep `chore(deps)`. Catalog bot PRs that raise core's TypeSpec peer floors can stay `chore(deps)`: the new floors ship with the next core release.
 
 ## Catalog validation
 
