@@ -57,6 +57,8 @@ The template includes the following files and directories:
 
 <FileTree>
 
+- .nvmrc Pins Node.js 24
+- PORTING.md How to connect your own data
 - src/
   - index.ts Node entrypoint — the only file that knows about Node
   - app.ts `createApp({ repository })` builds the app
@@ -78,10 +80,11 @@ Once the template is running, connect the API to your data. If your project star
 
 ### Upgrading from an earlier SDK
 
-The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. The template depends on SDK 0.9. If your project uses an earlier version, upgrade it and run the checks:
+The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. The template depends on SDK 0.9. If your project uses an earlier version, upgrade the SDK and Zod, deduplicate Zod so the SDK shares your project's copy, and run the checks:
 
 ```bash
-pnpm add @common-grants/sdk@^0.9.0
+pnpm add @common-grants/sdk@^0.9.0 zod@^4.6.6
+pnpm dedupe
 pnpm run ci
 ```
 
@@ -199,6 +202,5 @@ For a one-off extension without a plugin, use `withCustomFields()` from the same
 
 - [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme)
 - [Hono API template](https://github.com/common-grants/cg-api-template-hono)
-- [TypeSpec](https://typespec.io/docs/)
 - [Zod](https://zod.dev/)
 - [Hono](https://hono.dev/)
