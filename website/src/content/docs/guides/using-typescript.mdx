@@ -15,7 +15,7 @@ This guide walks you through setting up a new project from the CommonGrants Expr
 
 :::note[Prerequisites]
 
-- [Node.js](https://nodejs.org/) v22 or later (check with `node --version`). The SDK is published as ESM and requires Node.js 22+.
+- [Node.js](https://nodejs.org/) v22.12 or later (check with `node --version`). The template compiles to CommonJS, and loading the ESM-only SDK from CommonJS needs Node.js 22.12+.
 - [pnpm](https://pnpm.io/installation) v11 or later (check with `pnpm --version`). The template's scripts use pnpm.
 - Port `3000` free for the development server.
 
@@ -36,20 +36,37 @@ Get an Express.js project up and running with the following steps:
 2. Set up your project using the CommonGrants CLI:
 
    ```bash
-   npx @common-grants/cli@0.5.0 init --template express-js
+   npx @common-grants/cli@0.4.1 init --template express-js
    ```
 
-   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init` yet.
+   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
 
-3. Create `pnpm-workspace.yaml` so pnpm skips the optional install scripts in the template's dependencies:
+3. Create `pnpm-workspace.yaml`, which `cg init` doesn't create:
 
    ```yaml title=pnpm-workspace.yaml
    allowBuilds:
      "@scarf/scarf": false
      esbuild: false
+   overrides:
+     "ajv@>=7.0.0-alpha.0 <8.18.0": ">=8.18.0"
+     "brace-expansion@>=1 <1.1.21": "1.1.21"
+     "brace-expansion@>=3 <5.0.12": "5.0.12"
+     "fast-uri@>=3 <3.1.8": "3.1.8"
+     "flatted@<3.4.0": "3.4.2"
+     "minimatch@>=3 <3.1.5": "3.1.5"
+     "path-to-regexp@>=0.1 <0.1.13": "0.1.13"
+     "picomatch@>=2 <2.3.2": "2.3.2"
+     "picomatch@>=4 <4.0.4": "4.0.4"
+     "proxy-addr@>=1.1.0 <2.0.8": "2.0.8"
+     "qs@<6.16.0": "6.16.0"
+     "rollup@>=4 <4.59.0": "4.60.1"
+     "source-map-js@>=1 <1.2.2": "1.2.2"
+     "tar@<7.5.21": "7.5.21"
+     "vite@>=7.0.0 <=7.3.1": ">=7.3.2"
+     "yaml@>=2 <2.8.3": "2.8.3"
    ```
 
-   Without this file, pnpm stops every `pnpm run` command with an "Ignored build scripts" error.
+   `allowBuilds` skips optional install scripts. Without it, pnpm stops every `pnpm run` command with an "Ignored build scripts" error. `overrides` sets security floors for transitive dependencies and matches the scaffolded `pnpm-lock.yaml`.
 
 4. Install the dependencies:
 
@@ -80,6 +97,8 @@ The template includes the following files and directories:
 - tspconfig.yaml # TypeSpec emitter configuration
 - eslint.config.js # ESLint configuration
 - .prettierrc # Prettier configuration
+- .prettierignore # Files Prettier skips
+- .gitignore # Files Git ignores
 - README.md # Project documentation
 - src/
   - api/
@@ -124,7 +143,9 @@ The SDK exposes its modules through `package.json` `exports`, which the template
     "moduleResolution": "NodeNext",
 ```
 
-Then point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
+### Update the spec to v0.5
+
+Point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
 
 ```tsp title=src/typespec/main.tsp
 import "@typespec/http";
@@ -139,7 +160,7 @@ namespace Custom;
 
 @tag("Opportunities")
 @route("/common-grants/opportunities")
-namespace Custom.Routes {
+namespace Routes {
   alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
   op list is OpportunitiesRouter.list;
@@ -156,23 +177,25 @@ Compile the spec and check it against the CommonGrants v0.5 base spec:
 
 ```bash
 pnpm run typespec
-pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml
+pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml --protocol-version 0.5.0
 ```
 
 The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
 
-`cg check spec` validates the API specification, not the running server. Then confirm the code type-checks and runs:
+`cg check spec` validates the API specification, not the running server. To check the code, confirm it type-checks and runs:
 
 ```bash
 pnpm exec tsc --noEmit
 pnpm run dev
 ```
 
+Press `Ctrl+C` to stop the server.
+
 The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
 
 ### Validate data with the SDK
 
-The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for every protocol model, filter, and response, so you can replace the template's schemas as you build:
+The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for the opportunity and award models, filters, and responses, so you can replace the template's schemas as you build:
 
 ```typescript
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
@@ -239,7 +262,7 @@ The `as const` is only required when the specs are assigned to a variable before
 
 #### Use the plugin's schema
 
-Parse your data with the plugin's schema instead of the base schema. The custom field is validated and fully typed:
+Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/api/`. The custom field is validated and fully typed:
 
 ```typescript
 import { OpportunitySchema, type Opportunity } from "./schemas/plugin";
