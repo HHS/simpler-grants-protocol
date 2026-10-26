@@ -36,7 +36,7 @@ Get an Express.js project up and running with the following steps:
 2. Set up your project using the CommonGrants CLI:
 
    ```bash
-   npx @common-grants/cli init --template express-js
+   npx @common-grants/cli@0.4.1 init --template express-js
    ```
 
    `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init` yet.
@@ -103,32 +103,31 @@ Once the template is running, add the SDK and connect the API to your data.
 The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it and the matching TypeSpec library:
 
 ```bash
-pnpm add @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
-pnpm add -D @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+pnpm add --save-exact @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
+pnpm add --save-exact -D @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
 ```
 
-The SDK is ESM-only, so update `tsconfig.json` to resolve its import paths:
+The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
 
-```json title=tsconfig.json ins={3-4} del={1-2}
-    "module": "CommonJS",
-    "moduleResolution": "node",
+```json title=tsconfig.json
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 ```
 
-Then point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas:
+Then point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. In `src/typespec/main.tsp`, change `v0_2` to `v0_5`:
 
-```tsp title=src/typespec/main.tsp ins={2} del={1}
-@Versioning.useDependency(CommonGrants.Versions.v0_2)
+```tsp title=src/typespec/main.tsp
 @Versioning.useDependency(CommonGrants.Versions.v0_5)
 ```
 
-Confirm everything still compiles:
+Confirm everything still type-checks and runs:
 
 ```bash
-pnpm run checks
+pnpm exec tsc --noEmit
 pnpm run dev
 ```
+
+The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
 
 The SDK is split into modules, each with its own import path:
 
@@ -148,7 +147,8 @@ The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides m
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
 import type { OpportunityBase } from "@common-grants/sdk/types";
 
-// Throws a ZodError if the data doesn't match the protocol
+// rawData is a record from your data source
+// Throws a ZodError if it doesn't match the protocol
 const opportunity: OpportunityBase = OpportunityBaseSchema.parse(rawData);
 ```
 
@@ -163,6 +163,7 @@ The services layer in `src/api/services/` holds the business logic and data oper
 Specific changes to make in this file:
 
 - Replace the mock data with a real data source, e.g. a database query or a remote API call, and parse each record with an SDK schema.
+- Look opportunities up by `id` instead of title in `OpportunitiesService.getOpportunityByTitle`.
 - Add the sorting and filtering logic to the `OpportunitiesService.searchOpportunities` method.
 
 ### Adding custom fields
@@ -203,14 +204,14 @@ export const OpportunitySchema = myPlugin.schemas.Opportunity.commonSchema;
 export type Opportunity = z.infer<typeof OpportunitySchema>;
 ```
 
-Keep the `as const`. It lets TypeScript infer the field types from the spec.
+The `as const` is only required when the specs are assigned to a variable before the call, but the SDK keeps it by convention.
 
 #### Use the plugin's schema
 
 Parse your data with the plugin's schema instead of the base schema. The custom field is validated and fully typed:
 
-```typescript title=src/api/services/opportunity.service.ts
-import { OpportunitySchema, type Opportunity } from "../schemas/plugin";
+```typescript
+import { OpportunitySchema, type Opportunity } from "./schemas/plugin";
 
 const opportunity: Opportunity = OpportunitySchema.parse({
   id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -226,6 +227,8 @@ const opportunity: Opportunity = OpportunitySchema.parse({
 
 opportunity.customFields?.legacyId?.value; // number
 ```
+
+The template's services still import their own `Opportunity` type from `src/api/schemas`. Replace those imports with the plugin's schema and type as you wire in real data, so the two don't collide.
 
 For a one-off extension without a plugin, use `withCustomFields()` from the same module. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
