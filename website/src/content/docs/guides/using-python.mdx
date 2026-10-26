@@ -27,22 +27,14 @@ This guide walks you through setting up a new project from the CommonGrants Fast
 Get a FastAPI project up and running with the following steps:
 
 <Steps>
-1. Create a new directory for your project:
+1. Open the [FastAPI template repository](https://github.com/common-grants/cg-api-template-fastapi) on GitHub and click **Use this template** to create your own repository from it.
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
-
-2. Set up your project using the CommonGrants CLI, accepting the default answers at the prompts:
+2. Clone your new repository:
 
    ```bash
-   npx @common-grants/cli@0.4.1 init --template fast-api
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
-
-   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
-
-   The command also leaves `main.tsp`, `tspconfig.yaml`, `package.json`, `package-lock.json`, and `node_modules/` behind. The Python project doesn't use them, so you can delete them.
 
 3. Install the dependencies:
 
@@ -52,13 +44,38 @@ Get a FastAPI project up and running with the following steps:
 
    If Poetry picks an older interpreter, run `poetry env use python3.11` first.
 
-4. Run the project:
+4. Check that everything works before you change anything:
+
+   ```bash
+   make ci
+   ```
+
+   This runs the format, lint, and type checks, then the test suite with coverage.
+
+5. Run the project:
 
    ```bash
    make dev
    ```
 
-5. Open the API docs at `http://localhost:8000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
+6. Open the API docs at `http://localhost:8000/docs` to try a request from the browser.
+
+7. Or, in another terminal, make a few requests with `curl`:
+
+   ```bash
+   # A page of opportunities, most recently modified first
+   curl 'http://localhost:8000/common-grants/opportunities?pageSize=2'
+
+   # Filtered and sorted search
+   curl -X POST http://localhost:8000/common-grants/opportunities/search \
+     -H 'Content-Type: application/json' \
+     -d '{"filters":{"status":{"operator":"in","value":["open"]}},"sorting":{"sortBy":"title","sortOrder":"asc"}}'
+
+   # The OpenAPI document, generated from the SDK's models
+   curl http://localhost:8000/openapi.json
+   ```
+
+   Press `Ctrl+C` in the server's terminal to stop it when you're done.
 
 </Steps>
 
@@ -70,22 +87,21 @@ The template includes the following files and directories:
 
 - Makefile # Development workflow commands
 - README.md # Project documentation
+- PORTING.md # Walkthrough for connecting your own data
 - pyproject.toml # Python project configuration and dependencies
-- poetry.lock # Locked versions of dependencies (created by make install)
+- poetry.lock # Locked versions of dependencies
 - .coveragerc # Test coverage configuration
 - .gitignore # Files Git ignores
 - src/
   - common_grants/
-    - api.py # FastAPI application setup and config
+    - api.py # FastAPI application setup; choose the data source here
     - constants.py # Set ORGANIZATION_DOMAIN to your domain for stable opportunity IDs
+    - data/ # Bundled sample opportunities
     - routes/ # API route handlers
-    - schemas/ # Re-exports the SDK's Pydantic models
+    - schemas/ # The opportunity model the API serves
     - scripts/ # OpenAPI generator
-    - services/ # Business logic and data operations
-- tests/
-  - conftest.py # Shared test fixtures
-  - common_grants/
-    - routes/ # Route-related tests
+    - services/ # The data source interface and its sample-data implementation
+- tests/ # Test suites for the app, routes, sample data, and OpenAPI document
 
 </FileTree>
 
