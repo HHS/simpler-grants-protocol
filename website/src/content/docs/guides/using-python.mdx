@@ -15,7 +15,7 @@ This guide walks you through setting up a new project from the CommonGrants Fast
 
 :::note[Prerequisites]
 
-- [Python](https://www.python.org/downloads/) 3.11 or later (check with `python --version`).
+- [Python](https://www.python.org/downloads/) 3.11 or later (check with `python3 --version`).
 - [Poetry](https://python-poetry.org/docs/#installation) 2 or later (check with `poetry --version`). The template's `Makefile` runs every command through Poetry.
 - [Node.js](https://nodejs.org/) v22 or later (check with `node --version`). `npx` runs the CommonGrants CLI, which scaffolds the project and validates your spec.
 - Port `8000` free for the development server.
@@ -42,13 +42,15 @@ Get a FastAPI project up and running with the following steps:
 
    `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
 
-   The command also leaves `main.tsp`, `tspconfig.yaml`, `package.json`, and `node_modules/` behind. The Python project doesn't use them, so you can delete them.
+   The command also leaves `main.tsp`, `tspconfig.yaml`, `package.json`, `package-lock.json`, and `node_modules/` behind. The Python project doesn't use them, so you can delete them.
 
 3. Install the dependencies:
 
    ```bash
    make install
    ```
+
+   If Poetry picks an older interpreter, run `poetry env use python3.11` first.
 
 4. Run the project:
 
@@ -81,6 +83,7 @@ The template includes the following files and directories:
     - scripts/ # OpenAPI generator
     - services/ # Business logic and data operations
 - tests/
+  - conftest.py # Shared test fixtures
   - common_grants/
     - routes/ # Route-related tests
 
@@ -124,9 +127,9 @@ make gen-openapi
 npx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
 ```
 
-The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1. `make check-spec` runs the same check with a globally installed `cg`.
+The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1. `make check-spec` runs the same check with a globally installed `cg` 0.5.0 or later.
 
-`cg check spec` validates the API specification, not the running server. To check the code, run `make test` and `make dev`.
+`cg check spec` validates the API specification, not the running server. To check the code, run `make test` and `make dev`. Press `Ctrl+C` to stop the server.
 
 ### Validate data with the SDK
 
@@ -165,6 +168,8 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 Create a plugin that declares the custom field. The plugin registers an `Opportunity` schema with a typed `custom_fields` property:
 
 ```python title=src/common_grants/schemas/plugin.py
+"""Custom fields for this API's data source."""
+
 from typing import Optional
 
 from common_grants_sdk.extensions import (
@@ -180,7 +185,7 @@ from pydantic import Field
 
 
 class OppFields(CustomFieldSet):
-    """Custom fields for this API's data source."""
+    """Custom fields on the Opportunity schema."""
 
     legacy_id: Optional[CustomField[int]] = Field(
         default=None,
@@ -223,7 +228,7 @@ if fields and fields.legacy_id:
     fields.legacy_id.value  # int
 ```
 
-`Opportunity` is a subclass of `OpportunityBase`, so the template's response models accept it unchanged. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
+At runtime `Opportunity` is a subclass of `OpportunityBase`, so the template's response models accept it. Pyright treats the custom-fields type parameter as invariant, though. Once the service returns `Opportunity` records, change its `OpportunityBase` annotations to `Opportunity`, and build the list and search responses with `Paginated[Opportunity]` and `Filtered[Opportunity, dict]` instead of `OpportunitiesListResponse` and `OpportunitiesSearchResponse`, or `make check-types` fails. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
 
 For a one-off extension without a plugin, use `OpportunityBase.with_custom_fields()`. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
