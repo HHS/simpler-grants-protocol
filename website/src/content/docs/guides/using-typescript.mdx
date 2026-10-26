@@ -36,7 +36,7 @@ Get an Express.js project up and running with the following steps:
 2. Set up your project using the CommonGrants CLI:
 
    ```bash
-   npx @common-grants/cli@0.4.1 init --template express-js
+   npx @common-grants/cli@0.5.0 init --template express-js
    ```
 
    `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init` yet.
@@ -100,34 +100,12 @@ Once the template is running, add the SDK and connect the API to your data.
 
 ### Add the SDK
 
-The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it and the matching TypeSpec library:
+The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it, the matching TypeSpec library, and the CommonGrants CLI:
 
 ```bash
 pnpm add --save-exact @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
-pnpm add --save-exact -D @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+pnpm add --save-exact -D @common-grants/cli@0.5.0 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
 ```
-
-The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
-
-```json title=tsconfig.json
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-```
-
-Then point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. In `src/typespec/main.tsp`, change `v0_2` to `v0_5`:
-
-```tsp title=src/typespec/main.tsp
-@Versioning.useDependency(CommonGrants.Versions.v0_5)
-```
-
-Confirm everything still type-checks and runs:
-
-```bash
-pnpm exec tsc --noEmit
-pnpm run dev
-```
-
-The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
 
 The SDK is split into modules, each with its own import path:
 
@@ -138,6 +116,59 @@ The SDK is split into modules, each with its own import path:
 | `@common-grants/sdk/constants`  | Runtime enum constants                        |
 | `@common-grants/sdk/extensions` | Custom field and plugin framework             |
 | `@common-grants/sdk/client`     | HTTP client with auth, pagination, and search |
+
+The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
+
+```json title=tsconfig.json
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+```
+
+Then point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
+
+```tsp title=src/typespec/main.tsp
+import "@typespec/http";
+import "@typespec/versioning";
+import "@common-grants/core";
+
+using TypeSpec.Http;
+
+@service(#{ title: "CommonGrants API" })
+@Versioning.useDependency(CommonGrants.Versions.v0_5)
+namespace Custom;
+
+@tag("Opportunities")
+@route("/common-grants/opportunities")
+namespace Custom.Routes {
+  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
+
+  op list is OpportunitiesRouter.list;
+  op read is OpportunitiesRouter.read;
+  op search is OpportunitiesRouter.search;
+}
+```
+
+Besides the version, this moves `@Versioning.useDependency` onto the service namespace and nests the routes under it. The template's original layout applies the version incorrectly, so the read route comes out as `/common-grants/opportunities/{id}/{oppId}`.
+
+### Validate your spec
+
+Compile the spec and check it against the CommonGrants v0.5 base spec:
+
+```bash
+pnpm run typespec
+pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml
+```
+
+The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
+
+`cg check spec` validates the API specification, not the running server. Then confirm the code type-checks and runs:
+
+```bash
+pnpm exec tsc --noEmit
+pnpm run dev
+```
+
+The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
 
 ### Validate data with the SDK
 
