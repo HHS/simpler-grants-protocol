@@ -7,15 +7,15 @@ sidebar:
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework and the [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme).
+Learn how to implement a CommonGrants API in TypeScript using the [Hono API template](https://github.com/common-grants/cg-api-template-hono) and the [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme).
 
 ## Quickstart
 
-This guide walks you through setting up a new project from the CommonGrants Express.js template, then adding the SDK to validate your data and define custom fields.
+This guide walks you through creating a new project from the CommonGrants Hono template, then using the SDK to validate your data and define custom fields.
 
 :::note[Prerequisites]
 
-- [Node.js](https://nodejs.org/) v22.12 or later (check with `node --version`). The template compiles to CommonJS, and loading the ESM-only SDK from CommonJS needs Node.js 22.12+.
+- [Node.js](https://nodejs.org/) v24 (check with `node --version`). The template supports Node.js 24 only and includes an `.nvmrc` file.
 - [pnpm](https://pnpm.io/installation) v11 or later (check with `pnpm --version`). The template's scripts use pnpm.
 - Port `3000` free for the development server.
 
@@ -23,64 +23,31 @@ This guide walks you through setting up a new project from the CommonGrants Expr
 
 ### First steps
 
-Get an Express.js project up and running with the following steps:
+Get the Hono template up and running with the following steps:
 
 <Steps>
-1. Create a new directory for your project:
+1. Open the [template repository](https://github.com/common-grants/cg-api-template-hono) and click **Use this template** to create your own repository from it.
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
-
-2. Set up your project using the CommonGrants CLI:
+2. Clone your new repository:
 
    ```bash
-   npx @common-grants/cli@0.4.1 init --template express-js
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
 
-   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
-
-3. Create `pnpm-workspace.yaml`, which `cg init` doesn't create:
-
-   ```yaml title=pnpm-workspace.yaml
-   allowBuilds:
-     "@scarf/scarf": false
-     esbuild: false
-   overrides:
-     "ajv@>=7.0.0-alpha.0 <8.18.0": ">=8.18.0"
-     "brace-expansion@>=1 <1.1.21": "1.1.21"
-     "brace-expansion@>=3 <5.0.12": "5.0.12"
-     "fast-uri@>=3 <3.1.8": "3.1.8"
-     "flatted@<3.4.0": "3.4.2"
-     "minimatch@>=3 <3.1.5": "3.1.5"
-     "path-to-regexp@>=0.1 <0.1.13": "0.1.13"
-     "picomatch@>=2 <2.3.2": "2.3.2"
-     "picomatch@>=4 <4.0.4": "4.0.4"
-     "proxy-addr@>=1.1.0 <2.0.8": "2.0.8"
-     "qs@<6.16.0": "6.16.0"
-     "rollup@>=4 <4.59.0": "4.60.1"
-     "source-map-js@>=1 <1.2.2": "1.2.2"
-     "tar@<7.5.21": "7.5.21"
-     "vite@>=7.0.0 <=7.3.1": ">=7.3.2"
-     "yaml@>=2 <2.8.3": "2.8.3"
-   ```
-
-   `allowBuilds` skips optional install scripts. Without it, pnpm stops every `pnpm run` command with an "Ignored build scripts" error. `overrides` sets security floors for transitive dependencies and matches the scaffolded `pnpm-lock.yaml`.
-
-4. Install the dependencies:
+3. Install the dependencies:
 
    ```bash
    pnpm install
    ```
 
-5. Run the project:
+4. Run the project:
 
    ```bash
    pnpm run dev
    ```
 
-6. Open the API docs at `http://localhost:3000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
+5. Open the API docs at `http://localhost:3000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
 
 </Steps>
 
@@ -90,27 +57,18 @@ The template includes the following files and directories:
 
 <FileTree>
 
-- package.json # Node.js project configuration and dependencies
-- pnpm-lock.yaml # Locked versions of dependencies
-- pnpm-workspace.yaml # pnpm settings (created in step 3)
-- tsconfig.json # TypeScript configuration
-- tspconfig.yaml # TypeSpec emitter configuration
-- eslint.config.js # ESLint configuration
-- .prettierrc # Prettier configuration
-- .prettierignore # Files Prettier skips
-- .gitignore # Files Git ignores
-- README.md # Project documentation
-- main.tsp # Empty file left by `cg init`, safe to delete
 - src/
-  - api/
-    - index.ts # Express application setup and config
-    - controllers/ # Request handlers and routers
-    - errors/ # API error types
-    - middleware/ # Error handling and validation middleware
-    - schemas/ # Zod schemas for (de)serialization
-    - services/ # Business logic and data operations
-  - typespec/
-    - main.tsp # The TypeSpec specification for your API
+  - index.ts Node entrypoint — the only file that knows about Node
+  - app.ts `createApp({ repository })` builds the app
+  - http.ts Shared error shapes
+  - routes/
+    - opportunities.ts Route definitions, handlers, request/response validation
+  - data/
+    - schema.ts The one opportunity schema — extend custom fields here
+    - repository.ts The interface your data source implements: list / get / search
+    - fixtures.ts The sample-data implementation of that interface
+    - opportunities.json The bundled sample data
+- test/ Vitest suites: fixtures, app, routes, OpenAPI
 
 </FileTree>
 
