@@ -149,7 +149,7 @@ The check should report `Spec is compliant with base spec, with 3 warnings`. The
 
 ### Validate data with the SDK
 
-The template's `src/common_grants/schemas/__init__.py` re-exports the SDK's models, so the routes and services already use them. Validate records from your data source the same way:
+The template's routes and services already use the SDK's models, and `src/common_grants/schemas/opportunity.py` defines the opportunity model the API serves as the SDK's `OpportunityBase`. Validate records from your data source the same way:
 
 ```python
 from common_grants_sdk.schemas.pydantic import OpportunityBase
@@ -161,7 +161,7 @@ opportunity = OpportunityBase.model_validate(raw_data)
 
 ### Implementing services
 
-The services layer in `src/common_grants/services/` holds the business logic and data operations for the API. Focus on `opportunity.py`, which implements the `OpportunityService` class behind these routes:
+The services layer in `src/common_grants/services/` holds the data operations for the API. `repository.py` defines the `OpportunityRepository` interface behind these routes, and `fixtures.py` implements it over the bundled sample data:
 
 - `GET /common-grants/opportunities`
 - `GET /common-grants/opportunities/{oppId}`
@@ -169,9 +169,10 @@ The services layer in `src/common_grants/services/` holds the business logic and
 
 Specific changes to make:
 
-- Replace the mock data with a real data source, e.g. a database query or a remote API call, and validate each record with an SDK model.
-- Add the sorting and filtering logic to the `OpportunityService.search_opportunities` method.
-- Add `response_model_exclude_unset=True` to each route decorator in `src/common_grants/routes/opportunities.py`, so optional fields you don't set are omitted instead of sent as `null`, which the protocol rejects.
+- Implement the interface's `list`, `get`, and `search` methods against a real data source, e.g. a database query or a remote API call, including the sorting and filtering in `search`, and validate each record with an SDK model.
+- Pass your implementation to `create_app()` in `src/common_grants/api.py` in place of `fixture_repository`.
+
+The template's routes already omit optional fields you don't set instead of sending them as `null`. Its [`PORTING.md`](https://github.com/common-grants/cg-api-template-fastapi/blob/main/PORTING.md) walks through stable IDs, date and money handling, and which tests to keep.
 
 ### Adding custom fields
 
@@ -181,12 +182,10 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 
 #### Define a plugin
 
-Create a plugin that declares the custom field. The plugin registers an `Opportunity` schema with a typed `custom_fields` property:
+Create a plugin that declares the custom field. The plugin registers an `Opportunity` schema with a typed `custom_fields` property. Replace the contents of the template's opportunity model file with it, since the routes, response models, and services all read `Opportunity` from there:
 
-```python title=src/common_grants/schemas/plugin.py
+```python title=src/common_grants/schemas/opportunity.py
 """Custom fields for this API's data source."""
-
-from typing import Optional
 
 from common_grants_sdk.extensions import (
     CustomField,
@@ -203,7 +202,7 @@ from pydantic import Field
 class OppFields(CustomFieldSet):
     """Custom fields on the Opportunity schema."""
 
-    legacy_id: Optional[CustomField[int]] = Field(
+    legacy_id: CustomField[int] | None = Field(
         default=None,
         description="Maps to the opportunity_id in the legacy system",
     )
@@ -225,7 +224,7 @@ Opportunity = my_plugin.schemas.Opportunity.common_schema
 Validate your data with the plugin's schema instead of the base model, for example in a service. The custom field is validated and fully typed:
 
 ```python
-from common_grants.schemas.plugin import Opportunity
+from common_grants.schemas.opportunity import Opportunity
 
 opportunity = Opportunity.model_validate({
     "id": "573525f2-8e15-4405-83fb-e6523511d893",
@@ -244,7 +243,7 @@ if fields and fields.legacy_id:
     fields.legacy_id.value  # int
 ```
 
-At runtime `Opportunity` is a subclass of `OpportunityBase`, so the template's response models accept it. Pyright treats the custom-fields type parameter as invariant, though. Once the service returns `Opportunity` records, change its `OpportunityBase` annotations to `Opportunity`, and build the list and search responses with `Paginated[Opportunity]` and `Filtered[Opportunity, dict]` instead of `OpportunitiesListResponse` and `OpportunitiesSearchResponse`, or `make check-types` fails. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
+The template's response models and services are built on `Opportunity`, so they serve the custom field and `make check-types` still passes. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
 
 For a one-off extension without a plugin, use `OpportunityBase.with_custom_fields()`. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
