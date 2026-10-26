@@ -104,7 +104,9 @@ The SDK exposes its modules through `package.json` `exports`, which the template
 
 ### Validate data with the SDK
 
-The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for the opportunity and award models, filters, and responses, so you can replace the template's schemas as you build:
+The template and the SDK split the work. The template owns HTTP: routing, request and response validation, error bodies, the OpenAPI document, and the API docs at `/docs`. The SDK owns the CommonGrants schemas: the template builds its opportunity model, filters, and response envelopes from them, so when you update the SDK, your API picks up that release's schema changes.
+
+Use the same schemas to validate records from your data source:
 
 ```typescript
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
@@ -115,19 +117,20 @@ import type { OpportunityBase } from "@common-grants/sdk/types";
 const opportunity: OpportunityBase = OpportunityBaseSchema.parse(rawData);
 ```
 
-### Implementing services
+### Connect your own data
 
-The services layer in `src/api/services/` holds the business logic and data operations for the API. Focus on `opportunity.service.ts`, which implements the `OpportunitiesService` class behind these routes:
+The template reads the bundled sample data through the `OpportunityRepository` interface in `src/data/repository.ts`. The interface has three methods, `list`, `get`, and `search`, behind these routes:
 
 - `GET /common-grants/opportunities`
 - `GET /common-grants/opportunities/{oppId}`
 - `POST /common-grants/opportunities/search`
 
-Specific changes to make in this file:
+To serve your own data:
 
-- Replace the mock data with a real data source, e.g. a database query or a remote API call, and parse each record with an SDK schema.
-- Look opportunities up by `id` instead of title in `OpportunitiesService.getOpportunityByTitle`.
-- Add the sorting and filtering logic to the `OpportunitiesService.searchOpportunities` method.
+1. Implement `OpportunityRepository` against your database or upstream API, in place of the sample-data implementation, `fixtureRepository` in `src/data/fixtures.ts`. Parse each record with an SDK schema, or map it with a plugin's `toCommon`.
+2. Pass your implementation to `createApp` in `src/index.ts`.
+
+The routes, validation, and OpenAPI document keep working without changes. The template's [porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md) walks through these steps.
 
 ### Adding custom fields
 
@@ -139,7 +142,7 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 
 Create a plugin that declares the custom field. The plugin compiles an `Opportunity` schema with a typed `customFields` property:
 
-```typescript title=src/api/schemas/plugin.ts
+```typescript title=src/data/plugin.ts
 import { z } from "zod";
 import { definePlugin } from "@common-grants/sdk/extensions";
 
@@ -171,10 +174,10 @@ The `as const` is only required when the specs are assigned to a variable before
 
 #### Use the plugin's schema
 
-Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/api/`. The custom field is validated and fully typed:
+Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/`. The custom field is validated and fully typed:
 
 ```typescript
-import { OpportunitySchema, type Opportunity } from "./schemas/plugin";
+import { OpportunitySchema, type Opportunity } from "./data/plugin.js";
 
 const opportunity: Opportunity = OpportunitySchema.parse({
   id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -191,13 +194,14 @@ const opportunity: Opportunity = OpportunitySchema.parse({
 opportunity.customFields?.legacyId?.value; // number
 ```
 
-The template's services still import their own `Opportunity` type from `src/api/schemas`. Replace those imports with the plugin's schema and type as you wire in real data, so the two don't collide.
+To serve the custom field from the API, set `OpportunitySchema` in `src/data/schema.ts` to the plugin's schema. Response validation, the repository's types, and the OpenAPI document all pick it up. A plugin's custom filters don't come with it: the template's search route ignores them and reports them in `filterInfo.errors`. To support them, update the search route and your repository.
 
 For a one-off extension without a plugin, use `withCustomFields()` from the same module. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
 ## Additional resources
 
 - [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme)
+- [Hono API template](https://github.com/common-grants/cg-api-template-hono)
 - [TypeSpec](https://typespec.io/docs/)
 - [Zod](https://zod.dev/)
-- [Express.js](https://expressjs.com/)
+- [Hono](https://hono.dev/)
