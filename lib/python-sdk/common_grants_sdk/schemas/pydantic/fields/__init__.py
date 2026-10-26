@@ -6,11 +6,27 @@ __all__ = [  # noqa: RUF022
     "CustomFieldType",
     "DateRangeEvent",
     "Event",
+    "EventBase",
     "EventType",
     "Money",
+    "Name",
     "OtherEvent",
     "SingleDateEvent",
     "SystemMetadata",
+    # Identifiers
+    "Identifier",
+    "IdentifierCollection",
+    "IdentifierRegistry",
+    "IdentifierStatus",
+    "IdentifierValue",
+    "OppIdAln",
+    "OppIdFon",
+    "OppIds",
+    "OrgIdDuns",
+    "OrgIdEin",
+    "OrgIdUei",
+    "OrgIds",
+    "SystemId",
 ]
 
 from .custom import (
@@ -21,9 +37,26 @@ from .custom import (
 from .event import (
     DateRangeEvent,
     Event,
+    EventBase,
     EventType,
     OtherEvent,
     SingleDateEvent,
+)
+
+from .identifier import (
+    Identifier,
+    IdentifierCollection,
+    IdentifierRegistry,
+    IdentifierStatus,
+    IdentifierValue,
+    OppIdAln,
+    OppIdFon,
+    OppIds,
+    OrgIdDuns,
+    OrgIdEin,
+    OrgIdUei,
+    OrgIds,
+    SystemId,
 )
 
 from .metadata import (
@@ -32,4 +65,8 @@ from .metadata import (
 
 from .money import (
     Money,
+)
+
+from .name import (
+    Name,
 )

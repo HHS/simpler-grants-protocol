@@ -20,11 +20,16 @@ from common_grants_sdk.extensions import (
     schema,
 )
 from common_grants_sdk.extensions.schema import PluginDefinitionError
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters
 from common_grants_sdk.schemas.pydantic.filters.opportunity import (
     OpportunityFilters,
     StringArray,
 )
-from common_grants_sdk.schemas.pydantic.models import OpportunityBase
+from common_grants_sdk.schemas.pydantic.models import (
+    AwdRecipientIndividual,
+    OpportunityBase,
+)
+from tests.schemas.award_fixtures import RecipientFields
 
 
 class OpportunityFields(CustomFieldSet):
@@ -60,6 +65,59 @@ def test_omitted_schema_falls_back_to_base_schema_only_extension():
     assert entry.custom_fields == {}
     # The base schema has no custom fields declared.
     assert entry.common_schema is OpportunityBase
+
+
+def test_omitted_recipient_falls_back_to_base_recipient():
+    """Leaving out the recipient slot falls back to the untyped base recipient."""
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    entry = plugin.schemas.AwdRecipientIndividual
+    assert isinstance(entry, SchemaOnly)
+    assert entry.schema_name == "AwdRecipientIndividual"
+    assert entry.common_schema is AwdRecipientIndividual
+    assert entry.custom_fields == {}
+
+
+def test_recipient_only_plugin_keeps_the_base_opportunity():
+    recipient = schema(common_schema=AwdRecipientIndividual[RecipientFields])
+    plugin = define_plugin(
+        PluginSchemas(AwdRecipientIndividual=recipient), meta=_meta()
+    )
+    assert plugin.schemas.AwdRecipientIndividual is recipient
+    assert plugin.schemas.Opportunity.common_schema is OpportunityBase
+
+
+def test_plugin_holds_both_opportunity_and_recipient_extensions():
+    opportunity = schema(common_schema=OpportunityBase[OpportunityFields])
+    recipient = schema(common_schema=AwdRecipientIndividual[RecipientFields])
+    plugin = define_plugin(
+        PluginSchemas(Opportunity=opportunity, AwdRecipientIndividual=recipient),
+        meta=_meta(),
+    )
+    assert plugin.schemas.Opportunity is opportunity
+    assert plugin.schemas.AwdRecipientIndividual is recipient
+
+
+def test_define_plugin_rejects_entries_in_the_wrong_slot():
+    opportunity = schema(common_schema=OpportunityBase[OpportunityFields])
+    recipient = schema(common_schema=AwdRecipientIndividual[RecipientFields])
+    swapped = PluginSchemas(
+        Opportunity=recipient,  # type: ignore[arg-type]
+        AwdRecipientIndividual=opportunity,  # type: ignore[arg-type]
+    )
+    with pytest.raises(PluginDefinitionError) as exc:
+        define_plugin(swapped, meta=_meta())
+    assert exc.value.errors == [
+        "schemas.Opportunity: holds the 'AwdRecipientIndividual' extensible schema; "
+        "the attribute name must match the schema name",
+        "schemas.AwdRecipientIndividual: holds the 'Opportunity' extensible schema; "
+        "the attribute name must match the schema name",
+    ]
+
+
+def test_define_plugin_rejects_non_extension_in_recipient_slot():
+    bad = PluginSchemas(AwdRecipientIndividual=RecipientFields)  # type: ignore[arg-type]
+    with pytest.raises(PluginDefinitionError, match="schemas.AwdRecipientIndividual"):
+        define_plugin(bad, meta=_meta())
 
 
 def test_mappings_entry_is_a_transform_extension():
@@ -142,3 +200,25 @@ def test_define_plugin_defaults_routes_to_empty_carrier():
     assert isinstance(plugin.routes, PluginRoutes)
     # The empty carrier registers no custom filters.
     assert plugin.routes.opportunities.search is None
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    """An award route filter TypedDict registering one custom filter."""
+
+    program_code: StringArray
+
+
+def test_define_plugin_threads_awards_only_routes():
+    """Awards register on their own slot; opportunities need no dummy entry."""
+    plugin = define_plugin(
+        PluginSchemas(),
+        routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),
+        meta=_meta(),
+    )
+    assert plugin.routes.awards.search is AwardSearchFilters
+    assert plugin.routes.opportunities.search is None
+
+
+def test_define_plugin_default_carrier_has_an_empty_awards_slot():
+    plugin = define_plugin(PluginSchemas(), meta=_meta())
+    assert plugin.routes.awards.search is None

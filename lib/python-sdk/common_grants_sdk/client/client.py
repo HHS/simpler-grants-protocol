@@ -3,10 +3,11 @@
 ``BaseClient`` is the transport plumbing (auth headers, paginated GET/POST). The
 generic ``Client`` layers the typed resource facade on top. Scope it to a plugin
 with ``plugin.get_client(...)``: that binds the plugin's route filters
-(``FiltersT``) and Opportunity schema (``ItemT``) so
+(``FiltersT``), Opportunity schema (``ItemT``) and award model (``AwardT``) so
 ``client.opportunities.search(filters=...)`` is typed and responses parse with the
 plugin's custom fields by default. Constructing ``Client`` directly gives an
-unscoped client (standard filters only, base ``OpportunityBase`` rows).
+unscoped client (standard filters only, base ``OpportunityBase`` and ``AwardBase``
+rows).
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from uuid import UUID
 import typing_extensions as te
 
 from .auth import Auth
+from .awards import Awards
 from .config import Config
 from .response import SuccessResponse
 from .exceptions import raise_api_error
@@ -26,9 +28,14 @@ from .pagination import pagination
 from .types import ItemsT
 from ..extensions.filters import validate_routes
 from ..extensions.plugin import PluginSchemas
-from ..extensions.types import FiltersT, PluginRoutes, ResourceRoutes
-from ..schemas.pydantic.models import OpportunityBase
+from ..extensions.types import AwardFiltersT, FiltersT, PluginRoutes
+from ..schemas.pydantic.models import (
+    AwardBase,
+    AwdRecipientIndividual,
+    OpportunityBase,
+)
 from ..schemas.pydantic.responses import Filtered, Paginated
+from ..schemas.pydantic.responses.award import AwardT
 
 # Bound is OpportunityBase[Any] (the custom-fields parameter is invariant, so a
 # bare OpportunityBase bound would reject OpportunityBase[OppCustomFields]).
@@ -38,7 +45,7 @@ ItemT = te.TypeVar(
 
 
 def _resolve_opportunity_schema(
-    schemas: Optional[PluginSchemas[Any]],
+    schemas: Optional[PluginSchemas[Any, Any]],
 ) -> type[OpportunityBase]:
     """The Opportunity model a client parses into by default.
 
@@ -49,6 +56,23 @@ def _resolve_opportunity_schema(
         return OpportunityBase
     common = getattr(getattr(schemas, "Opportunity", None), "common_schema", None)
     return common if isinstance(common, type) else OpportunityBase
+
+
+def _resolve_award_schema(
+    schemas: Optional[PluginSchemas[Any, Any]],
+) -> type[AwardBase[Any]]:
+    """The award model a client parses into by default.
+
+    Composes the common model bound to the plugin's ``AwdRecipientIndividual``
+    slot into ``AwardBase``; the base recipient (or no bound schemas) keeps the
+    plain ``AwardBase``.
+    """
+    recipient = getattr(
+        getattr(schemas, "AwdRecipientIndividual", None), "common_schema", None
+    )
+    if not isinstance(recipient, type) or recipient is AwdRecipientIndividual:
+        return AwardBase
+    return cast(Any, AwardBase)[recipient]
 
 
 class BaseClient:
@@ -158,11 +182,20 @@ class BaseClient:
         if page_size < 1:
             page_size = self.config.page_size
 
+        # The protocol reads the page from body.pagination, so each page gets a fresh
+        # copy of the caller's body (never mutated) with the effective page set there.
+        body = {
+            **request_data,
+            "pagination": {
+                **(request_data.get("pagination") or {}),
+                "page": page,
+                "pageSize": page_size,
+            },
+        }
+
         try:
             # request_data already includes any filters assembled by the resource method.
-            api_response = self.post(
-                path, json=request_data, params={"page": page, "pageSize": page_size}
-            )
+            api_response = self.post(path, json=body)
             api_response.raise_for_status()
             # Validate into Filtered so the server's sortInfo/filterInfo (incl.
             # filterInfo.errors) survive instead of being dropped.
@@ -193,15 +226,17 @@ class BaseClient:
         self.close()
 
 
-class Client(BaseClient, Generic[FiltersT, ItemT]):
+class Client(BaseClient, Generic[FiltersT, ItemT, AwardFiltersT, AwardT]):
     """Typed resource facade over :class:`BaseClient`.
 
-    Binds a plugin's route filters and Opportunity schema, exposing the typed
-    ``opportunities`` resource. Construct one via ``plugin.get_client(...)``: that
-    binds the plugin's registered filters (``FiltersT``) and Opportunity schema
-    (``ItemT``) so ``opportunities.search`` is typed and responses parse with the
-    plugin's custom fields. Constructing ``Client`` directly leaves those generics
-    unbound (standard filters only, base ``OpportunityBase`` rows).
+    Binds a plugin's route filters and schemas, exposing the typed
+    ``opportunities`` and ``awards`` resources. Construct one via ``plugin.get_client(...)``: that
+    binds the plugin's registered filters (``FiltersT`` for opportunities,
+    ``AwardFiltersT`` for awards), Opportunity schema (``ItemT``) and award model
+    (``AwardT``, ``AwardBase`` over the plugin's recipient) so each resource's
+    ``search`` is typed and responses parse with the plugin's custom fields.
+    Constructing ``Client`` directly leaves those generics unbound (standard
+    filters only, base ``OpportunityBase`` and ``AwardBase`` rows).
     """
 
     def __init__(
@@ -216,19 +251,21 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
             auth: Optional Auth instance.
         """
         super().__init__(config=config, auth=auth)
-        self._routes: PluginRoutes[Any] = PluginRoutes(opportunities=ResourceRoutes())
-        self._schemas: Optional[PluginSchemas[Any]] = None
+        self._routes: PluginRoutes[Any, Any] = PluginRoutes()
+        self._schemas: Optional[PluginSchemas[Any, Any]] = None
         self._opportunity_schema: type[OpportunityBase] = _resolve_opportunity_schema(
             None
         )
+        self._award_schema: type[AwardBase[Any]] = _resolve_award_schema(None)
         self.opportunities: Opportunities[FiltersT, ItemT] = Opportunities(client=self)
+        self.awards: Awards[AwardFiltersT, AwardT] = Awards(client=self)
 
-    def _bind_routes(self, routes: PluginRoutes[Any]) -> None:
+    def _bind_routes(self, routes: PluginRoutes[Any, Any]) -> None:
         """Scope this client to a plugin's registered custom filters.
 
         Internal hook called by ``plugin.get_client``: it validates the route
-        registration and stores it for ``opportunities.search`` to classify
-        registered custom filters. Build scoped clients via ``get_client`` rather
+        registration and stores it for ``opportunities.search`` and
+        ``awards.search`` to classify registered custom filters. Build scoped clients via ``get_client`` rather
         than calling this directly.
 
         Raises:
@@ -238,12 +275,15 @@ class Client(BaseClient, Generic[FiltersT, ItemT]):
         validate_routes(routes)
         self._routes = routes
 
-    def _bind_schemas(self, schemas: Optional[PluginSchemas[Any]]) -> None:
+    def _bind_schemas(self, schemas: Optional[PluginSchemas[Any, Any]]) -> None:
         """Bind a plugin's schema extensions as the default parse schemas.
 
         Internal hook called by ``plugin.get_client``: the Opportunity common
-        model becomes the default schema ``opportunities`` responses parse into.
-        Build scoped clients via ``get_client`` rather than calling this directly.
+        model becomes the default schema ``opportunities`` responses parse into,
+        and ``AwardBase`` over the AwdRecipientIndividual common model the one
+        ``awards`` responses parse into. Build scoped clients via ``get_client``
+        rather than calling this directly.
         """
         self._schemas = schemas
         self._opportunity_schema = _resolve_opportunity_schema(schemas)
+        self._award_schema = _resolve_award_schema(schemas)

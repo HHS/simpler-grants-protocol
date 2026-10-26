@@ -51,7 +51,7 @@ poetry run ruff check .
 
 #### Type Checking
 
-Verify types with pyright (basic mode; tests are excluded from the gate — see `pyrightconfig.json`):
+Verify types with pyright (basic mode; tests are excluded from the gate; see `pyrightconfig.json`):
 ```bash
 poetry run pyright
 ```
@@ -59,6 +59,8 @@ poetry run pyright
 ## Release runbook
 
 Steps to follow when preparing a new release of the CommonGrants Python SDK library.
+
+Feature work that ships with a minor release follows [Hold branches](../README.md#hold-branches) and [Releasing from a hold branch](../README.md#releasing-from-a-hold-branch), including the rules for [SDK changes](../README.md#sdk-changes).
 
 ### Pre-release checklist
 
@@ -72,7 +74,7 @@ Steps to follow when preparing a new release of the CommonGrants Python SDK libr
 
 ### Release checklist
 
-- [ ] The `common-grants-sdk` Release PR has been merged — this tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to PyPI automatically
+- [ ] The `common-grants-sdk` Release PR has been merged. This tags the release, creates the [GitHub release](https://github.com/HHS/simpler-grants-protocol/releases), and publishes to PyPI automatically.
 - [ ] The auto-generated release notes are accurate
 - [ ] The new version appears on [PyPI](https://pypi.org/project/common-grants-sdk/)
 

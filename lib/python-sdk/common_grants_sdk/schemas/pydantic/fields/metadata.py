@@ -1,6 +1,6 @@
 """Metadata field types for the CommonGrants API."""
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from ..base import CommonGrantsBaseModel
 from ..types import UTCDateTime
@@ -8,7 +8,13 @@ from ..types import UTCDateTime
 
 # SystemMetadata
 class SystemMetadata(CommonGrantsBaseModel):
-    """System-managed metadata fields for tracking record creation and modification."""
+    """System-managed metadata fields for tracking record creation and modification.
+
+    Closed like Core's ``SystemMetadata``. Models that spread it in set their own
+    ``extra`` policy (``OpportunityBase`` keeps ignoring unknown properties).
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     created_at: UTCDateTime = Field(
         ...,
