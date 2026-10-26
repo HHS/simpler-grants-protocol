@@ -11,7 +11,7 @@ Learn how to implement a CommonGrants API in Python using the [FastAPI](https://
 
 ## Quickstart
 
-This guide walks you through setting up a new project from the CommonGrants FastAPI template, then upgrading the SDK to validate your data and define custom fields.
+This guide walks you through setting up a new project from the CommonGrants FastAPI template, then using the SDK to validate your data and define custom fields.
 
 :::note[Prerequisites]
 
@@ -107,32 +107,7 @@ The template includes the following files and directories:
 
 ## Next steps
 
-Once the template is running, upgrade the SDK and connect the API to your data.
-
-### Upgrade the SDK
-
-The [`common-grants-sdk`](https://pypi.org/project/common-grants-sdk/) package provides Pydantic models, an extension framework, and an HTTP client that match protocol v0.5. The template pins an older release, so upgrade it:
-
-```bash
-poetry add common-grants-sdk@0.9.0
-```
-
-The SDK is split into modules, each with its own import path:
-
-| Import path                          | Description                                                       |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| `common_grants_sdk.schemas.pydantic` | Pydantic models for opportunities, awards, filters, and responses |
-| `common_grants_sdk.extensions`       | Custom field and plugin framework                                 |
-| `common_grants_sdk.client`           | HTTP client with auth, pagination, and search                     |
-
-The SDK also ships the v0.5 award models, award filters, and a `client.awards` resource, which follow the same patterns as their opportunity counterparts. The template doesn't implement the award routes, which are optional in v0.5.
-
-SDK 0.9 types model constructors with snake_case field names, and the template passes camelCase keyword arguments. The app and tests still run, but `make check-types` reports errors until you rename the arguments in `src/common_grants/services/opportunity.py`, `src/common_grants/services/utils.py`, and `tests/conftest.py`: for example, `pageSize=page_size` becomes `page_size=page_size`. Leave dictionary keys such as `"pageSize"` alone, since they're the wire format. Then confirm the project type-checks and passes its tests:
-
-```bash
-make check-types
-make test
-```
+Once the template is running, validate your spec and connect the API to your data.
 
 ### Validate your spec
 
@@ -246,6 +221,31 @@ if fields and fields.legacy_id:
 The template's response models and services are built on `Opportunity`, so they serve the custom field and `make check-types` still passes. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
 
 For a one-off extension without a plugin, use `OpportunityBase.with_custom_fields()`. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for custom filters, transforms, and publishing plugins.
+
+## Upgrading from an earlier SDK
+
+The [`common-grants-sdk`](https://pypi.org/project/common-grants-sdk/) package provides Pydantic models, an extension framework, and an HTTP client that match protocol v0.5. The template depends on SDK 0.9. If your project started from an earlier version of the template, which depended on SDK 0.8, upgrade it:
+
+```bash
+poetry add common-grants-sdk@^0.9.0
+```
+
+The SDK is split into modules, each with its own import path:
+
+| Import path                          | Description                                                       |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `common_grants_sdk.schemas.pydantic` | Pydantic models for opportunities, awards, filters, and responses |
+| `common_grants_sdk.extensions`       | Custom field and plugin framework                                 |
+| `common_grants_sdk.client`           | HTTP client with auth, pagination, and search                     |
+
+The SDK also ships the v0.5 award models, award filters, and a `client.awards` resource, which follow the same patterns as their opportunity counterparts. The template doesn't implement the award routes, which are optional in v0.5.
+
+SDK 0.9 types model constructors with snake_case field names, and earlier versions of the template pass camelCase keyword arguments. The app and tests still run, but `make check-types` reports errors until you rename the arguments. In the template, `SearchSorting(sortBy=...)` in `src/common_grants/routes/opportunities.py` becomes `SearchSorting(sort_by=...)`, and `PaginatedBodyParams(pageSize=...)` in `tests/test_fixtures.py` becomes `PaginatedBodyParams(page_size=...)`. Leave `sortOrder=` alone, since the template's `SearchSorting` declares that field with its camelCase alias, and leave dictionary keys such as `"pageSize"` alone, since they're the wire format. Then confirm the project type-checks and passes its tests:
+
+```bash
+make check-types
+make test
+```
 
 ## Additional resources
 
