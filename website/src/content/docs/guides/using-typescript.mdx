@@ -74,16 +74,18 @@ The template includes the following files and directories:
 
 ## Next steps
 
-Once the template is running, add the SDK and connect the API to your data.
+Once the template is running, connect the API to your data. If your project started from an earlier version of the template, upgrade its SDK first.
 
-### Add the SDK
+### Upgrading from an earlier SDK
 
-The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it, the matching TypeSpec library, and the CommonGrants CLI:
+The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. The template depends on SDK 0.9. If your project uses an earlier version, upgrade it and run the checks:
 
 ```bash
-pnpm add --save-exact @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
-pnpm add --save-exact -D @common-grants/cli@0.5.0 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+pnpm add @common-grants/sdk@^0.9.0
+pnpm run ci
 ```
+
+SDK 0.9 updates the schemas to protocol v0.5 and is published as ESM only. The template is already an ES module project, so it needs no configuration changes.
 
 The SDK is split into modules, each with its own import path:
 
@@ -95,12 +97,7 @@ The SDK is split into modules, each with its own import path:
 | `@common-grants/sdk/extensions` | Custom field and plugin framework             |
 | `@common-grants/sdk/client`     | HTTP client with auth, pagination, and search |
 
-The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
-
-```json title=tsconfig.json
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-```
+The SDK exposes these modules through `package.json` `exports` and has no root entrypoint, so import from the paths above.
 
 ### Validate data with the SDK
 
