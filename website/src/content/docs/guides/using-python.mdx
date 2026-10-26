@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-import { FileTree, Steps } from "@astrojs/starlight/components";
+import { FileTree, Steps, TabItem, Tabs } from "@astrojs/starlight/components";
 
 Learn how to implement a CommonGrants API in Python using the [FastAPI](https://fastapi.tiangolo.com/) web framework and the [CommonGrants Python SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/python-sdk#readme).
 
@@ -17,7 +17,7 @@ This guide walks you through setting up a new project from the CommonGrants Fast
 
 - [Python](https://www.python.org/downloads/) 3.11 or later (check with `python3 --version`).
 - [Poetry](https://python-poetry.org/docs/#installation) 2 or later (check with `poetry --version`). The template's `Makefile` runs every command through Poetry.
-- [Node.js](https://nodejs.org/) v22 or later (check with `node --version`). `npx` runs the CommonGrants CLI, which scaffolds the project and validates your spec.
+- [Node.js](https://nodejs.org/) v22 or later (check with `node --version`), with pnpm, npm, or bun to run the CommonGrants CLI, which validates your spec.
 - Port `8000` free for the development server.
 
 :::
@@ -115,10 +115,33 @@ Generate the OpenAPI spec from the FastAPI app and check it against the CommonGr
 
 ```bash
 make gen-openapi
+```
+
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
+
+```bash
+pnpm dlx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
+```
+
+</TabItem>
+<TabItem label="npm">
+
+```bash
 npx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
 ```
 
-The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1. `make check-spec` runs the same check with a globally installed `cg` 0.5.0 or later.
+</TabItem>
+<TabItem label="bun">
+
+```bash
+bunx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
+```
+
+</TabItem>
+</Tabs>
+
+The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
 
 `cg check spec` validates the API specification, not the running server. To check the code, run `make test` and `make dev`. Press `Ctrl+C` to stop the server.
 
