@@ -13,7 +13,7 @@ import { z } from "zod";
 // ############################################################################
 
 // Not z.uuid(): `format: uuid` allows any version and variant nibble, which z.uuid() rejects.
-export const UuidSchema = z.stringFormat("uuid", z.regexes.guid, { error: "Invalid UUID" });
+export const UuidSchema = z.stringFormat("uuid", z.regexes.guid);
 
 /** Employer Identification Number (EIN), normalized to nine digits. */
 export const EmployerTaxIdSchema = z.string().regex(/^[0-9]{9}$/);

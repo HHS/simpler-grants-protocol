@@ -61,6 +61,12 @@ describe("UUID Schema", () => {
       message: "Invalid UUID",
     });
   });
+
+  it("should let a per-parse error map set the message for a rejected value", () => {
+    const result = UuidSchema.safeParse("invalid-uuid", { error: () => "Custom UUID message" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Custom UUID message");
+  });
 });
 
 // ############################################################################
