@@ -102,56 +102,6 @@ The SDK exposes its modules through `package.json` `exports`, which the template
     "moduleResolution": "NodeNext",
 ```
 
-### Update the spec to v0.5
-
-Point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
-
-```tsp title=src/typespec/main.tsp
-import "@typespec/http";
-import "@typespec/versioning";
-import "@common-grants/core";
-
-using TypeSpec.Http;
-
-@service(#{ title: "CommonGrants API" })
-@Versioning.useDependency(CommonGrants.Versions.v0_5)
-namespace Custom;
-
-@tag("Opportunities")
-@route("/common-grants/opportunities")
-namespace Routes {
-  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
-
-  op list is OpportunitiesRouter.list;
-  op read is OpportunitiesRouter.read;
-  op search is OpportunitiesRouter.search;
-}
-```
-
-Besides the version, this moves `@Versioning.useDependency` onto the service namespace and nests the routes under it. The template's original layout applies the version incorrectly, so the read route comes out as `/common-grants/opportunities/{id}/{oppId}`.
-
-### Validate your spec
-
-Compile the spec and check it against the CommonGrants v0.5 base spec:
-
-```bash
-pnpm run typespec
-pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml --protocol-version 0.5.0
-```
-
-The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
-
-`cg check spec` validates the API specification, not the running server. To check the code, confirm it type-checks and runs:
-
-```bash
-pnpm exec tsc --noEmit
-pnpm run dev
-```
-
-Press `Ctrl+C` to stop the server.
-
-The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
-
 ### Validate data with the SDK
 
 The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for the opportunity and award models, filters, and responses, so you can replace the template's schemas as you build:
