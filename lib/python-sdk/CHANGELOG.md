@@ -1,5 +1,34 @@
 # common-grants-sdk
 
+## [0.9.0](https://github.com/HHS/simpler-grants-protocol/compare/common-grants-sdk@0.8.1...common-grants-sdk@0.9.0) (2026-10-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **py-sdk:** align opportunity identifiers and funders with Core v0.5 ([#1320](https://github.com/HHS/simpler-grants-protocol/issues/1320))
+* **py-sdk:** add Core v0.5 award models and route contracts ([#1316](https://github.com/HHS/simpler-grants-protocol/issues/1316))
+* **py-sdk:** preserve and validate unregistered custom fields ([#1308](https://github.com/HHS/simpler-grants-protocol/issues/1308))
+* **py-sdk:** SDK model constructors are typed against snake_case field names; rename camelCase keyword arguments when instantiating models. Attribute reads, runtime validation, and the wire format are unchanged.
+
+### Features
+
+* **py-sdk:** add awards client and resource-aware filters ([#1322](https://github.com/HHS/simpler-grants-protocol/issues/1322)) ([5ac9bb2](https://github.com/HHS/simpler-grants-protocol/commit/5ac9bb2da6f177b12e55a1102c4bb9e07c862a6a))
+* **py-sdk:** add Core v0.5 award models and route contracts ([#1316](https://github.com/HHS/simpler-grants-protocol/issues/1316)) ([e817705](https://github.com/HHS/simpler-grants-protocol/commit/e817705f2ecbc7d4b5050cdcbc89a375aa58a31b))
+* **py-sdk:** align opportunity identifiers and funders with Core v0.5 ([#1320](https://github.com/HHS/simpler-grants-protocol/issues/1320)) ([7eb905c](https://github.com/HHS/simpler-grants-protocol/commit/7eb905c662021693c086f80336b84bf42da44d37))
+* **py-sdk:** derive camelCase wire naming from a shared alias generator ([#1010](https://github.com/HHS/simpler-grants-protocol/issues/1010)) ([c72657b](https://github.com/HHS/simpler-grants-protocol/commit/c72657b343b88972165654e73fae3b6853eff300))
+* **py-sdk:** retain related awards in opportunity details ([#1323](https://github.com/HHS/simpler-grants-protocol/issues/1323)) ([4e3bb37](https://github.com/HHS/simpler-grants-protocol/commit/4e3bb370ba4f163ae0a0b66e81591be439cf8d85))
+* **py-sdk:** support plugin-bound award recipient custom fields ([#1325](https://github.com/HHS/simpler-grants-protocol/issues/1325)) ([6d78bd6](https://github.com/HHS/simpler-grants-protocol/commit/6d78bd62958e6ff2f9621753b121701dce1c3f3d))
+
+
+### Bug Fixes
+
+* **py-sdk:** preserve and validate unregistered custom fields ([#1308](https://github.com/HHS/simpler-grants-protocol/issues/1308)) ([5958155](https://github.com/HHS/simpler-grants-protocol/commit/5958155486c9c561d4646693b77e5ea1379482a4))
+
+
+### Refactoring
+
+* **py-sdk:** type get_client with a single signature ([#1335](https://github.com/HHS/simpler-grants-protocol/issues/1335)) ([689dd06](https://github.com/HHS/simpler-grants-protocol/commit/689dd06fee07025446bb316d0b9b7620a833f23b))
+
 ## 0.8.1
 
 ### Patch Changes

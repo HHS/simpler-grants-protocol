@@ -3,8 +3,6 @@
 import pytest
 from datetime import date, time, datetime, timezone
 
-from pydantic import ValidationError
-
 from common_grants_sdk.schemas.pydantic.fields import (
     Money,
     EventType,
@@ -47,13 +45,17 @@ def test_decimal_string_validation():
     assert validate_decimal_string("123.45") == "123.45"
     assert validate_decimal_string("-123.45") == "-123.45"
     assert validate_decimal_string("0") == "0"
-    assert validate_decimal_string(".5") == ".5"
+    assert validate_decimal_string("1.") == "1."
     assert validate_decimal_string("-0.5") == "-0.5"
     assert validate_decimal_string("1000000.00") == "1000000.00"
 
     # Invalid cases
     with pytest.raises(ValueError, match="Value must be a string"):
         validate_decimal_string(123)
+
+    # Core's pattern requires a leading digit
+    with pytest.raises(ValueError, match="Value must be a valid decimal number"):
+        validate_decimal_string(".5")
 
     with pytest.raises(ValueError, match="Value must be a valid decimal number"):
         validate_decimal_string("abc")
@@ -89,11 +91,21 @@ def test_single_date_event_validation():
     assert event.time is None
     assert event.description is None
 
-    # Invalid: empty name fails min_length=1
-    with pytest.raises(ValidationError):
-        SingleDateEvent(
-            name="", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
-        )
+    # Core EventBase.name is a plain string: an empty name is valid
+    event = SingleDateEvent(
+        name="", event_type=EventType.SINGLE_DATE, date=date(2024, 1, 1)
+    )
+    assert event.name == ""
+
+    # An explicit null on an optional property reads as omitted
+    event = SingleDateEvent(
+        name="Test Event",
+        event_type=EventType.SINGLE_DATE,
+        date=date(2024, 1, 1),
+        time=None,
+    )
+    assert event.time is None
+    assert "time" not in event.model_dump(by_alias=True, exclude_unset=True)
 
     # With strict=False, date string is coerced to date
     event = SingleDateEvent(
@@ -221,12 +233,11 @@ def test_custom_field_validation():
     )
     assert str(field.schema_url) == "https://example.com/schema"
 
-    # Invalid cases
-    with pytest.raises(ValueError):
-        CustomField(
-            name="", fieldType=CustomFieldType.STRING, value="test"
-        )  # Empty name
+    # Core CustomField.name is a plain string: an empty name is valid
+    field = CustomField(name="", fieldType=CustomFieldType.STRING, value="test")
+    assert field.name == ""
 
+    # Invalid cases
     with pytest.raises(ValueError):
         CustomField(name="test", fieldType="invalid", value="test")
 

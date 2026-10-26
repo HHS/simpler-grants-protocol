@@ -1,12 +1,12 @@
 """Custom field types for the CommonGrants API."""
 
 from enum import StrEnum
-from typing import Any, Generic, Optional
+from typing import Any, ClassVar, Generic, Optional
 
 import typing_extensions as te
-from pydantic import ConfigDict, Field, HttpUrl
+from pydantic import AnyUrl, ConfigDict, Field
 
-from ..base import CommonGrantsBaseModel
+from .._contract import SealedModel
 
 
 # CustomField
@@ -24,7 +24,7 @@ class CustomFieldType(StrEnum):
 V = te.TypeVar("V", default=Any)
 
 
-class CustomField(CommonGrantsBaseModel, Generic[V]):
+class CustomField(SealedModel, Generic[V]):
     """A custom field with type information and a typed value.
 
     Generic over its value type ``V`` (default ``Any``): the bare ``CustomField``
@@ -34,20 +34,26 @@ class CustomField(CommonGrantsBaseModel, Generic[V]):
     ``fieldType`` on the wire, ``CustomField(field_type=...)`` in code); the one
     irregular wire name, ``schema_url`` -> ``"schema"``, keeps an explicit
     field-level alias.
+
+    ``value`` is required but may be ``null``; a ``null`` for the optional
+    ``schema`` or ``description`` reads as omitted.
     """
 
     model_config = ConfigDict(populate_by_name=True)
 
+    # Subclasses that make ``value`` optional (the runtime custom-field helper)
+    # still let it be null, as Core does.
+    _nullable_fields: ClassVar[frozenset[str]] = frozenset({"value"})
+
     name: str = Field(
         ...,
         description="Name of the custom field",
-        min_length=1,
     )
     field_type: CustomFieldType = Field(
         ...,
         description="The JSON schema type to use when de-serializing the `value` field",
     )
-    schema_url: Optional[HttpUrl] = Field(
+    schema_url: Optional[AnyUrl] = Field(
         None,
         validation_alias="schema",
         serialization_alias="schema",

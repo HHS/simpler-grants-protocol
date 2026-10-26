@@ -17,11 +17,13 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 - [Declaring custom fields](#declaring-custom-fields)
   - [Option 1: Ad hoc with `with_custom_fields()`](#option-1-ad-hoc-with-with_custom_fields)
   - [Option 2: A reusable plugin](#option-2-a-reusable-plugin)
+  - [Unregistered custom fields](#unregistered-custom-fields)
 - [Extracting custom field values](#extracting-custom-field-values)
 - [Plugins](#plugins)
   - [The `schema(...)` factory](#the-schema-factory)
   - [Assembling a plugin](#assembling-a-plugin)
   - [Consuming a plugin](#consuming-a-plugin)
+  - [Award recipient custom fields](#award-recipient-custom-fields)
   - [Publishing a plugin](#publishing-a-plugin)
 - [Bidirectional transforms](#bidirectional-transforms)
   - [Defining bidirectional transforms](#defining-bidirectional-transforms)
@@ -48,8 +50,9 @@ There is no build step. Plugins are plain Python: you declare custom fields as a
 | **`CustomField[V]`** | A Pydantic generic that is the single source of truth for a custom field. The static value type `V` anchors the typing; `fieldType` and the inspectable value type are *derived* from `V`, so they cannot drift. |
 | **`CustomFieldSet`** | The base class an author subclasses to declare a schema's custom fields, each as `Optional[CustomField[V]] = Field(default=None, description=...)`. |
 | **`OpportunityBase[CF]`** | The common Opportunity model, a Pydantic generic over its custom-fields container `CF`. `OpportunityBase[OpportunityFields]` is a fully concrete type; `OpportunityBase` is the unextended form. |
+| **`AwdRecipientIndividual[CF]`** | The individual who received an award, generic over its custom-fields container. Award custom fields live on this recipient, not on the award: `AwardBase[AwdRecipientIndividual[RecipientFields]]` is the typed award. |
 | **`schema(...)`** | The factory that builds a schema extension. Overloads enforce, statically: mappings XOR hand-written functions XOR schema-only, and a `source_schema` whenever transforms are present. Returns a `SchemaWithTransforms` or a `SchemaOnly`. |
-| **`PluginSchemas`** | Maps your extensions to the registered extensible schemas, keyed by name (`PluginSchemas(Opportunity=...)`). Schemas you omit fall back to the base schema, never `None`. |
+| **`PluginSchemas`** | Maps your extensions to the registered extensible schemas, keyed by name (`PluginSchemas(Opportunity=..., AwdRecipientIndividual=...)`). Schemas you omit fall back to the base schema, never `None`. |
 | **`define_plugin(...)`** | Assembles a `Plugin` from a `PluginSchemas` and a `PluginMeta`. |
 | **`Plugin`** | The value consumers import. `plugin.schemas.Opportunity` is fully typed dot access. |
 | **`build_transforms()`** | Compiles a pair of mapping dicts into `(to_common, from_common)` callables. Used by `schema(..., mappings=...)` under the hood; also callable directly when you need custom handlers. |
@@ -87,7 +90,7 @@ fields = {
 Opportunity = OpportunityBase.with_custom_fields(custom_fields=fields, model_name="Opportunity")
 
 opp = Opportunity.model_validate(opp_data)
-print(opp.custom_fields["legacyId"])
+print(opp.custom_fields.legacy_id.value)
 ```
 
 ### Option 2: A reusable plugin
@@ -133,9 +136,39 @@ opportunity_extensions = define_plugin(
 
 Custom-field keys are camelCase on the wire and snake_case in Python: a `CustomField[V]` named `legacy_grant_id` serializes to `legacyGrantId`. This is handled by an alias generator on the `CustomFieldSet` base, so authors and consumers use snake_case while JSON I/O stays camelCase.
 
+### Unregistered custom fields
+
+Both options keep the entries they don't declare. Unregistered entries land in `custom_fields.model_extra`, keyed exactly as on the wire: neither camelCased nor snake_cased, and with their nested `value` untouched. They serialize back out unchanged, so a parse → `model_dump_json(by_alias=True, exclude_unset=True)` → parse round trip preserves them. Keep `exclude_unset=True`: without it, unset optional properties are written as `null`, which Core rejects (see [Serializing to the wire](../schemas/README.md#serializing-to-the-wire)).
+
+Each unregistered entry is validated as the base `CustomField`, so it must carry its own complete envelope:
+
+- `name`, `fieldType` (one of the six field types), and `value` are required. The map key is never used as a missing `name`.
+- `value: null` is a valid entry. A `null`, string, or list in place of the whole entry is not, and neither is an invalid `schema` URI. A `null` `schema` or `description` reads as omitted.
+- Its `value` is untyped (`Any`); only registered fields get a typed value. Use [`get_custom_field_value()`](#extracting-custom-field-values) for typed access.
+
+This is not a general passthrough. Unknown top-level keys on the opportunity are still dropped, and an unknown key inside a `CustomField` envelope is rejected. A registered entry may be omitted, and a `null` one reads as omitted.
+
+```python
+opp = OpportunityBase[OpportunityFields].model_validate({
+    **opp_data,
+    "customFields": {
+        "programArea": {"name": "programArea", "fieldType": "string", "value": "CFDA-93.243"},
+        "vendorPayload": {"name": "vendorPayload", "fieldType": "object", "value": {"tier": 2}},
+    },
+})
+
+opp.custom_fields.program_area.value                # "CFDA-93.243" (registered, typed)
+opp.custom_fields.model_extra["vendorPayload"]      # CustomField(name="vendorPayload", ...)
+opp.get_custom_field_value("vendorPayload", dict)   # {"tier": 2}
+```
+
+An invalid unregistered entry fails the same way a registered one does: `model_validate` and `client.opportunities.get()` raise `ValidationError`, `list()` and `search()` return the row as a `ParseFailure` in `result.errors`, and a validating transform reports it in `TransformResult.errors`.
+
+> **Migrating:** `CustomFieldSet` containers used to drop unregistered entries silently; they are now kept. `with_custom_fields()` used to accept an unregistered entry without `fieldType` (or that wasn't an object at all), and filled a missing `name` from its key. Those entries now fail validation, so send the full envelope. Parsing also no longer rewrites the input dictionary.
+
 ## Extracting custom field values
 
-Use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`, e.g. for unregistered fields or programmatic (by-name) access. It returns `None` if the key is absent and raises `ValueError` if a present value cannot be converted.
+Use `get_custom_field_value()` to safely retrieve typed values from `custom_fields`, e.g. for unregistered fields or programmatic (by-name) access. It returns `None` if the key is absent and raises `ValueError` if a present value cannot be converted. A registered field resolves by its wire key or its attribute name; an unregistered entry resolves only by its exact wire key, so `vendorPayload` and `vendor_payload` are different entries.
 
 ```python
 from pydantic import BaseModel
@@ -164,11 +197,11 @@ A plugin bundles custom fields and transforms for the CommonGrants schemas a sou
 - **Mappings** — declarative transforms: `schema(source_schema=Src, common_schema=OpportunityBase[Fields], mappings={...})` returns a `SchemaWithTransforms`.
 - **Functions** — hand-written transforms: `schema(source_schema=Src, common_schema=OpportunityBase[Fields], to_common=fn, from_common=fn)` returns a `SchemaWithTransforms`.
 
-`common_schema` must be a registered extensible schema (`OpportunityBase[...]`); an unregistered base raises `PluginDefinitionError`.
+`common_schema` must be a registered extensible schema (`OpportunityBase[...]` or `AwdRecipientIndividual[...]`); an unregistered base, including `AwardBase` itself, raises `PluginDefinitionError`.
 
 ### Assembling a plugin
 
-`PluginSchemas` maps each extension to a registered schema name; `define_plugin` returns the `Plugin`. Schemas you omit fall back to the base schema (a `SchemaOnly` over `OpportunityBase`), never `None`.
+`PluginSchemas` maps each extension to a registered schema name; `define_plugin` returns the `Plugin`. Schemas you omit fall back to the base schema (a `SchemaOnly` over `OpportunityBase` or `AwdRecipientIndividual`), never `None`. A slot must hold the extension for its own schema: an `Opportunity` extension in the `AwdRecipientIndividual` slot raises `PluginDefinitionError`.
 
 ```python
 plugin = define_plugin(
@@ -190,6 +223,84 @@ print(opp.custom_fields.legacy_grant_id.value)  # typed as int
 for name, spec in plugin.schemas.Opportunity.custom_fields.items():
     print(name, spec.field_type, spec.description)
 ```
+
+### Award recipient custom fields
+
+Core v0.5 puts award custom fields on the award's individual recipient (`recipientIndividual.customFields`), not on the award. A plugin registers them on the `AwdRecipientIndividual` slot, with the same `schema(...)` factory and the same three shapes (schema-only, mappings, or functions):
+
+```python
+from typing import Optional
+
+from pydantic import BaseModel
+
+from common_grants_sdk.extensions import (
+    CustomField, CustomFieldSet, PluginMeta, PluginSchemas, define_plugin, schema,
+)
+from common_grants_sdk.schemas.pydantic.models import AwdRecipientIndividual
+
+
+class RecipientFields(CustomFieldSet):
+    scholarship_year: Optional[CustomField[int]] = None
+
+
+Recipient = AwdRecipientIndividual[RecipientFields]
+
+
+class ScholarshipRecipient(BaseModel):  # your system's own recipient record
+    first_name: str
+    last_name: str
+    award_year: int
+
+
+scholarships = define_plugin(
+    PluginSchemas(
+        AwdRecipientIndividual=schema(
+            source_schema=ScholarshipRecipient,
+            common_schema=Recipient,
+            mappings={
+                "to_common": {
+                    "name": {
+                        "firstName": {"field": "first_name"},
+                        "lastName": {"field": "last_name"},
+                    },
+                    "customFields": {
+                        "scholarshipYear": {
+                            "name": "scholarshipYear",
+                            "fieldType": "integer",
+                            "value": {"field": "award_year"},
+                        },
+                    },
+                },
+                "from_common": {
+                    "first_name": {"field": "name.firstName"},
+                    "last_name": {"field": "name.lastName"},
+                    "award_year": {"field": "customFields.scholarshipYear.value"},
+                },
+            },
+        )
+    ),
+    meta=PluginMeta(name="scholarships", source_system="scholarships.example.org"),
+)
+```
+
+`schema(common_schema=Recipient)` alone registers the custom fields without transforms. Hand-written `to_common` / `from_common` functions work as for opportunities, and typically return `validate_into(Recipient, ...)` / `validate_into(ScholarshipRecipient, ...)` so invalid output lands in `TransformResult.errors`. Transforms keep their [existing error behavior](#error-handling): mapping output is validated in both directions, handler failures carry the handler name, and an exception raised inside a hand-written function propagates to the caller.
+
+Consumers get the typed recipient two ways:
+
+```python
+result = scholarships.schemas.AwdRecipientIndividual.to_common(source_record)
+recipient = result.result  # Recipient on success; check result.errors first
+
+client = scholarships.get_client(config)
+award = client.awards.get(award_id)  # AwardBase[AwdRecipientIndividual[RecipientFields]]
+recipient = award.recipient_individual
+if recipient is not None and recipient.custom_fields is not None:
+    year = recipient.custom_fields.scholarship_year
+    if year is not None:
+        print(year.value)  # typed as int
+```
+
+The recipient, its `custom_fields` and each declared field are optional in the protocol, so narrow them before reading a value. Undeclared entries stay available under their exact wire keys in `recipient.custom_fields.model_extra`. A plugin that leaves the slot out gets the base recipient, whose `custom_fields` is the protocol's untyped `dict[str, CustomField]`. See [Using plugins with the API client](#using-plugins-with-the-api-client) for the default and override rules, and [`examples/awards_client.py`](../../examples/awards_client.py) for a runnable version.
 
 ### Publishing a plugin
 
@@ -296,6 +407,8 @@ Optional values carry three distinct states, each of which should be preserved t
 **For custom-handler authors:** preserve the three-state contract when you write your own handlers. Return `None` for both "not provided" and "doesn't apply" as appropriate — the walker writes `None` returns as a present key, so the output object distinguishes the three states the same way the wire does.
 
 > **Note:** The coercing handlers (`numberToString`, `stringToNumber`) currently collapse a `None` source into the "not provided" path rather than preserving it as `None`. This is a known divergence; bringing them to full parity is a pending follow-up.
+
+> **Note:** Core's shared field models (events, custom fields, `Money`, and every award model) read a `None` on an optional property as omitted, so the transform's validated output leaves it out of the wire recipe, as with any [optional Core property](../schemas/README.md#validation-rules-shared-with-awards).
 
 ### Custom handlers
 
@@ -490,6 +603,23 @@ define_plugin(
 
 The reason for the split: filter declarations vary per route-method (`opportunities.search` may support different filters than a future `applications.list`), whereas custom fields are a schema-level concern shared by every operation that returns the model.
 
+Awards follow the same split, and the two extension points stay independent. `PluginSchemas(AwdRecipientIndividual=...)` adds custom fields to the award data the client *parses* (on `recipientIndividual.customFields`, for `get`, `list` and `search`); `PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters))` adds custom filters to the search request the client *sends* (under `filters.customFilters`). Registering one never registers, changes or requires the other, and neither affects opportunities. With `Recipient` from [Award recipient custom fields](#award-recipient-custom-fields):
+
+```python
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters, StringArray
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    program_code: StringArray
+
+
+define_plugin(
+    PluginSchemas(AwdRecipientIndividual=schema(common_schema=Recipient)),  # award custom fields
+    routes=PluginRoutes(awards=ResourceRoutes(search=AwardSearchFilters)),  # award custom filters
+    meta=PluginMeta(name="scholarships", source_system="scholarships.example.org"),
+)
+```
+
 ### Declaring custom filters on a route
 
 Subclass `OpportunityFilters` and annotate each custom filter with its value model. That one subclass does double duty — it **registers** the filter (through the route carrier) and **types** the consumer's `search(filters=...)` call site, so there is no second declaration to drift:
@@ -605,7 +735,7 @@ The three-bucket classification rule (ADR-0012):
 2. **Registered custom filters** (declared on the route's TypedDict) → the `customFilters` record, validated against the model the plugin declared.
 3. **Ad-hoc filters** (anything else) → `customFilters` passthrough, validated against the union of the models in the [filter-type catalog](#filter-type-catalog-and-the-f-helpers) — so a value that does not fit its operator, such as `{"operator": "in", "value": "grant"}`, is still rejected rather than quietly forwarded.
 
-Registered filters are looked up by the **exact** `(resource, method)` strings the plugin declared. A non-matching pair (a pluralization typo, say) yields no registered bucket at all, and every non-standard filter is then validated as if it were ad-hoc.
+Registered filters are looked up by the **exact** `(resource, method)` strings the plugin declared. A resource with no filter policy (a pluralization typo such as `award`, say) raises `KeyError` naming the valid resources, `opportunities` and `awards`. A method the routes do not declare yields no registered bucket at all, and every non-standard filter is then validated as if it were ad-hoc.
 
 ### Validation — registration time and call time
 
@@ -651,7 +781,17 @@ results = client.opportunities.search(
 )
 ```
 
-If you are working with a client you built yourself, pass an extension's `common_schema` per call instead. This parses custom fields but leaves filters untyped, since the client has no route registrations bound:
+Award methods work the same way. `client.awards.get`, `.list` and `.search` parse into `AwardBase` composed with the plugin's `AwdRecipientIndividual` schema (`AwardBase[AwdRecipientIndividual[RecipientFields]]`), or plain `AwardBase` when the plugin does not register a recipient. A per-call `schema=` always wins over that default, and its type is the call's return type:
+
+```python
+award = client.awards.get(award_id)                    # the plugin's typed award
+base = client.awards.get(award_id, schema=AwardBase)   # per-call override: AwardBase
+page = client.awards.list(page=1, schema=OtherAward)   # ListResult[OtherAward]
+```
+
+Parsing validates the response as CommonGrants data; it never runs the plugin's `to_common` / `from_common`. Call those yourself to convert your own records. A response row that does not match the plugin's recipient fields (for example a `scholarshipYear` value that is not a valid integer) raises `ValidationError` from `get` and lands in `.errors` from `list` / `search`, as for any other invalid row.
+
+If you are working with a client you built yourself, pass an extension's `common_schema` per call instead. This parses custom fields but leaves filters untyped, since the client has no route registrations bound. For awards, pass the composed award model (`schema=AwardBase[AwdRecipientIndividual[RecipientFields]]`), not the recipient's `common_schema`:
 
 ```python
 from common_grants_sdk.client import Client, Config
@@ -663,6 +803,8 @@ opp = client.opportunities.get(opp_id, schema=schema_cls)
 response = client.opportunities.list(schema=schema_cls)
 results = client.opportunities.search(search="health", schema=schema_cls)
 ```
+
+An explicit `schema` replaces `get`'s detail default, so `get(opp_id, schema=schema_cls)` returns the base model without the opportunity's `awards`. To keep them, pass the detail form of your fields instead: `get(opp_id, schema=OpportunityDetails[OpportunityFields])`.
 
 `Config` reads `CG_API_BASE_URL` and `CG_API_KEY` from the environment when you omit them, so `Config()` is enough in a configured deployment.
 

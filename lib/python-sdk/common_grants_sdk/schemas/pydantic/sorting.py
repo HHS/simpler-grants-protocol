@@ -5,6 +5,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
 
+from ._contract import SealedModel as _SealedModel
 from .base import CAMEL_WIRE_CONFIG
 
 
@@ -106,3 +107,29 @@ class OppSorting(BaseModel):
         return self
 
     model_config = CAMEL_WIRE_CONFIG
+
+
+class AwdSortBy(StrEnum):
+    """Fields by which awards can be sorted."""
+
+    LAST_MODIFIED_AT = "lastModifiedAt"
+    CREATED_AT = "createdAt"
+    TITLE = "title"
+    STATUS = "status.value"
+    AWARD_DATE = "keyDates.awardDate"
+    AWARDED_AMOUNT = "funding.awardedAmount"
+    CUSTOM = "custom"
+
+
+class AwdSorting(_SealedModel):
+    """Sorting options for award searches."""
+
+    sort_by: AwdSortBy = Field(..., description="The field to sort by")
+    custom_sort_by: Optional[str] = Field(
+        default=None,
+        description="Implementation-defined sort key",
+    )
+    sort_order: Optional[SortOrder] = Field(
+        default=None,
+        description="The order to sort by",
+    )
