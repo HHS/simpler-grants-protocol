@@ -12,7 +12,8 @@ import { z } from "zod";
 // String types
 // ############################################################################
 
-// Not z.uuid(): `format: uuid` allows any version and variant nibble, which z.uuid() rejects.
+// Accepts any UUID-shaped string, like the protocol's `format: uuid`. Zod's z.uuid() also
+// requires valid RFC 9562 version and variant digits, which some real-world IDs don't have.
 export const UuidSchema = z.stringFormat("uuid", z.regexes.guid);
 
 /** Employer Identification Number (EIN), normalized to nine digits. */
