@@ -200,7 +200,7 @@ describe("OrgRef Schema", () => {
     await expectZodMatchesJsonSchema(OrgRefSchema, "OrgRef.yaml", cases, 0, true);
   });
 
-  it("should accept a USASpending recipient ID with a nonstandard variant nibble", () => {
+  it("should accept a USASpending recipient ID", () => {
     const orgRef = { id: "78e2168c-91dc-4ee3-f4cb-fb8e0cff6ea8", name: "Example Recipient" };
     expect(OrgRefSchema.parse(orgRef)).toEqual(orgRef);
   });

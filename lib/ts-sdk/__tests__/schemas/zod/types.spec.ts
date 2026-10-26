@@ -41,12 +41,12 @@ describe("UUID Schema", () => {
     expect(() => UuidSchema.parse("{123e4567-e89b-12d3-a456-426614174000}")).toThrow();
   });
 
-  it("should accept any version nibble", () => {
+  it("should accept an ID with a nonstandard version digit", () => {
     const uuid = "99c17cbb-656f-f64a-940f-1a4568f03487";
     expect(UuidSchema.parse(uuid)).toBe(uuid);
   });
 
-  it("should accept any variant nibble", () => {
+  it("should accept an ID with a nonstandard variant digit", () => {
     // A USASpending recipient ID
     const uuid = "78e2168c-91dc-4ee3-f4cb-fb8e0cff6ea8";
     expect(UuidSchema.parse(uuid)).toBe(uuid);
