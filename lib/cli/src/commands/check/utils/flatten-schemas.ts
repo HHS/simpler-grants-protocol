@@ -1,6 +1,15 @@
 import { OpenAPIV3 } from "openapi-types";
 import mergeAllOf from "json-schema-merge-allof";
 
+// `example` is documentation only, so when allOf members disagree keep the first value
+// instead of failing the merge (which would drop every property in the schema).
+// `example` is an OpenAPI keyword, so it's missing from the JSON Schema resolver types.
+const mergeAllOfOptions = {
+  resolvers: {
+    example: (values: unknown[]) => values[0],
+  },
+} as mergeAllOf.Options;
+
 // Simple cache to avoid redundant flattening of the same schemas
 const flattenCache = new WeakMap<OpenAPIV3.SchemaObject, OpenAPIV3.SchemaObject>();
 
@@ -28,7 +37,7 @@ export function deepFlattenAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.Sche
     // 2) Merge allOf (if any)
     if (processedSchema.allOf && Array.isArray(processedSchema.allOf)) {
       try {
-        processedSchema = mergeAllOf(processedSchema) as OpenAPIV3.SchemaObject;
+        processedSchema = mergeAllOf(processedSchema, mergeAllOfOptions) as OpenAPIV3.SchemaObject;
       } catch (error) {
         console.warn("Failed to merge allOf, keeping original schema:", error);
         // Remove allOf but keep the rest of the schema
