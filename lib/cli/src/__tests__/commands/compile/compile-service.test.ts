@@ -4,11 +4,19 @@ import { DefaultCompileService } from "../../../commands/compile/compile-service
 import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
-import { tspBinPath } from "../../../utils/typespec";
+import { resolveTspBinPath } from "../../../utils/typespec";
 
 vi.mock("child_process", () => ({
   spawn: vi.fn(),
 }));
+
+vi.mock("../../../utils/typespec", async importOriginal => {
+  const actual = await importOriginal<typeof import("../../../utils/typespec")>();
+  return {
+    ...actual,
+    resolveTspBinPath: vi.fn(actual.resolveTspBinPath),
+  };
+});
 
 describe("DefaultCompileService", () => {
   const service = new DefaultCompileService();
@@ -32,9 +40,13 @@ describe("DefaultCompileService", () => {
     mockChildProcess.emit("exit", 0);
     await compilePromise;
 
-    expect(mockSpawn).toHaveBeenCalledWith("node", [tspBinPath, "compile", "spec.tsp"], {
-      stdio: "inherit",
-    });
+    expect(mockSpawn).toHaveBeenCalledWith(
+      process.execPath,
+      [resolveTspBinPath(), "compile", "spec.tsp"],
+      {
+        stdio: "inherit",
+      }
+    );
   });
 
   it("should reject when process exits with non-zero code", async () => {
@@ -51,5 +63,23 @@ describe("DefaultCompileService", () => {
 
     await expect(compilePromise).rejects.toThrow("Command not found");
     expect(mockConsole).toHaveBeenCalledWith("Error executing tsp compile:", error);
+  });
+
+  it("should reject with the resolver's error without spawning when the compiler can't be resolved", async () => {
+    // Arrange
+    const resolveError = new Error(
+      "Could not find the TypeSpec compiler (@typespec/compiler). " +
+        "Reinstall @common-grants/cli and try again."
+    );
+    (resolveTspBinPath as Mock).mockImplementationOnce(() => {
+      throw resolveError;
+    });
+
+    // Act
+    const compilePromise = service.compile("spec.tsp");
+
+    // Assert
+    await expect(compilePromise).rejects.toBe(resolveError);
+    expect(mockSpawn).not.toHaveBeenCalled();
   });
 });
