@@ -64,6 +64,8 @@ How to propose a question:
 
 Adopting the protocol is one of the most valuable contributions to the community. There are several levels of adoption, and each one builds on the last. You do not have to start at the top.
 
+If you are a state, see [Adopting CommonGrants as a state](STATE_ADOPTION_PLAYBOOK.md) for a step-by-step playbook.
+
 1. **Cross-walk your data.** Map your grant data elements to CommonGrants fields. Where your data does not map to the core models or existing custom fields, propose new ones for the catalog. This is a useful exercise even if you go no further, because it surfaces gaps in the protocol and helps us understand what real-world data looks like.
 2. **Build an adapter.** Package the transformation logic needed to translate data between your format and CommonGrants. See [Build a plugin or adapter](#build-a-plugin-or-adapter) for details.
 3. **Stand up an API proxy.** Create a CommonGrants-compliant wrapper around your existing API using one of the SDK templates and your adapter. The proxy forwards requests to your existing system and translates responses into the CommonGrants format. This works especially well when your data or API is already publicly available.
