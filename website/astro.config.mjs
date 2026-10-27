@@ -80,6 +80,8 @@ export default defineConfig({
             "/plugins/**",
             "/registries",
             "/registries/**",
+            "/implementations",
+            "/implementations/**",
           ],
         }),
       ],
@@ -136,6 +138,10 @@ export default defineConfig({
             {
               label: "ID registries",
               link: "registries",
+            },
+            {
+              label: "Implementations",
+              link: "implementations",
             },
           ],
         },
