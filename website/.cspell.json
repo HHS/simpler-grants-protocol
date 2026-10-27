@@ -134,6 +134,7 @@
     "proposalbase",
     "fieldtype",
     "browsable",
+    "bunx",
     "apidevtools",
     "allof",
     "pypi",

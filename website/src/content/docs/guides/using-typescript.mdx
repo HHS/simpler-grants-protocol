@@ -7,31 +7,23 @@ sidebar:
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework.
+Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework and the [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme).
 
 ## Quickstart
 
-This guide will walk you through the process of setting up a new project using the CommonGrants Express.js template, and then outline steps for extending this template to meet your specific needs.
+This guide walks you through setting up a new project from the CommonGrants Express.js template, then adding the SDK to validate your data and define custom fields.
 
-### Prerequisites
+:::note[Prerequisites]
 
-To follow this guide, you'll need to have the following installed on your machine:
+- [Node.js](https://nodejs.org/) v22.12 or later (check with `node --version`). The template compiles to CommonJS, and loading the ESM-only SDK from CommonJS needs Node.js 22.12+.
+- [pnpm](https://pnpm.io/installation) v11 or later (check with `pnpm --version`). The template's scripts use pnpm.
+- Port `3000` free for the development server.
 
-- Node.js 20+ and npm 10+
-- CommonGrants and TypeSpec CLIs
-
-Check your versions by running:
-
-```bash
-node --version
-npm --version
-cg --version
-tsp --version
-```
+:::
 
 ### First steps
 
-Get a Express.js project up and running with the following steps:
+Get an Express.js project up and running with the following steps:
 
 <Steps>
 1. Create a new directory for your project:
@@ -44,223 +36,260 @@ Get a Express.js project up and running with the following steps:
 2. Set up your project using the CommonGrants CLI:
 
    ```bash
-   cg init --template express-js
+   npx @common-grants/cli@0.4.1 init --template express-js
    ```
 
-3. Install the dependencies:
+   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
+
+3. Create `pnpm-workspace.yaml`, which `cg init` doesn't create:
+
+   ```yaml title=pnpm-workspace.yaml
+   allowBuilds:
+     "@scarf/scarf": false
+     esbuild: false
+   overrides:
+     "ajv@>=7.0.0-alpha.0 <8.18.0": ">=8.18.0"
+     "brace-expansion@>=1 <1.1.21": "1.1.21"
+     "brace-expansion@>=3 <5.0.12": "5.0.12"
+     "fast-uri@>=3 <3.1.8": "3.1.8"
+     "flatted@<3.4.0": "3.4.2"
+     "minimatch@>=3 <3.1.5": "3.1.5"
+     "path-to-regexp@>=0.1 <0.1.13": "0.1.13"
+     "picomatch@>=2 <2.3.2": "2.3.2"
+     "picomatch@>=4 <4.0.4": "4.0.4"
+     "proxy-addr@>=1.1.0 <2.0.8": "2.0.8"
+     "qs@<6.16.0": "6.16.0"
+     "rollup@>=4 <4.59.0": "4.60.1"
+     "source-map-js@>=1 <1.2.2": "1.2.2"
+     "tar@<7.5.21": "7.5.21"
+     "vite@>=7.0.0 <=7.3.1": ">=7.3.2"
+     "yaml@>=2 <2.8.3": "2.8.3"
+   ```
+
+   `allowBuilds` skips optional install scripts. Without it, pnpm stops every `pnpm run` command with an "Ignored build scripts" error. `overrides` sets security floors for transitive dependencies and matches the scaffolded `pnpm-lock.yaml`.
+
+4. Install the dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
-4. Run the project:
+5. Run the project:
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
-5. Open the API docs:
-
-   ```bash
-   open http://localhost:3000/docs
-   ```
+6. Open the API docs at `http://localhost:3000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
 
 </Steps>
 
 ### Project structure
 
-The boilerplate template includes the following files and directories:
+The template includes the following files and directories:
 
 <FileTree>
 
 - package.json # Node.js project configuration and dependencies
-- package-lock.json # Locked versions of dependencies
+- pnpm-lock.yaml # Locked versions of dependencies
+- pnpm-workspace.yaml # pnpm settings (created in step 3)
 - tsconfig.json # TypeScript configuration
-- .eslintrc.js # ESLint configuration
+- tspconfig.yaml # TypeSpec emitter configuration
+- eslint.config.js # ESLint configuration
 - .prettierrc # Prettier configuration
+- .prettierignore # Files Prettier skips
+- .gitignore # Files Git ignores
 - README.md # Project documentation
+- main.tsp # Empty file left by `cg init`, safe to delete
 - src/
   - api/
     - index.ts # Express application setup and config
-    - controllers/ # Request handlers and controllers
-    - middleware/ # Middleware functions
-    - schemas/ # Schemas for (de)serialization
+    - controllers/ # Request handlers and routers
+    - errors/ # API error types
+    - middleware/ # Error handling and validation middleware
+    - schemas/ # Zod schemas for (de)serialization
     - services/ # Business logic and data operations
   - typespec/
-    - main.tsp # The main TypeSpec specification
-- tests/
-  - common_grants/
-    - schemas/ # Schema-related tests
-    - services/ # Service-related tests
-    - routes/ # Route-related tests
+    - main.tsp # The TypeSpec specification for your API
 
 </FileTree>
 
 ## Next steps
 
-Once you've set up your initial project structure, you can start implementing the API routes and services.
+Once the template is running, add the SDK and connect the API to your data.
+
+### Add the SDK
+
+The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it, the matching TypeSpec library, and the CommonGrants CLI:
+
+```bash
+pnpm add --save-exact @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
+pnpm add --save-exact -D @common-grants/cli@0.5.0 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+```
+
+The SDK is split into modules, each with its own import path:
+
+| Import path                     | Description                                   |
+| ------------------------------- | --------------------------------------------- |
+| `@common-grants/sdk/schemas`    | Zod schemas for data validation               |
+| `@common-grants/sdk/types`      | Inferred TypeScript types                     |
+| `@common-grants/sdk/constants`  | Runtime enum constants                        |
+| `@common-grants/sdk/extensions` | Custom field and plugin framework             |
+| `@common-grants/sdk/client`     | HTTP client with auth, pagination, and search |
+
+The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
+
+```json title=tsconfig.json
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+```
+
+### Update the spec to v0.5
+
+Point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
+
+```tsp title=src/typespec/main.tsp
+import "@typespec/http";
+import "@typespec/versioning";
+import "@common-grants/core";
+
+using TypeSpec.Http;
+
+@service(#{ title: "CommonGrants API" })
+@Versioning.useDependency(CommonGrants.Versions.v0_5)
+namespace Custom;
+
+@tag("Opportunities")
+@route("/common-grants/opportunities")
+namespace Routes {
+  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
+
+  op list is OpportunitiesRouter.list;
+  op read is OpportunitiesRouter.read;
+  op search is OpportunitiesRouter.search;
+}
+```
+
+Besides the version, this moves `@Versioning.useDependency` onto the service namespace and nests the routes under it. The template's original layout applies the version incorrectly, so the read route comes out as `/common-grants/opportunities/{id}/{oppId}`.
+
+### Validate your spec
+
+Compile the spec and check it against the CommonGrants v0.5 base spec:
+
+```bash
+pnpm run typespec
+pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml --protocol-version 0.5.0
+```
+
+The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
+
+`cg check spec` validates the API specification, not the running server. To check the code, confirm it type-checks and runs:
+
+```bash
+pnpm exec tsc --noEmit
+pnpm run dev
+```
+
+Press `Ctrl+C` to stop the server.
+
+The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
+
+### Validate data with the SDK
+
+The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for the opportunity and award models, filters, and responses, so you can replace the template's schemas as you build:
+
+```typescript
+import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
+import type { OpportunityBase } from "@common-grants/sdk/types";
+
+// rawData is a record from your data source
+// Throws a ZodError if it doesn't match the protocol
+const opportunity: OpportunityBase = OpportunityBaseSchema.parse(rawData);
+```
 
 ### Implementing services
 
-The services layer is responsible for implementing the business logic and data operations for the API. It includes the following files:
+The services layer in `src/api/services/` holds the business logic and data operations for the API. Focus on `opportunity.service.ts`, which implements the `OpportunitiesService` class behind these routes:
 
-<FileTree>
+- `GET /common-grants/opportunities`
+- `GET /common-grants/opportunities/{oppId}`
+- `POST /common-grants/opportunities/search`
 
-- src/api/services/
-  - opportunity.service.ts # Opportunity service
-  - utils.ts # Utility functions
+Specific changes to make in this file:
 
-</FileTree>
-
-In particular, you should focus on updating the `opportunity.service.ts` file. This file contains the implementation of the `OpportunityService` class, which is responsible for fetching and processing opportunities from the CommonGrants API.
+- Replace the mock data with a real data source, e.g. a database query or a remote API call, and parse each record with an SDK schema.
+- Look opportunities up by `id` instead of title in `OpportunitiesService.getOpportunityByTitle`.
+- Add the sorting and filtering logic to the `OpportunitiesService.searchOpportunities` method.
 
 ### Adding custom fields
 
-When adopting the CommonGrants protocol, you may need to include information about a funding opportunity that is not explicitly defined by the CommonGrants model for opportunities. The protocol defines a pattern for supporting these kinds of custom fields through the `custom_fields` property on the `OpportunityBase` model.
+When adopting the CommonGrants protocol, you may need to include information about a funding opportunity that is not explicitly defined by the CommonGrants model for opportunities. The protocol supports this through the `customFields` property on the `OpportunityBase` model, and the SDK's extensions module gives those fields types.
 
-For example, let's say you need to add a `legacyId` field to map opportunities to an existing ID system. Here's how to do it:
+For example, let's say you need to add a `legacyId` field to map opportunities to an existing ID system.
 
-#### Define the custom field
+#### Define a plugin
 
-```typescript models.ts
-// ############################################################################
-// Custom fields
-// ############################################################################
+Create a plugin that declares the custom field. The plugin compiles an `Opportunity` schema with a typed `customFields` property:
 
-/** Schema for the legacy ID custom field */
-export const legacyIdCustomFieldSchema = customFieldSchema.extend({
-  /** The name of the custom field */
-  name: z.literal("legacyId"),
+```typescript title=src/api/schemas/plugin.ts
+import { z } from "zod";
+import { definePlugin } from "@common-grants/sdk/extensions";
 
-  /** The type of the custom field */
-  type: z.literal("number"),
+/** Custom fields for this API's data source */
+export const myPlugin = definePlugin({
+  meta: {
+    name: "my-system",
+    sourceSystem: "grants.example.gov",
+    capabilities: ["customFields"],
+  },
+  schemas: {
+    Opportunity: {
+      customFields: {
+        legacyId: {
+          fieldType: "integer",
+          description: "Maps to the opportunity_id in the legacy system",
+        },
+      },
+    },
+  },
+} as const);
 
-  /** The value of the custom field */
-  value: z.number().int(),
-
-  /** Description of the custom field */
-  description: z
-    .string()
-    .optional()
-    .default("Maps to the opportunity_id in the legacy system"),
-});
-
-export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
-
-/** Schema for all custom fields in an opportunity */
-export const oppCustomFieldsSchema = z.object({
-  /** Legacy ID mapping to existing system */
-  legacyId: legacyIdCustomFieldSchema.optional(),
-
-  /** Additional custom fields specific to this opportunity */
-  customFields: z.record(customFieldSchema).optional(),
-});
-
-export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
+/** Opportunity schema with typed custom fields */
+export const OpportunitySchema = myPlugin.schemas.Opportunity.commonSchema;
+export type Opportunity = z.infer<typeof OpportunitySchema>;
 ```
 
-#### Update the `OpportunityBase` model
+The `as const` is only required when the specs are assigned to a variable before the call, but the SDK keeps it by convention.
 
-:::note
+#### Use the plugin's schema
 
-The sample code below skips other imports and fields for brevity.
+Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/api/`. The custom field is validated and fully typed:
 
-:::
+```typescript
+import { OpportunitySchema, type Opportunity } from "./schemas/plugin";
 
-```typescript models.ts ins={9-10}
-// ############################################################################
-// Base opportunity model
-// ############################################################################
-
-export const opportunityBaseSchema = z
-  .object({
-    // other fields omitted for brevity
-
-    /** Additional custom fields specific to this opportunity */
-    customFields: oppCustomFieldsSchema.optional(),
-  })
-  .extend(systemMetadataSchema.shape);
-
-export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
-```
-
-#### Full example
-
-Here's the full example of defining a custom field within the `models.ts` file.
-
-```typescript models.ts
-// ############################################################################
-// Custom fields
-// ############################################################################
-
-/** Schema for the legacy ID custom field */
-export const legacyIdCustomFieldSchema = customFieldSchema.extend({
-  /** The name of the custom field */
-  name: z.literal("legacyId"),
-
-  /** The type of the custom field */
-  type: z.literal("number"),
-
-  /** The value of the custom field */
-  value: z.number().int(),
-
-  /** Description of the custom field */
-  description: z
-    .string()
-    .optional()
-    .default("Maps to the opportunity_id in the legacy system"),
+const opportunity: Opportunity = OpportunitySchema.parse({
+  id: "573525f2-8e15-4405-83fb-e6523511d893",
+  title: "STEM Education Grant Program",
+  description: "Improving STEM education in underserved communities",
+  status: { value: "open" },
+  createdAt: "2025-01-01T00:00:00Z",
+  lastModifiedAt: "2025-01-15T00:00:00Z",
+  customFields: {
+    legacyId: { name: "legacyId", fieldType: "integer", value: 12345 },
+  },
 });
 
-export type LegacyIdCustomField = z.infer<typeof legacyIdCustomFieldSchema>;
-
-/** Schema for all custom fields in an opportunity */
-export const oppCustomFieldsSchema = z.object({
-  /** Legacy ID mapping to existing system */
-  legacyId: legacyIdCustomFieldSchema.optional(),
-
-  /** Additional custom fields specific to this opportunity */
-  customFields: z.record(customFieldSchema).optional(),
-});
-
-export type OppCustomFields = z.infer<typeof oppCustomFieldsSchema>;
-
-// ############################################################################
-// Base opportunity model
-// ############################################################################
-
-export const opportunityBaseSchema = z
-  .object({
-    /** Globally unique id for the opportunity */
-    id: z.uuid(),
-
-    /** Title or name of the funding opportunity */
-    title: z.string(),
-
-    /** Status of the opportunity */
-    status: oppStatusSchema,
-
-    /** Description of the opportunity's purpose and scope */
-    description: z.string(),
-
-    /** Details about the funding available */
-    funding: oppFundingSchema,
-
-    /** Key dates for the opportunity */
-    keyDates: oppTimelineSchema,
-
-    /** URL for the original source of the opportunity */
-    source: z.url().optional(),
-
-    /** Additional custom fields specific to this opportunity */
-    customFields: oppCustomFieldsSchema.optional(),
-  })
-  .extend(systemMetadataSchema.shape);
-
-export type OpportunityBase = z.infer<typeof opportunityBaseSchema>;
+opportunity.customFields?.legacyId?.value; // number
 ```
+
+The template's services still import their own `Opportunity` type from `src/api/schemas`. Replace those imports with the plugin's schema and type as you wire in real data, so the two don't collide.
+
+For a one-off extension without a plugin, use `withCustomFields()` from the same module. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
 ## Additional resources
 
+- [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme)
 - [TypeSpec](https://typespec.io/docs/)
 - [Zod](https://zod.dev/)
 - [Express.js](https://expressjs.com/)
