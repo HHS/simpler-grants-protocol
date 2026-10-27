@@ -1,5 +1,12 @@
 # @common-grants/cli
 
+## [0.5.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.4.1...@common-grants/cli@0.5.0) (2026-10-27)
+
+
+### Features
+
+* **cli:** add protocol v0.5 base spec to cg check ([#1346](https://github.com/HHS/simpler-grants-protocol/issues/1346)) ([48f9c25](https://github.com/HHS/simpler-grants-protocol/commit/48f9c251e3b1d34b5c3a9c329eab4337812b8450))
+
 ## [0.4.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.4.0...@common-grants/cli@0.4.1) (2026-10-13)
 
 
