@@ -45,3 +45,16 @@ overrides:
   # No patched postcss-selector-parser 6.x exists, so this crosses postcss-nested's
   # ^6 range on purpose. Delete once the lockfile has no postcss-nested 6.2.0.
   'postcss-nested@6.2.0>postcss-selector-parser': '>=7.1.6 <8'
+  # Security floors for advisories that blocked the release gate. Each stays
+  # inside its parent's major; delete once the lockfile resolves past it unaided.
+  body-parser@<1.20.9: '>=1.20.9 <2'
+  fast-uri@>=3.0.0 <3.1.9: '>=3.1.9 <4'
+  undici@>=6.0.0 <6.29.1: '>=6.29.1 <7'
+  # miniflare and @scalar/json-magic pin undici exactly, so this crosses their
+  # pin by a patch. Delete once both pins reach 7.30.1.
+  undici@>=7.0.0 <7.30.1: '>=7.30.1 <8'
+  # No patched zod 3.x exists. cg-grants-gov 0.3.1 (a ts-sdk devDependency for
+  # an example) and its SDK 0.6.1 peer still declare zod ^3, so this crosses
+  # their range on purpose. Delete once ts-sdk uses a cg-grants-gov on zod 4.
+  '@common-grants/cg-grants-gov@0.3.1>zod': '>=4.6.6 <5'
+  '@common-grants/sdk@0.6.1>zod': '>=4.6.6 <5'
