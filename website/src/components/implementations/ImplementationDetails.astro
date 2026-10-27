@@ -1,0 +1,373 @@
+---
+import type { Implementation } from "@/lib/implementations";
+import { LinkButton, CardGrid } from "@astrojs/starlight/components";
+import CustomFieldCard from "@/components/custom-fields/CustomFieldCard.astro";
+import CustomFilterCard from "@/components/plugins/CustomFilterCard.astro";
+import SourceFieldCard from "@/components/implementations/SourceFieldCard.astro";
+
+interface Props {
+  implementation: Implementation;
+}
+
+const { implementation } = Astro.props;
+const customFields = implementation.resolvedFields;
+const sourceSpecificFields = Object.entries(
+  implementation.sourceSpecificFields ?? {},
+);
+---
+
+<div class="implementation-details">
+  <!-- Summary -->
+  <section class="section">
+    <h2>Summary</h2>
+    <p class="description">{implementation.description}</p>
+    {implementation.note && <p class="note">{implementation.note}</p>}
+
+    <dl class="meta-list">
+      <div class="meta-item">
+        <dt>Maintainer</dt>
+        <dd>{implementation.maintainer}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Tags</dt>
+        <dd>{implementation.tags.join(", ")}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Funder scope</dt>
+        <dd>{implementation.scope.join(", ")}</dd>
+      </div>
+      <div class="meta-item">
+        <dt>Data sources</dt>
+        <dd>
+          {
+            implementation.sources.map((source, i) => (
+              <>
+                {source.url ? (
+                  <a href={source.url}>{source.name}</a>
+                ) : (
+                  source.name
+                )}
+                {i < implementation.sources.length - 1 && ", "}
+              </>
+            ))
+          }
+        </dd>
+      </div>
+      <div class="meta-item">
+        <dt>Authentication</dt>
+        <dd>
+          {
+            implementation.authUrl ? (
+              <a href={implementation.authUrl}>{implementation.auth}</a>
+            ) : (
+              implementation.auth
+            )
+          }
+        </dd>
+      </div>
+      {
+        implementation.refresh && (
+          <div class="meta-item">
+            <dt>Refreshed from source</dt>
+            <dd>{implementation.refresh}</dd>
+          </div>
+        )
+      }
+      <div class="meta-item">
+        <dt>Source code</dt>
+        <dd>
+          {
+            implementation.sourceUrl ? (
+              <a href={implementation.sourceUrl}>
+                {implementation.license
+                  ? `Open source (${implementation.license})`
+                  : "Open source"}
+              </a>
+            ) : (
+              "Not public"
+            )
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- URLs -->
+  <section class="section">
+    <h2>URLs</h2>
+    <div class="url-row">
+      <span class="url-label">API</span>
+      <code class="url-value">{implementation.apiUrl}</code>
+    </div>
+    <div class="url-row">
+      <span class="url-label">Docs</span>
+      <a class="url-value" href={implementation.docsUrl}
+        >{implementation.docsUrl}</a
+      >
+    </div>
+  </section>
+
+  <!-- Routes -->
+  <section class="section">
+    <h2>Supported routes</h2>
+    <ul class="route-list">
+      {
+        implementation.routes.map((route) => (
+          <li>
+            <code>{route}</code>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Custom fields -->
+  {
+    (customFields.length > 0 || sourceSpecificFields.length > 0) && (
+      <section class="section">
+        <h2>Custom fields</h2>
+        {customFields.length > 0 && (
+          <>
+            <p class="section-description">
+              This implementation uses {customFields.length} custom fields from
+              the catalog:
+            </p>
+            <CardGrid>
+              {customFields.map((field) => (
+                <CustomFieldCard field={field} />
+              ))}
+            </CardGrid>
+          </>
+        )}
+        {sourceSpecificFields.length > 0 && (
+          <details class="source-fields">
+            <summary>
+              {sourceSpecificFields.length} other fields, not in the catalog
+            </summary>
+            <CardGrid>
+              {sourceSpecificFields.map(([name, field]) => (
+                <SourceFieldCard
+                  name={name}
+                  fieldType={field.fieldType}
+                  description={field.description}
+                />
+              ))}
+            </CardGrid>
+          </details>
+        )}
+      </section>
+    )
+  }
+
+  <!-- Custom filters -->
+  {
+    (implementation.resolvedFilters.length > 0 ||
+      implementation.unresolvedFilters.length > 0) && (
+      <section class="section">
+        <h2>Custom filters</h2>
+        <p class="section-description">
+          This implementation accepts{" "}
+          {implementation.resolvedFilters.length +
+            implementation.unresolvedFilters.length}{" "}
+          custom filters beyond the CommonGrants base filters:
+        </p>
+        {implementation.resolvedFilters.length > 0 && (
+          <CardGrid>
+            {implementation.resolvedFilters.map((filter) => (
+              <CustomFilterCard filter={filter} />
+            ))}
+          </CardGrid>
+        )}
+        {implementation.unresolvedFilters.length > 0 && (
+          <ul class="chip-list">
+            {implementation.unresolvedFilters.map((name) => (
+              <li>
+                <code class="chip chip-plain">{name}</code>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  }
+
+  <!-- Plugins -->
+  {
+    implementation.resolvedPlugins.length > 0 && (
+      <section class="section">
+        <h2>Plugins</h2>
+        <p class="section-description">
+          Plugins that adapt this API's data in the CommonGrants SDKs:
+        </p>
+        <ul>
+          {implementation.resolvedPlugins.map((plugin) => (
+            <li>
+              <a href={`/plugins/${plugin.id}`}>{plugin.label}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <!-- Actions -->
+  <div class="actions">
+    <LinkButton href={implementation.docsUrl} icon="external">
+      Open API docs
+    </LinkButton>
+    <LinkButton
+      href="/implementations"
+      variant="secondary"
+      icon="left-arrow"
+      iconPlacement="start"
+    >
+      Back to Catalog
+    </LinkButton>
+  </div>
+</div>
+
+<style>
+  .implementation-details {
+    max-width: 800px;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section h2 {
+    font-size: 1.6rem;
+    color: var(--sl-color-white);
+  }
+
+  .section-description {
+    color: var(--sl-color-gray-2);
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 1.1rem;
+    color: var(--sl-color-gray-1);
+    margin-bottom: 1.5rem;
+  }
+
+  .note {
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--sl-color-orange);
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-1);
+    margin-bottom: 1.5rem;
+  }
+
+  dl.meta-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  dl.meta-list > .meta-item {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .meta-item dt {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    font-weight: normal;
+    margin: 0 0 0.5rem 0;
+    padding: 0;
+  }
+
+  .meta-item dd {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--sl-color-text);
+    margin: 0;
+    padding: 0;
+  }
+
+  .url-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .url-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    min-width: 4rem;
+  }
+
+  .url-value {
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+  }
+
+  .route-list {
+    margin: 0;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chip-list li {
+    margin: 0;
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-accent-high);
+    border-radius: 0.375rem;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    text-decoration: none;
+  }
+
+  .chip-plain {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-text);
+  }
+
+  .source-fields {
+    margin-top: 1rem;
+  }
+
+  .source-fields summary {
+    cursor: pointer;
+    color: var(--sl-color-gray-2);
+    margin-bottom: 0.75rem;
+  }
+
+  .actions {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 640px) {
+    dl.meta-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -2,6 +2,7 @@ import {
   CheckApiArgsSchema,
   CheckSpecArgsSchema,
   CheckSpecOptionsSchema,
+  availableVersions,
 } from "../../../commands/check/check-args";
 
 describe("Check Args Validation", () => {
@@ -90,7 +91,7 @@ describe("Check Args Validation", () => {
   // #########################################################
 
   describe("CheckSpecOptionsSchema", () => {
-    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0"])(
+    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"])(
       "should accept valid protocolVersion %s",
       version => {
         const result = CheckSpecOptionsSchema.safeParse({
@@ -99,6 +100,10 @@ describe("Check Args Validation", () => {
         expect(result.success).toBe(true);
       }
     );
+
+    it("should list 0.5.0 as the latest (default) protocolVersion", () => {
+      expect(availableVersions[0]).toBe("0.5.0");
+    });
 
     it("should reject invalid protocolVersion", () => {
       const result = CheckSpecOptionsSchema.safeParse({

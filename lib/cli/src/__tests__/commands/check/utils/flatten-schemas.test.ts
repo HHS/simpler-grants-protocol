@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { deepFlattenAllOf } from "../../../../commands/check/utils/flatten-schemas";
 import { OpenAPIV3 } from "openapi-types";
 
@@ -185,5 +186,44 @@ describe("Schema Flattening", () => {
       email: { type: "string" },
       phone: { type: "string" },
     });
+  });
+
+  // ############################################################
+  // Conflicting example values
+  // ############################################################
+
+  it("should flatten allOf schemas whose members have different examples", () => {
+    // Arrange - Mirror core v0.5, where a $ref'd model and its wrapper carry different examples
+    const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const schema: OpenAPIV3.SchemaObject = {
+      allOf: [
+        {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+          },
+          example: { id: "123456789" },
+        },
+        {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+          },
+          example: { id: "582345679", name: "Example Org" },
+        },
+      ],
+    };
+
+    // Act
+    const flattened = deepFlattenAllOf(schema);
+
+    // Assert - Properties from both members are kept and the first example wins
+    expect(flattened.properties).toEqual({
+      id: { type: "string" },
+      name: { type: "string" },
+    });
+    expect(flattened.example).toEqual({ id: "123456789" });
+    expect(mockConsoleWarn).not.toHaveBeenCalled();
+    mockConsoleWarn.mockRestore();
   });
 });

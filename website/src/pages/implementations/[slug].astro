@@ -1,0 +1,37 @@
+---
+import {
+  loadAllImplementations,
+  getImplementationIds,
+} from "@/lib/implementations";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import ImplementationDetails from "@/components/implementations/ImplementationDetails.astro";
+import type { GetStaticPaths } from "astro";
+
+export interface Props {
+  id: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return getImplementationIds().map((id) => ({
+    params: { slug: id },
+    props: { id },
+  }));
+};
+
+const { id } = Astro.props;
+const implementation = loadAllImplementations().find((i) => i.id === id);
+
+if (!implementation) {
+  throw new Error(`Implementation "${id}" not found`);
+}
+---
+
+<StarlightPage
+  frontmatter={{
+    title: implementation.name,
+    description: implementation.description,
+    tableOfContents: false,
+  }}
+>
+  <ImplementationDetails implementation={implementation} />
+</StarlightPage>

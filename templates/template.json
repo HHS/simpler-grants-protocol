@@ -57,6 +57,10 @@
         "destination": "src/common_grants/scripts/generate_openapi.py"
       },
       {
+        "path": "./fast-api/src/common_grants/scripts/check_domain.sh",
+        "destination": "src/common_grants/scripts/check_domain.sh"
+      },
+      {
         "path": "./fast-api/src/common_grants/services/opportunity.py",
         "destination": "src/common_grants/services/opportunity.py"
       },
