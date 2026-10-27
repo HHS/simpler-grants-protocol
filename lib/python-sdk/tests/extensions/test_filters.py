@@ -8,20 +8,27 @@ from datetime import date
 
 import pytest
 from pydantic import ValidationError
+from pydantic.alias_generators import to_camel
 
 from common_grants_sdk.extensions import PluginRoutes, ResourceRoutes
 from common_grants_sdk.extensions.filters import (
+    _policy_for,
     classify_filters,
     f,
     validate_filter_call,
     validate_routes,
 )
 from common_grants_sdk.extensions.types import FilterError
+from common_grants_sdk.schemas.pydantic.filters import AwardFilters, AwdFilters
+from common_grants_sdk.schemas.pydantic.filters.base import DefaultFilter
+from common_grants_sdk.schemas.pydantic.filters.date import DateRange, DateRangeFilter
 from common_grants_sdk.schemas.pydantic.filters.money import (
     MoneyComparisonFilter,
+    MoneyRange,
     MoneyRangeFilter,
 )
 from common_grants_sdk.schemas.pydantic.filters.numeric import (
+    NumberArrayFilter,
     NumberComparisonFilter,
     NumberRangeFilter,
 )
@@ -487,23 +494,18 @@ def test_classify_all_valid_mixed_buckets_returns_all_keys():
     assert "legacyTag" in result.custom_filters
 
 
-@pytest.mark.parametrize(
-    ("resource", "method"),
-    [
-        ("opportunities", "list"),  # method not declared in routes
-        ("opportunity", "search"),  # resource near-miss (pluralization)
-    ],
-)
-def test_classify_unmatched_route_treats_registered_name_as_adhoc(resource, method):
-    """A (resource, method) pair with no routes entry has no registered bucket.
+def test_classify_unmatched_route_treats_registered_name_as_adhoc():
+    """A declared resource with an undeclared method has no registered bucket.
 
-    "agency" is registered as a stringArray under opportunities.search only. Via any
-    other pair it is validated as an ad-hoc filter, so f.eq("NSF") (a valid string
-    comparison) passes through to customFilters. This exercises both levels of the
-    routes lookup: a mis-keyed lookup would either apply the spec where it should
-    not, or skip it where it should apply.
+    "agency" is registered as a stringArray under opportunities.search only. Via
+    opportunities.list it is validated as an ad-hoc filter, so f.eq("NSF") (a valid
+    string comparison) passes through to customFilters. A mis-keyed lookup would
+    either apply the spec where it should not, or skip it where it should apply.
+    (An unknown resource raises; see test_unknown_resource_name_raises_key_error.)
     """
-    result = classify_filters(SAMPLE_ROUTES, resource, method, {"agency": f.eq("NSF")})
+    result = classify_filters(
+        SAMPLE_ROUTES, "opportunities", "list", {"agency": f.eq("NSF")}
+    )
     assert result.custom_filters is not None
     assert result.custom_filters["agency"].value == "NSF"
 
@@ -708,3 +710,297 @@ def test_validate_filter_call_number_comparison_validates_as_number():
     )
     assert value is None
     assert isinstance(error, FilterError)
+
+
+# ---------------------------------------------------------------------------
+# Awards: the resource's own standard filters, models and registrations
+# ---------------------------------------------------------------------------
+
+
+class AwardSearchFilters(AwardFilters, total=False):
+    """Registered custom filters for awards.search."""
+
+    program_code: StringArray
+    program_year: NumberComparison
+
+
+AWARD_ROUTES = PluginRoutes(
+    opportunities=ResourceRoutes(search=OppSearchFilters),
+    awards=ResourceRoutes(search=AwardSearchFilters),
+)
+OPP_ID = "00000000-0000-4000-8000-000000000001"
+USD_RANGE = (
+    {"amount": "1000", "currency": "USD"},
+    {"amount": "5000", "currency": "USD"},
+)
+
+
+def _award_wire(filters):
+    return classify_filters(AWARD_ROUTES, "awards", "search", filters).model_dump(
+        by_alias=True, mode="json", exclude_unset=True
+    )
+
+
+def test_unknown_resource_name_raises_key_error():
+    """A resource with no filter policy, such as a misspelled "award", raises
+    instead of borrowing the opportunity classification."""
+    with pytest.raises(KeyError, match="'award'.*'opportunities', 'awards'"):
+        _policy_for("award")
+    with pytest.raises(KeyError, match="'award'.*'opportunities', 'awards'"):
+        classify_filters(
+            AWARD_ROUTES, "award", "search", {"status": f.in_(["awarded"])}
+        )
+    assert _policy_for("opportunities") is not _policy_for("awards")
+
+
+@pytest.mark.parametrize(
+    ("snake", "camel", "value", "wire_value"),
+    [
+        ("status", "status", f.in_(["awarded"]), ["awarded"]),
+        ("opportunity_id", "opportunityId", f.in_([OPP_ID]), [OPP_ID]),
+        (
+            "award_date_range",
+            "awardDateRange",
+            f.between("2026-01-01", "2026-12-31"),
+            {"min": "2026-01-01", "max": "2026-12-31"},
+        ),
+        (
+            "awarded_amount_range",
+            "awardedAmountRange",
+            f.between(*USD_RANGE),
+            {"min": USD_RANGE[0], "max": USD_RANGE[1]},
+        ),
+    ],
+)
+def test_award_standard_filter_snake_and_camel_forms_send_camel_wire_name(
+    snake, camel, value, wire_value
+):
+    for key in (snake, camel):
+        result = classify_filters(AWARD_ROUTES, "awards", "search", {key: value})
+        assert isinstance(result, AwdFilters)
+        body = result.model_dump(by_alias=True, mode="json", exclude_unset=True)
+        assert body == {camel: {"operator": value.operator.value, "value": wire_value}}
+
+
+def test_award_date_range_keeps_datetime_values_on_the_wire():
+    body = _award_wire(
+        {
+            "award_date_range": {
+                "operator": "between",
+                "value": {"min": "2026-01-01T09:30:00Z", "max": "2026-12-31"},
+            }
+        }
+    )
+    assert body["awardDateRange"]["value"] == {
+        "min": "2026-01-01T09:30:00Z",
+        "max": "2026-12-31",
+    }
+
+
+def test_award_both_forms_of_one_standard_filter_raises():
+    with pytest.raises(FilterError) as exc:
+        _award_wire(
+            {"opportunity_id": f.in_([OPP_ID]), "opportunityId": f.in_([OPP_ID])}
+        )
+    assert exc.value.path == "filters.opportunityId"
+    assert "more than once" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("opportunity_id", f.eq(OPP_ID)),  # wrong family: needs in/notIn
+        ("award_date_range", {"operator": "between", "value": {"min": "2026-01-01"}}),
+        (
+            "awarded_amount_range",
+            {"operator": "between", "value": {"max": USD_RANGE[1]}},
+        ),
+        ("status", {"operator": "in", "value": ["awarded"], "extra": True}),
+    ],
+)
+def test_award_standard_filter_uses_the_strict_award_model(key, value):
+    with pytest.raises(FilterError) as exc:
+        _award_wire({key: value})
+    assert exc.value.path == f"filters.{to_camel(key)}"
+
+
+def test_award_standard_filter_reads_null_as_omitted():
+    assert _award_wire({"status": None}) == {}
+
+
+def test_award_registered_filter_is_coerced_and_kept_literal():
+    body = _award_wire({"program_year": {"operator": "eq", "value": "2026"}})
+    assert body == {
+        "customFilters": {"program_year": {"operator": "eq", "value": 2026}}
+    }
+
+
+def test_award_registered_filter_rejects_wrong_value():
+    with pytest.raises(FilterError) as exc:
+        _award_wire({"program_code": f.eq("RESEARCH")})
+    assert exc.value.path == "filters.program_code"
+
+
+def test_award_adhoc_filter_is_validated_and_not_camelized():
+    assert _award_wire({"experimental_tag": f.eq("pilot")}) == {
+        "customFilters": {"experimental_tag": {"operator": "eq", "value": "pilot"}}
+    }
+    with pytest.raises(FilterError):
+        _award_wire({"experimental_tag": {"operator": "in", "value": "pilot"}})
+
+
+def test_award_and_opportunity_registrations_stay_on_their_own_resource():
+    # program_code is registered for awards only: on opportunities it is ad-hoc.
+    opp = classify_filters(
+        AWARD_ROUTES, "opportunities", "search", {"program_code": f.eq("X")}
+    )
+    assert opp.custom_filters is not None and "program_code" in opp.custom_filters
+    # agency is registered for opportunities only: on awards it is ad-hoc.
+    assert _award_wire({"agency": f.eq("NSF")}) == {
+        "customFilters": {"agency": {"operator": "eq", "value": "NSF"}}
+    }
+
+
+def test_standard_names_belong_to_their_own_resource():
+    # An opportunity standard filter is just a custom filter on awards ...
+    body = _award_wire({"closeDateRange": f.between("2026-01-01", "2026-12-31")})
+    assert list(body) == ["customFilters"]
+    # ... and an award standard filter is just a custom filter on opportunities.
+    opp = classify_filters(
+        AWARD_ROUTES, "opportunities", "search", {"opportunity_id": f.in_([OPP_ID])}
+    )
+    assert opp.custom_filters is not None and "opportunity_id" in opp.custom_filters
+
+
+def test_validate_routes_checks_award_redeclarations_against_award_standards():
+    class RedeclaresAwardStatus(AwardFilters, total=False):
+        status: StringComparison
+
+    with pytest.raises(FilterError) as exc:
+        validate_routes(
+            PluginRoutes(awards=ResourceRoutes(search=RedeclaresAwardStatus))
+        )
+    assert exc.value.path == "routes.awards.search.status"
+
+
+def test_validate_routes_rejects_non_filter_award_registration():
+    class BadAwardFilters(AwardFilters, total=False):
+        program_code: int
+
+    with pytest.raises(FilterError) as exc:
+        validate_routes(PluginRoutes(awards=ResourceRoutes(search=BadAwardFilters)))
+    assert exc.value.path == "routes.awards.search.program_code"
+
+
+def test_validate_routes_judges_standard_names_per_resource():
+    class AwardRouteWithCloseDate(AwardFilters, total=False):
+        closeDateRange: StringArray  # not an award standard: a custom filter
+
+    validate_routes(PluginRoutes(awards=ResourceRoutes(search=AwardRouteWithCloseDate)))
+
+    class OppRouteWithCloseDate(OpportunityFilters, total=False):
+        closeDateRange: StringArray  # IS an opportunity standard, re-typed
+
+    with pytest.raises(FilterError):
+        validate_routes(
+            PluginRoutes(opportunities=ResourceRoutes(search=OppRouteWithCloseDate))
+        )
+
+
+class _OpportunityIdAsNumbers(AwardFilters, total=False):
+    opportunityId: NumberArrayFilter
+
+
+class _OpportunityIdAsStrings(AwardFilters, total=False):
+    opportunityId: StringArrayFilter
+
+
+class _AwardDateRangeAsString(AwardFilters, total=False):
+    awardDateRange: StringComparison
+
+
+class _AwardDateRangeAsDates(AwardFilters, total=False):
+    awardDateRange: DateRangeFilter
+
+
+class _AwardedAmountRangeAsNumbers(AwardFilters, total=False):
+    awardedAmountRange: NumberRangeFilter
+
+
+class _AwardedAmountRangeAsMoney(AwardFilters, total=False):
+    awardedAmountRange: MoneyRangeFilter
+
+
+@pytest.mark.parametrize(
+    ("name", "route_td"),
+    [
+        ("opportunityId", _OpportunityIdAsNumbers),
+        ("opportunityId", _OpportunityIdAsStrings),
+        ("awardDateRange", _AwardDateRangeAsString),
+        ("awardDateRange", _AwardDateRangeAsDates),
+        ("awardedAmountRange", _AwardedAmountRangeAsNumbers),
+        ("awardedAmountRange", _AwardedAmountRangeAsMoney),
+    ],
+)
+def test_validate_routes_rejects_award_wire_names_as_custom_filters(name, route_td):
+    """The classifier sends a standard filter's camelCase wire name as that standard
+    filter, so a custom filter registered under it would never be validated against
+    its declared type. Rejected whatever the type, same family or not."""
+    with pytest.raises(FilterError, match="reserved") as exc:
+        validate_routes(PluginRoutes(awards=ResourceRoutes(search=route_td)))
+    assert exc.value.path == f"routes.awards.search.{name}"
+
+
+def test_validate_routes_accepts_snake_award_standards_and_custom_filters():
+    class SnakeRedeclarations(AwardSearchFilters, total=False):
+        status: StringArrayFilter
+        opportunity_id: StringArrayFilter
+
+    validate_routes(PluginRoutes(awards=ResourceRoutes(search=SnakeRedeclarations)))
+
+
+def test_award_wire_name_reservation_does_not_apply_to_opportunities():
+    class OppRoute(OpportunityFilters, total=False):
+        opportunityId: NumberArrayFilter  # not an opportunity standard filter
+        # Pre-existing opportunity behavior, deliberately unchanged here.
+        close_date_range: StringArray
+
+    validate_routes(PluginRoutes(opportunities=ResourceRoutes(search=OppRoute)))
+
+
+def test_award_standard_filters_accept_the_authoring_value_models():
+    """AwardFilters types its range keys with the shared models; the strict award
+    models must accept those instances, not only private award subclasses."""
+    body = _award_wire(
+        {
+            "award_date_range": DateRangeFilter(
+                operator="between",
+                value=DateRange(min=date(2026, 1, 1), max=date(2026, 12, 31)),
+            ),
+            "awarded_amount_range": MoneyRangeFilter(
+                operator="between", value=MoneyRange(min=USD_RANGE[0], max=USD_RANGE[1])
+            ),
+        }
+    )
+    assert body["awardDateRange"]["value"] == {"min": "2026-01-01", "max": "2026-12-31"}
+    assert body["awardedAmountRange"]["value"] == {
+        "min": USD_RANGE[0],
+        "max": USD_RANGE[1],
+    }
+
+
+def test_validate_routes_accepts_an_equal_union_redeclaration():
+    """Standard hints compare by equality, not identity: an equal union spelled
+    differently (PEP 604 here; every inherited union on Python 3.14+, which no
+    longer caches unions) is not a re-typed standard filter."""
+
+    class Pep604Redeclaration(AwardFilters, total=False):
+        award_date_range: DateRangeFilter | DefaultFilter
+
+    validate_routes(PluginRoutes(awards=ResourceRoutes(search=Pep604Redeclaration)))
+
+    class Narrowed(AwardFilters, total=False):
+        award_date_range: DateRangeFilter  # a different type: still rejected
+
+    with pytest.raises(FilterError):
+        validate_routes(PluginRoutes(awards=ResourceRoutes(search=Narrowed)))

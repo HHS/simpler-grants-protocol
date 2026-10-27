@@ -33,12 +33,14 @@ from pydantic import (
     AliasGenerator,
     BaseModel,
     ConfigDict,
+    Field,
     ValidationError,
 )
 from pydantic.alias_generators import to_camel
 
+from ..schemas.pydantic._contract import NonNullOptionals
 from ..schemas.pydantic.fields.custom import CustomField, CustomFieldType
-from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.models import AwdRecipientIndividual, OpportunityBase
 from .specs import PluginCustomFieldSpec
 from .transforms import build_transforms
 from .types import TransformError, TransformResult
@@ -77,21 +79,32 @@ class _CamelModel(BaseModel):
     )
 
 
-class CustomFieldSet(_CamelModel):
+class CustomFieldSet(NonNullOptionals, _CamelModel):
     """Base class an author subclasses to declare a schema's custom fields.
 
     Each field is declared as ``Optional[CustomField[V]] = Field(default=None,
     description=...)``. ``CustomField[V]`` is the single source of truth: its value
     type ``V`` is the anchor from which ``field_type`` and the inspectable value type
     are derived, so they cannot drift.
+
+    Entries the set does not declare are kept in ``model_extra`` under their exact
+    wire key and validated as a base ``CustomField``, so each must carry its own
+    ``name``, ``fieldType`` and ``value``. A declared entry may be omitted, and a
+    ``null`` one reads as omitted; an entry's own ``value`` may still be ``null``.
     """
+
+    model_config = ConfigDict(extra="allow")
+
+    __pydantic_extra__: dict[str, CustomField] = Field(init=False)
 
 
 # The extensible-schema registry: the closed set of models a plugin may extend,
 # mapped to their generic base model. Add an entry when a new model gains
-# custom-field support.
+# custom-field support. Award custom fields live on the individual recipient, so
+# the recipient (not AwardBase) is the registered award extension point.
 EXTENSIBLE_SCHEMA_MAP: dict[str, type[BaseModel]] = {
     "Opportunity": OpportunityBase,
+    "AwdRecipientIndividual": AwdRecipientIndividual,
 }
 _BASE_TO_NAME: dict[type[BaseModel], str] = {
     v: k for k, v in EXTENSIBLE_SCHEMA_MAP.items()

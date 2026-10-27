@@ -3,6 +3,10 @@
 __all__ = [  # noqa: RUF022
     # Base Filter
     "DefaultFilter",
+    # Award Filters
+    "AwardFilters",
+    "AwdDefaultFilters",
+    "AwdFilters",
     # Operators
     "ArrayOperator",
     "ComparisonOperator",
@@ -45,6 +49,11 @@ __all__ = [  # noqa: RUF022
     "StringComparison",
 ]
 
+from .award import (
+    AwardFilters,
+    AwdDefaultFilters,
+    AwdFilters,
+)
 from .base import (
     ArrayOperator,
     ComparisonOperator,

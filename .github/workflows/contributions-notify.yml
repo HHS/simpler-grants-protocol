@@ -1,0 +1,149 @@
+name: "Contributions: Notify Slack"
+
+# SAFETY INVARIANT, do not remove.
+# pull_request_target runs with repository secrets in the base repo's context,
+# which is the only way a fork's pull request can reach the Slack webhook. It is
+# safe here only because this workflow never checks out the pull request's code.
+# Never add actions/checkout with the PR head ref to this file. If you need the
+# contents of a PR, write a separate workflow triggered by pull_request.
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: "17 16 * * 1-5" # weekdays, about 9am Pacific (8am in winter); off the hour, when GitHub drops fewer runs
+  workflow_dispatch: # press Run workflow to post a test message and the claims list
+
+# No token scopes by default. The claims job below asks for read access to issues.
+permissions: {}
+
+jobs:
+  # Anything opened by someone outside the team.
+  opened:
+    if: >-
+      (github.event_name == 'issues' || github.event_name == 'pull_request_target') &&
+      !endsWith(github.event.issue.user.login || github.event.pull_request.user.login, '[bot]') &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.issue.author_association || github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          # Untrusted values go through env, never inlined into the script.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          KIND: ${{ github.event_name == 'issues' && 'issue' || 'pull request' }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
+          URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          AUTHOR: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+        run: |
+          jq -n --arg kind "$KIND" --arg author "$AUTHOR" --arg url "$URL" \
+                --arg num "$NUMBER" --arg title "$TITLE" '
+            def esc: gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;");
+            {text: "New \($kind) from @\($author|esc): <\($url)|#\($num) \($title|esc)>"}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+  # Someone outside the team commented on a funded issue: a claim, a proposal,
+  # an extension request, or a question.
+  #
+  # Depends on the labels `funded: contribution` and `funded: implementation`
+  # existing exactly as spelled. contains() over an array is an exact match.
+  funded-comment:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      (contains(github.event.issue.labels.*.name, 'funded: contribution') ||
+       contains(github.event.issue.labels.*.name, 'funded: implementation')) &&
+      !endsWith(github.event.comment.user.login, '[bot]') &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          ISSUE_KIND: "${{ contains(github.event.issue.labels.*.name, 'funded: implementation') && 'implementation' || 'contribution' }}"
+          NUMBER: ${{ github.event.issue.number }}
+          TITLE: ${{ github.event.issue.title }}
+          URL: ${{ github.event.comment.html_url }}
+          AUTHOR: ${{ github.event.comment.user.login }}
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          # First line of the comment, so a claim reads differently from a question.
+          SNIPPET=$(printf '%s' "$BODY" | head -n 1 | cut -c1-140)
+          jq -n --arg kind "$ISSUE_KIND" --arg author "$AUTHOR" --arg url "$URL" \
+                --arg num "$NUMBER" --arg title "$TITLE" --arg snippet "$SNIPPET" '
+            def esc: gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;");
+            {text: "@\($author|esc) on a funded \($kind) issue: <\($url)|#\($num) \($title|esc)>\n> \($snippet|esc)"}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"
+
+  # Each weekday, list the funded issues someone is working on and how many days
+  # since they were assigned. Posts nothing when no funded issue is assigned.
+  # Extensions and time spent paused are not tracked, so read the count with
+  # those in mind. A claim shows as paused only if its PR says "Closes #N".
+  claims:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Post the claims list
+        shell: bash # adds pipefail, so a failed query fails the run instead of posting nothing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SEARCH: >-
+            repo:${{ github.repository }} is:issue is:open assignee:*
+            label:"funded: contribution","funded: implementation"
+        run: |
+          gh api graphql -f q="$SEARCH" -f query='
+            query($q: String!) { search(query: $q, type: ISSUE, first: 50) { nodes { ... on Issue {
+              number title url
+              labels(first: 20) { nodes { name } }
+              assignees(first: 1) { nodes { login } }
+              timelineItems(itemTypes: [ASSIGNED_EVENT], last: 10) {
+                nodes { ... on AssignedEvent { createdAt assignee { ... on User { login } } } } }
+              closedByPullRequestsReferences(first: 5) { nodes { isDraft state } }
+            } } } }' \
+          | jq -c '
+            def esc: gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;");
+            [.data.search.nodes[] | select(.assignees.nodes | length > 0)
+              | .assignees.nodes[0].login as $who
+              # the date this person was assigned, not whoever was assigned last
+              | ([.timelineItems.nodes[] | select(.assignee.login == $who) | .createdAt] | last // (now | todate)) as $since
+              | ((now - ($since | fromdateiso8601)) / 86400 | floor) as $d
+              | any(.labels.nodes[]; .name == "funded: implementation") as $impl
+              # day ranges rather than exact days, so a weekend cannot hide a reminder
+              | "• <\(.url)|#\(.number) \(.title | esc)>, @\($who): " +
+                if any(.closedByPullRequestsReferences.nodes[]; .state == "OPEN" and (.isDraft | not))
+                  then "PR ready for review, clock paused"
+                elif $impl and $d > 60 then "day \($d), past the 60-day default: check the deadline on the issue"
+                elif $impl and $d >= 30 and $d % 30 <= 2 then "day \($d), 30-day progress update due"
+                elif $impl then "day \($d)"
+                elif $d > 14 then "day \($d), past 14 days: end the claim unless you extended it"
+                elif $d == 14 then "day 14, deadline today"
+                elif $d >= 7 and $d <= 9 then "day \($d), check-in due"
+                else "day \($d) of 14" end]
+            | select(length > 0) | {text: (["*Funded claims today*"] + .) | join("\n")}' \
+          | { read -r payload || exit 0
+              curl -sS --fail-with-body --retry 3 --retry-all-errors \
+                -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"; }
+
+  # Press "Run workflow" in the Actions tab to confirm the webhook still works.
+  # A working notifier and a dead one both look like silence otherwise.
+  test:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post a test message
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          jq -n '{text: "Test message. The webhook is working."}' \
+          | curl -sS --fail-with-body --retry 3 --retry-all-errors \
+              -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL"

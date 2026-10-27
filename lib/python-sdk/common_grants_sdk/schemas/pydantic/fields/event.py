@@ -1,11 +1,11 @@
 """Event field types for the CommonGrants API."""
 
 from enum import StrEnum
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import Field
 
-from ..base import CommonGrantsBaseModel
+from .._contract import SealedModel
 from ..types import ISODate, ISOTime
 
 
@@ -19,13 +19,12 @@ class EventType(StrEnum):
 
 
 # Event Base
-class EventBase(CommonGrantsBaseModel):
+class EventBase(SealedModel):
     """Base model for all events."""
 
     name: str = Field(
         ...,
         description="Human-readable name of the event (e.g., 'Application posted', 'Question deadline')",
-        min_length=1,
     )
     event_type: EventType = Field(
         ...,
@@ -35,6 +34,15 @@ class EventBase(CommonGrantsBaseModel):
         default=None,
         description="Description of what this event represents",
     )
+
+    def model_post_init(self, context: Any, /) -> None:
+        """Treat a defaulted discriminator as set.
+
+        ``eventType`` is required on the wire, but subclasses default it for
+        construction convenience. Marking it set keeps it in
+        ``model_dump(exclude_unset=True)`` output.
+        """
+        self.__pydantic_fields_set__.add("event_type")
 
 
 # Single Date Event

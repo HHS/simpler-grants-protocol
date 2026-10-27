@@ -8,17 +8,20 @@ consumers get fully-typed, non-optional dot access: ``plugin.schemas.Opportunity
 
 ``plugin.get_client(...)`` returns a client already scoped with the plugin's routes and
 schemas: ``client.opportunities.search(filters=...)`` is typed by the registered filter
-TypedDict, and responses parse with the plugin's Opportunity schema by default.
+TypedDict, and responses parse with the plugin's Opportunity schema by default. Award
+responses parse into ``AwardBase`` composed with the plugin's ``AwdRecipientIndividual``
+schema, where award custom fields live.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
-from typing import TYPE_CHECKING, Any, Generic, Optional, cast, overload
+from typing import TYPE_CHECKING, Any, Generic, Optional, Protocol, cast
 
 import typing_extensions as te
 
-from ..schemas.pydantic.models import OpportunityBase
+from ..schemas.pydantic.models import AwardBase, AwdRecipientIndividual, OpportunityBase
+from ..schemas.pydantic.models.award import RecipientT
 from .filters import validate_routes
 from .schema import (
     PluginDefinitionError,
@@ -26,7 +29,7 @@ from .schema import (
     SchemaWithTransforms,
     schema,
 )
-from .types import FiltersT, PluginMeta, PluginRoutes, ResourceRoutes
+from .types import AwardFiltersT, FiltersT, PluginMeta, PluginRoutes
 
 if TYPE_CHECKING:
     from ..client.auth import Auth
@@ -34,6 +37,37 @@ if TYPE_CHECKING:
     from ..client.config import Config
 
 SchemasT = te.TypeVar("SchemasT")
+# Plugin is frozen, so its schemas parameter can be covariant. That lets
+# get_client's self-type match PluginSchemas structurally against
+# _PluginSchemasView, whichever entry kind fills each slot.
+_SchemasT_co = te.TypeVar("_SchemasT_co", covariant=True)
+_TCommon_co = te.TypeVar("_TCommon_co", covariant=True)
+_OppT_co = te.TypeVar("_OppT_co", covariant=True)
+_RecT_co = te.TypeVar("_RecT_co", covariant=True)
+
+
+class _ParsesInto(Protocol[_TCommon_co]):
+    """A schema slot's entry, either kind (``SchemaOnly`` or ``SchemaWithTransforms``),
+    read for the common model it parses into."""
+
+    @property
+    def common_schema(self) -> type[_TCommon_co]: ...
+
+
+class _PluginSchemasView(Protocol[_OppT_co, _RecT_co]):
+    """Read-only view of ``PluginSchemas``: one property per extensible schema,
+    typed by the common model that slot parses into.
+
+    ``Plugin.get_client`` reads the plugin's schemas through this view, so its
+    single signature covers every combination of entry kinds. A new extensible
+    schema adds one property here.
+    """
+
+    @property
+    def Opportunity(self) -> _ParsesInto[_OppT_co]: ...
+    @property
+    def AwdRecipientIndividual(self) -> _ParsesInto[_RecT_co]: ...
+
 
 # The item model a get_client()-scoped client parses responses into: the common
 # model bound to the plugin's Opportunity schema slot (OpportunityBase or a
@@ -49,12 +83,15 @@ ItemT = te.TypeVar(
 # fields, no transforms. A SchemaOnly type, so unextended slots have no
 # to_common either.
 DefaultOpportunity = SchemaOnly[OpportunityBase]
+DefaultAwdRecipientIndividual = SchemaOnly[AwdRecipientIndividual]
 
 _TOpportunity = te.TypeVar("_TOpportunity", default=DefaultOpportunity)
+# Appended after _TOpportunity, with a default, so PluginSchemas[O] keeps its meaning.
+_TRecipient = te.TypeVar("_TRecipient", default=DefaultAwdRecipientIndividual)
 
 
 @dataclass
-class PluginSchemas(Generic[_TOpportunity]):
+class PluginSchemas(Generic[_TOpportunity, _TRecipient]):
     """Maps your extensions to the extensible schemas. Construct it directly.
 
     Pass one extension per schema you extend, keyed by the registered schema name.
@@ -65,7 +102,9 @@ class PluginSchemas(Generic[_TOpportunity]):
         plugin = define_plugin(PluginSchemas(Opportunity=opp_ext), meta=...)
         plugin.schemas.Opportunity   # the extension you passed
 
-    There is one field per registered extensible schema.
+    There is one field per registered extensible schema. Award custom fields live
+    on the award's individual recipient, so awards are extended through
+    ``AwdRecipientIndividual``.
     """
 
     Opportunity: _TOpportunity = field(
@@ -73,66 +112,62 @@ class PluginSchemas(Generic[_TOpportunity]):
             _TOpportunity, schema(common_schema=OpportunityBase)
         )
     )
+    AwdRecipientIndividual: _TRecipient = field(
+        default_factory=lambda: cast(
+            _TRecipient, schema(common_schema=AwdRecipientIndividual)
+        )
+    )
 
 
 @dataclass(frozen=True)
-class Plugin(Generic[SchemasT, FiltersT]):
+class Plugin(Generic[_SchemasT_co, FiltersT, AwardFiltersT]):
     """The plugin singleton consumers import.
 
-    ``schemas`` is a typed frozen dataclass, so ``plugin.schemas.Opportunity`` is
+    ``schemas`` is a typed dataclass, so ``plugin.schemas.Opportunity`` is
     fully typed (dot access). ``routes`` is the typed custom-filter registration
-    (``PluginRoutes``); its filter TypedDict flows through ``get_client`` to type
-    ``client.opportunities.search(filters=...)``.
+    (``PluginRoutes``); each resource's filter TypedDict flows through
+    ``get_client`` to type ``client.opportunities.search(filters=...)`` and
+    ``client.awards.search(filters=...)``.
     """
 
-    schemas: SchemasT
-    routes: PluginRoutes[FiltersT]
+    schemas: _SchemasT_co
+    routes: PluginRoutes[FiltersT, AwardFiltersT]
     meta: PluginMeta
 
-    @overload
+    # One signature for every entry-kind combination: the self-type reads each
+    # slot's common model through _PluginSchemasView, whichever entry kind holds it.
     def get_client(
-        self: "Plugin[PluginSchemas[SchemaOnly[ItemT]], FiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT]": ...
-
-    @overload
-    def get_client(
-        self: "Plugin[PluginSchemas[SchemaWithTransforms[Any, ItemT]], FiltersT]",
-        config: Optional[Config] = ...,
-        auth: Optional[Auth] = ...,
-    ) -> "Client[FiltersT, ItemT]": ...
-
-    def get_client(
-        self,
+        self: "Plugin[_PluginSchemasView[ItemT, RecipientT], FiltersT, AwardFiltersT]",
         config: "Optional[Config]" = None,
         auth: "Optional[Auth]" = None,
-    ) -> "Client[Any, Any]":
+    ) -> "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]":
         """Return a client pre-scoped with this plugin's routes and schemas.
 
         Consumers call ``plugin.get_client(config)`` instead of constructing a
         client and binding the plugin's schemas/routes by hand. The returned
         client types ``opportunities.search(filters=...)`` by the plugin's
-        registered filters and parses responses with its Opportunity schema.
+        registered filters and parses responses with its Opportunity schema, and
+        awards into ``AwardBase`` over its ``AwdRecipientIndividual`` schema.
         """
         # Local import: the client imports from extensions, so importing it at
         # module scope here would create a cycle.
         from ..client.client import Client
 
-        # self.schemas/self.routes are opaque here (SchemasT); the overloads above
-        # carry the precise Client[FiltersT, ItemT] the caller sees.
         client = Client(config=config, auth=auth)
         client._bind_schemas(cast("Any", self.schemas))
         client._bind_routes(cast("Any", self.routes))
-        return client
+        # Client() infers its defaults here; the signature carries the precise type.
+        return cast(
+            "Client[FiltersT, ItemT, AwardFiltersT, AwardBase[RecipientT]]", client
+        )
 
 
 def define_plugin(
     schemas: SchemasT,
     *,
-    routes: PluginRoutes[FiltersT] | None = None,
+    routes: PluginRoutes[FiltersT, AwardFiltersT] | None = None,
     meta: PluginMeta,
-) -> Plugin[SchemasT, FiltersT]:
+) -> Plugin[SchemasT, FiltersT, AwardFiltersT]:
     """Assemble the plugin from schema extensions, optional route registrations,
     and metadata.
 
@@ -162,8 +197,8 @@ def define_plugin(
             )
     if errors:
         raise PluginDefinitionError("plugin", errors)
-    resolved_routes: PluginRoutes[Any] = (
-        routes if routes is not None else PluginRoutes(opportunities=ResourceRoutes())
+    resolved_routes: PluginRoutes[Any, Any] = (
+        routes if routes is not None else PluginRoutes()
     )
     # Validate the routes here, when the plugin is defined, so that a plugin author
     # sees an invalid filter registration right away instead of a consumer running

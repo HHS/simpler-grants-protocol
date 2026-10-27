@@ -1,5 +1,6 @@
 """Tests for the Client class."""
 
+import copy
 import json
 import pytest
 from unittest.mock import Mock, patch
@@ -1043,7 +1044,9 @@ class TestClientGetItem:
 class TestClientSearch:
     """Tests for Client.search() method."""
 
-    def test_search_with_page_calls_list_some_items(self, sample_search_response):
+    def test_search_with_page_calls_list_some_items(
+        self, search_request, sample_search_response
+    ):
         """Test that search() with page calls search() with page parameter."""
         """Test that search(path, search, page=1) calls search()."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
@@ -1064,7 +1067,9 @@ class TestClientSearch:
             assert isinstance(response.pagination_info, PaginatedResultsInfo)
             assert response.pagination_info.page == 1
 
-    def test_search_without_page_calls_list_all_items(self, sample_search_response):
+    def test_search_without_page_calls_list_all_items(
+        self, search_request, sample_search_response
+    ):
         """Test that search(path, search, page=None) calls search() without page parameter."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1086,7 +1091,9 @@ class TestClientSearch:
             assert response.pagination_info.page == 1
             assert response.pagination_info.total_pages == 1
 
-    def test_search_uses_default_page_size(self, sample_search_response):
+    def test_search_uses_default_page_size(
+        self, search_request, sample_search_response
+    ):
         """Test that search() uses default page_size from config."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1100,9 +1107,10 @@ class TestClientSearch:
             client.search("/test-path", request_data=search_request, page=1)
 
             call_args = client.post.call_args
-            assert call_args[1]["params"]["pageSize"] == 100  # Default from config
+            pagination = call_args[1]["json"]["pagination"]
+            assert pagination["pageSize"] == 100  # Default from config
 
-    def test_search_with_custom_page_size(self, sample_search_response):
+    def test_search_with_custom_page_size(self, search_request, sample_search_response):
         """Test that search() accepts custom page_size."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1118,7 +1126,7 @@ class TestClientSearch:
             )
 
             call_args = client.post.call_args
-            assert call_args[1]["params"]["pageSize"] == 25
+            assert call_args[1]["json"]["pagination"]["pageSize"] == 25
 
     def test_search_handles_http_error(self, search_request):
         """Test that search() raises APIError on HTTP errors."""
@@ -1159,7 +1167,9 @@ class TestClientSearch:
 class TestClientSearchSomeItems:
     """Tests for Client.search() with page parameter."""
 
-    def test_search_some_returns_paginated(self, sample_search_response):
+    def test_search_some_returns_paginated(
+        self, search_request, sample_search_response
+    ):
         """Test that search(path, request, page=1) returns Paginated instance."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1178,7 +1188,7 @@ class TestClientSearchSomeItems:
             assert len(response.items) == 2
             assert response.items[0]["name"] == "Test Item"
 
-    def test_search_some_handles_empty_items(self):
+    def test_search_some_handles_empty_items(self, search_request):
         """Test that search(path, request, page=1) handles empty items list."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1212,7 +1222,7 @@ class TestClientSearchSomeItems:
             assert len(response.items) == 0
             assert response.pagination_info.total_items == 0
 
-    def test_search_some_handles_missing_items(self):
+    def test_search_some_handles_missing_items(self, search_request):
         """Test that search(path, request, page=1) raises ValidationError when items field is missing."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1237,7 +1247,9 @@ class TestClientSearchSomeItems:
             with pytest.raises(ValidationError):
                 client.search("/test-path", request_data=search_request, page=1)
 
-    def test_search_some_uses_config_page_size_when_none(self, sample_search_response):
+    def test_search_some_uses_config_page_size_when_none(
+        self, search_request, sample_search_response
+    ):
         """Test that search(path, request, page=1) uses config page_size when page_size is None."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1253,10 +1265,11 @@ class TestClientSearchSomeItems:
             )
 
             call_args = client.post.call_args
-            assert call_args[1]["params"]["pageSize"] == 100  # Default from config
+            pagination = call_args[1]["json"]["pagination"]
+            assert pagination["pageSize"] == 100  # Default from config
 
     def test_search_some_falls_back_to_config_for_invalid_page_size(
-        self, sample_search_response
+        self, search_request, sample_search_response
     ):
         """Test that search(path, request, page=1) falls back to config for invalid page_size."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
@@ -1273,13 +1286,15 @@ class TestClientSearchSomeItems:
             )
 
             call_args = client.post.call_args
-            assert call_args[1]["params"]["pageSize"] == 100  # Falls back to config
+            assert (
+                call_args[1]["json"]["pagination"]["pageSize"] == 100
+            )  # Falls back to config
 
 
 class TestClientSearchAllItems:
     """Tests for Client.search() without page parameter."""
 
-    def test_search_all_single_page(self, sample_search_response):
+    def test_search_all_single_page(self, search_request, sample_search_response):
         """Test search(path, request) when there's only one page."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1297,7 +1312,7 @@ class TestClientSearchAllItems:
             assert response.pagination_info.total_pages == 1
             assert response.pagination_info.total_items == 2
 
-    def test_search_all_multiple_pages(self, sample_item_data):
+    def test_search_all_multiple_pages(self, search_request, sample_item_data):
         """Test search(path, request) when there are multiple pages."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1359,7 +1374,7 @@ class TestClientSearchAllItems:
             }
 
             def mock_post(*args, **kwargs):
-                page = kwargs.get("params", {}).get("page", 1)
+                page = kwargs["json"]["pagination"]["page"]
                 mock_resp = Mock()
                 mock_resp.raise_for_status = Mock()
                 if page == 1:
@@ -1379,7 +1394,7 @@ class TestClientSearchAllItems:
             assert response.pagination_info.total_pages == 1
             assert response.pagination_info.total_items == 5
 
-    def test_search_all_empty_result(self):
+    def test_search_all_empty_result(self, search_request):
         """Test search(path, request) when there are no items."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1416,7 +1431,7 @@ class TestClientSearchAllItems:
                 response.pagination_info.page_size == 100
             )  # Uses config default when empty
 
-    def test_search_all_handles_error_on_first_page(self):
+    def test_search_all_handles_error_on_first_page(self, search_request):
         """Test search(path, request) error handling on first page."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1438,7 +1453,9 @@ class TestClientSearchAllItems:
                 client.search("/test-path", search_request)
             assert exc_info.value.error.status == 500
 
-    def test_search_all_handles_error_on_subsequent_page(self, sample_item_data):
+    def test_search_all_handles_error_on_subsequent_page(
+        self, search_request, sample_item_data
+    ):
         """Test search(path, request) error handling on subsequent page."""
         with patch("common_grants_sdk.client.client.httpx.Client"):
             config = Config(base_url="https://api.example.com", api_key="test-key")
@@ -1474,7 +1491,7 @@ class TestClientSearchAllItems:
             )
 
             def mock_post(*args, **kwargs):
-                page = kwargs.get("params", {}).get("page", 1)
+                page = kwargs["json"]["pagination"]["page"]
                 if page == 1:
                     mock_resp = Mock()
                     mock_resp.raise_for_status = Mock()
@@ -1488,3 +1505,61 @@ class TestClientSearchAllItems:
             with pytest.raises(APIError) as exc_info:
                 client.search("/test-path", search_request)
             assert exc_info.value.error.status == 500
+
+
+class TestSearchBodyPagination:
+    """Search pages travel in ``body.pagination``, the field the protocol reads."""
+
+    @staticmethod
+    def _client(**config):
+        return Client(
+            config=Config(base_url="https://api.example.com", api_key="k", **config)
+        )
+
+    def test_aggregate_search_requests_each_page_in_the_body(
+        self, paged_search, search_request
+    ):
+        client = self._client(page_size=2)
+        seen = paged_search(client, [[{"id": "a"}, {"id": "b"}], [{"id": "c"}]])
+        original = copy.deepcopy(search_request)
+
+        response = client.search("/search", search_request)
+
+        # each row arrives exactly once, so page 2 was really page 2
+        assert [item["id"] for item in response.items] == ["a", "b", "c"]
+        bodies = [json.loads(r.content) for r in seen]
+        assert [b["pagination"] for b in bodies] == [
+            {"page": 1, "pageSize": 2},
+            {"page": 2, "pageSize": 2},
+        ]
+        assert all(not r.url.params for r in seen)  # no query pagination
+        for body in bodies:  # the rest of the body is untouched
+            assert {k: v for k, v in body.items() if k != "pagination"} == {
+                k: v for k, v in original.items() if k != "pagination"
+            }
+        assert search_request == original  # caller's data never mutated
+
+    def test_explicit_page_two_is_sent_in_the_body(self, paged_search, search_request):
+        client = self._client()
+        seen = paged_search(client, [[{"id": "a"}], [{"id": "b"}]])
+
+        response = client.search("/search", search_request, page=2, page_size=1)
+
+        assert [item["id"] for item in response.items] == ["b"]
+        assert json.loads(seen[0].content)["pagination"] == {"page": 2, "pageSize": 1}
+        assert not seen[0].url.params
+
+    def test_aggregate_search_keeps_cap_and_first_page_metadata(
+        self, paged_search, search_request
+    ):
+        client = self._client(page_size=2, list_items_limit=3)
+        seen = paged_search(
+            client, [[{"id": "a"}, {"id": "b"}], [{"id": "c"}, {"id": "d"}], []]
+        )
+
+        response = client.search("/search", search_request)
+
+        assert [item["id"] for item in response.items] == ["a", "b", "c"]
+        assert len(seen) == 2  # stopped once the cap was reached
+        assert response.pagination_info.total_items == 3
+        assert response.sort_info.sort_by == "lastModifiedAt"  # type: ignore[attr-defined]

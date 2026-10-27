@@ -17,6 +17,7 @@ Before contributing, we encourage you to read our [LICENSE](LICENSE.md) and [REA
   - [Report a bug](#report-a-bug)
   - [Request new functionality](#request-new-functionality)
   - [Contribute to the codebase](#contribute-to-the-codebase)
+  - [Paid contributions](#paid-contributions)
 - [Getting started](#getting-started)
 - [Questions?](#questions)
 
@@ -63,6 +64,8 @@ How to propose a question:
 
 Adopting the protocol is one of the most valuable contributions to the community. There are several levels of adoption, and each one builds on the last. You do not have to start at the top.
 
+If you are a state, see [Adopting CommonGrants as a state](STATE_ADOPTION_PLAYBOOK.md) for a step-by-step playbook.
+
 1. **Cross-walk your data.** Map your grant data elements to CommonGrants fields. Where your data does not map to the core models or existing custom fields, propose new ones for the catalog. This is a useful exercise even if you go no further, because it surfaces gaps in the protocol and helps us understand what real-world data looks like.
 2. **Build an adapter.** Package the transformation logic needed to translate data between your format and CommonGrants. See [Build a plugin or adapter](#build-a-plugin-or-adapter) for details.
 3. **Stand up an API proxy.** Create a CommonGrants-compliant wrapper around your existing API using one of the SDK templates and your adapter. The proxy forwards requests to your existing system and translates responses into the CommonGrants format. This works especially well when your data or API is already publicly available.
@@ -75,6 +78,8 @@ If you are a state, platform, or organization exploring adoption at any level, w
 ### Build a plugin or adapter
 
 Plugins extend the CommonGrants SDKs with additional functionality. Adapters translate data from existing grant platforms into the CommonGrants format, so that platforms can adopt the protocol without rebuilding their systems. This can enable your platform to interoperate with others in the ecosystem without changing your internal data model. If you are interested in learning more about building an adapter, reach out on the [forum](https://forum.simpler.grants.gov/c/commongrants/8) and the CommonGrants maintainers can help you get started.
+
+You can build a plugin or adapter on your own at any time. Some of this work is also posted as funded issues. See [Paid contributions](#paid-contributions) for how those work.
 
 How to build a plugin or adapter:
 
@@ -116,16 +121,18 @@ If you don't have specific language or code to submit but would like to suggest 
 
 If you've implemented a new feature, fixed a bug, or made some documentation clearer, we'd love to consider your contribution. Good documentation is just as valuable as code, so if you notice gaps or unclear explanations, a pull request is welcome.
 
+You don't need a funded issue to contribute. Most issues don't carry an award, and contributions to any of them are welcome. If you do pick up a [funded issue](#paid-contributions), claim it on the issue and wait until it's assigned to you before starting substantial work.
+
 1. **Fork the repo:** Create a copy of this repo where you can make your proposed changes by [following the GitHub forking methodology](https://docs.github.com/en/github/getting-started-with-github/quickstart/fork-a-repo).
 2. **Find or create an issue:** Before proposing a change, make sure there is a corresponding issue (i.e. Bug Fix, Task, Feature Request) that describes the contribution you'll be making. If there isn't an existing issue, create a new one by selecting and filling out a template from the [issue tab](https://github.com/HHS/simpler-grants-protocol/issues/new/choose).
 3. **Create a feature branch:** Create a feature branch on your forked repository with a descriptive name, ideally one that references the issue number that your contribution is related to (e.g., `issue-10-unit-testing`).
 4. **Make changes and test them:** Add your code or documentation and commit those changes to the feature branch. If your contribution includes code, make sure you've written tests for it and that all of the tests are passing.
-5. **Submit a pull request:** When you're ready to make your contribution, [submit a pull request against the upstream repo](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) and fill out the PR template sections so that project maintainers can begin to review your contributions.
+5. **Submit a pull request:** When you're ready to make your contribution, [submit a pull request against the upstream repo](https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) and fill out the PR template sections so that project maintainers can begin to review your contributions. Target `main`, unless your issue is in a release milestone. Then target that release's [hold branch](lib/README.md#hold-branches). A maintainer can help you retarget.
 6. **Fix requested changes:** As maintainers review your proposed contribution, they may request specific changes. If so, simply add and commit those changes to the feature branch directly and they'll automatically show up on the PR.
 
 #### PR title format
 
-PR titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) format — `type(scope): description` — and a CI check enforces this. PRs are squash-merged with the PR title as the commit subject, and that history drives releases: [release-please](https://github.com/googleapis/release-please) reads the commit type to decide version bumps and changelog entries for the published packages.
+PR titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) format (`type(scope): description`), and a CI check enforces this. PRs are squash-merged with the PR title as the commit subject, and that history drives releases: [release-please](https://github.com/googleapis/release-please) reads the commit type to decide version bumps and changelog entries for the published packages.
 
 | Type | Effect on the touched package(s) | Example |
 |------|----------------------------------|---------|
@@ -135,11 +142,23 @@ PR titles must follow the [Conventional Commits](https://www.conventionalcommits
 | `perf`, `revert`, `docs`, `refactor`, `build` | Patch release | `docs(core): clarify filter usage` |
 | `chore`, `ci`, `test` | No release; hidden from changelogs (a `!` marker still cuts a breaking release) | `chore(deps): bump the runtime group` |
 
-The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package — `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
+The scope is free-form; use the package or area you touched (`core`, `cli`, `ts-sdk`, `py-sdk`, `website`, `deps`). Releases are scoped by path rather than by that scope: only files under `lib/core/`, `lib/cli/`, `lib/ts-sdk/`, or `lib/python-sdk/` can trigger one, so `docs(website): ...` releases nothing. Inside those paths a releasing type does release the package, `docs` included, since `README.md` ships in the published artifact. Use `chore` for a package's internal notes that shouldn't ship.
 
 A PR touching two packages bumps both at the title's type. That is usually right, since both packages changed; split the PR when they warrant different bumps, such as a `feat` in `lib/core/` alongside a mechanical regeneration in `lib/ts-sdk/`.
 
-GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check — retitle it `revert: <description>` before merging. release-please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+GitHub's **Revert** button titles the new PR `Revert "..."`, which fails this check. Retitle it `revert: <description>` before merging. Release Please cannot parse `Revert "..."` either, so a revert merged under that title would ship with no version bump and no error. See [lib/README.md](lib/README.md) for how releases are cut from this history.
+
+### Paid contributions
+
+Some CommonGrants issues carry an award of $50 to $500. They're labeled `funded: contribution` or `funded: implementation`, and the award amount is at the top of the issue. See the [open funded issues](https://github.com/HHS/simpler-grants-protocol/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22funded%3A%20contribution%22%2C%22funded%3A%20implementation%22).
+
+CommonGrants is a shared standard for how grant information moves between systems. It's public infrastructure, and paying for some of the work is one way we're making room for more people to help build it.
+
+Who's eligible, how to claim or propose, and how payment works are all in the [paid contributor terms](PAID_CONTRIBUTOR_TERMS.md).
+
+**Funded issues are currently open to United States persons only.** That is a limit on how we can move money today. If you are outside the US you are welcome on any issue, funded or otherwise, and your contribution gets the same review and the same credit. We are working on it.
+
+Questions go on the issue.
 
 ## Getting started
 
