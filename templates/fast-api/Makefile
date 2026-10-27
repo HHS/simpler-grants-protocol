@@ -24,7 +24,7 @@ test-coverage: test
 	$(RUNTIME_PREFIX) coverage report --show-missing --fail-under=$(MIN_TEST_COVERAGE)
 
 check-domain:
-	@./src/common_grants/scripts/check_domain.sh
+	@bash ./src/common_grants/scripts/check_domain.sh
 
 check-format:
 	$(RUNTIME_PREFIX) black $(PYTHON_DIRS) --check
