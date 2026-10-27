@@ -8,6 +8,8 @@ import {
   Steps,
   CardGrid,
   LinkCard,
+  Tabs,
+  TabItem,
 } from "@astrojs/starlight/components";
 
 Welcome to our docs! Learn how to get started with the CommonGrants protocol.
@@ -43,83 +45,182 @@ Not looking for a quickstart guide? Here are some other resources to help you ge
 
 ## Quickstart
 
-The following tutorial will walk you through:
+In this tutorial you will:
 
-- Creating a new CommonGrants API specification using TypeSpec
-- Compiling your project to OpenAPI and previewing it with Swagger
-- Extending the base CommonGrants spec to include a custom field
-- Viewing this new field in the OpenAPI docs
+- Define a CommonGrants API specification with TypeSpec
+- Compile it to OpenAPI and preview it with Swagger
+- Add a custom field and see it in the docs
+
+You'll end up with an API specification and a docs preview, not a running API.
 
 :::note[Prerequisites]
 
-Make sure you have Node.js v18+ and npm v10+ installed. If you need to manage multiple versions of Node, we recommend using [nvm](https://github.com/nvm-sh/nvm).
-
-```bash
-node --version
-npm --version
-```
+- [Node.js](https://nodejs.org/) v22 or later (check with `node --version`). Bun users need Node.js too.
+- One package manager: [pnpm](https://pnpm.io/installation), [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), or [Bun](https://bun.sh/docs/installation).
+- Port `3000` free for the preview server.
 
 :::
 
 ### First steps
 
-First, we'll show you how to set up and preview the default CommonGrants API specification using the CLI and quickstart template.
+Set up and preview the default CommonGrants API specification.
 
-<Steps>
+#### 1. Create a new directory for your project
 
-1. Install the CLI globally
+```bash
+mkdir common-grants-quickstart
+cd common-grants-quickstart
+```
 
-   ```bash
-   npm install @common-grants/cli -g
-   ```
+#### 2. Create a `package.json` file
 
-2. Create a new directory for your project
+```json title=package.json
+{
+  "name": "common-grants-quickstart",
+  "private": true,
+  "type": "module"
+}
+```
 
-   ```bash
-   mkdir common-grants-quickstart
-   cd common-grants-quickstart
-   ```
+#### 3. Install the dependencies
 
-3. Initialize your project with the quickstart template.
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
 
-   **Note:** The TypeSpec compiler will warn you about using an untrusted template. This is expected and the template is safe to use.
+pnpm stops on unapproved install scripts. Create `pnpm-workspace.yaml` to skip the one optional script in the CLI's dependencies:
 
-   ```bash
-   cg init --template quickstart
-   ```
+```yaml title=pnpm-workspace.yaml
+allowBuilds:
+  "@scarf/scarf": false
+```
 
-   Follow the prompts and accept the default options.
+Then install the packages:
 
-   ```bash
-   ✔ Continue Yes
-   ✔ Enter a project name: common-grants-quickstart
-   ✔ Installing dependencies
+```bash
+pnpm add --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+```
 
-   success: Project initialized!
-   ```
+</TabItem>
+<TabItem label="npm">
 
-4. Compile and preview your API specification at `http://localhost:3000`
+```bash
+npm install --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+```
 
-   ```bash
-   cg compile main.tsp
-   cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
-   ```
+</TabItem>
+<TabItem label="bun">
 
-</Steps>
+```bash
+bun add --exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+```
+
+</TabItem>
+</Tabs>
+
+#### 4. Create the TypeSpec project files
+
+```tsp title=main.tsp
+import "@typespec/http";
+import "@typespec/versioning";
+import "@common-grants/core";
+
+import "./routes.tsp";
+
+/** API description here */
+@service(#{ title: "Quickstart API" })
+@Versioning.useDependency(CommonGrants.Versions.v0_5)
+namespace Quickstart;
+```
+
+```tsp title=routes.tsp
+import "@common-grants/core";
+
+using TypeSpec.Http;
+
+@tag("Opportunities")
+@route("/common-grants/opportunities")
+namespace Quickstart.Routes {
+  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
+
+  op list is OpportunitiesRouter.list;
+  op read is OpportunitiesRouter.read;
+  op search is OpportunitiesRouter.search;
+}
+```
+
+```yaml title=tspconfig.yaml
+emit:
+  - "@typespec/json-schema"
+  - "@typespec/openapi3"
+```
+
+#### 5. Compile your API specification
+
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
+
+```bash
+pnpm exec tsp compile main.tsp
+```
+
+With pnpm, run the TypeSpec compiler (`tsp`) directly. `cg compile` wraps the same command but doesn't work with pnpm yet.
+
+</TabItem>
+<TabItem label="npm">
+
+```bash
+npm exec -- cg compile main.tsp
+```
+
+</TabItem>
+<TabItem label="bun">
+
+```bash
+bun run cg compile main.tsp
+```
+
+</TabItem>
+</Tabs>
+
+#### 6. Preview your API specification at `http://localhost:3000`
+
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
+
+```bash
+pnpm exec cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+```
+
+</TabItem>
+<TabItem label="npm">
+
+```bash
+npm exec -- cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+```
+
+</TabItem>
+<TabItem label="bun">
+
+```bash
+bun run cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+```
+
+</TabItem>
+</Tabs>
+
+Press `Ctrl+C` in the terminal to stop the preview server when you're done.
 
 ### Deep dive
 
-Next, we'll take a step back and walk you through what happened behind the scenes when you ran the CLI commands listed above.
-
-If you want to jump straight into customizing the API spec, feel free to skip ahead to the [Customization](#customization) section.
+A closer look at the files and packages you just created. To skip ahead, go to [Customization](#customization).
 
 :::tip
 To make the deep dive sections easier to follow, we recommend installing the [TypeSpec VSCode extension](https://marketplace.visualstudio.com/items?itemName=typespec.typespec-vscode) which provides syntax highlighting and autocomplete for TypeSpec files.
 :::
 
-#### Explore the files created by `cg init`
+#### Explore the files you created
 
-When you run `cg init` it sets up a new CommonGrants project in the `common-grants-quickstart` directory with the following files:
+Your project directory now contains the following files:
 
 <FileTree>
 
@@ -127,8 +228,8 @@ When you run `cg init` it sets up a new CommonGrants project in the `common-gran
 - routes.tsp # Defines the API routes
 - tspconfig.yaml # Configures TypeSpec emitters (e.g. OpenAPI)
 - package.json # Manages project dependencies
-- .gitignore # Ignores files from the project
-- README.md # The project README
+- pnpm-workspace.yaml # pnpm only: skips an optional install script
+- tsp-output/ # Created when you compile
 
 </FileTree>
 
@@ -174,7 +275,7 @@ Since there's a lot happening here, let's break it down section by section.
    using TypeSpec.Http;
    ```
 
-   This makes the `@route` and `@tag` keywords available in the current namespace without requiring the `TypeSpec.Http` prefix.
+   This makes the `@route` decorator available in the current namespace without requiring the `TypeSpec.Http` prefix. (`@tag` is built into TypeSpec and needs no import.)
 
 3. Define a namespace for the `OpportunitiesRouter`.
 
@@ -195,7 +296,7 @@ Since there's a lot happening here, let's break it down section by section.
    @tag("Opportunities")
    @route("/common-grants/opportunities")
    namespace Quickstart.Routes {
-     alias OpportunitiesRouter = Opportunities;
+     alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
      op list is OpportunitiesRouter.list;
      op read is OpportunitiesRouter.read;
@@ -205,7 +306,7 @@ Since there's a lot happening here, let's break it down section by section.
 
    This exposes the following default routes from the CommonGrants library:
    - `GET /common-grants/opportunities`
-   - `GET /common-grants/opportunities/{id}`
+   - `GET /common-grants/opportunities/{oppId}`
    - `POST /common-grants/opportunities/search`
 
 </Steps>
@@ -223,7 +324,7 @@ import "./routes.tsp";
 
 /** API description here */
 @service(#{ title: "Quickstart API" })
-@Versioning.useDependency(CommonGrants.Versions.v0_2)
+@Versioning.useDependency(CommonGrants.Versions.v0_5)
 namespace Quickstart;
 ```
 
@@ -231,36 +332,39 @@ Let's break down the `main.tsp` file section by section.
 
 <Steps>
 
-1. Import the TypeSpec HTTP module and the `routes.tsp` file.
+1. Import the TypeSpec libraries and the `routes.tsp` file.
 
    ```tsp
    import "@typespec/http";
+   import "@typespec/versioning";
+   import "@common-grants/core";
+
    import "./routes.tsp";
    ```
 
-   Importing the `routes.tsp` includes the routes from that file in the OpenAPI document generated by the `cg compile` command.
+   Importing the `routes.tsp` includes the routes from that file in the OpenAPI document generated when you compile.
 
 2. Define the API service.
 
    ```tsp {2}
    /** API description here */
    @service(#{ title: "Quickstart API" })
-   @Versioning.useDependency(CommonGrants.Versions.v0_2)
+   @Versioning.useDependency(CommonGrants.Versions.v0_5)
    namespace Quickstart;
    ```
 
-   This defines the API service with a title of "Quickstart API". The `@service` keyword is used to define the API service and is required for the OpenAPI emitter to work. The `title` property is used to set the title of the API and the docstring is used to set the description of the API in the OpenAPI docs.
+   This defines the API service with a title of "Quickstart API". The `@service` decorator is required for the OpenAPI emitter to work. The `title` property is used to set the title of the API and the docstring is used to set the description of the API in the OpenAPI docs.
 
 3. Specify the version of the CommonGrants protocol to use.
 
    ```tsp {3}
    /** API description here */
    @service(#{ title: "Quickstart API" })
-   @Versioning.useDependency(CommonGrants.Versions.v0_2)
+   @Versioning.useDependency(CommonGrants.Versions.v0_5)
    namespace Quickstart;
    ```
 
-   This specifies that the Quickstart API should use the models and routes defined in the v0.2.x version of the CommonGrants protocol.
+   This specifies that the Quickstart API should use the models and routes defined in the v0.5 version of the CommonGrants protocol.
 
 </Steps>
 
@@ -269,35 +373,38 @@ Let's break down the `main.tsp` file section by section.
 The `tspconfig.yaml` file is the TypeSpec configuration file that defines the emitters for the project.
 
 ```yaml title=tspconfig.yaml
-emitters:
+emit:
   - "@typespec/json-schema"
   - "@typespec/openapi3"
 ```
 
 This configures the TypeSpec compiler to emit the API definition as an OpenAPI document and a JSON Schema.
 
-#### Explore the packages installed by `cg init`
+#### Explore the packages you installed
 
-When you run `cg init`, the following packages are installed (among others):
+You installed the following packages:
 
 - [`@common-grants/core`](https://www.npmjs.com/package/@common-grants/core) The CommonGrants TypeSpec library, which includes a default set of models and routes that can be used to define your own CommonGrants API.
+- [`@common-grants/cli`](https://www.npmjs.com/package/@common-grants/cli) The CommonGrants CLI (`cg`), which compiles your TypeSpec project and previews the OpenAPI document with Swagger UI.
+- [`@typespec/compiler`](https://www.npmjs.com/package/@typespec/compiler) The TypeSpec compiler (`tsp`).
 - [`@typespec/openapi3`](https://www.npmjs.com/package/@typespec/openapi3) The OpenAPI emitter for TypeSpec, which emits the CommonGrants API definition as an OpenAPI document.
 - [`@typespec/json-schema`](https://www.npmjs.com/package/@typespec/json-schema) The JSON Schema emitter for TypeSpec, which emits the models in your CommonGrants API as JSON Schemas.
+- `@typespec/http`, `@typespec/openapi`, `@typespec/rest`, and `@typespec/versioning` Supporting TypeSpec libraries that the CommonGrants library depends on.
 
-#### Explore the files created by `cg compile`
+#### Explore the files created by compiling
 
-This will create a `tsp-output` directory with the following files compiled from `main.tsp`:
+Compiling creates a `tsp-output` directory with the following files compiled from `main.tsp`:
 
 <FileTree>
 
 - `tsp-output/`
   - `@typespec/`
     - `openapi3/` Auto-generated by the OpenAPI emitter
-      - `openapi.CommonGrants.yaml` The base CommonGrants API spec
-      - `openapi.Quickstart.yaml` The quickstart API spec
+      - `openapi.Quickstart.yaml` The Quickstart API spec
+      - `openapi.CommonGrants.API.<version>.yaml` One base CommonGrants API spec per protocol version
     - `json-schema/` Auto-generated by the JSON Schema emitter
-      - `CustomEnumValue.yaml`
-      - `Opportunity.yaml`
+      - `CustomField.yaml`
+      - `OpportunityBase.yaml`
       - ...
 
 </FileTree>
@@ -306,13 +413,11 @@ This will create a `tsp-output` directory with the following files compiled from
 
 The `cg preview` command starts a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
 
+The server reads the spec file once when it starts. If you recompile, stop the server with `Ctrl+C` and start it again to see your changes.
+
 ### Customization
 
-Finally, we'll show you how to extend the base CommonGrants API specification with a custom field.
-
-:::tip
-To make the customization process easier to follow, we recommend installing the [TypeSpec VSCode extension](https://marketplace.visualstudio.com/items?itemName=typespec.typespec-vscode) which provides syntax highlighting and autocomplete for TypeSpec files.
-:::
+Extend the base CommonGrants specification with a custom field.
 
 #### Add a custom field to the `Opportunity` model
 
@@ -335,7 +440,7 @@ model ProgramArea extends CustomField {
   description: "Primary focus area of the grant program.";
 }
 
-// Create a custom Opportunity type using the template
+// Create a custom Opportunity type by extending the base model
 model CustomOpportunity extends OpportunityBase {
   @example(#{
     programArea: #{
@@ -356,22 +461,26 @@ There's a lot happening here, so let's break it down section by section.
 <Steps>
 
 1. Import the CommonGrants TypeSpec library.
+
    ```tsp
    import "@common-grants/core";
    ```
+
 2. Make the CommonGrants fields, models, etc. available in the current namespace.
 
    ```tsp
-   using CommonGrants.Fields;
    using CommonGrants.Models;
+   using CommonGrants.Fields;
    ```
 
    Without this, you would have to prefix each model with `CommonGrants.Models` and each field with `CommonGrants.Fields`. For example `CommonGrants.Fields.CustomField`.
 
 3. Declare a namespace for the current file.
+
    ```tsp
    namespace Quickstart.Models;
    ```
+
 4. Define a custom field by extending the `CustomField` model.
 
    ```tsp
@@ -386,30 +495,31 @@ There's a lot happening here, so let's break it down section by section.
    The `ProgramArea` model defines literal values for the field's `name`, `fieldType`, and `description` metadata properties, and requires the `value` property to be a string.
 
 5. Extend the `OpportunityBase` model to include this custom field.
+
    ```tsp
-   model CustomOpportunity extends Models.OpportunityBase {
+   model CustomOpportunity extends OpportunityBase {
      // Example omitted for brevity
      customFields: {
        programArea: ProgramArea;
      };
    }
    ```
+
    It also provides an example of the updated `customFields` property, which will be displayed in the OpenAPI docs.
-   ```tsp {2-11}
-   model CustomOpportunity extends Opportunity.OpportunityBase {
-    @example(
-        #{
-            programArea: #{
-                name: "programArea",
-                fieldType: Fields.CustomFieldType.string,
-                value: "Healthcare Innovation",
-                description: "Primary focus area of the grant program."
-            }
-        }
-    )
-    customFields: {
-        programArea: ProgramArea;
-        };
+
+   ```tsp {2-9}
+   model CustomOpportunity extends OpportunityBase {
+     @example(#{
+       programArea: #{
+         name: "programArea",
+         fieldType: CustomFieldType.string,
+         value: "Healthcare Innovation",
+         description: "Primary focus area of the grant program.",
+       },
+     })
+     customFields: {
+       programArea: ProgramArea;
+     };
    }
    ```
 
@@ -417,12 +527,9 @@ There's a lot happening here, so let's break it down section by section.
 
 #### Update the default routes
 
-Update the `routes.tsp` file and make the following changes:
+Replace `routes.tsp` with the following. Highlighted lines are new or changed:
 
-- Import the `models.tsp` file to expose the `CustomOpportunity` model.
-- Update the routes to use the `CustomOpportunity` model.
-
-```tsp title=routes.tsp ins={2,14-16} del={11-13}
+```tsp title=routes.tsp ins={2,11-13}
 import "@common-grants/core";
 import "./models.tsp";
 
@@ -433,9 +540,6 @@ using TypeSpec.Http;
 namespace Quickstart.Routes {
   alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
-  op list is OpportunitiesRouter.list;
-  op read is OpportunitiesRouter.read;
-  op search is OpportunitiesRouter.search;
   op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
   op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
   op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
@@ -458,7 +562,7 @@ Let's explain these changes section by section.
    @tag("Opportunities")
    @route("/common-grants/opportunities")
    namespace Quickstart.Routes {
-     alias OpportunitiesRouter = Opportunities;
+     alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
 
      op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
      op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
@@ -466,41 +570,47 @@ Let's explain these changes section by section.
    }
    ```
 
-   This updates `GET /opportunities` and `GET /opportunities/{id}` to return our `CustomOpportunity` model instead of the default model from the CommonGrants library.
+   This updates the following routes to return our `CustomOpportunity` model instead of the default model from the CommonGrants library:
+   - `GET /common-grants/opportunities` returns a paginated list of `CustomOpportunity` items.
+   - `GET /common-grants/opportunities/{oppId}` returns a single `CustomOpportunity`.
+   - `POST /common-grants/opportunities/search` returns a paginated list of matching `CustomOpportunity` items.
 
 </Steps>
 
-The updated `routes.tsp` file should now look like this:
-
-```tsp title=routes.tsp
-import "@common-grants/core";
-import "./models.tsp";
-
-using TypeSpec.Http;
-
-@tag("Opportunities")
-@route("/common-grants/opportunities")
-namespace Quickstart.Routes {
-  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
-
-  op list is OpportunitiesRouter.list<Models.CustomOpportunity>;
-  op read is OpportunitiesRouter.read<Models.CustomOpportunity>;
-  op search is OpportunitiesRouter.search<Models.CustomOpportunity>;
-}
-```
-
 #### View your changes
 
+Stop the preview server from earlier with `Ctrl+C` if it's still running, then recompile and start it again:
+
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
+
 ```bash
-cg compile main.tsp
-cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+pnpm exec tsp compile main.tsp
+pnpm exec cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
-This should start a local server that serves the OpenAPI specification using Swagger UI. View your API specification at `http://localhost:3000`.
+</TabItem>
+<TabItem label="npm">
 
-Specifically look for the `programArea` field in the `customFields` property of the `Opportunity` model at `http://localhost:3000/#/Opportunities/Routes_read`. It should look something like this:
+```bash
+npm exec -- cg compile main.tsp
+npm exec -- cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+```
 
-![Screenshot of a custom field in OpenAPI docs](../../assets/custom-fields-screenshot.png)
+</TabItem>
+<TabItem label="bun">
+
+```bash
+bun run cg compile main.tsp
+bun run cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
+```
+
+</TabItem>
+</Tabs>
+
+Open `http://localhost:3000/#/Opportunities/Routes_read`. The example response's `customFields` now includes `programArea`:
+
+![Screenshot of the programArea custom field in the OpenAPI docs](../../assets/custom-fields-screenshot.png)
 
 ## Next steps
 
