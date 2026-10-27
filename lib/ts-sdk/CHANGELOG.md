@@ -1,5 +1,12 @@
 # @common-grants/sdk
 
+## [0.9.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.9.0...@common-grants/sdk@0.9.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **ts-sdk:** accept any UUID-shaped ID; `UuidSchema`'s exported type changes from `ZodUUID` to `ZodCustomStringFormat<"uuid">` ([fabff50](https://github.com/HHS/simpler-grants-protocol/commit/fabff50de0f154048ad9a84f657d7da0993a8cdb))
+
 ## [0.9.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/sdk@0.8.0...@common-grants/sdk@0.9.0) (2026-10-23)
 
 
