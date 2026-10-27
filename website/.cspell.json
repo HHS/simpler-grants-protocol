@@ -137,6 +137,7 @@
     "conftest",
     "bunx",
     "browsable",
+    "bunx",
     "apidevtools",
     "allof",
     "pypi",
