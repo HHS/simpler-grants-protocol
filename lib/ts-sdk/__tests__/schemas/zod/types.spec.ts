@@ -35,6 +35,37 @@ describe("UUID Schema", () => {
     expect(() => UuidSchema.parse("123e4567e89b12d3a456426614174000")).toThrow();
     // Too short
     expect(() => UuidSchema.parse("123e4567-e89b")).toThrow();
+    // URN prefix
+    expect(() => UuidSchema.parse("urn:uuid:123e4567-e89b-12d3-a456-426614174000")).toThrow();
+    // Braces
+    expect(() => UuidSchema.parse("{123e4567-e89b-12d3-a456-426614174000}")).toThrow();
+  });
+
+  it("should accept an ID with a nonstandard version digit", () => {
+    const uuid = "99c17cbb-656f-f64a-940f-1a4568f03487";
+    expect(UuidSchema.parse(uuid)).toBe(uuid);
+  });
+
+  it("should accept an ID with a nonstandard variant digit", () => {
+    // A USASpending recipient ID
+    const uuid = "78e2168c-91dc-4ee3-f4cb-fb8e0cff6ea8";
+    expect(UuidSchema.parse(uuid)).toBe(uuid);
+  });
+
+  it("should report a rejected value as an invalid UUID", () => {
+    const result = UuidSchema.safeParse("invalid-uuid");
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]).toMatchObject({
+      code: "invalid_format",
+      format: "uuid",
+      message: "Invalid UUID",
+    });
+  });
+
+  it("should let a per-parse error map set the message for a rejected value", () => {
+    const result = UuidSchema.safeParse("invalid-uuid", { error: () => "Custom UUID message" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Custom UUID message");
   });
 });
 
