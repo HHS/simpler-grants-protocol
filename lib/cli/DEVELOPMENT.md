@@ -75,7 +75,6 @@ Steps to follow when preparing a new release of the CommonGrants CLI. Feature wo
   - [ ] [Fast API template README](../../templates/fast-api/README.md)
   - [ ] [Express.js template README](../../templates/express-js/README.md)
   - [ ] [Quickstart guide](../../website/src/content/docs/getting-started.mdx)
-  - [ ] [Using TypeScript](../../website/src/content/docs/guides/using-typescript.mdx)
 - [ ] If the `check spec` command was updated, references to that command in the following locations have been updated:
   - [ ] [FastAPI template Makefile](../../templates/fast-api/Makefile)
   - [ ] [Using Python](../../website/src/content/docs/guides/using-python.mdx)

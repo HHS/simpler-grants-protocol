@@ -1,5 +1,5 @@
 ---
-title: Building a TypeScript API
+title: Using TypeScript
 description: Learn how to implement a CommonGrants API in TypeScript.
 sidebar:
   order: 1
@@ -7,15 +7,15 @@ sidebar:
 
 import { FileTree, Steps } from "@astrojs/starlight/components";
 
-Learn how to implement a CommonGrants API in TypeScript using the [Express.js](https://expressjs.com/) web framework and the [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme).
+Learn how to implement a CommonGrants API in TypeScript using the [Hono API template](https://github.com/common-grants/cg-api-template-hono) and the [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme).
 
 ## Quickstart
 
-This guide walks you through setting up a new project from the CommonGrants Express.js template, then adding the SDK to validate your data and define custom fields.
+This guide walks you through creating a new project from the CommonGrants Hono template, then using the SDK to validate your data and define custom fields.
 
 :::note[Prerequisites]
 
-- [Node.js](https://nodejs.org/) v22.12 or later (check with `node --version`). The template compiles to CommonJS, and loading the ESM-only SDK from CommonJS needs Node.js 22.12+.
+- [Node.js](https://nodejs.org/) v24 (check with `node --version`). The template supports Node.js 24 only and includes an `.nvmrc` file.
 - [pnpm](https://pnpm.io/installation) v11 or later (check with `pnpm --version`). The template's scripts use pnpm.
 - Port `3000` free for the development server.
 
@@ -23,64 +23,31 @@ This guide walks you through setting up a new project from the CommonGrants Expr
 
 ### First steps
 
-Get an Express.js project up and running with the following steps:
+Get the Hono template up and running with the following steps:
 
 <Steps>
-1. Create a new directory for your project:
+1. Open the [template repository](https://github.com/common-grants/cg-api-template-hono) and click **Use this template** to create your own repository from it.
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
-
-2. Set up your project using the CommonGrants CLI:
+2. Clone your new repository:
 
    ```bash
-   npx @common-grants/cli@0.4.1 init --template express-js
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
 
-   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
-
-3. Create `pnpm-workspace.yaml`, which `cg init` doesn't create:
-
-   ```yaml title=pnpm-workspace.yaml
-   allowBuilds:
-     "@scarf/scarf": false
-     esbuild: false
-   overrides:
-     "ajv@>=7.0.0-alpha.0 <8.18.0": ">=8.18.0"
-     "brace-expansion@>=1 <1.1.21": "1.1.21"
-     "brace-expansion@>=3 <5.0.12": "5.0.12"
-     "fast-uri@>=3 <3.1.8": "3.1.8"
-     "flatted@<3.4.0": "3.4.2"
-     "minimatch@>=3 <3.1.5": "3.1.5"
-     "path-to-regexp@>=0.1 <0.1.13": "0.1.13"
-     "picomatch@>=2 <2.3.2": "2.3.2"
-     "picomatch@>=4 <4.0.4": "4.0.4"
-     "proxy-addr@>=1.1.0 <2.0.8": "2.0.8"
-     "qs@<6.16.0": "6.16.0"
-     "rollup@>=4 <4.59.0": "4.60.1"
-     "source-map-js@>=1 <1.2.2": "1.2.2"
-     "tar@<7.5.21": "7.5.21"
-     "vite@>=7.0.0 <=7.3.1": ">=7.3.2"
-     "yaml@>=2 <2.8.3": "2.8.3"
-   ```
-
-   `allowBuilds` skips optional install scripts. Without it, pnpm stops every `pnpm run` command with an "Ignored build scripts" error. `overrides` sets security floors for transitive dependencies and matches the scaffolded `pnpm-lock.yaml`.
-
-4. Install the dependencies:
+3. Install the dependencies:
 
    ```bash
    pnpm install
    ```
 
-5. Run the project:
+4. Run the project:
 
    ```bash
    pnpm run dev
    ```
 
-6. Open the API docs at `http://localhost:3000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
+5. Open the API docs at `http://localhost:3000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
 
 </Steps>
 
@@ -90,42 +57,38 @@ The template includes the following files and directories:
 
 <FileTree>
 
-- package.json # Node.js project configuration and dependencies
-- pnpm-lock.yaml # Locked versions of dependencies
-- pnpm-workspace.yaml # pnpm settings (created in step 3)
-- tsconfig.json # TypeScript configuration
-- tspconfig.yaml # TypeSpec emitter configuration
-- eslint.config.js # ESLint configuration
-- .prettierrc # Prettier configuration
-- .prettierignore # Files Prettier skips
-- .gitignore # Files Git ignores
-- README.md # Project documentation
-- main.tsp # Empty file left by `cg init`, safe to delete
+- .nvmrc Pins Node.js 24
+- PORTING.md How to connect your own data
 - src/
-  - api/
-    - index.ts # Express application setup and config
-    - controllers/ # Request handlers and routers
-    - errors/ # API error types
-    - middleware/ # Error handling and validation middleware
-    - schemas/ # Zod schemas for (de)serialization
-    - services/ # Business logic and data operations
-  - typespec/
-    - main.tsp # The TypeSpec specification for your API
+  - index.ts Node entrypoint — the only file that knows about Node
+  - app.ts `createApp({ repository })` builds the app
+  - http.ts Shared error shapes
+  - routes/
+    - opportunities.ts Route definitions, handlers, request/response validation
+  - data/
+    - schema.ts The one opportunity schema — extend custom fields here
+    - repository.ts The interface your data source implements: list / get / search
+    - fixtures.ts The sample-data implementation of that interface
+    - opportunities.json The bundled sample data
+- test/ Vitest suites: fixtures, app, routes, OpenAPI
 
 </FileTree>
 
 ## Next steps
 
-Once the template is running, add the SDK and connect the API to your data.
+Once the template is running, connect the API to your data. If your project started from an earlier version of the template, upgrade its SDK first.
 
-### Add the SDK
+### Upgrading from an earlier SDK
 
-The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. Install it, the matching TypeSpec library, and the CommonGrants CLI:
+The [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk) package provides Zod schemas, TypeScript types, and an extension framework that match the current protocol version. The template depends on SDK 0.9. If your project uses an earlier version, upgrade the SDK and Zod, deduplicate Zod so the SDK shares your project's copy, and run the checks:
 
 ```bash
-pnpm add --save-exact @common-grants/sdk@0.9.0 @common-grants/core@0.5.0
-pnpm add --save-exact -D @common-grants/cli@0.5.0 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+pnpm add @common-grants/sdk@^0.9.0 zod@^4.6.6
+pnpm dedupe
+pnpm run ci
 ```
+
+SDK 0.9 updates the schemas to protocol v0.5 and is published as ESM only. The template is already an ES module project, so it needs no configuration changes.
 
 The SDK is split into modules, each with its own import path:
 
@@ -137,66 +100,13 @@ The SDK is split into modules, each with its own import path:
 | `@common-grants/sdk/extensions` | Custom field and plugin framework             |
 | `@common-grants/sdk/client`     | HTTP client with auth, pagination, and search |
 
-The SDK exposes its modules through `package.json` `exports`, which the template's `"moduleResolution": "node"` setting ignores. In `tsconfig.json`, replace `"module": "CommonJS"` and `"moduleResolution": "node"` with:
-
-```json title=tsconfig.json
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-```
-
-### Update the spec to v0.5
-
-Point the template's TypeSpec spec at protocol v0.5 so the API docs at `/docs` match the SDK's schemas. Replace `src/typespec/main.tsp` with:
-
-```tsp title=src/typespec/main.tsp
-import "@typespec/http";
-import "@typespec/versioning";
-import "@common-grants/core";
-
-using TypeSpec.Http;
-
-@service(#{ title: "CommonGrants API" })
-@Versioning.useDependency(CommonGrants.Versions.v0_5)
-namespace Custom;
-
-@tag("Opportunities")
-@route("/common-grants/opportunities")
-namespace Routes {
-  alias OpportunitiesRouter = CommonGrants.Routes.Opportunities;
-
-  op list is OpportunitiesRouter.list;
-  op read is OpportunitiesRouter.read;
-  op search is OpportunitiesRouter.search;
-}
-```
-
-Besides the version, this moves `@Versioning.useDependency` onto the service namespace and nests the routes under it. The template's original layout applies the version incorrectly, so the read route comes out as `/common-grants/opportunities/{id}/{oppId}`.
-
-### Validate your spec
-
-Compile the spec and check it against the CommonGrants v0.5 base spec:
-
-```bash
-pnpm run typespec
-pnpm exec cg check spec tsp-output/@typespec/openapi3/openapi.Custom.yaml --protocol-version 0.5.0
-```
-
-The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
-
-`cg check spec` validates the API specification, not the running server. To check the code, confirm it type-checks and runs:
-
-```bash
-pnpm exec tsc --noEmit
-pnpm run dev
-```
-
-Press `Ctrl+C` to stop the server.
-
-The docs now describe v0.5 models, but the API's responses still follow the template's own schemas until you swap in the SDK's, as described next.
+The SDK exposes these modules through `package.json` `exports` and has no root entrypoint, so import from the paths above.
 
 ### Validate data with the SDK
 
-The template ships its own Zod schemas in `src/api/schemas/`. The SDK provides maintained equivalents for the opportunity and award models, filters, and responses, so you can replace the template's schemas as you build:
+The template and the SDK split the work. The template owns HTTP: routing, request and response validation, error bodies, the OpenAPI document, and the API docs at `/docs`. The SDK owns the CommonGrants schemas: the template builds its opportunity model, filters, and response envelopes from them, so when you update the SDK, your API picks up that release's schema changes.
+
+Use the same schemas to validate records from your data source:
 
 ```typescript
 import { OpportunityBaseSchema } from "@common-grants/sdk/schemas";
@@ -207,19 +117,20 @@ import type { OpportunityBase } from "@common-grants/sdk/types";
 const opportunity: OpportunityBase = OpportunityBaseSchema.parse(rawData);
 ```
 
-### Implementing services
+### Connect your own data
 
-The services layer in `src/api/services/` holds the business logic and data operations for the API. Focus on `opportunity.service.ts`, which implements the `OpportunitiesService` class behind these routes:
+The template reads the bundled sample data through the `OpportunityRepository` interface in `src/data/repository.ts`. The interface has three methods, `list`, `get`, and `search`, behind these routes:
 
 - `GET /common-grants/opportunities`
 - `GET /common-grants/opportunities/{oppId}`
 - `POST /common-grants/opportunities/search`
 
-Specific changes to make in this file:
+To serve your own data:
 
-- Replace the mock data with a real data source, e.g. a database query or a remote API call, and parse each record with an SDK schema.
-- Look opportunities up by `id` instead of title in `OpportunitiesService.getOpportunityByTitle`.
-- Add the sorting and filtering logic to the `OpportunitiesService.searchOpportunities` method.
+1. Implement `OpportunityRepository` against your database or upstream API, in place of the sample-data implementation, `fixtureRepository` in `src/data/fixtures.ts`. Parse each record with an SDK schema, or map it with a plugin's `toCommon`.
+2. Pass your implementation to `createApp` in `src/index.ts`.
+
+The routes, validation, and OpenAPI document keep working without changes. The template's [porting guide](https://github.com/common-grants/cg-api-template-hono/blob/main/PORTING.md) walks through these steps.
 
 ### Adding custom fields
 
@@ -231,7 +142,7 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 
 Create a plugin that declares the custom field. The plugin compiles an `Opportunity` schema with a typed `customFields` property:
 
-```typescript title=src/api/schemas/plugin.ts
+```typescript title=src/data/plugin.ts
 import { z } from "zod";
 import { definePlugin } from "@common-grants/sdk/extensions";
 
@@ -263,10 +174,10 @@ The `as const` is only required when the specs are assigned to a variable before
 
 #### Use the plugin's schema
 
-Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/api/`. The custom field is validated and fully typed:
+Parse your data with the plugin's schema instead of the base schema, for example in a new file under `src/`. The custom field is validated and fully typed:
 
 ```typescript
-import { OpportunitySchema, type Opportunity } from "./schemas/plugin";
+import { OpportunitySchema, type Opportunity } from "./data/plugin.js";
 
 const opportunity: Opportunity = OpportunitySchema.parse({
   id: "573525f2-8e15-4405-83fb-e6523511d893",
@@ -283,13 +194,13 @@ const opportunity: Opportunity = OpportunitySchema.parse({
 opportunity.customFields?.legacyId?.value; // number
 ```
 
-The template's services still import their own `Opportunity` type from `src/api/schemas`. Replace those imports with the plugin's schema and type as you wire in real data, so the two don't collide.
+To serve the custom field from the API, set `OpportunitySchema` in `src/data/schema.ts` to the plugin's schema. Response validation, the repository's types, and the OpenAPI document all pick it up. A plugin's custom filters don't come with it: the template's search route ignores them and reports them in `filterInfo.errors`. To support them, update the search route and your repository.
 
 For a one-off extension without a plugin, use `withCustomFields()` from the same module. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/ts-sdk/src/extensions/README.md) for custom filters, transforms, and publishing plugins.
 
 ## Additional resources
 
 - [CommonGrants TypeScript SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/ts-sdk#readme)
-- [TypeSpec](https://typespec.io/docs/)
+- [Hono API template](https://github.com/common-grants/cg-api-template-hono)
 - [Zod](https://zod.dev/)
-- [Express.js](https://expressjs.com/)
+- [Hono](https://hono.dev/)
