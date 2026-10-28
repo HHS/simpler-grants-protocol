@@ -8,6 +8,8 @@ dist/
 tsp-output/
 # extension schemas (custom fields + question bank, generated, not committed)
 .extension-schemas/
+# quickstart compile check scratch projects (removed after each run)
+.quickstart-check/
 # generated json cache
 cache/
 public/schemas/yaml/versions/**
