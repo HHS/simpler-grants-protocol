@@ -44,7 +44,8 @@
     "check:lint": "eslint",
     "check:format": "prettier --check . && tsp format lib --check",
     "check:types": "tsc --noEmit",
-    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types",
+    "check:examples": "node scripts/check-utc-datetime-examples.mjs",
+    "checks": "pnpm run check:lint && pnpm run check:format && pnpm run check:types && pnpm run check:examples",
     "ci": "pnpm run checks && pnpm run build && pnpm run typespec",
     "audit": "pnpm audit"
   },
