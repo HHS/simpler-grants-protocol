@@ -78,3 +78,4 @@ Steps to follow when preparing a new release of the CommonGrants CLI. Feature wo
   - [ ] [Using TypeScript](../../website/src/content/docs/guides/using-typescript.mdx)
 - [ ] If the `check spec` command was updated, references to that command in the following locations have been updated:
   - [ ] [FastAPI template Makefile](../../templates/fast-api/Makefile)
+  - [ ] [Using Python](../../website/src/content/docs/guides/using-python.mdx)
