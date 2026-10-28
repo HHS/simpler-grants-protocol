@@ -37,7 +37,7 @@ model SystemMetadata {
 /** Examples of the SystemMetadata model */
 namespace Examples.Metadata {
   const system = #{
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01Z"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00Z"),
   };
 }
