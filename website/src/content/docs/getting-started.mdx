@@ -97,21 +97,21 @@ allowBuilds:
 Then install the packages:
 
 ```bash
-pnpm add --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+pnpm add --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.5.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
 ```
 
 </TabItem>
 <TabItem label="npm">
 
 ```bash
-npm install --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+npm install --save-exact @common-grants/core@0.5.0 @common-grants/cli@0.5.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
 ```
 
 </TabItem>
 <TabItem label="bun">
 
 ```bash
-bun add --exact @common-grants/core@0.5.0 @common-grants/cli@0.4.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
+bun add --exact @common-grants/core@0.5.0 @common-grants/cli@0.5.1 @typespec/compiler@1.17.0 @typespec/http@1.17.0 @typespec/openapi@1.17.0 @typespec/openapi3@1.17.0 @typespec/json-schema@1.17.0 @typespec/rest@0.87.0 @typespec/versioning@0.87.0
 ```
 
 </TabItem>
@@ -160,10 +160,8 @@ emit:
 <TabItem label="pnpm">
 
 ```bash
-pnpm exec tsp compile main.tsp
+pnpm exec cg compile main.tsp
 ```
-
-With pnpm, run the TypeSpec compiler (`tsp`) directly. `cg compile` wraps the same command but doesn't work with pnpm yet.
 
 </TabItem>
 <TabItem label="npm">
@@ -585,7 +583,7 @@ Stop the preview server from earlier with `Ctrl+C` if it's still running, then r
 <TabItem label="pnpm">
 
 ```bash
-pnpm exec tsp compile main.tsp
+pnpm exec cg compile main.tsp
 pnpm exec cg preview tsp-output/@typespec/openapi3/openapi.Quickstart.yaml
 ```
 
