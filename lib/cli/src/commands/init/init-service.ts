@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import { tspBinPath } from "../../utils/typespec";
+import { resolveTspBinPath } from "../../utils/typespec";
 import { InitCommandOptions } from "./init-args";
 
 const cgTemplate =
@@ -51,15 +51,15 @@ export class DefaultInitService {
   async init(options: InitCommandOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       // Build the argument list for the tsp init command
-      const args = [tspBinPath, "init", cgTemplate];
+      const args = [resolveTspBinPath(), "init", cgTemplate];
 
       // Add template argument if specified in options
       if (options.template) {
         args.push("--template", options.template);
       }
 
-      // Spawn node process to run the TypeSpec CLI
-      const child = spawn("node", args, {
+      // Spawn the current Node binary to run the TypeSpec CLI
+      const child = spawn(process.execPath, args, {
         stdio: "inherit",
       });
 
