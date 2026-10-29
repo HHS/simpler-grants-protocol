@@ -35,8 +35,8 @@ namespace Examples.File {
     description: "A PDF file with instructions",
     sizeInBytes: 1000,
     mimeType: "application/pdf",
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01Z"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00Z"),
   };
 
   const imageFile = #{
@@ -44,8 +44,8 @@ namespace Examples.File {
     name: "image.png",
     sizeInBytes: 1000,
     mimeType: "image/png",
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01Z"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00Z"),
   };
 
   const excelFile = #{
@@ -54,8 +54,8 @@ namespace Examples.File {
     description: "The excel file for the application",
     sizeInBytes: 1000,
     mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01Z"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00Z"),
   };
 
   const zipFile = #{
@@ -64,7 +64,7 @@ namespace Examples.File {
     description: "The zip file for the application",
     sizeInBytes: 50000,
     mimeType: "application/zip",
-    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01"),
-    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00"),
+    createdAt: utcDateTime.fromISO("2025-01-01T17:01:01Z"),
+    lastModifiedAt: utcDateTime.fromISO("2025-01-02T17:30:00Z"),
   };
 }
