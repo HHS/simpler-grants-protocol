@@ -69,8 +69,8 @@ examples:
             field: emails.primary
           phone:
             field: phones.primary
-        createdAt: 2025-01-01T17:01:01
-        lastModifiedAt: 2025-01-02T17:30:00
+        createdAt: 2025-01-01T17:01:01Z
+        lastModifiedAt: 2025-01-02T17:30:00Z
       formB:
         id: b7c1e2f4-8a3d-4e2a-9c5b-1f2e3d4c5b6a
         name: Form A
@@ -126,8 +126,8 @@ examples:
             field: emails.primary
           phone:
             field: phones.primary
-        createdAt: 2025-01-01T17:01:01
-        lastModifiedAt: 2025-01-02T17:30:00
+        createdAt: 2025-01-01T17:01:01Z
+        lastModifiedAt: 2025-01-02T17:30:00Z
     validation:
       required:
         - formA

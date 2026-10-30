@@ -5,7 +5,7 @@ import { spawn } from "child_process";
 import { EventEmitter } from "events";
 import { ChildProcess } from "child_process";
 import { Readable } from "stream";
-import { tspBinPath } from "../../../utils/typespec";
+import { resolveTspBinPath } from "../../../utils/typespec";
 
 // Mock child_process.spawn
 vi.mock("child_process", () => ({
@@ -71,9 +71,13 @@ describe("DefaultInitService", () => {
       mockChildProcess.emit("exit", 0);
       await initPromise;
 
-      expect(mockSpawn).toHaveBeenCalledWith("node", [tspBinPath, "init", templateUrl], {
-        stdio: "inherit",
-      });
+      expect(mockSpawn).toHaveBeenCalledWith(
+        process.execPath,
+        [resolveTspBinPath(), "init", templateUrl],
+        {
+          stdio: "inherit",
+        }
+      );
     });
 
     it("should spawn tsp init with template argument when specified", async () => {
@@ -82,8 +86,8 @@ describe("DefaultInitService", () => {
       await initPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "node",
-        [tspBinPath, "init", templateUrl, "--template", "grants-api"],
+        process.execPath,
+        [resolveTspBinPath(), "init", templateUrl, "--template", "grants-api"],
         { stdio: "inherit" }
       );
     });

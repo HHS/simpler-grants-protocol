@@ -1,23 +1,23 @@
 ---
-title: Building a Python API
+title: Using Python
 description: Learn how to implement a CommonGrants API in Python.
 sidebar:
   order: 0
 ---
 
-import { FileTree, Steps } from "@astrojs/starlight/components";
+import { FileTree, Steps, TabItem, Tabs } from "@astrojs/starlight/components";
 
 Learn how to implement a CommonGrants API in Python using the [FastAPI](https://fastapi.tiangolo.com/) web framework and the [CommonGrants Python SDK](https://github.com/HHS/simpler-grants-protocol/tree/main/lib/python-sdk#readme).
 
 ## Quickstart
 
-This guide walks you through setting up a new project from the CommonGrants FastAPI template, then upgrading the SDK to validate your data and define custom fields.
+This guide walks you through setting up a new project from the CommonGrants FastAPI template, then using the SDK to validate your data and define custom fields.
 
 :::note[Prerequisites]
 
 - [Python](https://www.python.org/downloads/) 3.11 or later (check with `python3 --version`).
 - [Poetry](https://python-poetry.org/docs/#installation) 2 or later (check with `poetry --version`). The template's `Makefile` runs every command through Poetry.
-- [Node.js](https://nodejs.org/) v22 or later (check with `node --version`). `npx` runs the CommonGrants CLI, which scaffolds the project and validates your spec.
+- To run the CommonGrants CLI, which validates your spec: [Node.js](https://nodejs.org/) v22 or later (check with `node --version`) with pnpm or npm, or bun.
 - Port `8000` free for the development server.
 
 :::
@@ -27,22 +27,14 @@ This guide walks you through setting up a new project from the CommonGrants Fast
 Get a FastAPI project up and running with the following steps:
 
 <Steps>
-1. Create a new directory for your project:
+1. Open the [FastAPI template repository](https://github.com/common-grants/cg-api-template-fastapi) on GitHub and click **Use this template** to create your own repository from it.
 
-    ```bash
-    mkdir common-grants-api
-    cd common-grants-api
-    ```
-
-2. Set up your project using the CommonGrants CLI, accepting the default answers at the prompts:
+2. Clone your new repository:
 
    ```bash
-   npx @common-grants/cli@0.4.1 init --template fast-api
+   git clone https://github.com/<you>/<your-api>.git
+   cd <your-api>
    ```
-
-   `npx` ships with Node.js. Bun users can run `bunx` instead. `pnpm dlx` can't run `cg init`.
-
-   The command also leaves `main.tsp`, `tspconfig.yaml`, `package.json`, `package-lock.json`, and `node_modules/` behind. The Python project doesn't use them, so you can delete them.
 
 3. Install the dependencies:
 
@@ -52,13 +44,38 @@ Get a FastAPI project up and running with the following steps:
 
    If Poetry picks an older interpreter, run `poetry env use python3.11` first.
 
-4. Run the project:
+4. Check that everything works before you change anything:
+
+   ```bash
+   make ci
+   ```
+
+   This runs the format, lint, and type checks, then the test suite with coverage.
+
+5. Run the project:
 
    ```bash
    make dev
    ```
 
-5. Open the API docs at `http://localhost:8000/docs`. Press `Ctrl+C` in the terminal to stop the server when you're done.
+6. Open the API docs at `http://localhost:8000/docs` to try a request from the browser.
+
+7. Or, in another terminal, make a few requests with `curl`:
+
+   ```bash
+   # A page of opportunities, most recently modified first
+   curl 'http://localhost:8000/common-grants/opportunities?pageSize=2'
+
+   # Filtered and sorted search
+   curl -X POST http://localhost:8000/common-grants/opportunities/search \
+     -H 'Content-Type: application/json' \
+     -d '{"filters":{"status":{"operator":"in","value":["open"]}},"sorting":{"sortBy":"title","sortOrder":"asc"}}'
+
+   # The OpenAPI document, generated from the SDK's models
+   curl http://localhost:8000/openapi.json
+   ```
+
+   Press `Ctrl+C` in the server's terminal to stop it when you're done.
 
 </Steps>
 
@@ -70,53 +87,27 @@ The template includes the following files and directories:
 
 - Makefile # Development workflow commands
 - README.md # Project documentation
+- PORTING.md # Walkthrough for connecting your own data
 - pyproject.toml # Python project configuration and dependencies
-- poetry.lock # Locked versions of dependencies (created by make install)
+- poetry.lock # Locked versions of dependencies
 - .coveragerc # Test coverage configuration
 - .gitignore # Files Git ignores
 - src/
   - common_grants/
-    - api.py # FastAPI application setup and config
+    - api.py # FastAPI application setup; choose the data source here
     - constants.py # Set ORGANIZATION_DOMAIN to your domain for stable opportunity IDs
+    - data/ # Bundled sample opportunities
     - routes/ # API route handlers
-    - schemas/ # Re-exports the SDK's Pydantic models
+    - schemas/ # The opportunity model the API serves
     - scripts/ # OpenAPI generator
-    - services/ # Business logic and data operations
-- tests/
-  - conftest.py # Shared test fixtures
-  - common_grants/
-    - routes/ # Route-related tests
+    - services/ # The data source interface and its sample-data implementation
+- tests/ # Test suites for the app, routes, sample data, and OpenAPI document
 
 </FileTree>
 
 ## Next steps
 
-Once the template is running, upgrade the SDK and connect the API to your data.
-
-### Upgrade the SDK
-
-The [`common-grants-sdk`](https://pypi.org/project/common-grants-sdk/) package provides Pydantic models, an extension framework, and an HTTP client that match protocol v0.5. The template pins an older release, so upgrade it:
-
-```bash
-poetry add common-grants-sdk@0.9.0
-```
-
-The SDK is split into modules, each with its own import path:
-
-| Import path                          | Description                                                       |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| `common_grants_sdk.schemas.pydantic` | Pydantic models for opportunities, awards, filters, and responses |
-| `common_grants_sdk.extensions`       | Custom field and plugin framework                                 |
-| `common_grants_sdk.client`           | HTTP client with auth, pagination, and search                     |
-
-The SDK also ships the v0.5 award models, award filters, and a `client.awards` resource, which follow the same patterns as their opportunity counterparts. The template doesn't implement the award routes, which are optional in v0.5.
-
-SDK 0.9 types model constructors with snake_case field names, and the template passes camelCase keyword arguments. The app and tests still run, but `make check-types` reports errors until you rename the arguments in `src/common_grants/services/opportunity.py`, `src/common_grants/services/utils.py`, and `tests/conftest.py`: for example, `pageSize=page_size` becomes `page_size=page_size`. Leave dictionary keys such as `"pageSize"` alone, since they're the wire format. Then confirm the project type-checks and passes its tests:
-
-```bash
-make check-types
-make test
-```
+Once the template is running, validate your spec and connect the API to your data.
 
 ### Validate your spec
 
@@ -124,16 +115,39 @@ Generate the OpenAPI spec from the FastAPI app and check it against the CommonGr
 
 ```bash
 make gen-openapi
+```
+
+<Tabs syncKey="pkg-manager">
+<TabItem label="pnpm">
+
+```bash
+pnpm dlx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
+```
+
+</TabItem>
+<TabItem label="npm">
+
+```bash
 npx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
 ```
 
-The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1. `make check-spec` runs the same check with a globally installed `cg` 0.5.0 or later.
+</TabItem>
+<TabItem label="bun">
+
+```bash
+bunx @common-grants/cli@0.5.0 check spec openapi.yaml --protocol-version 0.5.0
+```
+
+</TabItem>
+</Tabs>
+
+The check should report `Spec is compliant with base spec, with 3 warnings`. The warnings list the award routes, which are optional in v0.5 and not implemented by the template. Errors, such as a missing or extra route, fail the command with exit code 1.
 
 `cg check spec` validates the API specification, not the running server. To check the code, run `make test` and `make dev`. Press `Ctrl+C` to stop the server.
 
 ### Validate data with the SDK
 
-The template's `src/common_grants/schemas/__init__.py` re-exports the SDK's models, so the routes and services already use them. Validate records from your data source the same way:
+The template's routes and services already use the SDK's models, and `src/common_grants/schemas/opportunity.py` defines the opportunity model the API serves as the SDK's `OpportunityBase`. Validate records from your data source the same way:
 
 ```python
 from common_grants_sdk.schemas.pydantic import OpportunityBase
@@ -145,7 +159,7 @@ opportunity = OpportunityBase.model_validate(raw_data)
 
 ### Implementing services
 
-The services layer in `src/common_grants/services/` holds the business logic and data operations for the API. Focus on `opportunity.py`, which implements the `OpportunityService` class behind these routes:
+The services layer in `src/common_grants/services/` holds the data operations for the API. `repository.py` defines the `OpportunityRepository` interface behind these routes, and `fixtures.py` implements it over the bundled sample data:
 
 - `GET /common-grants/opportunities`
 - `GET /common-grants/opportunities/{oppId}`
@@ -153,9 +167,10 @@ The services layer in `src/common_grants/services/` holds the business logic and
 
 Specific changes to make:
 
-- Replace the mock data with a real data source, e.g. a database query or a remote API call, and validate each record with an SDK model.
-- Add the sorting and filtering logic to the `OpportunityService.search_opportunities` method.
-- Add `response_model_exclude_unset=True` to each route decorator in `src/common_grants/routes/opportunities.py`, so optional fields you don't set are omitted instead of sent as `null`, which the protocol rejects.
+- Implement the interface's `list`, `get`, and `search` methods against a real data source, e.g. a database query or a remote API call, including the sorting and filtering in `search`, and validate each record with an SDK model.
+- Pass your implementation to `create_app()` in `src/common_grants/api.py` in place of `fixture_repository`.
+
+The template's routes already omit optional fields you don't set instead of sending them as `null`. Its [`PORTING.md`](https://github.com/common-grants/cg-api-template-fastapi/blob/main/PORTING.md) walks through stable IDs, date and money handling, and which tests to keep.
 
 ### Adding custom fields
 
@@ -165,12 +180,10 @@ For example, let's say you need to add a `legacyId` field to map opportunities t
 
 #### Define a plugin
 
-Create a plugin that declares the custom field. The plugin registers an `Opportunity` schema with a typed `custom_fields` property:
+Create a plugin that declares the custom field. The plugin registers an `Opportunity` schema with a typed `custom_fields` property. Replace the contents of the template's opportunity model file with it, since the routes, response models, and services all read `Opportunity` from there:
 
-```python title=src/common_grants/schemas/plugin.py
+```python title=src/common_grants/schemas/opportunity.py
 """Custom fields for this API's data source."""
-
-from typing import Optional
 
 from common_grants_sdk.extensions import (
     CustomField,
@@ -187,7 +200,7 @@ from pydantic import Field
 class OppFields(CustomFieldSet):
     """Custom fields on the Opportunity schema."""
 
-    legacy_id: Optional[CustomField[int]] = Field(
+    legacy_id: CustomField[int] | None = Field(
         default=None,
         description="Maps to the opportunity_id in the legacy system",
     )
@@ -209,7 +222,7 @@ Opportunity = my_plugin.schemas.Opportunity.common_schema
 Validate your data with the plugin's schema instead of the base model, for example in a service. The custom field is validated and fully typed:
 
 ```python
-from common_grants.schemas.plugin import Opportunity
+from common_grants.schemas.opportunity import Opportunity
 
 opportunity = Opportunity.model_validate({
     "id": "573525f2-8e15-4405-83fb-e6523511d893",
@@ -228,9 +241,34 @@ if fields and fields.legacy_id:
     fields.legacy_id.value  # int
 ```
 
-At runtime `Opportunity` is a subclass of `OpportunityBase`, so the template's response models accept it. Pyright treats the custom-fields type parameter as invariant, though. Once the service returns `Opportunity` records, change its `OpportunityBase` annotations to `Opportunity`, and build the list and search responses with `Paginated[Opportunity]` and `Filtered[Opportunity, dict]` instead of `OpportunitiesListResponse` and `OpportunitiesSearchResponse`, or `make check-types` fails. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
+The template's response models and services are built on `Opportunity`, so they serve the custom field and `make check-types` still passes. Custom fields the plugin doesn't declare are kept under their wire keys in `custom_fields.model_extra`.
 
 For a one-off extension without a plugin, use `OpportunityBase.with_custom_fields()`. See the [extensions guide](https://github.com/HHS/simpler-grants-protocol/blob/main/lib/python-sdk/common_grants_sdk/extensions/README.md) for custom filters, transforms, and publishing plugins.
+
+## Upgrading from an earlier SDK
+
+The [`common-grants-sdk`](https://pypi.org/project/common-grants-sdk/) package provides Pydantic models, an extension framework, and an HTTP client that match protocol v0.5. The template depends on SDK 0.9. If your project started from an earlier version of the template, which depended on SDK 0.8, upgrade it:
+
+```bash
+poetry add common-grants-sdk@^0.9.0
+```
+
+The SDK is split into modules, each with its own import path:
+
+| Import path                          | Description                                                       |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| `common_grants_sdk.schemas.pydantic` | Pydantic models for opportunities, awards, filters, and responses |
+| `common_grants_sdk.extensions`       | Custom field and plugin framework                                 |
+| `common_grants_sdk.client`           | HTTP client with auth, pagination, and search                     |
+
+The SDK also ships the v0.5 award models, award filters, and a `client.awards` resource, which follow the same patterns as their opportunity counterparts. The template doesn't implement the award routes, which are optional in v0.5.
+
+SDK 0.9 types model constructors with snake_case field names, and earlier versions of the template pass camelCase keyword arguments. The app and tests still run, but `make check-types` reports errors until you rename the arguments. In the template, `SearchSorting(sortBy=...)` in `src/common_grants/routes/opportunities.py` becomes `SearchSorting(sort_by=...)`, and `PaginatedBodyParams(pageSize=...)` in `tests/test_fixtures.py` becomes `PaginatedBodyParams(page_size=...)`. Leave `sortOrder=` alone, since the template's `SearchSorting` declares that field with its camelCase alias, and leave dictionary keys such as `"pageSize"` alone, since they're the wire format. Then confirm the project type-checks and passes its tests:
+
+```bash
+make check-types
+make test
+```
 
 ## Additional resources
 
