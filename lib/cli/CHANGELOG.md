@@ -1,5 +1,18 @@
 # @common-grants/cli
 
+## [0.5.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.5.0...@common-grants/cli@0.5.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **core:** give timestamp examples a UTC offset ([#1342](https://github.com/HHS/simpler-grants-protocol/issues/1342)) ([d4958fa](https://github.com/HHS/simpler-grants-protocol/commit/d4958faf3ac2ee9a6e03a63acf12f2039a88c2a5))
+
+
+### Documentation
+
+* **website:** start the Python guide from the FastAPI template repository ([#1340](https://github.com/HHS/simpler-grants-protocol/issues/1340)) ([9e160b1](https://github.com/HHS/simpler-grants-protocol/commit/9e160b1ba2418ab1824826fd992558a8179a4a60))
+* **website:** start the TypeScript guide from the Hono template repository ([#1341](https://github.com/HHS/simpler-grants-protocol/issues/1341)) ([c184eaa](https://github.com/HHS/simpler-grants-protocol/commit/c184eaad9bc82063a0ba34eef37271c3b27161d5))
+
 ## [0.5.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/cli@0.4.1...@common-grants/cli@0.5.0) (2026-10-27)
 
 
