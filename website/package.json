@@ -37,16 +37,16 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^15.5.2",
-    "@astrojs/cloudflare": "^14.4.0",
+    "@astrojs/cloudflare": "^14.4.2",
     "@astrojs/react": "^6.0.6",
-    "@astrojs/starlight": "^0.42.6",
+    "@astrojs/starlight": "^0.42.7",
     "@jsonforms/core": "^3.8.0",
     "@jsonforms/react": "^3.8.0",
     "@jsonforms/vanilla-renderers": "^3.8.0",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "ajv": "^8.20.0",
-    "astro": "~7.4.0",
+    "astro": "~7.4.2",
     "js-yaml": "^4.3.2",
     "json-schema-merge-allof": "^0.8.1",
     "openapi-sampler": "^1.7.9",
@@ -60,7 +60,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.12",
     "@bruits/satteri-wasm32-wasi": "0.10.5",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
