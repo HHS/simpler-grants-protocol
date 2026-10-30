@@ -1,5 +1,12 @@
 # @common-grants/core
 
+## [0.5.1](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/core@0.5.0...@common-grants/core@0.5.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* **core:** give timestamp examples a UTC offset ([#1342](https://github.com/HHS/simpler-grants-protocol/issues/1342)) ([d4958fa](https://github.com/HHS/simpler-grants-protocol/commit/d4958faf3ac2ee9a6e03a63acf12f2039a88c2a5))
+
 ## [0.5.0](https://github.com/HHS/simpler-grants-protocol/compare/@common-grants/core@0.4.0...@common-grants/core@0.5.0) (2026-10-13)
 
 
