@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "@bruits/satteri-wasm32-wasi": "0.10.5",
+    "@bruits/satteri-wasm32-wasi": "0.11.5",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
     "@types/ajv": "^0.0.5",
@@ -85,6 +85,6 @@
     "starlight-links-validator": "^0.27.0",
     "typescript-eslint": "catalog:",
     "vitest": "catalog:website",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.153.0"
   }
 }
