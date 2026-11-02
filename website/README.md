@@ -40,5 +40,43 @@ Run `pnpm install` once from the repo root. Then run these from `website/`, or f
 | `pnpm run check:lint`     | Check linting, fail if issues are found                    |
 | `pnpm run check:spelling` | Check spelling, fail if issues are found                   |
 | `pnpm run check:types`    | Check TypeScript types, fail if issues are found           |
+| `pnpm run check:a11y`     | Scan the built site for accessibility issues (see below)   |
 | `pnpm run check:astro`    | Check Astro build and type safety                          |
-| `pnpm run checks`         | Run all CI checks listed above                             |
+| `pnpm run checks`         | Run the lint, format, type, Astro, and spelling checks     |
+
+## Accessibility checks
+
+Every pull request that changes the website runs an [axe](https://github.com/dequelabs/axe-core) accessibility scan in CI (the "Run accessibility scan" step of `.github/workflows/ci-website-preview.yml`). The scan:
+
+- Serves the site built earlier in the same job from `dist/client`, so it runs on pull requests from forks and doesn't depend on the preview deploy.
+- Opens each page listed in `a11y/pages.txt` in headless Chromium and checks it against WCAG 2.1 AA (axe tags `wcag2a`, `wcag2aa`, `wcag21a` and `wcag21aa`). Requests to other sites, such as analytics, are blocked.
+- Fails on any issue axe rates "serious" or "critical" that isn't listed in `a11y/exceptions.txt`, and on any listed page that doesn't load. "Moderate" and "minor" issues don't fail the check.
+
+The job log lists each new issue with the affected elements and a link to the rule's documentation, and the run's summary page shows the same results as a table.
+
+### Run the scan locally
+
+```bash
+pnpm run build                                 # the scan checks the built site
+pnpm exec playwright install chromium          # once, to download the browser
+pnpm run check:a11y
+```
+
+### Add a page to the scan
+
+Add the page's path to `a11y/pages.txt`, one path per line, starting with `/` and written the way the site serves it (for example `/forms/sf424/`, with the trailing slash). Lines starting with `#` are comments. Then run the scan, since a new page may surface issues to fix or list as exceptions.
+
+### Add or remove an exception
+
+An exception lets the check pass while a known issue is still on a page. Fixing the issue is always preferred; add an exception only for an issue that can't be fixed in the same pull request, such as one that comes from a third-party component.
+
+`a11y/exceptions.txt` holds one exception per line: the page path, a space, and the axe rule ID, for example:
+
+```text
+/protocol/api-docs/ color-contrast
+```
+
+- **To add one:** copy the line the failed scan prints under "add its line to a11y/exceptions.txt" (the line is also in the run's summary), and put a `#` comment above it saying why the issue can't be fixed yet. An exception covers every element on that page that breaks that rule, and only on that page.
+- **To remove one:** delete its line once the issue is fixed. The scan prints a warning for any exception that no longer matches an issue, so stale lines are easy to spot.
+
+The page in each exception must also be in `a11y/pages.txt`. A malformed or duplicate line fails the check.

@@ -1,0 +1,19 @@
+# Known accessibility issues the scan does not fail on, one "<page> <rule-id>"
+# line per page and rule. Rule IDs are axe's (https://dequeuniversity.com/rules/axe/).
+# Remove a line once its issue is fixed; the scan warns about lines that no
+# longer match. See website/README.md.
+
+# Starlight's search button: the accessible name ("Search") omits the visible
+# keyboard shortcut text. Comes from the Starlight header on every page.
+/ label-content-name-mismatch
+/protocol/api-docs/ label-content-name-mismatch
+/custom-fields/ label-content-name-mismatch
+/forms/ label-content-name-mismatch
+/question-bank/ label-content-name-mismatch
+/plugins/ label-content-name-mismatch
+/registries/ label-content-name-mismatch
+
+# Swagger UI, which renders the API docs page.
+/protocol/api-docs/ color-contrast
+/protocol/api-docs/ nested-interactive
+/protocol/api-docs/ select-name
