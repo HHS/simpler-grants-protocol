@@ -52,6 +52,3 @@ overrides:
   # eslint, @eslint/config-array, @typescript-eslint/typescript-estree (minimatch 10) and
   # glob 10 (minimatch 9) on purpose. Delete once none of them resolve minimatch <11.0.1.
   'minimatch@<11.0.1': '>=11.0.1 <12'
-  # GHSA-3g3m-2fjr-6pw4 is patched only in glob 14, so this crosses rimraf 5's glob ^10
-  # range (via lib/core) on purpose. Delete once rimraf no longer resolves glob <14.0.2.
-  'glob@>=9.0.0 <=14.0.1': '>=14.0.2 <15'
