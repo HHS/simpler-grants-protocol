@@ -77,7 +77,6 @@ catalogs:
 overrides:
   postcss-nested@6.2.0>postcss-selector-parser: '>=7.1.6 <8'
   undici@>=7 <7.30.1: ^7.30.1
-  zod@<4: ^4.6.7
 
 importers:
 
@@ -287,8 +286,8 @@ importers:
         version: 4.6.7
     devDependencies:
       '@common-grants/cg-grants-gov':
-        specifier: ^0.3.1
-        version: 0.3.1(@common-grants/sdk@0.6.1)
+        specifier: ^0.4.0
+        version: 0.4.0(@common-grants/sdk@0.9.1)
       '@common-grants/core':
         specifier: workspace:*
         version: link:../core
@@ -949,13 +948,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@common-grants/cg-grants-gov@0.3.1':
-    resolution: {integrity: sha512-z5o/497JNVLtUoupuwFj9RoipkAsm7Cyzf3ybHxYUtSRTNAznjTzJWcKgT57b/YA4+IGWwPjv+ZwaFEhvf1nyg==}
+  '@common-grants/cg-grants-gov@0.4.0':
+    resolution: {integrity: sha512-qIYrL15ItC22NYVwooqEzRtTbxRDau9MistX6BsBdtYWbrJAeDh1hBQxn9qrR4QxVhGpDOcfISSjGId2QRffKQ==}
     peerDependencies:
-      '@common-grants/sdk': ^0.6.0
+      '@common-grants/sdk': '>=0.7.0 <0.10.0'
 
-  '@common-grants/sdk@0.6.1':
-    resolution: {integrity: sha512-Ce3Litu0n7+Sv8CF6P00AY1TV3ze+vqOFvvAPWVh0MWCCnLwVeQ2kUhcBAG8vI1o755RsQuHzdySMY3nL5m/5w==}
+  '@common-grants/sdk@0.9.1':
+    resolution: {integrity: sha512-OggMPspDIeMdAimgmhe5qXb9wI9+xKS8mTLab9O0RPboks6WWdQtFbFfPMpwsJWVS39QGtcuVeQw3NQzoaA6Uw==}
     engines: {node: '>=22.0.0'}
 
   '@cspell/cspell-bundled-dicts@8.19.4':
@@ -5802,12 +5801,12 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20261019.1':
     optional: true
 
-  '@common-grants/cg-grants-gov@0.3.1(@common-grants/sdk@0.6.1)':
+  '@common-grants/cg-grants-gov@0.4.0(@common-grants/sdk@0.9.1)':
     dependencies:
-      '@common-grants/sdk': 0.6.1
+      '@common-grants/sdk': 0.9.1
       zod: 4.6.7
 
-  '@common-grants/sdk@0.6.1':
+  '@common-grants/sdk@0.9.1':
     dependencies:
       zod: 4.6.7
 
