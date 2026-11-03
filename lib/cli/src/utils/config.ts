@@ -56,7 +56,7 @@ export function loadConfig(options: LoadConfigOptions = {}): Config {
   if (!filePath) {
     return {};
   }
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+  if (!fs.statSync(filePath, { throwIfNoEntry: false })?.isFile()) {
     throw new Error(`Config file not found: ${filePath}`);
   }
 

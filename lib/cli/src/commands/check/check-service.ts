@@ -29,7 +29,7 @@ export class DefaultCheckService {
    */
   async checkSpec(
     specPath: string,
-    options: CheckSpecOptions,
+    options: Omit<CheckSpecOptions, "config">,
     // Not consumed yet: strictness, threshold and overrides will read it (#381-#383)
     _config: Config = {}
   ): Promise<void> {

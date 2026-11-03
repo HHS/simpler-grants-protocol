@@ -247,6 +247,9 @@ describe("checkCommand", () => {
       expect(mockExit).toHaveBeenCalledWith(1);
       expect(mockLoadConfig).not.toHaveBeenCalled();
       expect(mockCheckSpec).not.toHaveBeenCalled();
+      const printed = mockConsoleError.mock.calls.flat().join(" ");
+      expect(printed).toContain("config: --config requires a file path");
+      expect(printed).not.toContain('"code"');
     });
   });
 });

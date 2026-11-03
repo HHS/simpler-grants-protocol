@@ -1,6 +1,8 @@
 import { Command } from "commander";
+import { ZodError } from "zod";
 import { DefaultCheckService } from "./check-service";
 import { loadConfig, withConfigOption } from "../../utils/config";
+import { formatZodIssues } from "../../utils/error";
 import {
   CheckApiArgsSchema,
   CheckApiOptionsSchema,
@@ -67,7 +69,10 @@ export function checkCommand(program: Command) {
 
       await validationService.checkSpec(validatedArgs.specPath, validatedOptions, config);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof ZodError) {
+        const issues = formatZodIssues(error.issues).map(line => `- ${line}`);
+        console.error(`Validation error:\n${issues.join("\n")}`);
+      } else if (error instanceof Error) {
         console.error("Validation error:", error.message);
       } else {
         console.error("Error checking spec:", error);

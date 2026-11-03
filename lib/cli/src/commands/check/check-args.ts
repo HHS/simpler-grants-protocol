@@ -55,7 +55,7 @@ export const CheckSpecArgsSchema = z.object({
  * Optional arguments that can be passed to the `check spec` command using flags (e.g. `--base`, `--protocol-version` or `--config`)
  */
 export const CheckSpecOptionsSchema = z.object({
-  config: z.string().min(1).optional(),
+  config: z.string().min(1, "--config requires a file path").optional(),
   base: z.string().optional(),
   protocolVersion:
     availableVersions.length > 0
