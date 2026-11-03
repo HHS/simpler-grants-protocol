@@ -5,6 +5,12 @@ on:
   pull_request:
     paths:
       - lib/core/**
+      - website/src/content/docs/getting-started.mdx
+      - website/src/lib/quickstart/**
+      - website/src/scripts/check-quickstarts.ts
+      # The quickstart check compiles with the website's TypeSpec emitters
+      - website/package.json
+      - pnpm-workspace.yaml
       - .github/workflows/ci-lib-core.yml
 
 defaults:
@@ -38,3 +44,7 @@ jobs:
 
       - name: Emit TypeSpec outputs
         run: pnpm --filter @common-grants/core run typespec
+
+      # Compiles the Getting Started and README quickstarts against this core
+      - name: Compile quickstarts
+        run: pnpm --filter website run check:quickstarts
