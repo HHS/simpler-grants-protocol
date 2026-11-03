@@ -48,7 +48,11 @@ overrides:
   # miniflare (via wrangler and @cloudflare/vite-plugin) and @scalar/json-magic 0.13
   # pin undici 7.x below the patched 7.30.1. Delete once neither pins undici <7.30.1.
   'undici@>=7 <7.30.1': '^7.30.1'
-  # GHSA-g3hv-75wg-m249 is patched only in minimatch 11, so this crosses the minimatch 10
+  # GHSA-g3hv-75wg-m249 is patched only in minimatch 11, so these cross the minimatch 10
   # ranges of eslint, @eslint/config-array, and @typescript-eslint/typescript-estree on
-  # purpose. Delete once none of them resolve minimatch <11.0.1.
-  'minimatch@<11.0.1': '>=11.0.1 <12'
+  # purpose. They are scoped to those parents so a new dependent on an older minimatch
+  # shows up in the audit instead of silently jumping majors. Delete each entry once its
+  # parent resolves minimatch >=11.0.1.
+  'eslint>minimatch@<11.0.1': '>=11.0.1 <12'
+  '@eslint/config-array>minimatch@<11.0.1': '>=11.0.1 <12'
+  '@typescript-eslint/typescript-estree>minimatch@<11.0.1': '>=11.0.1 <12'
