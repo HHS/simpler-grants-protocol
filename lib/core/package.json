@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/HHS/simpler-grants-protocol/tree/main/lib/core/#readme",
   "scripts": {
-    "clean": "rimraf dist tsp-output",
+    "clean": "node --input-type=module -e \"import{rmSync}from'node:fs';for(const d of['dist','tsp-output'])rmSync(d,{recursive:true,force:true})\"",
     "build": "tsc -p .",
     "watch": "tsc -p . --watch",
     "typespec": "tsp compile lib/main.tsp",
@@ -79,7 +79,6 @@
     "eslint": "catalog:",
     "globals": "catalog:",
     "prettier": "catalog:",
-    "rimraf": "^5.0.10",
     "source-map-support": "^0.5.21",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
