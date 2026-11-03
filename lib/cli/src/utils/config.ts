@@ -1,3 +1,4 @@
+import { Command } from "commander";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
@@ -66,4 +67,12 @@ export function loadConfig(options: LoadConfigOptions = {}): Config {
     throw new Error(`Invalid config file ${filePath}:\n${issues.join("\n")}`);
   }
   return result.data;
+}
+
+/** Opt a command in to `--config`; pair it with `loadConfig` in the command's action. */
+export function withConfigOption(command: Command): Command {
+  return command.option(
+    "--config <path>",
+    `Path to a cg config file (defaults to ${CONFIG_FILE_NAMES.join(", ")} in the current directory)`
+  );
 }

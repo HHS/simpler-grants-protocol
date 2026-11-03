@@ -51,6 +51,10 @@ Create a new CommonGrants project from a template:
 
     cg check spec openapi.yaml --base <path-to-base-spec>
 
+    cg check spec openapi.yaml --config path/to/cg.config.yaml
+
+    Without --config, cg loads cg.config.yml, cg.config.yaml or cg.config.json from the current directory if exactly one exists.
+
 
 .SH Development status
     This CLI is currently under active development and only supports the following commands:

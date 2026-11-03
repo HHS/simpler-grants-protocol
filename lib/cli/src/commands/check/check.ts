@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { DefaultCheckService } from "./check-service";
+import { loadConfig, withConfigOption } from "../../utils/config";
 import {
   CheckApiArgsSchema,
   CheckApiOptionsSchema,
@@ -39,7 +40,7 @@ export function checkCommand(program: Command) {
       }
     });
 
-  check
+  const checkSpec = check
     .command("spec")
     .description("Validate an OpenAPI spec against the CommonGrants base protocol")
     .argument("<specPath>", "Path to the OpenAPI spec you want to validate")
@@ -47,29 +48,31 @@ export function checkCommand(program: Command) {
     .option(
       "--protocol-version <version>",
       "Version of the CommonGrants protocol OpenAPI spec to validate against. Note: Only major and minor versions are supported."
-    )
-    .action(async (specPath, options) => {
-      try {
-        const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
-        const validatedOptions = CheckSpecOptionsSchema.parse(options);
+    );
 
-        // Handle conflict between --base and --protocol-version
-        if (validatedOptions.base && validatedOptions.protocolVersion) {
-          console.warn(
-            "Warning: Both --base and --protocol-version are specified. Using --base and ignoring --protocol-version."
-          );
-          // Remove protocolVersion from options to prioritize base
-          delete validatedOptions.protocolVersion;
-        }
+  withConfigOption(checkSpec).action(async (specPath, options) => {
+    try {
+      const validatedArgs = CheckSpecArgsSchema.parse({ specPath });
+      const { config: configPath, ...validatedOptions } = CheckSpecOptionsSchema.parse(options);
+      const config = loadConfig({ configPath });
 
-        await validationService.checkSpec(validatedArgs.specPath, validatedOptions);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error("Validation error:", error.message);
-        } else {
-          console.error("Error checking spec:", error);
-        }
-        process.exit(1);
+      // Handle conflict between --base and --protocol-version
+      if (validatedOptions.base && validatedOptions.protocolVersion) {
+        console.warn(
+          "Warning: Both --base and --protocol-version are specified. Using --base and ignoring --protocol-version."
+        );
+        // Remove protocolVersion from options to prioritize base
+        delete validatedOptions.protocolVersion;
       }
-    });
+
+      await validationService.checkSpec(validatedArgs.specPath, validatedOptions, config);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Validation error:", error.message);
+      } else {
+        console.error("Error checking spec:", error);
+      }
+      process.exit(1);
+    }
+  });
 }

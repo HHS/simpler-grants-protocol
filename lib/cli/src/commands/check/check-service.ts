@@ -10,6 +10,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { OpenAPIV3 } from "openapi-types";
+import { Config } from "../../utils/config";
 
 export class DefaultCheckService {
   /** Check that an API implementation matches its spec. */
@@ -26,7 +27,12 @@ export class DefaultCheckService {
    *   3) Checking for unexpected routes prefixed with /common-grants/
    *   4) Checking that matching routes are compatible
    */
-  async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
+  async checkSpec(
+    specPath: string,
+    options: CheckSpecOptions,
+    // Not consumed yet: strictness, threshold and overrides will read it (#381-#383)
+    _config: Config = {}
+  ): Promise<void> {
     // Get the base spec and implementation spec
     const baseSpecPath = options.base || getBaseSpecPath(options.protocolVersion);
     const baseDoc = await loadAndParseSpec(baseSpecPath);
