@@ -66,11 +66,17 @@ function stripComment(raw: string): string {
   return (hash === -1 ? raw : raw.slice(0, hash)).trim();
 }
 
-/** A page path must be site-relative: `/`, `/forms/`, `/forms/sf424/`. */
+/**
+ * A page path must be site-relative and end in a slash: `/`, `/forms/`,
+ * `/forms/sf424/`. The site serves its pages with trailing slashes, and the
+ * local server would answer `/forms` with a 200 where production redirects,
+ * so a path without the slash is rejected rather than scanned by accident.
+ */
 function pathError(page: string): string | null {
   if (!page.startsWith("/")) return `page must start with "/": ${page}`;
   if (/[?#\s]/.test(page))
     return `page must be a plain path, without a query or fragment: ${page}`;
+  if (!page.endsWith("/")) return `page must end with "/": ${page}`;
   return null;
 }
 

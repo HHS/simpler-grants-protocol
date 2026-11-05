@@ -5,6 +5,7 @@
 
 # Starlight's search button: the accessible name ("Search") omits the visible
 # keyboard shortcut text. Comes from the Starlight header on every page.
+# Tracked in https://github.com/HHS/simpler-grants-protocol/issues/1395
 / label-content-name-mismatch
 /protocol/api-docs/ label-content-name-mismatch
 /custom-fields/ label-content-name-mismatch
@@ -14,6 +15,9 @@
 /registries/ label-content-name-mismatch
 
 # Swagger UI, which renders the API docs page.
+# Contrast and nested controls: https://github.com/HHS/simpler-grants-protocol/issues/1396
 /protocol/api-docs/ color-contrast
 /protocol/api-docs/ nested-interactive
+# The servers dropdown has no accessible name: covered by
+# https://github.com/HHS/simpler-grants-protocol/issues/355
 /protocol/api-docs/ select-name

@@ -38,10 +38,17 @@ describe("parsePages", () => {
   });
 
   it("rejects relative paths, queries, extra fields, and duplicates", () => {
-    const { pages, errors } = parsePages("forms/\n/a?b=1\n/x /y\n/\n/\n");
+    const { pages, errors } = parsePages("forms/\n/a/?b=1\n/x/ /y/\n/\n/\n");
     expect(pages).toEqual(["/"]);
     expect(errors.map((e) => e.line)).toEqual([1, 2, 3, 5]);
     expect(errors[3].message).toContain("duplicate");
+  });
+
+  it("requires a trailing slash, as the site serves its pages", () => {
+    const { pages, errors } = parsePages("/forms\n/forms/sf424\n/forms/\n");
+    expect(pages).toEqual(["/forms/"]);
+    expect(errors.map((e) => e.line)).toEqual([1, 2]);
+    expect(errors[0].message).toBe('page must end with "/": /forms');
   });
 
   it("rejects an empty list", () => {
@@ -64,6 +71,15 @@ describe("parseExceptions", () => {
       { page: "/", rule: "color-contrast", line: 2 },
       { page: "/forms/", rule: "select-name", line: 4 },
     ]);
+  });
+
+  it("rejects an exception page without a trailing slash", () => {
+    const { exceptions, errors } = parseExceptions("/forms color-contrast", [
+      "/forms/",
+    ]);
+    expect(exceptions).toEqual([]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toBe('page must end with "/": /forms');
   });
 
   it("rejects malformed lines, pages not in the scan, and duplicates", () => {

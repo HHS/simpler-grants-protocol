@@ -58,13 +58,15 @@ The job log lists each new issue with the affected elements and a link to the ru
 
 ```bash
 pnpm run build                                 # the scan checks the built site
-pnpm exec playwright install chromium          # once, to download the browser
+pnpm exec playwright install chromium          # once, and again after a `playwright` version bump
 pnpm run check:a11y
 ```
 
 ### Add a page to the scan
 
-Add the page's path to `a11y/pages.txt`, one path per line, starting with `/` and written the way the site serves it (for example `/forms/sf424/`, with the trailing slash). Lines starting with `#` are comments. Then run the scan, since a new page may surface issues to fix or list as exceptions.
+Add the page's path to `a11y/pages.txt`, one path per line, starting with `/` and written the way the site serves it, with the trailing slash (for example `/forms/sf424/`; the scan rejects a path without it). Lines starting with `#` are comments. Then run the scan, since a new page may surface issues to fix or list as exceptions.
+
+Expect every new page to need an exception for `label-content-name-mismatch` until the search button in the site header is fixed (see the comment above those lines in `a11y/exceptions.txt`). The button appears on every page, so a new page fails the scan until you add `<page> label-content-name-mismatch` to the exceptions file. Once the header is fixed, all of those lines can be removed.
 
 ### Add or remove an exception
 
