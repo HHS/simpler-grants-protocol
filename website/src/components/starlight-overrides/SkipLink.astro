@@ -6,10 +6,23 @@ import DefaultSkipLink from "@astrojs/starlight/components/SkipLink.astro";
 
 <script>
   const link = document.querySelector<HTMLAnchorElement>(".sl-skip-link");
-  link?.addEventListener("click", () => {
+  link?.addEventListener("click", (event) => {
     const target = document.getElementById(link.hash.slice(1));
     if (!(target instanceof HTMLElement)) return;
+    event.preventDefault();
     target.tabIndex = -1;
-    target.focus();
+    target.focus({ preventScroll: true });
+    const header = document.querySelector("header");
+    const offset = header?.getBoundingClientRect().height ?? 0;
+    window.scrollTo({
+      top: window.scrollY + target.getBoundingClientRect().top - offset - 16,
+      behavior: "instant",
+    });
   });
 </script>
+
+<style is:global>
+  h1#_top {
+    scroll-margin-top: calc(var(--sl-nav-height, 4rem) + 1rem);
+  }
+</style>
