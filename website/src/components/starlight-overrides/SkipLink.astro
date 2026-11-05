@@ -5,7 +5,10 @@ import DefaultSkipLink from "@astrojs/starlight/components/SkipLink.astro";
 <DefaultSkipLink />
 
 <script>
+  // cspell:ignore Zensmooth
   const link = document.querySelector<HTMLAnchorElement>(".sl-skip-link");
+  // Swagger bundles a global smooth-scroll handler; keep it off the skip link.
+  link?.classList.add("noZensmooth");
   link?.addEventListener("click", (event) => {
     const target = document.getElementById(link.hash.slice(1));
     if (!(target instanceof HTMLElement)) return;
