@@ -27,6 +27,7 @@
     "check:format": "prettier --check . && tsp format . --check",
     "check:astro": "astro check",
     "check:spelling": "cspell .",
+    "check:a11y": "tsx src/scripts/a11y-scan.ts",
     "check:quickstarts": "tsx src/scripts/check-quickstarts.ts",
     "check:types": "tsc --noEmit",
     "checks": "pnpm check:lint && pnpm check:format && pnpm check:types && pnpm check:astro && pnpm check:spelling",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.14.0",
     "@bruits/satteri-wasm32-wasi": "0.10.5",
     "@common-grants/core": "workspace:*",
     "@eslint/js": "catalog:",
@@ -81,6 +83,7 @@
     "eslint": "catalog:",
     "eslint-plugin-astro": "^2.1.1",
     "globals": "catalog:",
+    "playwright": "^1.64.1",
     "prettier": "catalog:",
     "prettier-plugin-astro": "^0.14.1",
     "starlight-links-validator": "^0.27.0",

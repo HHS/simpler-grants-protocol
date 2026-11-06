@@ -1,0 +1,10 @@
+# Pages the accessibility scan checks, one site path per line.
+# The scan runs in CI on every pull request that changes the website.
+# See website/README.md for how to add a page.
+/
+/protocol/api-docs/
+/custom-fields/
+/forms/
+/question-bank/
+/plugins/
+/registries/
