@@ -1,3 +1,4 @@
+import "../headers.tsp";
 import "../pagination.tsp";
 import "../sorting.tsp";
 import "@typespec/http";
@@ -57,6 +58,9 @@ model OkT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
+
   /** Response data */
   data: T;
 }
@@ -111,6 +115,9 @@ model PaginatedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
+
   ...PaginatedBase<T>;
 }
 
@@ -161,6 +168,9 @@ model Sorted extends Success {
 model SortedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
+
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
 
   ...SortedBase<T>;
 }
@@ -225,6 +235,9 @@ model FilteredT<ItemsT, FilterT> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
+
   ...FilteredBase<ItemsT, FilterT>;
 }
 
@@ -252,6 +265,9 @@ model Created extends Success {
 model CreatedT<T> extends Success {
   // Inherit the 201 status code
   ...Http.CreatedResponse;
+
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
 
   /** Response data */
   data: T;
@@ -285,6 +301,9 @@ model Accepted extends Success {
 model AcceptedT<T> extends Success {
   // Inherit the 202 status code
   ...Http.AcceptedResponse;
+
+  // Report the protocol version this response was served in
+  ...Headers.VersionResponse;
 
   /** URL where the accepted resource can be retrieved */
   @Http.header("Location")

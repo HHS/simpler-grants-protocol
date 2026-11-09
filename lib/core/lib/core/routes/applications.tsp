@@ -70,7 +70,7 @@ interface Applications {
     ...Headers.VersionRequest,
   ):
     | Responses.OkT<unknown>
-    | Responses.ApplicationSubmissionError
+    | ApplicationSubmissionFailed
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -91,4 +91,17 @@ interface Applications {
 
     ...Headers.VersionRequest,
   ): Responses.FilteredT<Models.ApplicationBase, Models.AppFilters>;
+}
+
+// An `ApplicationSubmissionError` response with the version response headers.
+// Declared here rather than in `Responses`, which emits JSON Schemas, so the
+// headers never become schema fields. The explicit `@body` keeps the response
+// body a reference to `ApplicationSubmissionError`. A plain comment, not a doc
+// comment, so the OpenAPI response description stays unchanged.
+@error
+model ApplicationSubmissionFailed {
+  ...Headers.VersionResponse;
+
+  /** The submission error */
+  @body body: Responses.ApplicationSubmissionError;
 }

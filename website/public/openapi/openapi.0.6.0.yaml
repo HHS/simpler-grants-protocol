@@ -53,6 +53,67 @@ paths:
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -106,6 +167,67 @@ paths:
       responses:
         '201':
           description: A 201 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -122,6 +244,65 @@ paths:
                 description: A 201 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -166,6 +347,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -182,12 +424,132 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -217,6 +579,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -263,6 +686,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -296,6 +780,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -310,18 +855,199 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         default:
           description: An unexpected error response.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -341,6 +1067,67 @@ paths:
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -374,6 +1161,67 @@ paths:
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -459,6 +1307,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -475,6 +1384,67 @@ paths:
                 description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -502,6 +1472,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -518,6 +1549,67 @@ paths:
                 description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -537,6 +1629,67 @@ paths:
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -576,6 +1729,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -605,6 +1819,67 @@ paths:
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -638,6 +1913,67 @@ paths:
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -723,6 +2059,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -739,6 +2136,67 @@ paths:
                 description: A 200 response with typed data
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -772,6 +2230,67 @@ paths:
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -794,12 +2313,130 @@ paths:
                 description: A 200 response with a paginated list of typed items
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -834,6 +2471,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -850,18 +2548,197 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -887,6 +2764,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -903,18 +2841,197 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -949,6 +3066,66 @@ paths:
         '202':
           description: A 202 response with typed data
           headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
             Location:
               required: false
               description: URL where the accepted resource can be retrieved
@@ -971,18 +3148,197 @@ paths:
                 description: A 202 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1017,6 +3373,67 @@ paths:
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1039,18 +3456,197 @@ paths:
                 description: A 200 response with a paginated list of typed items
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1083,6 +3679,67 @@ paths:
       responses:
         '200':
           description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1099,18 +3756,197 @@ paths:
                 description: A 200 response with typed data
         '401':
           description: Access is unauthorized.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '403':
           description: Access is forbidden.
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Optional on 401 and 403 responses, because authentication can run before
+                the server selects a version. When present, it can differ from the
+                requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every response produced after a version is selected, including
+                responses served in the server's default version and errors such as a
+                missing record or a body validation error. It can differ from the
+                requested version in the patch number only. A response without it is
+                unconfirmed and must not be read as the requested version.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: |-
+                Request header names that shared caches must key this response on
+
+                Required on every cacheable response that depends on `CG-Version`,
+                including responses served in the server's default version, and must then
+                list `CG-Version`, as in `Vary: CG-Version`. It may list other header
+                names too.
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: |-
+                When the served version was or will be deprecated (RFC 9745)
+
+                A Structured Field Date: `@` followed by a Unix timestamp, such as
+                `@1796083200`. Sent only while the version being served is retiring,
+                never for a change of default.
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: |-
+                When the served version stops responding (RFC 8594), as an HTTP-date
+
+                For example, `Tue, 01 Jun 2027 00:00:00 GMT`.
+                Sent only while the version being served is retiring and a date is set,
+                never for a change of default. After this date, requests for the version
+                get a `version.retired` error.
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: |-
+                Links about the served version's lifecycle (RFC 8288)
+
+                Servers may send several `Link` headers. While the served version is
+                retiring: `rel="deprecation"` and `rel="sunset"` point to migration
+                documentation. While the default is changing, on responses served by
+                default: `rel="successor-version"` points to documentation for the new
+                default. In both cases `rel="version-history"` points to
+                `/common-grants/versions`, as in
+                `<https://grants.example.org/common-grants/versions>; rel="version-history"`.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1130,11 +3966,12 @@ components:
       description: |-
         The protocol version the client wants, such as `0.5.0`
 
-        A full published version. A `v` prefix and short forms such as `0.5` are
-        malformed. Servers match on major and minor version, so a request for
-        `0.5.0` can be served by a server hosting `0.5.1`. Send one value per
-        request. When the header is absent, the server responds in its default
-        version. Header names are case-insensitive.
+        A full published version. A `v` prefix, short forms such as `0.5`, ranges,
+        and aliases are malformed. Servers trim surrounding whitespace, then match
+        on major and minor version, so a request for `0.5.0` can be served by a
+        server hosting `0.5.1`. Send one value per request. When the header is
+        absent, the server responds in its default version. Header names are
+        case-insensitive.
       schema:
         $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
     CommonGrants.Pagination.PaginatedQueryParams.page:
