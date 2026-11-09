@@ -62,6 +62,16 @@ pnpm exec playwright install chromium          # once, and again after a `playwr
 pnpm run check:a11y
 ```
 
+### Check skip links and Server labels
+
+After building the site and installing Chromium, run `pnpm run check:skip-server`.
+This checks every HTML page in `dist/client`: keyboard access to the skip link,
+actual focus and visible placement of its target, and focus stability after a
+short wait (15 seconds on API docs). It also checks the next Tab on API docs
+and the Server name/value before and after changing API Version to 0.4.0.
+The check emits a JSON report and fails on a broken assertion. It complements
+manual screen reader testing; it does not verify spoken output.
+
 ### Add a page to the scan
 
 Add the page's path to `a11y/pages.txt`, one path per line, starting with `/` and written the way the site serves it, with the trailing slash (for example `/forms/sf424/`; the scan rejects a path without it). Lines starting with `#` are comments. Then run the scan, since a new page may surface issues to fix or list as exceptions.
