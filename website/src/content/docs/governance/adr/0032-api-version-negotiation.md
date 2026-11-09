@@ -7,9 +7,67 @@ tableOfContents:
 
 A CommonGrants API can serve more than one protocol version, and clients built against different versions need to ask for the one they were built for. The protocol defines no way to do that today. A client can't ask for a version, can't find out which versions a server supports, and can't confirm which version a response was served in. The mock API selects a version by path prefix ([ADR 0028](https://commongrants.org/governance/adr/0028-mock-api-hosting/)), but production APIs have no shared convention.
 
+We decided that a client selects a version with an optional `CG-Version` request header, a server lists the versions it serves at `GET /common-grants/versions`, and every response confirms the version it was served in. Retirement uses the standard `Deprecation` and `Sunset` headers.
+
 This decision covers three areas: discovering supported versions, requesting a specific version, and retiring a version, which includes changing a server's default. How the SDKs support versioning is a separate decision.
 
 ## Overview
+
+### Decision
+
+:::note[At a glance]
+
+- A client selects a version with an optional `CG-Version` request header. Every response confirms the version served in `CG-Version-Served`, and a client that sends no version gets the server's pinned default.
+- A server publishes its supported versions at `GET /common-grants/versions`, as a baseline plus entries for routes that differ. It's required only for servers that serve more than one version.
+- Version problems get dedicated codes: `version.malformed` and `version.conflict` (400), and `version.unsupported` and `version.retired` (406).
+- Retiring a version uses the standard `Deprecation`, `Sunset`, and `Link` headers. A change of default uses `Link` with `rel="successor-version"`, with the date published in discovery.
+
+:::
+
+We recommend that servers move all their routes to a new version at the same time. The protocol doesn't require it: a server can serve different versions on different routes and advertise those exceptions in discovery.
+
+#### Discovering supported versions
+
+- A server publishes `GET /common-grants/versions`: a baseline (the default version and the versions every route serves) plus entries for routes that differ, in the standard success envelope.
+- The route is optional, and required for servers that serve more than one version. It SHOULD be readable without authentication.
+- It takes no request parameters, ignores `CG-Version`, and never returns a version error.
+- Optional lifecycle fields appear while a change is pending: the upcoming default and its date, and deprecated versions with their deprecation and sunset dates. Dates use RFC 3339.
+- Fields are only ever added, and clients ignore fields they don't recognize.
+- Ordinary responses don't carry a supported-versions header. Discovery and unsupported-version errors carry the list.
+
+#### Requesting a specific version
+
+- A client selects a version only with the `CG-Version` request header: no path segment, query parameter, or media type. Each request carries one value.
+- The header applies only to protocol routes under `/common-grants/`. Custom routes and the discovery route ignore it.
+- A version is a full published version, such as `0.5.0`. Servers match on major and minor, so a request for `0.5.0` is served by a server hosting `0.5.1`. A server never substitutes a different major or minor version.
+- A request without the header is served in the server's pinned default. A server adopting negotiation sets its default to the version it already serves, and adding versions never moves it.
+- Every response produced after a version is selected carries `CG-Version-Served` with the full version served. The served version travels in headers only, so response bodies don't change.
+- Version problems return `version.malformed` (400), `version.unsupported` (406), `version.retired` (406), or `version.conflict` (400), never 404 or 410.
+- Cacheable responses carry `Vary: CG-Version`, and cross-origin servers allow and expose the version headers.
+
+#### Retiring a version
+
+- **Retiring a version:** responses served in it carry `Deprecation`, `Sunset`, and `Link` headers, with their standard IETF meaning, and discovery lists it as deprecated. After the sunset date, requests for it get `version.retired`.
+- **Changing the default:** responses served by default carry a `Link` with `rel="successor-version"`, and discovery shows the upcoming default and its date. Clients that send a version see no change.
+- A retiring default moves forward to the next newer version no later than the sunset. A server can't retire its default without a newer version to move to.
+- A single route retires a version the same way as the whole server. Experimental routes are exempt.
+
+### Consequences
+
+- **Positive consequences**
+  - Resource URLs never change across versions, so links stored in grant systems stay valid, and a host API keeps its own path scheme.
+  - Existing clients keep working without changes: a server adopting negotiation keeps serving them the version they already use.
+  - A server can upgrade one route at a time and say so truthfully, and a client can predict a route's versions before calling it.
+  - Every response says which version it is, and an unconfirmed response is recognizable as unconfirmed.
+  - Retirement uses headers that existing HTTP tooling already understands, with their standard meaning.
+  - The 0.6.0 contract is purely additive. The version headers and errors are added in 0.6.0, and the published 0.1.0 through 0.5.0 contracts don't change.
+- **Negative consequences**
+  - A URL alone doesn't reproduce a version. Bug reports, docs examples, and curl commands have to include the header.
+  - Servers behind shared caches or CDNs need `Vary: CG-Version`, and some CDNs need the header added to their cache key.
+  - Cross-origin servers need CORS configuration for the version headers.
+  - Discovery dates use RFC 3339, `Deprecation` uses the `@<unix-timestamp>` form, and `Sunset` uses HTTP-date. Client parsers and the docs have to handle all three.
+  - A client that sends no version accepts that its default can move. Before 1.0 the new default may not be compatible with the old one.
+  - The specification's versioning section describes a patch as adding "new optional functionality," which contradicts the patch rule here. It needs correcting alongside this decision.
 
 ### Questions
 
@@ -85,55 +143,6 @@ This decision covers three areas: discovering supported versions, requesting a s
 | Removing a version from one route      | No notice required; **the same process as the whole server**                                                                   |
 
 Selected options are in bold. The [Evaluation](#evaluation) section compares them.
-
-### Decision
-
-A client chooses a CommonGrants version by sending it in an optional request header, `CG-Version`. A server publishes the versions it serves at a discovery route, as a baseline plus per-route exceptions. Every response confirms the version it was served in, clients that send no version get a pinned default, and version problems get dedicated error codes. Retirement uses the standard IETF headers with their standard meaning.
-
-We recommend that servers move all their routes to a new version at the same time. The protocol doesn't require it: a server can serve different versions on different routes and advertise those exceptions in discovery.
-
-#### Discovering supported versions
-
-- A server publishes `GET /common-grants/versions`: a baseline (the default version and the versions every route serves) plus entries for routes that differ, in the standard success envelope.
-- The route is optional, and required for servers that serve more than one version. It SHOULD be readable without authentication.
-- It takes no request parameters, ignores `CG-Version`, and never returns a version error.
-- Optional lifecycle fields appear while a change is pending: the upcoming default and its date, and deprecated versions with their deprecation and sunset dates. Dates use RFC 3339.
-- Fields are only ever added, and clients ignore fields they don't recognize.
-- Ordinary responses don't carry a supported-versions header. Discovery and unsupported-version errors carry the list.
-
-#### Requesting a specific version
-
-- A client selects a version only with the `CG-Version` request header: no path segment, query parameter, or media type. Each request carries one value.
-- The header applies only to protocol routes under `/common-grants/`. Custom routes and the discovery route ignore it.
-- A version is a full published version, such as `0.5.0`. Servers match on major and minor, so a request for `0.5.0` is served by a server hosting `0.5.1`. A server never substitutes a different major or minor version.
-- A request without the header is served in the server's pinned default. A server adopting negotiation sets its default to the version it already serves, and adding versions never moves it.
-- Every response produced after a version is selected carries `CG-Version-Served` with the full version served. The served version travels in headers only, so response bodies don't change.
-- Version problems return `version.malformed` (400), `version.unsupported` (406), `version.retired` (406), or `version.conflict` (400), never 404 or 410.
-- Cacheable responses carry `Vary: CG-Version`, and cross-origin servers allow and expose the version headers.
-
-#### Retiring a version
-
-- **Retiring a version:** responses served in it carry `Deprecation`, `Sunset`, and `Link` headers, with their standard IETF meaning, and discovery lists it as deprecated. After the sunset date, requests for it get `version.retired`.
-- **Changing the default:** responses served by default carry a `Link` with `rel="successor-version"`, and discovery shows the upcoming default and its date. Clients that send a version see no change.
-- A retiring default moves forward to the next newer version no later than the sunset. A server can't retire its default without a newer version to move to.
-- A single route retires a version the same way as the whole server. Experimental routes are exempt.
-
-### Consequences
-
-- **Positive consequences**
-  - Resource URLs never change across versions, so links stored in grant systems stay valid, and a host API keeps its own path scheme.
-  - Existing clients keep working without changes: a server adopting negotiation keeps serving them the version they already use.
-  - A server can upgrade one route at a time and say so truthfully, and a client can predict a route's versions before calling it.
-  - Every response says which version it is, and an unconfirmed response is recognizable as unconfirmed.
-  - Retirement uses headers that existing HTTP tooling already understands, with their standard meaning.
-  - The 0.6.0 contract is purely additive. The version headers and errors are added in 0.6.0, and the published 0.1.0 through 0.5.0 contracts don't change.
-- **Negative consequences**
-  - A URL alone doesn't reproduce a version. Bug reports, docs examples, and curl commands have to include the header.
-  - Servers behind shared caches or CDNs need `Vary: CG-Version`, and some CDNs need the header added to their cache key.
-  - Cross-origin servers need CORS configuration for the version headers.
-  - Discovery dates use RFC 3339, `Deprecation` uses the `@<unix-timestamp>` form, and `Sunset` uses HTTP-date. Client parsers and the docs have to handle all three.
-  - A client that sends no version accepts that its default can move. Before 1.0 the new default may not be compatible with the old one.
-  - The specification's versioning section describes a patch as adding "new optional functionality," which contradicts the patch rule here. It needs correcting alongside this decision.
 
 ## Evaluation
 
