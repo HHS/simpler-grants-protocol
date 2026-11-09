@@ -12,6 +12,5 @@ properties:
     description: When the server will stop serving the version, if scheduled
 required:
   - deprecation
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The retirement schedule for a deprecated version

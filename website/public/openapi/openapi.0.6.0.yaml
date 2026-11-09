@@ -3827,6 +3827,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          minItems: 1
           description: The versions this route serves
         defaultVersion:
           allOf:
@@ -3840,7 +3841,11 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CommonGrants.Models.VersionRetirement'
-          description: Deprecated versions of this route, keyed by version, with their retirement schedule
+          description: |-
+            Deprecated versions of this route, keyed by version, with their retirement schedule
+
+            Each key is a full protocol version listed in `versions`, matched on major and minor.
+      additionalProperties: {}
       description: The versions a single route serves, when they differ from the API-wide values
     CommonGrants.Models.OppDefaultFilters:
       type: object
@@ -5679,6 +5684,7 @@ components:
           type: string
           format: date-time
           description: When the new default takes effect
+      additionalProperties: {}
       description: A scheduled change to the version a server serves by default
     CommonGrants.Models.VersionDiscovery:
       type: object
@@ -5690,11 +5696,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The versions every route serves
+          minItems: 1
+          description: The versions every route without an `operations` entry serves
         defaultVersion:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The version every route serves when a request doesn't name one
+          description: The version every route without an `operations` entry serves when a request doesn't name one
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
@@ -5703,7 +5710,10 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/CommonGrants.Models.VersionRetirement'
-          description: Deprecated versions, keyed by version, with their retirement schedule
+          description: |-
+            Deprecated versions, keyed by version, with their retirement schedule
+
+            Each key is a full protocol version listed in `versions`, matched on major and minor.
         operations:
           type: object
           additionalProperties:
@@ -5715,12 +5725,14 @@ components:
             by a space, such as `GET /common-grants/forms/{formId}`. Path parameter
             names are ignored when matching a key to a route. Omitted when every
             route serves the API-wide values.
+      additionalProperties: {}
       description: |-
         The protocol versions an API serves
 
-        The top-level fields describe every route. Routes that differ from them
-        have an entry in `operations`. New fields are only ever added to this
-        model; clients ignore fields they don't recognize.
+        The top-level fields describe every route that has no entry in
+        `operations`. Routes that differ from them have an entry in `operations`.
+        New fields are only ever added to this model; clients ignore fields they
+        don't recognize.
       example:
         versions:
           - 0.3.0
@@ -5747,6 +5759,7 @@ components:
           type: string
           format: date-time
           description: When the server will stop serving the version, if scheduled
+      additionalProperties: {}
       description: The retirement schedule for a deprecated version
     CommonGrants.Pagination.PaginatedBodyParams:
       type: object

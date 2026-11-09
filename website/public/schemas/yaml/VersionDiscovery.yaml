@@ -6,16 +6,20 @@ properties:
     type: array
     items:
       $ref: protocolVersion.yaml
-    description: The versions every route serves
+    minItems: 1
+    description: The versions every route without an `operations` entry serves
   defaultVersion:
     $ref: protocolVersion.yaml
-    description: The version every route serves when a request doesn't name one
+    description: The version every route without an `operations` entry serves when a request doesn't name one
   upcomingDefault:
     $ref: UpcomingDefault.yaml
     description: A scheduled change to the API-wide default version, if any
   deprecated:
     $ref: "#/$defs/RecordVersionRetirement"
-    description: Deprecated versions, keyed by version, with their retirement schedule
+    description: |-
+      Deprecated versions, keyed by version, with their retirement schedule
+
+      Each key is a full protocol version listed in `versions`, matched on major and minor.
   operations:
     $ref: "#/$defs/RecordOperationVersions"
     description: |-
@@ -28,8 +32,7 @@ properties:
 required:
   - versions
   - defaultVersion
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 examples:
   - versions:
       - 0.3.0
@@ -59,9 +62,10 @@ examples:
 description: |-
   The protocol versions an API serves
 
-  The top-level fields describe every route. Routes that differ from them
-  have an entry in `operations`. New fields are only ever added to this
-  model; clients ignore fields they don't recognize.
+  The top-level fields describe every route that has no entry in
+  `operations`. Routes that differ from them have an entry in `operations`.
+  New fields are only ever added to this model; clients ignore fields they
+  don't recognize.
 $defs:
   RecordVersionRetirement:
     type: object
