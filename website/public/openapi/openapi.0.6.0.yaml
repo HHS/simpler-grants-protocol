@@ -49,6 +49,7 @@ paths:
           schema:
             $ref: '#/components/schemas/CommonGrants.Models.AppSorting'
           explode: false
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
@@ -100,7 +101,8 @@ paths:
       operationId: Applications_startApplication
       summary: Start an application
       description: Start a new application for a given competition.
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '201':
           description: A 201 response with typed data
@@ -160,6 +162,7 @@ paths:
           description: The ID of the application to get
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -210,6 +213,7 @@ paths:
           description: The ID of the form whose response is being updated
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -255,6 +259,7 @@ paths:
           description: The ID of the form whose response is being retrieved
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -287,6 +292,7 @@ paths:
           description: The ID of the application to submit
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -331,6 +337,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
@@ -362,7 +369,8 @@ paths:
       operationId: Awards_search
       summary: Search awards
       description: Search for awards based on the provided filters.
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
@@ -447,6 +455,7 @@ paths:
           description: The ID of the award to view
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -489,6 +498,7 @@ paths:
           description: The ID of the competition to view
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -523,6 +533,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
@@ -561,6 +572,7 @@ paths:
           description: The ID of the form to view
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -589,6 +601,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
@@ -620,7 +633,8 @@ paths:
       operationId: Opportunities_search
       summary: Search opportunities
       description: Search for opportunities based on the provided filters.
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A paginated list of typed items with a typed filter
@@ -705,6 +719,7 @@ paths:
           description: The ID of the opportunity to view
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -753,6 +768,7 @@ paths:
           schema:
             type: string
           explode: false
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
@@ -814,6 +830,7 @@ paths:
             type: string
             format: date-time
           explode: false
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -866,6 +883,7 @@ paths:
           description: The UUID of the organization to update
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -926,6 +944,7 @@ paths:
           description: The UUID of the organization to change
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '202':
           description: A 202 response with typed data
@@ -994,6 +1013,7 @@ paths:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.page'
         - $ref: '#/components/parameters/CommonGrants.Pagination.PaginatedQueryParams.pageSize'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with a paginated list of typed items
@@ -1059,6 +1079,7 @@ paths:
           description: The id of the change to view
           schema:
             $ref: '#/components/schemas/CommonGrants.Types.uuid'
+        - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
           description: A 200 response with typed data
@@ -1102,6 +1123,20 @@ paths:
             - org.changes:read
 components:
   parameters:
+    CommonGrants.Headers.VersionRequest:
+      name: CG-Version
+      in: header
+      required: false
+      description: |-
+        The protocol version the client wants, such as `0.5.0`
+
+        A full published version. A `v` prefix and short forms such as `0.5` are
+        malformed. Servers match on major and minor version, so a request for
+        `0.5.0` can be served by a server hosting `0.5.1`. Send one value per
+        request. When the header is absent, the server responds in its default
+        version. Header names are case-insensitive.
+      schema:
+        $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
     CommonGrants.Pagination.PaginatedQueryParams.page:
       name: page
       in: query
@@ -6446,6 +6481,14 @@ components:
       minLength: 1
       description: A string with at least one character
       example: Example
+    CommonGrants.Types.protocolVersion:
+      type: string
+      pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$
+      description: |-
+        A published CommonGrants protocol version, such as `0.5.0`
+
+        A full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros.
+      example: 0.5.0
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$

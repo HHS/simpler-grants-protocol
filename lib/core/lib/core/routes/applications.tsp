@@ -33,6 +33,8 @@ interface Applications {
     /** The title of the application */
     @Versioning.renamedFrom(Versions.v0_4, "name")
     title: string,
+
+    ...Headers.VersionRequest,
   ): Responses.CreatedT<Models.ApplicationBase> | Responses.Unauthorized;
 
   // ###############################
@@ -46,6 +48,8 @@ interface Applications {
   getApplication(
     /** The ID of the application to get */
     @path appId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.OkT<Models.ApplicationBase>
     | Responses.NotFound
@@ -62,6 +66,8 @@ interface Applications {
   submitApplication(
     /** The ID of the application to submit */
     @path appId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.OkT<unknown>
     | Responses.ApplicationSubmissionError
@@ -82,5 +88,7 @@ interface Applications {
 
     /** The sorting to apply to the search */
     @query sorting: Models.AppSorting,
+
+    ...Headers.VersionRequest,
   ): Responses.FilteredT<Models.ApplicationBase, Models.AppFilters>;
 }
