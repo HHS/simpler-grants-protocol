@@ -83,6 +83,10 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Check skip-link focus and Server naming
+        if: ${{ !cancelled() && steps.a11y-browser.outcome == 'success' }}
+        run: pnpm run check:skip-server
+
       - name: Run accessibility scan
         if: ${{ !cancelled() && steps.a11y-browser.outcome == 'success' }}
         run: pnpm run check:a11y
