@@ -61,6 +61,15 @@ scalar duns extends string;
 @Versioning.added(CommonGrants.Versions.v0_5)
 scalar nonEmptyString extends string;
 
+/** A published CommonGrants protocol version, such as `0.5.0`
+ *
+ * A full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros.
+ */
+@example("0.5.0")
+@pattern("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")
+@Versioning.added(CommonGrants.Versions.v0_6)
+scalar protocolVersion extends string;
+
 // ########################################
 // Numeric types
 // ########################################

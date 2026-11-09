@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: protocolVersion.yaml
+type: string
+examples:
+  - 0.5.0
+pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$
+description: |-
+  A published CommonGrants protocol version, such as `0.5.0`
+
+  A full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros.
