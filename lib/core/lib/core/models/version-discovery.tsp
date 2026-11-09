@@ -14,6 +14,9 @@ model UpcomingDefault {
 
   /** When the new default takes effect */
   date: utcDateTime;
+
+  // Discovery sits outside version selection, so new fields must be tolerated rather than versioned
+  ...Record<unknown>;
 }
 
 // #########################################################
@@ -28,6 +31,8 @@ model VersionRetirement {
 
   /** When the server will stop serving the version, if scheduled */
   sunset?: utcDateTime;
+
+  ...Record<unknown>;
 }
 
 // #########################################################
@@ -38,6 +43,7 @@ model VersionRetirement {
 @Versioning.added(CommonGrants.Versions.v0_6)
 model OperationVersions {
   /** The versions this route serves */
+  @minItems(1)
   versions: Types.protocolVersion[];
 
   /** The version this route serves when a request doesn't name one */
@@ -46,8 +52,13 @@ model OperationVersions {
   /** A scheduled change to this route's default version, if any */
   upcomingDefault?: UpcomingDefault;
 
-  /** Deprecated versions of this route, keyed by version, with their retirement schedule */
+  /** Deprecated versions of this route, keyed by version, with their retirement schedule
+   *
+   * Each key is a full protocol version listed in `versions`, matched on major and minor.
+   */
   deprecated?: Record<VersionRetirement>;
+
+  ...Record<unknown>;
 }
 
 // #########################################################
@@ -56,9 +67,10 @@ model OperationVersions {
 
 /** The protocol versions an API serves
  *
- * The top-level fields describe every route. Routes that differ from them
- * have an entry in `operations`. New fields are only ever added to this
- * model; clients ignore fields they don't recognize.
+ * The top-level fields describe every route that has no entry in
+ * `operations`. Routes that differ from them have an entry in `operations`.
+ * New fields are only ever added to this model; clients ignore fields they
+ * don't recognize.
  */
 @example(
   Examples.VersionDiscovery.routeEntries,
@@ -70,16 +82,20 @@ model OperationVersions {
 )
 @Versioning.added(CommonGrants.Versions.v0_6)
 model VersionDiscovery {
-  /** The versions every route serves */
+  /** The versions every route without an `operations` entry serves */
+  @minItems(1)
   versions: Types.protocolVersion[];
 
-  /** The version every route serves when a request doesn't name one */
+  /** The version every route without an `operations` entry serves when a request doesn't name one */
   defaultVersion: Types.protocolVersion;
 
   /** A scheduled change to the API-wide default version, if any */
   upcomingDefault?: UpcomingDefault;
 
-  /** Deprecated versions, keyed by version, with their retirement schedule */
+  /** Deprecated versions, keyed by version, with their retirement schedule
+   *
+   * Each key is a full protocol version listed in `versions`, matched on major and minor.
+   */
   deprecated?: Record<VersionRetirement>;
 
   /** Routes whose versions differ from the API-wide values
@@ -90,6 +106,8 @@ model VersionDiscovery {
    * route serves the API-wide values.
    */
   operations?: Record<OperationVersions>;
+
+  ...Record<unknown>;
 }
 
 // #########################################################
