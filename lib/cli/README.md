@@ -89,7 +89,12 @@ cg check spec openapi.yaml --protocol-version 0.4.0
 
 # Using the path to a locally compiled base spec
 cg check spec openapi.yaml --base <path-to-base-spec>
+
+# Using a config file at an explicit path
+cg check spec openapi.yaml --config path/to/cg.config.yaml
 ```
+
+Without `--config`, `cg` looks for `cg.config.yml`, `cg.config.yaml` or `cg.config.json` in the current directory and loads it if exactly one exists (it is an error if more than one does). Config files are YAML or JSON, and unknown keys are rejected so typos fail loudly. For now the only recognized key is an empty `check-spec` section; settings for strictness, thresholds and ignored rules are coming.
 
 Findings are reported as either errors or warnings. Errors fail the command with exit code 1. Warnings are printed, marked `(warning)`, and the command still succeeds with exit code 0, because a route the base spec tags `optional` MAY be omitted by a compliant implementation.
 
