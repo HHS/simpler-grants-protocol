@@ -75,6 +75,18 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: pnpm run test
 
+      # Accessibility scan: axe (WCAG 2.1 AA) against the site built above,
+      # served locally, so it also runs on PRs from forks. Pages and known
+      # issues are listed in website/a11y/. See website/README.md.
+      - name: Install Chromium for accessibility scan
+        id: a11y-browser
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run accessibility scan
+        if: ${{ !cancelled() && steps.a11y-browser.outcome == 'success' }}
+        run: pnpm run check:a11y
+
   # Upload the built artifact as a new version of the shared preview Worker,
   # aliased to this PR. Decoupled from the test/check outcome (via
   # artifact_ready) so previews stay available for reviewing UI changes on PRs
