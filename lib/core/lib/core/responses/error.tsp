@@ -11,6 +11,11 @@ namespace CommonGrants.Responses;
  * import "@typespec/http"
  *
  * alias Unauthorized = Error & Http.UnauthorizedResponse
+ *
+ * // From protocol version 0.6.0, also carry the version response headers
+ * alias VersionedUnauthorized = Error &
+ *   Http.UnauthorizedResponse &
+ *   Headers.VersionResponseAuth
  * ```
  */
 @error

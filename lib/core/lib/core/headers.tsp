@@ -37,11 +37,11 @@ model VersionRequest {
   /** The protocol version the client wants, such as `0.5.0`
    *
    * A full published version. A `v` prefix, short forms such as `0.5`, ranges,
-   * and aliases are malformed. Servers trim surrounding whitespace, then match
-   * on major and minor version, so a request for `0.5.0` can be served by a
-   * server hosting `0.5.1`. Send one value per request. When the header is
-   * absent, the server responds in its default version. Header names are
-   * case-insensitive.
+   * and aliases are malformed. Servers trim surrounding whitespace before
+   * checking the value against this format, then match on major and minor
+   * version, so a request for `0.5.0` can be served by a server hosting
+   * `0.5.1`. Send one value per request. When the header is absent, the
+   * server responds in its default version. Header names are case-insensitive.
    */
   @Http.header("CG-Version")
   // This property-level `@added` is what keeps the header out of 0.1.0 to

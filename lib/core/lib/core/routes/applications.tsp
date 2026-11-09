@@ -70,7 +70,7 @@ interface Applications {
     ...Headers.VersionRequest,
   ):
     | Responses.OkT<unknown>
-    | ApplicationSubmissionFailed
+    | ApplicationSubmissionErrorResponse
     | Responses.NotFound
     | Responses.Unauthorized;
 
@@ -99,7 +99,7 @@ interface Applications {
 // body a reference to `ApplicationSubmissionError`. A plain comment, not a doc
 // comment, so the OpenAPI response description stays unchanged.
 @error
-model ApplicationSubmissionFailed {
+model ApplicationSubmissionErrorResponse {
   ...Headers.VersionResponse;
 
   /** The submission error */
