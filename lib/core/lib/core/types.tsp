@@ -61,6 +61,13 @@ scalar duns extends string;
 @Versioning.added(CommonGrants.Versions.v0_5)
 scalar nonEmptyString extends string;
 
+// Owned by #1386; remove this stub when that PR lands.
+/** A published CommonGrants protocol version, such as `0.5.0` */
+@example("0.5.0")
+@pattern("^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$")
+@Versioning.added(CommonGrants.Versions.v0_6)
+scalar protocolVersion extends string;
+
 // ########################################
 // Numeric types
 // ########################################

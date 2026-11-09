@@ -1,0 +1,79 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionDiscovery.yaml
+type: object
+properties:
+  versions:
+    type: array
+    items:
+      $ref: protocolVersion.yaml
+    minItems: 1
+    description: The versions every route without an `operations` entry serves
+  defaultVersion:
+    $ref: protocolVersion.yaml
+    description: The version every route without an `operations` entry serves when a request doesn't name one
+  upcomingDefault:
+    $ref: UpcomingDefault.yaml
+    description: A scheduled change to the API-wide default version, if any
+  deprecated:
+    $ref: "#/$defs/RecordVersionRetirement"
+    description: |-
+      Deprecated versions, keyed by version, with their retirement schedule
+
+      Each key is a full protocol version listed in `versions`, matched on major and minor.
+  operations:
+    $ref: "#/$defs/RecordOperationVersions"
+    description: |-
+      Routes whose versions differ from the API-wide values
+
+      Each key is the HTTP method and the route's published path, separated
+      by a space, such as `GET /common-grants/forms/{formId}`. Path parameter
+      names are ignored when matching a key to a route. Omitted when every
+      route serves the API-wide values.
+required:
+  - versions
+  - defaultVersion
+unevaluatedProperties: {}
+examples:
+  - versions:
+      - 0.3.0
+      - 0.4.0
+      - 0.5.0
+    defaultVersion: 0.4.0
+    upcomingDefault:
+      version: 0.5.0
+      date: 2027-03-01T00:00:00Z
+    deprecated:
+      0.3.0:
+        deprecation: 2026-12-01T00:00:00Z
+        sunset: 2027-06-01T00:00:00Z
+  - versions:
+      - 0.4.0
+    defaultVersion: 0.4.0
+    operations:
+      GET /common-grants/forms:
+        versions:
+          - 0.5.0
+        defaultVersion: 0.5.0
+      GET /common-grants/forms/{formId}:
+        versions:
+          - 0.4.0
+          - 0.5.0
+        defaultVersion: 0.4.0
+description: |-
+  The protocol versions an API serves
+
+  The top-level fields describe every route that has no entry in
+  `operations`. Routes that differ from them have an entry in `operations`.
+  New fields are only ever added to this model; clients ignore fields they
+  don't recognize.
+$defs:
+  RecordVersionRetirement:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: VersionRetirement.yaml
+  RecordOperationVersions:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: OperationVersions.yaml
