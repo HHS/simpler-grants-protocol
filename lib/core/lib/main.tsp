@@ -21,4 +21,7 @@ enum Versions {
   v0_3: "0.3.0",
   v0_4: "0.4.0",
   v0_5: "0.5.0",
+
+  // Owned by #1386; remove this stub when that PR lands.
+  v0_6: "0.6.0",
 }

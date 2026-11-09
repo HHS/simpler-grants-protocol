@@ -9,6 +9,7 @@ import "./applications.tsp";
 import "./form-responses.tsp";
 import "./forms.tsp";
 import "./competitions.tsp";
+import "./version-discovery.tsp";
 
 /** A series of routing interfaces for CommonGrants API endpoints
  *

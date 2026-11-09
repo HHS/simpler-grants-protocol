@@ -30,6 +30,12 @@ using Versioning;
     description: "Endpoints that MUST be implemented by all CommonGrants APIs",
   }
 )
+@tagMetadata(
+  "Versions",
+  #{
+    description: "Endpoints related to discovering the protocol versions an API serves",
+  }
+)
 @tagMetadata("Forms", #{ description: "Endpoints related to forms" })
 @tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
 @tagMetadata(
@@ -244,5 +250,19 @@ namespace Forms {
   op list is Router.list;
 
   @added(Versions.v0_2)
+  op read is Router.read;
+}
+
+// #########################################################
+// Versions
+// #########################################################
+
+@tag("Versions")
+@route("/versions")
+namespace ProtocolVersions {
+  alias Router = Routes.ProtocolVersions;
+
+  @added(Versions.v0_6)
+  @tag("optional")
   op read is Router.read;
 }
