@@ -6,6 +6,7 @@ properties:
     type: array
     items:
       $ref: protocolVersion.yaml
+    minItems: 1
     description: The versions this route serves
   defaultVersion:
     $ref: protocolVersion.yaml
@@ -15,12 +16,14 @@ properties:
     description: A scheduled change to this route's default version, if any
   deprecated:
     $ref: "#/$defs/RecordVersionRetirement"
-    description: Deprecated versions of this route, keyed by version, with their retirement schedule
+    description: |-
+      Deprecated versions of this route, keyed by version, with their retirement schedule
+
+      Each key is a full protocol version listed in `versions`, matched on major and minor.
 required:
   - versions
   - defaultVersion
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The versions a single route serves, when they differ from the API-wide values
 $defs:
   RecordVersionRetirement:
