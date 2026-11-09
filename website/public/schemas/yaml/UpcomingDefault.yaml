@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: UpcomingDefault.yaml
+type: object
+properties:
+  version:
+    $ref: protocolVersion.yaml
+    description: The version that will become the default
+  date:
+    type: string
+    format: date-time
+    description: When the new default takes effect
+required:
+  - version
+  - date
+unevaluatedProperties:
+  not: {}
+description: A scheduled change to the version a server serves by default
