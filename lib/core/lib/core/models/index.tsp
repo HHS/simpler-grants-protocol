@@ -15,6 +15,7 @@ import "./form.tsp";
 import "./form-response.tsp";
 import "./mapping.tsp";
 import "./applicant-type.tsp";
+import "./version-discovery.tsp";
 
 using TypeSpec.JsonSchema;
 
