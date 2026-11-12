@@ -1,3 +1,4 @@
+import "../headers.tsp";
 import "@typespec/http";
 
 namespace CommonGrants.Responses;
@@ -10,6 +11,11 @@ namespace CommonGrants.Responses;
  * import "@typespec/http"
  *
  * alias Unauthorized = Error & Http.UnauthorizedResponse
+ *
+ * // From protocol version 0.6.0, also carry the version response headers
+ * alias VersionedUnauthorized = Error &
+ *   Http.UnauthorizedResponse &
+ *   Headers.VersionResponseAuth
  * ```
  */
 @error
@@ -27,9 +33,11 @@ model Error {
   errors: Array<unknown>;
 }
 
-alias Unauthorized = Error & Http.UnauthorizedResponse;
-alias Forbidden = Error & Http.ForbiddenResponse;
-alias NotFound = Error & Http.NotFoundResponse;
+alias Unauthorized = Error &
+  Http.UnauthorizedResponse &
+  Headers.VersionResponseAuth;
+alias Forbidden = Error & Http.ForbiddenResponse & Headers.VersionResponseAuth;
+alias NotFound = Error & Http.NotFoundResponse & Headers.VersionResponse;
 
 @example(#{
   status: 400,

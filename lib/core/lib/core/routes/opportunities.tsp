@@ -50,6 +50,7 @@ interface Opportunities {
   @list
   list<T extends Models.OpportunityBase = Models.OpportunityBase>(
     ...Pagination.PaginatedQueryParams,
+    ...Headers.VersionRequest,
   ): Responses.PaginatedT<T>;
 
   // ##############################
@@ -74,6 +75,8 @@ interface Opportunities {
     @path
     @added(Versions.v0_2)
     oppId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ): Responses.OkT<T> | Responses.NotFound;
 
   // ###############################
@@ -106,5 +109,7 @@ interface Opportunities {
 
     /** Pagination instructions for the results */
     pagination?: Pagination.PaginatedBodyParams,
+
+    ...Headers.VersionRequest,
   ): Responses.FilteredT<T, Models.OppFilters>;
 }

@@ -30,6 +30,8 @@ interface Competitions {
   read(
     /** The ID of the competition to view */
     @path compId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ): Responses.OkT<Models.CompetitionBase> | Responses.NotFound;
 
   // ###############################
@@ -46,6 +48,8 @@ interface Competitions {
 
     /** The application to apply to the competition */
     @body application: Models.ApplicationBase,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.CreatedT<Models.ApplicationBase>
     | Responses.NotFound

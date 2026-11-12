@@ -1,4 +1,5 @@
 import "./types.tsp";
+import "./headers.tsp";
 import "./fields/index.tsp";
 import "./models/index.tsp";
 import "./routes/index.tsp";
