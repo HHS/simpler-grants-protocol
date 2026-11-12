@@ -58,7 +58,6 @@ model OkT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
 
   /** Response data */
@@ -115,9 +114,7 @@ model PaginatedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
-
   ...PaginatedBase<T>;
 }
 
@@ -169,9 +166,7 @@ model SortedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
-
   ...SortedBase<T>;
 }
 
@@ -235,9 +230,7 @@ model FilteredT<ItemsT, FilterT> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
-
   ...FilteredBase<ItemsT, FilterT>;
 }
 
@@ -266,7 +259,6 @@ model CreatedT<T> extends Success {
   // Inherit the 201 status code
   ...Http.CreatedResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
 
   /** Response data */
@@ -302,7 +294,6 @@ model AcceptedT<T> extends Success {
   // Inherit the 202 status code
   ...Http.AcceptedResponse;
 
-  // Report the protocol version this response was served in
   ...Headers.VersionResponse;
 
   /** URL where the accepted resource can be retrieved */

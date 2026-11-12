@@ -44,15 +44,10 @@ model VersionRequest {
    * server responds in its default version. Header names are case-insensitive.
    */
   @Http.header("CG-Version")
-  // This property-level `@added` is what keeps the header out of 0.1.0 to
-  // 0.5.0: spreading copies properties without the model's versioning.
+  // Spreading drops model-level `@added`, so each property repeats it
   @Versioning.added(CommonGrants.Versions.v0_6)
   cgVersion?: Types.protocolVersion;
 }
-
-// Each property below carries its own `@added`, for the same reason as
-// `VersionRequest.cgVersion`: spreading copies properties without the model's
-// versioning.
 
 /** Response headers that report the protocol version a response was served in
  *
