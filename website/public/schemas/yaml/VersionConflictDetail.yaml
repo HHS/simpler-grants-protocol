@@ -10,6 +10,5 @@ required:
   - code
 allOf:
   - $ref: VersionErrorDetail.yaml
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The request sent more than one `CG-Version` value

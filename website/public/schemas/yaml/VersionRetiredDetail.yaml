@@ -23,6 +23,5 @@ required:
   - sunset
 allOf:
   - $ref: VersionErrorDetail.yaml
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The requested version was retired from this server or this route

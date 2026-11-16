@@ -18,6 +18,5 @@ required:
   - scope
 allOf:
   - $ref: VersionErrorDetail.yaml
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The requested version isn't served by this server or this route

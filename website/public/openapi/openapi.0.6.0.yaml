@@ -8192,6 +8192,7 @@ components:
           enum:
             - version.conflict
           description: Stable error code that clients branch on
+      additionalProperties: {}
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
       description: The request sent more than one `CG-Version` value
@@ -8210,6 +8211,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictDetail'
+          minItems: 1
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.Error'
       description: A request that sent more than one `CG-Version` value, even the same value twice
@@ -8279,6 +8281,7 @@ components:
         requested:
           type: string
           description: The value received, as sent
+      additionalProperties: {}
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
       description: The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version
@@ -8297,6 +8300,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedDetail'
+          minItems: 1
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.Error'
       description: A `CG-Version` header that isn't a full `MAJOR.MINOR.PATCH` version
@@ -8338,6 +8342,7 @@ components:
           type: string
           format: date-time
           description: When the version stopped being served
+      additionalProperties: {}
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
       description: The requested version was retired from this server or this route
@@ -8356,6 +8361,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredDetail'
+          minItems: 1
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.Error'
       description: A requested version that was retired from this server or route
@@ -8395,6 +8401,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorScope'
           description: Whether the server or only this route doesn't serve the version
+      additionalProperties: {}
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
       description: The requested version isn't served by this server or this route
@@ -8413,6 +8420,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedDetail'
+          minItems: 1
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.Error'
       description: A requested version that this server or route doesn't serve

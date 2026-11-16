@@ -49,6 +49,9 @@ model VersionMalformedDetail extends VersionErrorDetail {
 
   /** The value received, as sent */
   requested: string;
+
+  // Version errors are returned outside version selection, so new fields must be tolerated
+  ...Record<unknown>;
 }
 
 /** The request sent more than one `CG-Version` value */
@@ -56,6 +59,8 @@ model VersionMalformedDetail extends VersionErrorDetail {
 model VersionConflictDetail extends VersionErrorDetail {
   /** Stable error code that clients branch on */
   code: "version.conflict";
+
+  ...Record<unknown>;
 }
 
 /** The requested version isn't served by this server or this route */
@@ -69,6 +74,8 @@ model VersionUnsupportedDetail extends VersionErrorDetail {
 
   /** Whether the server or only this route doesn't serve the version */
   scope: VersionErrorScope;
+
+  ...Record<unknown>;
 }
 
 /** The requested version was retired from this server or this route */
@@ -85,6 +92,8 @@ model VersionRetiredDetail extends VersionErrorDetail {
 
   /** When the version stopped being served */
   sunset: utcDateTime;
+
+  ...Record<unknown>;
 }
 
 // ############################################################################
@@ -113,6 +122,7 @@ model VersionMalformedError extends Error {
   @example(400)
   status: 400;
 
+  @minItems(1)
   errors: VersionMalformedDetail[];
 }
 
@@ -137,6 +147,7 @@ model VersionConflictError extends Error {
   @example(400)
   status: 400;
 
+  @minItems(1)
   errors: VersionConflictDetail[];
 }
 
@@ -163,6 +174,7 @@ model VersionUnsupportedError extends Error {
   @example(406)
   status: 406;
 
+  @minItems(1)
   errors: VersionUnsupportedDetail[];
 }
 
@@ -190,6 +202,7 @@ model VersionRetiredError extends Error {
   @example(406)
   status: 406;
 
+  @minItems(1)
   errors: VersionRetiredDetail[];
 }
 
@@ -197,12 +210,8 @@ model VersionRetiredError extends Error {
 // JSON Schemas. Version errors carry no version response headers (ADR 0032).
 alias VersionMalformed = VersionMalformedError & Http.BadRequestResponse;
 alias VersionConflict = VersionConflictError & Http.BadRequestResponse;
-alias VersionUnsupported = VersionUnsupportedError & {
-  @Http.statusCode _: 406;
-};
-alias VersionRetired = VersionRetiredError & {
-  @Http.statusCode _: 406;
-};
+alias VersionUnsupported = VersionUnsupportedError & Http.Response<406>;
+alias VersionRetired = VersionRetiredError & Http.Response<406>;
 
 // Adds the version errors to a route's responses from protocol version 0.6.0.
 // Docs go on the variants: a union-level doc would replace every response description.
@@ -211,17 +220,9 @@ union WithVersionErrors<R> {
 
   /** The `CG-Version` value is malformed or was sent more than once */
   @Versioning.added(CommonGrants.Versions.v0_6)
-  malformed: VersionMalformed,
-
-  /** The `CG-Version` value is malformed or was sent more than once */
-  @Versioning.added(CommonGrants.Versions.v0_6)
-  conflict: VersionConflict,
+  badRequest: VersionMalformed | VersionConflict,
 
   /** The requested version isn't served by this server or this route */
   @Versioning.added(CommonGrants.Versions.v0_6)
-  unsupported: VersionUnsupported,
-
-  /** The requested version isn't served by this server or this route */
-  @Versioning.added(CommonGrants.Versions.v0_6)
-  retired: VersionRetired,
+  notAcceptable: VersionUnsupported | VersionRetired,
 }

@@ -14,6 +14,5 @@ required:
   - requested
 allOf:
   - $ref: VersionErrorDetail.yaml
-unevaluatedProperties:
-  not: {}
+unevaluatedProperties: {}
 description: The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version
