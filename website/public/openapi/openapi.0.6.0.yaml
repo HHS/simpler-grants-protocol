@@ -123,6 +123,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Applications
         - experimental
@@ -182,6 +198,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 201 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -219,6 +243,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Applications
         - experimental
@@ -304,6 +336,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -378,6 +418,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Applications
         - experimental
@@ -448,6 +496,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Applications
         - experimental
@@ -525,6 +589,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Applications
         - experimental
@@ -587,6 +667,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -661,6 +749,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
         default:
           description: An unexpected error response.
           headers:
@@ -764,6 +860,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Awards
         - optional
@@ -847,6 +959,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Awards
         - optional
@@ -938,6 +1066,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -975,6 +1111,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Awards
         - optional
@@ -1043,6 +1187,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -1080,6 +1232,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Competitions
         - experimental
@@ -1146,6 +1306,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Forms
         - experimental
@@ -1210,6 +1386,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Forms
         - experimental
@@ -1276,6 +1468,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Opportunities
         - required
@@ -1359,6 +1567,22 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Opportunities
         - optional
@@ -1450,6 +1674,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -1487,6 +1719,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Opportunities
         - required
@@ -1567,6 +1807,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -1641,6 +1889,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental
@@ -1716,6 +1972,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -1827,6 +2091,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental
@@ -1893,6 +2165,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2004,6 +2284,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental
@@ -2084,6 +2372,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 202 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2195,6 +2491,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental
@@ -2276,6 +2580,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2387,6 +2699,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental
@@ -2460,6 +2780,14 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
+        '400':
+          description: The `CG-Version` value is malformed or was sent more than once
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2571,6 +2899,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonGrants.Responses.Error'
+        '406':
+          description: The requested version isn't served by this server or this route
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredError'
       tags:
         - Organizations
         - experimental

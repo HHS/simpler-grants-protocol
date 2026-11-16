@@ -23,6 +23,16 @@ using TypeSpec.JsonSchema;
  *   op getPets(): Responses.OkT<Pet> | Responses.Unauthorized;
  * }
  * ```
+ *
+ * @example How to add the version errors to a protocol route
+ *
+ * ```typespec
+ * @route("/common-grants/pets")
+ * @get
+ * op listPets(
+ *   ...Headers.VersionRequest,
+ * ): Responses.WithVersionErrors<Responses.OkT<Pet> | Responses.Unauthorized>;
+ * ```
  */
 @jsonSchema
 namespace CommonGrants.Responses;

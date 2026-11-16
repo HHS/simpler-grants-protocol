@@ -203,3 +203,25 @@ alias VersionUnsupported = VersionUnsupportedError & {
 alias VersionRetired = VersionRetiredError & {
   @Http.statusCode _: 406;
 };
+
+// Adds the version errors to a route's responses from protocol version 0.6.0.
+// Docs go on the variants: a union-level doc would replace every response description.
+union WithVersionErrors<R> {
+  response: R,
+
+  /** The `CG-Version` value is malformed or was sent more than once */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  malformed: VersionMalformed,
+
+  /** The `CG-Version` value is malformed or was sent more than once */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  conflict: VersionConflict,
+
+  /** The requested version isn't served by this server or this route */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  unsupported: VersionUnsupported,
+
+  /** The requested version isn't served by this server or this route */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  retired: VersionRetired,
+}

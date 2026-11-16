@@ -52,7 +52,7 @@ interface Awards {
   list<T extends Models.AwardBase = Models.AwardBase>(
     ...Pagination.PaginatedQueryParams,
     ...Headers.VersionRequest,
-  ): Responses.PaginatedT<T>;
+  ): Responses.WithVersionErrors<Responses.PaginatedT<T>>;
 
   // ##############################
   // View an award
@@ -72,7 +72,7 @@ interface Awards {
     awdId: Types.uuid,
 
     ...Headers.VersionRequest,
-  ): Responses.OkT<T> | Responses.NotFound;
+  ): Responses.WithVersionErrors<Responses.OkT<T> | Responses.NotFound>;
 
   // ###############################
   // Search awards
@@ -106,5 +106,5 @@ interface Awards {
     pagination?: Pagination.PaginatedBodyParams,
 
     ...Headers.VersionRequest,
-  ): Responses.FilteredT<T, Models.AwdFilters>;
+  ): Responses.WithVersionErrors<Responses.FilteredT<T, Models.AwdFilters>>;
 }

@@ -20,7 +20,9 @@ import "./types.tsp";
  *
  * @route("/common-grants/custom")
  * @get
- * op listCustom(...Headers.VersionRequest): Responses.OkT<string>;
+ * op listCustom(
+ *   ...Headers.VersionRequest,
+ * ): Responses.WithVersionErrors<Responses.OkT<string>>;
  * ```
  */
 namespace CommonGrants.Headers;

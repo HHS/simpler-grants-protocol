@@ -63,7 +63,10 @@ interface Organizations {
     @query id?: string,
 
     ...Headers.VersionRequest,
-  ): Responses.PaginatedT<T> | Responses.Unauthorized | Responses.Forbidden;
+  ): Responses.WithVersionErrors<
+    | Responses.PaginatedT<T>
+    | Responses.Unauthorized
+    | Responses.Forbidden>;
 
   // ##############################
   // View an organization
@@ -89,11 +92,11 @@ interface Organizations {
     @query at?: utcDateTime,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.OkT<T>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // Update an organization
@@ -118,11 +121,11 @@ interface Organizations {
     patch: Models.OrgPatchData,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // Submit a change
@@ -149,11 +152,11 @@ interface Organizations {
     patch: Models.OrgPatchData,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.AcceptedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // List changes
@@ -177,11 +180,11 @@ interface Organizations {
 
     ...Pagination.PaginatedQueryParams,
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.PaginatedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // View a change
@@ -208,9 +211,9 @@ interface Organizations {
     changeId: Types.uuid,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 }
