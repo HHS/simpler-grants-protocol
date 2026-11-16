@@ -55,7 +55,7 @@ const REPRESENTATIVE_SEARCH = JSON.stringify({
  * once the Worker serves every entry in `SUPPORTED_VERSIONS` again.
  */
 const GOLDEN_VERSIONS = SUPPORTED_VERSIONS.filter(
-  (version) => version !== "0.5.0",
+  (version) => version !== "0.5.0" && version !== "0.6.0",
 );
 
 /** The three endpoints across every version the golden corpus covers. */

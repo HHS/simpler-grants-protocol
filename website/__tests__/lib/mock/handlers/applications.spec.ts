@@ -871,6 +871,7 @@ describe("per-version application response shape", () => {
     "0.3.0": "name",
     "0.4.0": "title",
     "0.5.0": "title",
+    "0.6.0": "title",
   };
 
   /** Versions whose `ApplicationBase` declares `opportunityId`. */
@@ -880,6 +881,7 @@ describe("per-version application response shape", () => {
     "0.3.0": true,
     "0.4.0": true,
     "0.5.0": true,
+    "0.6.0": true,
   };
 
   /** The applications routes start at v0.2; v0.1 never reaches a handler. */
