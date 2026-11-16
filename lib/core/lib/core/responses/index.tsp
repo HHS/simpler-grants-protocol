@@ -2,6 +2,7 @@ import "@typespec/http";
 
 import "./error.tsp";
 import "./success.tsp";
+import "./version-errors.tsp";
 
 using TypeSpec.JsonSchema;
 

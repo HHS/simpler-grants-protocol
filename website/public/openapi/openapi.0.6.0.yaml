@@ -7846,6 +7846,254 @@ components:
         message:
           type: string
           example: Success
+    CommonGrants.Responses.VersionConflictDetail:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - version.conflict
+          description: Stable error code that clients branch on
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
+      description: The request sent more than one `CG-Version` value
+    CommonGrants.Responses.VersionConflictError:
+      type: object
+      required:
+        - status
+        - errors
+      properties:
+        status:
+          type: number
+          enum:
+            - 400
+          example: 400
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictDetail'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      description: A request that sent more than one `CG-Version` value, even the same value twice
+      example:
+        status: 400
+        message: The request sent more than one CG-Version value
+        errors:
+          - field: CG-Version
+            code: version.conflict
+            message: Received CG-Version values 0.5.0 and 0.6.0
+            supported:
+              - 0.5.0
+              - 0.6.0
+            defaultVersion: 0.5.0
+            discovery: https://grants.example.org/common-grants/versions
+    CommonGrants.Responses.VersionErrorDetail:
+      type: object
+      required:
+        - field
+        - message
+        - supported
+        - defaultVersion
+      properties:
+        field:
+          type: string
+          enum:
+            - CG-Version
+          description: The request header the error is about
+        message:
+          type: string
+          description: Human-readable description of the problem
+        supported:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          minItems: 1
+          description: The versions this route serves
+        defaultVersion:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version this route serves when a request doesn't name one
+        discovery:
+          type: string
+          format: uri
+          description: |-
+            The server's version discovery URL
+
+            Omitted by servers that serve one version and don't publish discovery.
+      description: Details shared by every version error, describing the route that was called
+    CommonGrants.Responses.VersionErrorScope:
+      type: string
+      enum:
+        - deployment
+        - operation
+      description: Whether a version is unavailable on the whole server or only on the route called
+    CommonGrants.Responses.VersionMalformedDetail:
+      type: object
+      required:
+        - code
+        - requested
+      properties:
+        code:
+          type: string
+          enum:
+            - version.malformed
+          description: Stable error code that clients branch on
+        requested:
+          type: string
+          description: The value received, as sent
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
+      description: The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version
+    CommonGrants.Responses.VersionMalformedError:
+      type: object
+      required:
+        - status
+        - errors
+      properties:
+        status:
+          type: number
+          enum:
+            - 400
+          example: 400
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedDetail'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      description: A `CG-Version` header that isn't a full `MAJOR.MINOR.PATCH` version
+      example:
+        status: 400
+        message: The CG-Version header is not a valid CommonGrants version
+        errors:
+          - field: CG-Version
+            code: version.malformed
+            message: Version 0.5 is not a full MAJOR.MINOR.PATCH version
+            requested: '0.5'
+            supported:
+              - 0.5.0
+              - 0.6.0
+            defaultVersion: 0.5.0
+            discovery: https://grants.example.org/common-grants/versions
+    CommonGrants.Responses.VersionRetiredDetail:
+      type: object
+      required:
+        - code
+        - requested
+        - scope
+        - sunset
+      properties:
+        code:
+          type: string
+          enum:
+            - version.retired
+          description: Stable error code that clients branch on
+        requested:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version requested
+        scope:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorScope'
+          description: Whether the server or only this route doesn't serve the version
+        sunset:
+          type: string
+          format: date-time
+          description: When the version stopped being served
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
+      description: The requested version was retired from this server or this route
+    CommonGrants.Responses.VersionRetiredError:
+      type: object
+      required:
+        - status
+        - errors
+      properties:
+        status:
+          type: number
+          enum:
+            - 406
+          example: 406
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Responses.VersionRetiredDetail'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      description: A requested version that was retired from this server or route
+      example:
+        status: 406
+        message: The requested CommonGrants version has been retired
+        errors:
+          - field: CG-Version
+            code: version.retired
+            message: 'Version 0.3.0 was retired on 2027-06-01. Supported versions: 0.4.0, 0.5.0, 0.6.0'
+            requested: 0.3.0
+            supported:
+              - 0.4.0
+              - 0.5.0
+              - 0.6.0
+            scope: deployment
+            defaultVersion: 0.4.0
+            discovery: https://grants.example.org/common-grants/versions
+            sunset: '2027-06-01T00:00:00Z'
+    CommonGrants.Responses.VersionUnsupportedDetail:
+      type: object
+      required:
+        - code
+        - requested
+        - scope
+      properties:
+        code:
+          type: string
+          enum:
+            - version.unsupported
+          description: Stable error code that clients branch on
+        requested:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version requested
+        scope:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorScope'
+          description: Whether the server or only this route doesn't serve the version
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.VersionErrorDetail'
+      description: The requested version isn't served by this server or this route
+    CommonGrants.Responses.VersionUnsupportedError:
+      type: object
+      required:
+        - status
+        - errors
+      properties:
+        status:
+          type: number
+          enum:
+            - 406
+          example: 406
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Responses.VersionUnsupportedDetail'
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Error'
+      description: A requested version that this server or route doesn't serve
+      example:
+        status: 406
+        message: The requested CommonGrants version is not available for this route
+        errors:
+          - field: CG-Version
+            code: version.unsupported
+            message: 'Version 0.4.0 is not served by GET /common-grants/forms. Supported versions: 0.5.0, 0.6.0'
+            requested: 0.4.0
+            supported:
+              - 0.5.0
+              - 0.6.0
+            scope: operation
+            defaultVersion: 0.5.0
+            discovery: https://grants.example.org/common-grants/versions
     CommonGrants.Sorting.SortBodyParams:
       type: object
       required:

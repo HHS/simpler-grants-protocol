@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionUnsupportedDetail.yaml
+type: object
+properties:
+  code:
+    type: string
+    const: version.unsupported
+    description: Stable error code that clients branch on
+  requested:
+    $ref: protocolVersion.yaml
+    description: The version requested
+  scope:
+    $ref: VersionErrorScope.yaml
+    description: Whether the server or only this route doesn't serve the version
+required:
+  - code
+  - requested
+  - scope
+allOf:
+  - $ref: VersionErrorDetail.yaml
+unevaluatedProperties:
+  not: {}
+description: The requested version isn't served by this server or this route
