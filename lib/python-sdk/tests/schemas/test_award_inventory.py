@@ -195,9 +195,9 @@ def wire_shape(model: type[BaseModel]) -> tuple[set[str], set[str]]:
     return keys, required
 
 
-def test_core_baseline_is_v0_5():
-    assert (SCHEMA_DIR.parents[1] / "openapi" / "openapi.0.5.0.yaml").exists()
-    assert not list((SCHEMA_DIR.parents[1] / "openapi").glob("openapi.0.[6-9]*.yaml"))
+def test_core_baseline_is_v0_6():
+    assert (SCHEMA_DIR.parents[1] / "openapi" / "openapi.0.6.0.yaml").exists()
+    assert not list((SCHEMA_DIR.parents[1] / "openapi").glob("openapi.0.[7-9]*.yaml"))
 
 
 def test_inventory_classifies_the_whole_award_closure():
