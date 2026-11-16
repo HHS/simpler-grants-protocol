@@ -14,6 +14,7 @@ import {
   allForVersion,
   type Opportunity,
 } from "@/lib/mock/data/fixtures";
+import { isAtLeastVersion } from "@/lib/mock/data/availability";
 
 const STATUS_VALUES = ["forecasted", "open", "closed", "custom"];
 
@@ -296,7 +297,7 @@ describe("shapeOpportunityForVersion", () => {
 
   it("strips identifiers for every version below 0.5.0, both variants", () => {
     const olderVersions = SUPPORTED_VERSIONS.filter(
-      (version) => version !== "0.5.0",
+      (version) => !isAtLeastVersion(version, "0.5.0"),
     );
 
     for (const version of olderVersions) {
@@ -340,7 +341,7 @@ describe("shapeOpportunityForVersion", () => {
 
   it("strips funders for every version below 0.5.0, both variants", () => {
     const olderVersions = SUPPORTED_VERSIONS.filter(
-      (version) => version !== "0.5.0",
+      (version) => !isAtLeastVersion(version, "0.5.0"),
     );
 
     for (const version of olderVersions) {
@@ -388,7 +389,7 @@ describe("shapeOpportunityForVersion", () => {
 
   it("strips awards for every version below 0.5.0, both variants", () => {
     const olderVersions = SUPPORTED_VERSIONS.filter(
-      (version) => version !== "0.5.0",
+      (version) => !isAtLeastVersion(version, "0.5.0"),
     );
 
     for (const version of olderVersions) {
@@ -432,6 +433,6 @@ describe("isSupportedVersion", () => {
   });
 
   it("rejects a version the fixture cannot shape", () => {
-    expect(isSupportedVersion("0.6.0")).toBe(false);
+    expect(isSupportedVersion("0.7.0")).toBe(false);
   });
 });
