@@ -7,12 +7,11 @@
 import { MOCK_API_BASE_PATH } from "./router";
 
 /**
- * Builds the root-relative server URL for one spec, e.g. `/api/v0.4.0`. The
- * version rides in the path, so this doubles as an SDK `baseUrl`.
+ * The root-relative server URL every spec advertises. The version rides in
+ * the `CG-Version` header (ADR 0032), so all versions share one URL, which
+ * doubles as an SDK `baseUrl`.
  */
-export function serverUrlFor(version: string): string {
-  return `${MOCK_API_BASE_PATH}/v${version}`;
-}
+export const MOCK_SERVER_URL = MOCK_API_BASE_PATH;
 
 /**
  * Public directory holding the mock-advertising spec copies, written each build
