@@ -22,6 +22,8 @@ tags:
     description: Endpoints related to grant awards
   - name: Forms
     description: Endpoints related to forms
+  - name: Versions
+    description: Endpoints related to discovering the protocol versions an API serves
   - name: required
     description: Endpoints that MUST be implemented by all CommonGrants APIs
   - name: optional
@@ -2913,6 +2915,69 @@ paths:
       security:
         - OAuth2Auth:
             - org.changes:read
+  /common-grants/versions:
+    get:
+      operationId: ProtocolVersions_read
+      summary: List supported versions
+      description: |-
+        List the protocol versions this API serves, its default version, and any routes whose versions differ.
+
+        This route is optional, but a server that serves more than one protocol version MUST implement it.
+        It ignores the `CG-Version` request header, because clients call it before they know which version to request.
+        It SHOULD be readable without authentication.
+        Fields are only ever added to the response; clients ignore fields they don't recognize.
+      parameters: []
+      responses:
+        '200':
+          description: A 200 response with typed data
+          headers:
+            CG-Version-Served:
+              required: true
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Can differ from the requested version in the patch number only.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Models.VersionDiscovery'
+                    description: Response data
+                allOf:
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+                description: A 200 response with typed data
+      tags:
+        - Versions
+        - optional
 components:
   parameters:
     CommonGrants.Headers.VersionRequest:
@@ -5607,6 +5672,36 @@ components:
             active: open
             inactive: closed
           default: custom
+    CommonGrants.Models.OperationVersions:
+      type: object
+      required:
+        - versions
+        - defaultVersion
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          minItems: 1
+          description: The versions this route serves
+        defaultVersion:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version this route serves when a request doesn't name one
+        upcomingDefault:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
+          description: A scheduled change to this route's default version, if any
+        deprecated:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.VersionRetirement'
+          description: |-
+            Deprecated versions of this route, keyed by version, with their retirement schedule
+
+            Each key is a full protocol version listed in `versions`, matched on major and minor.
+      additionalProperties: {}
+      description: The versions a single route serves, when they differ from the API-wide values
     CommonGrants.Models.OppDefaultFilters:
       type: object
       properties:
@@ -7430,6 +7525,97 @@ components:
         A revision moves once from `pending` into a terminal state; a terminal
         revision is never restated. How a receiver resolves a `pending` change (a
         human review, a policy engine, a batch job) is out of scope for this contract.
+    CommonGrants.Models.UpcomingDefault:
+      type: object
+      required:
+        - version
+        - date
+      properties:
+        version:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version that will become the default
+        date:
+          type: string
+          format: date-time
+          description: When the new default takes effect
+      additionalProperties: {}
+      description: A scheduled change to the version a server serves by default
+    CommonGrants.Models.VersionDiscovery:
+      type: object
+      required:
+        - versions
+        - defaultVersion
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          minItems: 1
+          description: The versions every route without an `operations` entry serves
+        defaultVersion:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+          description: The version every route without an `operations` entry serves when a request doesn't name one
+        upcomingDefault:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
+          description: A scheduled change to the API-wide default version, if any
+        deprecated:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.VersionRetirement'
+          description: |-
+            Deprecated versions, keyed by version, with their retirement schedule
+
+            Each key is a full protocol version listed in `versions`, matched on major and minor.
+        operations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommonGrants.Models.OperationVersions'
+          description: |-
+            Routes whose versions differ from the API-wide values
+
+            Each key is the HTTP method and the route's published path, separated
+            by a space, such as `GET /common-grants/forms/{formId}`. Path parameter
+            names are ignored when matching a key to a route. Omitted when every
+            route serves the API-wide values.
+      additionalProperties: {}
+      description: |-
+        The protocol versions an API serves
+
+        The top-level fields describe every route that has no entry in
+        `operations`. Routes that differ from them have an entry in `operations`.
+        New fields are only ever added to this model; clients ignore fields they
+        don't recognize.
+      example:
+        versions:
+          - 0.3.0
+          - 0.4.0
+          - 0.5.0
+        defaultVersion: 0.4.0
+        upcomingDefault:
+          version: 0.5.0
+          date: '2027-03-01T00:00:00Z'
+        deprecated:
+          0.3.0:
+            deprecation: '2026-12-01T00:00:00Z'
+            sunset: '2027-06-01T00:00:00Z'
+    CommonGrants.Models.VersionRetirement:
+      type: object
+      required:
+        - deprecation
+      properties:
+        deprecation:
+          type: string
+          format: date-time
+          description: When the version was or will be deprecated
+        sunset:
+          type: string
+          format: date-time
+          description: When the server will stop serving the version, if scheduled
+      additionalProperties: {}
+      description: The retirement schedule for a deprecated version
     CommonGrants.Pagination.PaginatedBodyParams:
       type: object
       properties:

@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OperationVersions.yaml
+type: object
+properties:
+  versions:
+    type: array
+    items:
+      $ref: protocolVersion.yaml
+    minItems: 1
+    description: The versions this route serves
+  defaultVersion:
+    $ref: protocolVersion.yaml
+    description: The version this route serves when a request doesn't name one
+  upcomingDefault:
+    $ref: UpcomingDefault.yaml
+    description: A scheduled change to this route's default version, if any
+  deprecated:
+    $ref: "#/$defs/RecordVersionRetirement"
+    description: |-
+      Deprecated versions of this route, keyed by version, with their retirement schedule
+
+      Each key is a full protocol version listed in `versions`, matched on major and minor.
+required:
+  - versions
+  - defaultVersion
+unevaluatedProperties: {}
+description: The versions a single route serves, when they differ from the API-wide values
+$defs:
+  RecordVersionRetirement:
+    type: object
+    properties: {}
+    unevaluatedProperties:
+      $ref: VersionRetirement.yaml
