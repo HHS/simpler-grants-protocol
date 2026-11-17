@@ -5,7 +5,8 @@
  * The protocol version comes from the `CG-Version` header, never the path
  * (ADR 0032). A request is matched to a route first, then its version is
  * resolved against the versions that route serves (`data/availability.ts`),
- * then it is dispatched.
+ * then it is dispatched. The discovery route (`/common-grants/versions`)
+ * skips version resolution.
  *
  * The opportunity routes keep the behavior the golden byte-identity corpus
  * (`golden-envelopes.spec.ts`) pins.
@@ -42,6 +43,11 @@ import {
   submitOrgChange,
   updateOrganization,
 } from "./handlers/organizations";
+import {
+  discoveryUrl,
+  getVersionDiscovery,
+  VERSIONS_PATH,
+} from "./handlers/versions";
 import { preflightResponse, withCors } from "./http/cors";
 import {
   errorResponse,
@@ -271,7 +277,7 @@ async function routeCompetitions(
  */
 async function serveVersioned(
   request: Request,
-  pathname: string,
+  { origin, pathname }: URL,
   path: string,
   versions: readonly Version[],
   dispatchRoute: (version: Version) => Promise<Response | undefined>,
@@ -285,7 +291,12 @@ async function serveVersioned(
     },
   );
   if ("error" in resolution) {
-    return withVaryVersion(versionErrorResponse(resolution.error));
+    return withVaryVersion(
+      versionErrorResponse(
+        resolution.error,
+        discoveryUrl(origin, MOCK_API_BASE_PATH),
+      ),
+    );
   }
 
   const response = await dispatchRoute(resolution.version);
@@ -312,7 +323,8 @@ function versionsForRoute(
 }
 
 async function route(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url);
+  const url = new URL(request.url);
+  const { pathname } = url;
   const path = stripBasePath(pathname);
 
   if (path === undefined) {
@@ -322,6 +334,13 @@ async function route(request: Request): Promise<Response> {
   // The health route answers at the mount point; the docs homepage owns `/`.
   if (path === "/") {
     return healthResponse();
+  }
+
+  // Discovery sits outside version selection, so it never resolves a version.
+  if (path === VERSIONS_PATH) {
+    return request.method === "GET"
+      ? getVersionDiscovery()
+      : routeMissResponse(request.method, pathname);
   }
 
   const match = RESOURCE_ROUTE.exec(path);
@@ -337,7 +356,7 @@ async function route(request: Request): Promise<Response> {
 
   return serveVersioned(
     request,
-    pathname,
+    url,
     path,
     versionsForRoute(resource, request.method, remainder),
     (version) => dispatch(request, version, resource, remainder),
