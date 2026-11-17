@@ -12,18 +12,12 @@ import {
 } from "@/lib/mock/data/fixtures";
 import { withCors } from "@/lib/mock/http/cors";
 import { withErrorBoundary } from "@/lib/mock/http/envelope";
-
-/** Builds `https://docs.example/api/v{version}/common-grants/opportunities{suffix}`. */
-function opportunitiesUrl(version: string, suffix = ""): string {
-  return `https://docs.example/api/v${version}/common-grants/opportunities${suffix}`;
-}
+import { mockUrl, opportunitiesRequest } from "../__fixtures__/mock-request";
 
 describe("CORS", () => {
   describe("success responses carry Access-Control-Allow-Origin: *", () => {
     it.each(SUPPORTED_VERSIONS)("list route, for v%s", async (version) => {
-      const response = await handleMockRequest(
-        new Request(opportunitiesUrl(version)),
-      );
+      const response = await handleMockRequest(opportunitiesRequest(version));
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
@@ -31,7 +25,7 @@ describe("CORS", () => {
 
     it("detail route", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest("0.3.0", `/${CANONICAL_OPPORTUNITY_ID}`),
       );
 
       expect(response.status).toBe(200);
@@ -40,7 +34,7 @@ describe("CORS", () => {
 
     it("search route", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: { "Content-Type": "application/json" },
@@ -55,7 +49,7 @@ describe("CORS", () => {
   describe("error responses carry Access-Control-Allow-Origin: * too", () => {
     it("400 for a malformed (non-UUID) detail oppId", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/not-a-uuid")),
+        opportunitiesRequest("0.3.0", "/not-a-uuid"),
       );
 
       expect(response.status).toBe(400);
@@ -64,9 +58,7 @@ describe("CORS", () => {
 
     it("404 for a well-formed but unknown detail oppId", async () => {
       const response = await handleMockRequest(
-        new Request(
-          opportunitiesUrl("0.3.0", `/${RESERVED_MISSING_OPPORTUNITY_ID}`),
-        ),
+        opportunitiesRequest("0.3.0", `/${RESERVED_MISSING_OPPORTUNITY_ID}`),
       );
 
       expect(response.status).toBe(404);
@@ -75,7 +67,7 @@ describe("CORS", () => {
 
     it("400 for a malformed search request body", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: "{not valid json",
           headers: { "Content-Type": "application/json" },
@@ -118,9 +110,9 @@ describe("CORS", () => {
 
   describe("OPTIONS preflight", () => {
     const preflightTargets: Array<[string, string]> = [
-      ["list", opportunitiesUrl("0.3.0")],
-      ["detail", opportunitiesUrl("0.3.0", `/${CANONICAL_OPPORTUNITY_ID}`)],
-      ["search", opportunitiesUrl("0.3.0", "/search")],
+      ["list", mockUrl("/opportunities")],
+      ["detail", mockUrl(`/opportunities/${CANONICAL_OPPORTUNITY_ID}`)],
+      ["search", mockUrl("/opportunities/search")],
       ["health", "https://docs.example/api/"],
       ["an unmatched path", "https://docs.example/api/nonexistent"],
     ];
@@ -158,7 +150,7 @@ describe("CORS", () => {
 
     it("answers a browser-shaped preflight (Origin + Access-Control-Request-Method/Headers) the same way", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "OPTIONS",
           headers: {
             Origin: "https://commongrants.org",
@@ -193,7 +185,7 @@ describe("CORS", () => {
   describe("SDK auth headers on an actual (non-preflight) request", () => {
     it("a search request carrying X-API-Key and Authorization still returns 200 with the CORS header", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: {
@@ -210,7 +202,7 @@ describe("CORS", () => {
 
     it("a search request with no auth headers (Auth.none()) still returns 200 with the CORS header", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: { "Content-Type": "application/json" },
@@ -227,7 +219,7 @@ describe("CORS", () => {
   describe("unexpected failures stay on the CORS path", () => {
     it("answers a JSON body that is valid but not an object without throwing, and with the CORS header", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: "null",
           headers: { "Content-Type": "application/json" },

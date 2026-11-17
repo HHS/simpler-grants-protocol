@@ -15,7 +15,7 @@ export const DEFAULT_VERSION: Version = "0.6.0";
 
 /** The versions one route serves, as version errors report them. */
 export interface RouteVersions {
-  /** Method and published path, e.g. `GET /common-grants/awards`. */
+  /** Request method and path, e.g. `GET /common-grants/awards`. */
   label: string;
   versions: readonly Version[];
   defaultVersion: Version;
@@ -129,4 +129,26 @@ export function resolveRequestedVersion(
       },
     },
   };
+}
+
+/** Adds `Vary: CG-Version`, since the response depends on the request header. */
+export function withVaryVersion(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.append("Vary", VERSION_HEADER);
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+/** Adds `CG-Version-Served` and `Vary: CG-Version` to a response served in `version`. */
+export function withVersionHeaders(
+  response: Response,
+  version: Version,
+): Response {
+  const varied = withVaryVersion(response);
+  varied.headers.set(VERSION_SERVED_HEADER, version);
+  return varied;
 }

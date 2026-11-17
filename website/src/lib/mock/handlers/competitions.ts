@@ -14,7 +14,7 @@ import { errorResponse, successResponse } from "../http/envelope";
 import { isUuid } from "../http/query";
 
 /**
- * `GET /v{version}/common-grants/competitions/{compId}` — a single
+ * `GET /common-grants/competitions/{compId}` — a single
  * competition. A malformed id answers 400, not a route miss.
  */
 export function getCompetition(compId: string, version: Version): Response {
