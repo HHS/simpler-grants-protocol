@@ -28,7 +28,7 @@ namespace CommonGrants.Headers;
 /** Request headers a client sends to select a protocol version */
 @Versioning.added(CommonGrants.Versions.v0_6)
 model VersionRequest {
-  /** The protocol version the client wants, such as `0.5.0`
+  /** The protocol version the client wants, such as `0.6.0`
    *
    * Servers match on major and minor version. When absent, the server responds
    * in its default version.

@@ -2584,7 +2584,7 @@ components:
       in: header
       required: false
       description: |-
-        The protocol version the client wants, such as `0.5.0`
+        The protocol version the client wants, such as `0.6.0`
 
         Servers match on major and minor version. When absent, the server responds
         in its default version.
@@ -7938,10 +7938,10 @@ components:
       type: string
       pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$
       description: |-
-        A published CommonGrants protocol version, such as `0.5.0`
+        A published CommonGrants protocol version, such as `0.6.0`
 
         A full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros.
-      example: 0.5.0
+      example: 0.6.0
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$
