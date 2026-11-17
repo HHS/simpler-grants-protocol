@@ -393,6 +393,6 @@ export async function handleMockRequest(request: Request): Promise<Response> {
   }
 
   // Every non-preflight response passes through CORS and the error boundary;
-  // `preflightResponse()` sets the same headers itself.
+  // `preflightResponse()` sets the same `Allow-*` headers itself.
   return withCors(await withErrorBoundary(() => route(request)));
 }

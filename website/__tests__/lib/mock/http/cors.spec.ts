@@ -12,7 +12,32 @@ import {
 } from "@/lib/mock/data/fixtures";
 import { withCors } from "@/lib/mock/http/cors";
 import { withErrorBoundary } from "@/lib/mock/http/envelope";
-import { mockUrl, opportunitiesRequest } from "../__fixtures__/mock-request";
+import { VERSION_HEADER, VERSION_SERVED_HEADER } from "@/lib/mock/http/version";
+import {
+  mockRequest,
+  mockUrl,
+  opportunitiesRequest,
+} from "../__fixtures__/mock-request";
+
+const EXPOSED_VERSION_HEADERS = [
+  VERSION_SERVED_HEADER,
+  "Deprecation",
+  "Sunset",
+  "Link",
+];
+
+function exposedHeaders(response: Response): string[] {
+  return (response.headers.get("Access-Control-Expose-Headers") ?? "")
+    .split(",")
+    .map((name) => name.trim().toLowerCase());
+}
+
+function expectExposesVersionHeaders(response: Response) {
+  const exposed = exposedHeaders(response);
+  for (const name of EXPOSED_VERSION_HEADERS) {
+    expect(exposed).toContain(name.toLowerCase());
+  }
+}
 
 describe("CORS", () => {
   describe("success responses carry Access-Control-Allow-Origin: *", () => {
@@ -142,6 +167,7 @@ describe("CORS", () => {
         expect(allowHeaders).toContain("content-type");
         expect(allowHeaders).toContain("x-api-key");
         expect(allowHeaders).toContain("authorization");
+        expect(allowHeaders).toContain(VERSION_HEADER.toLowerCase());
 
         const text = await response.text();
         expect(text).toBe("");
@@ -155,7 +181,7 @@ describe("CORS", () => {
           headers: {
             Origin: "https://commongrants.org",
             "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "content-type,x-api-key",
+            "Access-Control-Request-Headers": "content-type,cg-version",
           },
         }),
       );
@@ -176,9 +202,81 @@ describe("CORS", () => {
       expect(allowHeaders).toContain("content-type");
       expect(allowHeaders).toContain("x-api-key");
       expect(allowHeaders).toContain("authorization");
+      expect(allowHeaders).toContain(VERSION_HEADER.toLowerCase());
 
       const text = await response.text();
       expect(text).toBe("");
+    });
+  });
+
+  describe("non-preflight responses expose the version headers", () => {
+    it("200 opportunities list", async () => {
+      const response = await handleMockRequest(opportunitiesRequest("0.3.0"));
+
+      expect(response.status).toBe(200);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("404 route miss", async () => {
+      const response = await handleMockRequest(
+        new Request("https://docs.example/api/nonexistent"),
+      );
+
+      expect(response.status).toBe(404);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("400 for a malformed version", async () => {
+      const response = await handleMockRequest(
+        mockRequest("/opportunities", "v1"),
+      );
+
+      expect(response.status).toBe(400);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("406 for an unsupported version", async () => {
+      const response = await handleMockRequest(mockRequest("/awards", "0.2.0"));
+
+      expect(response.status).toBe(406);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("200 versions discovery route", async () => {
+      const response = await handleMockRequest(
+        new Request(mockUrl("/versions")),
+      );
+
+      expect(response.status).toBe(200);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("200 health route", async () => {
+      const response = await handleMockRequest(
+        new Request("https://docs.example/api/"),
+      );
+
+      expect(response.status).toBe(200);
+      expectExposesVersionHeaders(response);
+    });
+
+    it("500 from the error boundary", async () => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      try {
+        const response = withCors(
+          await withErrorBoundary(() => {
+            throw new Error("boom");
+          }),
+        );
+
+        expect(response.status).toBe(500);
+        expectExposesVersionHeaders(response);
+      } finally {
+        consoleError.mockRestore();
+      }
     });
   });
 
