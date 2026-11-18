@@ -4,7 +4,7 @@ import "./types.tsp";
 
 /** Version negotiation headers (ADR 0032), added in protocol version 0.6.0
  *
- * @example How to add the version request header to a custom route
+ * @example How to add the version request header to a declared protocol route
  *
  * ```typespec
  * import "@typespec/http";
@@ -18,9 +18,12 @@ import "./types.tsp";
  * @useDependency(CommonGrants.Versions.v0_6)
  * namespace MyApi;
  *
- * @route("/common-grants/custom")
+ * @route("/common-grants/opportunities")
  * @get
- * op listCustom(...Headers.VersionRequest): Responses.OkT<string>;
+ * op listOpportunities(
+ *   ...Pagination.PaginatedQueryParams,
+ *   ...Headers.VersionRequest,
+ * ): Responses.PaginatedT<Models.OpportunityBase>;
  * ```
  */
 namespace CommonGrants.Headers;
