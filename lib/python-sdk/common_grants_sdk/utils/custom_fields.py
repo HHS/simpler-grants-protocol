@@ -61,12 +61,15 @@ def add_custom_fields(
         **field_defs,
     )
 
+    # Built at runtime, so pyright can't read it as a static type form.
+    custom_fields_type: Any = Optional[CustomFieldsContainer]
+
     # Extended opportunity model
     return create_model(
         name,
         __base__=cls,
         custom_fields=(
-            Optional[CustomFieldsContainer],
+            custom_fields_type,
             Field(default=None),
         ),
     )
@@ -143,6 +146,8 @@ def create_custom_field_schema(
             value_type = field.value
         else:
             value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
+        # Built at runtime, so pyright can't read it as a static type form.
+        optional_value_type: Any = Optional[value_type]
 
         CustomFieldForAttr = create_model(
             _create_model_name(name=name, key=key),
@@ -156,7 +161,7 @@ def create_custom_field_schema(
             name=(str, Field(default=field.name or key)),
             description=(Optional[str], Field(default=field.description or None)),
             # typed value (Optional[...] to allow missing)
-            value=(Optional[value_type], None),
+            value=(optional_value_type, None),
         )
 
         # Add this field's definition to the accumulator
