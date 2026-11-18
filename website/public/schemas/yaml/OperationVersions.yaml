@@ -10,7 +10,7 @@ properties:
     description: The versions this route serves
   defaultVersion:
     $ref: protocolVersion.yaml
-    description: The version this route serves when a request doesn't name one
+    description: The version this route serves when a request doesn't name one, one of `versions`
   upcomingDefault:
     $ref: UpcomingDefault.yaml
     description: A scheduled change to this route's default version, if any

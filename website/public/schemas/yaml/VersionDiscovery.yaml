@@ -10,7 +10,7 @@ properties:
     description: The versions every route without an `operations` entry serves
   defaultVersion:
     $ref: protocolVersion.yaml
-    description: The version every route without an `operations` entry serves when a request doesn't name one
+    description: The version every route without an `operations` entry serves when a request doesn't name one, one of `versions`
   upcomingDefault:
     $ref: UpcomingDefault.yaml
     description: A scheduled change to the API-wide default version, if any

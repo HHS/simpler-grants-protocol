@@ -46,7 +46,7 @@ model OperationVersions {
   @minItems(1)
   versions: Types.protocolVersion[];
 
-  /** The version this route serves when a request doesn't name one */
+  /** The version this route serves when a request doesn't name one, one of `versions` */
   defaultVersion: Types.protocolVersion;
 
   /** A scheduled change to this route's default version, if any */
@@ -86,7 +86,7 @@ model VersionDiscovery {
   @minItems(1)
   versions: Types.protocolVersion[];
 
-  /** The version every route without an `operations` entry serves when a request doesn't name one */
+  /** The version every route without an `operations` entry serves when a request doesn't name one, one of `versions` */
   defaultVersion: Types.protocolVersion;
 
   /** A scheduled change to the API-wide default version, if any */

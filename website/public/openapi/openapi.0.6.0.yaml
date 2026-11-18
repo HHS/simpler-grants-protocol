@@ -2589,8 +2589,8 @@ paths:
         This route is optional, but a server that serves more than one protocol version MUST implement it.
         It ignores the `CG-Version` request header, because clients call it before they know which version to request.
         Its responses carry neither `CG-Version-Served` nor `Vary: CG-Version`.
-        It SHOULD be readable without authentication.
-        Fields are only ever added to the response; clients ignore fields they don't recognize.
+        It requires no stronger authentication than the API's required routes, and SHOULD be readable without authentication.
+        Fields are only ever added to `data`; clients ignore fields they don't recognize.
       parameters: []
       responses:
         '200':
@@ -5311,7 +5311,7 @@ components:
         defaultVersion:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The version this route serves when a request doesn't name one
+          description: The version this route serves when a request doesn't name one, one of `versions`
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
@@ -7180,7 +7180,7 @@ components:
         defaultVersion:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The version every route without an `operations` entry serves when a request doesn't name one
+          description: The version every route without an `operations` entry serves when a request doesn't name one, one of `versions`
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
