@@ -32,6 +32,8 @@ interface FormResponses {
 
     /** The response to the form */
     @body response: Record<unknown>,
+
+    ...Headers.VersionRequest,
   ): Responses.OkT<Models.AppFormResponse>;
 
   // ###############################
@@ -48,5 +50,7 @@ interface FormResponses {
 
     /** The ID of the form whose response is being retrieved */
     @path formId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ): Responses.OkT<Models.AppFormResponse>;
 }

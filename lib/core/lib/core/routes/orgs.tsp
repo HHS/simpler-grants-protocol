@@ -61,6 +61,8 @@ interface Organizations {
 
     /** Identifier value within the given registry to filter by */
     @query id?: string,
+
+    ...Headers.VersionRequest,
   ): Responses.PaginatedT<T> | Responses.Unauthorized | Responses.Forbidden;
 
   // ##############################
@@ -85,6 +87,8 @@ interface Organizations {
 
     /** Return the profile as of the given point in time */
     @query at?: utcDateTime,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.OkT<T>
     | Responses.NotFound
@@ -112,6 +116,8 @@ interface Organizations {
     /** JSON Merge Patch body for the organization profile */
     @body
     patch: Models.OrgPatchData,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
@@ -141,6 +147,8 @@ interface Organizations {
     /** JSON Merge Patch body for the organization profile */
     @body
     patch: Models.OrgPatchData,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.AcceptedT<Models.OrgRevision>
     | Responses.NotFound
@@ -168,6 +176,7 @@ interface Organizations {
     orgId: Types.uuid,
 
     ...Pagination.PaginatedQueryParams,
+    ...Headers.VersionRequest,
   ):
     | Responses.PaginatedT<Models.OrgRevision>
     | Responses.NotFound
@@ -197,6 +206,8 @@ interface Organizations {
     /** The id of the change to view */
     @path
     changeId: Types.uuid,
+
+    ...Headers.VersionRequest,
   ):
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
