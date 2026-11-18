@@ -213,14 +213,28 @@ alias VersionConflict = VersionConflictError & Http.BadRequestResponse;
 alias VersionUnsupported = VersionUnsupportedError & Http.Response<406>;
 alias VersionRetired = VersionRetiredError & Http.Response<406>;
 
+// Any other 400, such as a body that fails validation in the requested version.
+// The served version is optional because version errors share this status.
+alias BadRequest = Error &
+  Http.BadRequestResponse & {
+    /** The full protocol version this response was served in, such as `0.5.1`
+     *
+     * Sent on every 400 except the version errors.
+     */
+    @Http.header("CG-Version-Served")
+    cgVersionServed?: Types.protocolVersion;
+
+    ...Headers.VersionLifecycle;
+  };
+
 // Adds the version errors to a route's responses from protocol version 0.6.0.
 // Docs go on the variants: a union-level doc would replace every response description.
 union WithVersionErrors<R> {
   response: R,
 
-  /** The `CG-Version` value is malformed or was sent more than once */
+  /** The request is invalid, or its `CG-Version` value is malformed or was sent more than once */
   @Versioning.added(CommonGrants.Versions.v0_6)
-  badRequest: VersionMalformed | VersionConflict,
+  badRequest: VersionMalformed | VersionConflict | BadRequest,
 
   /** The requested version isn't served by this server or this route */
   @Versioning.added(CommonGrants.Versions.v0_6)

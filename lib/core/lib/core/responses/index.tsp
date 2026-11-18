@@ -27,11 +27,12 @@ using TypeSpec.JsonSchema;
  * @example How to add the version errors to a protocol route
  *
  * ```typespec
- * @route("/common-grants/pets")
+ * @route("/common-grants/opportunities")
  * @get
- * op listPets(
+ * op listOpportunities(
+ *   ...Pagination.PaginatedQueryParams,
  *   ...Headers.VersionRequest,
- * ): Responses.WithVersionErrors<Responses.OkT<Pet> | Responses.Unauthorized>;
+ * ): Responses.WithVersionErrors<Responses.PaginatedT<Models.OpportunityBase>>;
  * ```
  */
 @jsonSchema
