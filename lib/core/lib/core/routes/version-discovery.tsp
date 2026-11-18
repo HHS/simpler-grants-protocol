@@ -41,9 +41,10 @@ interface ProtocolVersions {
     
     This route is optional, but a server that serves more than one protocol version MUST implement it.
     It ignores the `CG-Version` request header, because clients call it before they know which version to request.
+    Its responses carry neither `CG-Version-Served` nor `Vary: CG-Version`.
     It SHOULD be readable without authentication.
     Fields are only ever added to the response; clients ignore fields they don't recognize.
     """)
   @get
-  read(): Responses.OkT<Models.VersionDiscovery>;
+  read(): Responses.VersionDiscoveryResponse;
 }
