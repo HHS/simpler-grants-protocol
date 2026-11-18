@@ -4,7 +4,7 @@ import "./types.tsp";
 
 /** Version negotiation headers (ADR 0032), added in protocol version 0.6.0
  *
- * @example How to add the version request header to a custom route
+ * @example How to add the version request header to a declared protocol route
  *
  * ```typespec
  * import "@typespec/http";
@@ -18,11 +18,12 @@ import "./types.tsp";
  * @useDependency(CommonGrants.Versions.v0_6)
  * namespace MyApi;
  *
- * @route("/common-grants/custom")
+ * @route("/common-grants/opportunities")
  * @get
- * op listCustom(
+ * op listOpportunities(
+ *   ...Pagination.PaginatedQueryParams,
  *   ...Headers.VersionRequest,
- * ): Responses.WithVersionErrors<Responses.OkT<string>>;
+ * ): Responses.WithVersionErrors<Responses.PaginatedT<Models.OpportunityBase>>;
  * ```
  */
 namespace CommonGrants.Headers;
@@ -30,7 +31,7 @@ namespace CommonGrants.Headers;
 /** Request headers a client sends to select a protocol version */
 @Versioning.added(CommonGrants.Versions.v0_6)
 model VersionRequest {
-  /** The protocol version the client wants, such as `0.5.0`
+  /** The protocol version the client wants, such as `0.6.0`
    *
    * Servers match on major and minor version. When absent, the server responds
    * in its default version.
