@@ -38,7 +38,7 @@ We recommend that servers move all their routes to a new version at the same tim
 #### Requesting a specific version
 
 - A client selects a version only with the `CG-Version` request header: no path segment, query parameter, or media type. Each request carries one value.
-- The header applies only to protocol routes under `/common-grants/`. Custom routes and the discovery route ignore it.
+- The header applies only to protocol routes under `/common-grants/`, relative to the API's base URL, so a host API may mount them at a path such as `/api/v2/common-grants/`. Custom routes and the discovery route ignore it.
 - A version is a full published version, such as `0.5.0`. Servers match on major and minor, so a request for `0.5.0` is served by a server hosting `0.5.1`. A server never substitutes a different major or minor version.
 - A request without the header is served in the server's pinned default. A server adopting negotiation sets its default to the version it already serves, and adding versions never moves it.
 - Every response produced after a version is selected carries `CG-Version-Served` with the full version served. The served version travels in headers only, so response bodies don't change.
@@ -47,7 +47,7 @@ We recommend that servers move all their routes to a new version at the same tim
 
 #### Retiring a version
 
-- **Retiring a version:** responses served in it carry `Deprecation`, `Sunset`, and `Link` headers, with their standard IETF meaning, and discovery lists it as deprecated. After the sunset date, requests for it get `version.retired`.
+- **Retiring a version:** responses served in it carry `Deprecation`, `Sunset`, and `Link` headers, with their standard IETF meaning, and discovery lists it as deprecated. After the sunset date, requests for it get `version.retired` for a period the server chooses, and `version.unsupported` after that.
 - **Changing the default:** responses served by default carry a `Link` with `rel="successor-version"`, and discovery shows the upcoming default and its date. Clients that send a version see no change.
 - A retiring default moves forward to the next newer version no later than the sunset. A server can't retire its default without a newer version to move to.
 - A single route retires a version the same way as the whole server. Experimental routes are exempt.
@@ -60,7 +60,7 @@ We recommend that servers move all their routes to a new version at the same tim
   - A server can upgrade one route at a time and say so truthfully, and a client can predict a route's versions before calling it.
   - Every response says which version it is, and an unconfirmed response is recognizable as unconfirmed.
   - Retirement uses headers that existing HTTP tooling already understands, with their standard meaning.
-  - The 0.6.0 contract is purely additive. The version headers and errors are added in 0.6.0, and the published 0.1.0 through 0.5.0 contracts don't change.
+  - The 0.6.0 contract is purely additive. The version headers, errors, and discovery route are declared from 0.6.0, and the published 0.1.0 through 0.5.0 contracts don't change. A negotiating server sends `CG-Version-Served` whatever version it serves; a client of an older version gets one extra header and, because it sends no `CG-Version`, never a version error.
 - **Negative consequences**
   - A URL alone doesn't reproduce a version. Bug reports, docs examples, and curl commands have to include the header.
   - Servers behind shared caches or CDNs need `Vary: CG-Version`, and some CDNs need the header added to their cache key.
@@ -248,7 +248,7 @@ The useful prompt to upgrade is that the served version is going away, and `Depr
 
 ##### Required supported-versions header — Rejected
 
-Lets a long-running client notice new versions without re-reading discovery. But clients that never send a version, the ones that most need the prompt, won't read a new header either. It's a second source that must agree with discovery, and servers on different builds during a rolling deploy can return different lists. Adding it later is additive if clients ask for it.
+Microsoft's ASP.NET API Versioning library does this with `api-supported-versions` and `api-deprecated-versions`, sent when a service turns on `ReportApiVersions`. It lets a long-running client notice new versions without re-reading discovery. But clients that never send a version, the ones that most need the prompt, won't read a new header either. It's a second source that must agree with discovery, and servers on different builds during a rolling deploy can return different lists. The library itself later added `Deprecation` and `Sunset` support because those headers can't say when a version goes away. Adding the header later is additive if clients ask for it.
 
 ##### Optional supported-versions header — Rejected
 
@@ -445,7 +445,7 @@ Breaks every client that exists today.
 
 ##### 400 or 406 by case — Selected
 
-An unavailable version fits RFC 9110's definition of 406, which is based on the negotiation header fields in the request. 400 covers malformed or conflicting requests. OpenStack splits them the same way. On writes, 406 describes the response even though the version also governs the request body, and `code` carries the distinction either way.
+406 is the closest fit for an unavailable version, not an exact match. RFC 9110 defines 406 against the proactive negotiation header fields in the request, and the fields it defines for that are the `Accept` family, which `CG-Version` isn't. OpenStack returns 406 for an unsupported `OpenStack-API-Version` the same way. 400 covers malformed or conflicting requests. On writes, 406 describes the response even though the version also governs the request body, and `code` carries the distinction either way.
 
 ##### One status for every version error — Rejected
 
@@ -526,10 +526,10 @@ Sources: [GitHub API versions](https://docs.github.com/en/rest/about-the-rest-ap
 | Headers          | `Location` on accepted responses                                                                                   | New pattern: `CG-Version` and `CG-Version-Served` are the first protocol-defined custom headers. Uses the IETF `Deprecation`, `Sunset`, and `Link` headers instead of custom ones |
 | Status codes     | Operations declare 401, 403, and 404                                                                               | New: 400 and 406 for version errors. 406 is new to the protocol                                                                                                                   |
 | Query parameters | camelCase, such as `pageSize`                                                                                      | Not applicable: no query parameter is added                                                                                                                                       |
-| Versioning       | `@added` on new fields and routes                                                                                  | Conforms: the headers, errors, and discovery route are added in 0.6.0                                                                                                             |
+| Versioning       | `@added` on new fields and routes                                                                                  | Conforms: the headers, errors, and discovery route are declared from 0.6.0. A negotiating server applies them whatever version it serves                                          |
 | Custom routes    | Outside `/common-grants/` ([ADR 0014](https://commongrants.org/governance/adr/0014-custom-routes/))                | Conforms: the header has no meaning on custom routes                                                                                                                              |
 | Pagination       | Page-based ([ADR 0011](https://commongrants.org/governance/adr/0011-pagination/))                                  | Not applicable: discovery isn't paginated                                                                                                                                         |
-| Mock API         | Versioned by path ([ADR 0028](https://commongrants.org/governance/adr/0028-mock-api-hosting/))                     | Diverges: this decision supersedes ADR 0028's path prefix, and the mock moves to the header                                                                                       |
+| Mock API         | Versioned by path ([ADR 0028](https://commongrants.org/governance/adr/0028-mock-api-hosting/))                     | Diverges: this decision supersedes ADR 0028's path prefix, and the mock moves to the header. The rest of ADR 0028 stands                                                          |
 
 ## Specification
 
@@ -537,23 +537,23 @@ Sources: [GitHub API versions](https://docs.github.com/en/rest/about-the-rest-ap
 
 These scenarios show the decision end to end. The sections that follow answer the client and implementer questions for each area.
 
-| Scenario                                 | Request                                                            | Result                                                                                           |
-| ---------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Request a served version                 | `CG-Version: 0.5.0`                                                | 200 in 0.5.0. `CG-Version-Served` reports the version, which can differ in the patch number only |
-| No version sent                          | No header                                                          | 200 in the server's pinned default. `CG-Version-Served` names it                                 |
-| Version the server doesn't serve         | `CG-Version: 0.3.0`                                                | 406 `version.unsupported`, scope `deployment`, with the supported versions and the discovery URL |
-| Version this route doesn't serve         | `CG-Version: 0.4.0` on a route that serves only 0.5.0              | 406 `version.unsupported`, scope `operation`. The route's entry in discovery predicts this       |
-| Server that serves only one version      | `CG-Version: 0.5.0` to a server that serves only 0.6.0             | 406 `version.unsupported`, scope `deployment`. The server doesn't substitute 0.6.0               |
-| Malformed or repeated value              | `CG-Version: banana`, or the header sent twice                     | 400 `version.malformed` or `version.conflict`                                                    |
-| Version in the URL instead of the header | `?cg-version=0.5.0` with no header                                 | 200 in the default. The URL isn't a selector, and `CG-Version-Served` shows what the client got  |
-| Body validated in the requested version  | A 0.4.0 search with a filter that exists only in 0.5.0             | 400 validation error naming the filter, with `CG-Version-Served: 0.4.0`                          |
-| Server that predates negotiation         | `CG-Version: 0.5.0` to a server that ignores the header            | 200 with no `CG-Version-Served`. The response is unconfirmed and must not be read as 0.5.0       |
-| Host API with its own path versioning    | `GET /api/v2/common-grants/opportunities` with `CG-Version: 0.5.0` | 200 in 0.5.0. The host's v2 and the protocol version are independent                             |
-| Custom route                             | `CG-Version: 0.5.0` on a route outside `/common-grants/`           | The header is ignored. No `CG-Version-Served` and no version errors                              |
-| Shared cache in front of the API         | Two clients request 0.4.0 and 0.5.0 for the same URL               | Each gets its own version, because `Vary: CG-Version` keeps the cached responses apart           |
-| Default is changing                      | No header, while the default moves from 0.4.0 to 0.5.0             | 200 in 0.4.0 with the `successor-version` link, and no `Deprecation` or `Sunset`                 |
-| Version is retiring                      | `CG-Version: 0.3.0` before its sunset date                         | 200 in 0.3.0 with `Deprecation`, `Sunset`, and `Link` headers                                    |
-| Version has been retired                 | `CG-Version: 0.3.0` after its sunset date                          | 406 `version.retired` with the sunset date, the supported versions, and the discovery URL        |
+| Scenario                                 | Request                                                            | Result                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Request a served version                 | `CG-Version: 0.5.0`                                                | 200 in 0.5.0. `CG-Version-Served` reports the version, which can differ in the patch number only                        |
+| No version sent                          | No header                                                          | 200 in the server's pinned default. `CG-Version-Served` names it                                                        |
+| Version the server doesn't serve         | `CG-Version: 0.3.0`                                                | 406 `version.unsupported`, scope `deployment`, with the supported versions and the discovery URL                        |
+| Version this route doesn't serve         | `CG-Version: 0.4.0` on a route that serves only 0.5.0              | 406 `version.unsupported`, scope `operation`. The route's entry in discovery predicts this                              |
+| Server that serves only one version      | `CG-Version: 0.5.0` to a server that serves only 0.6.0             | 406 `version.unsupported`, scope `deployment`. The server doesn't substitute 0.6.0                                      |
+| Malformed or repeated value              | `CG-Version: banana`, or two values                                | 400 `version.malformed` or `version.conflict`                                                                           |
+| Version in the URL instead of the header | `?cg-version=0.5.0` with no header                                 | 200 in the default. The URL isn't a selector, and `CG-Version-Served` shows what the client got                         |
+| Body validated in the requested version  | A 0.4.0 search with a filter that exists only in 0.5.0             | 400 validation error naming the filter, with `CG-Version-Served: 0.4.0`                                                 |
+| Server that predates negotiation         | `CG-Version: 0.5.0` to a server that ignores the header            | 200 with no `CG-Version-Served`. The response is unconfirmed and must not be read as 0.5.0                              |
+| Host API with its own path versioning    | `GET /api/v2/common-grants/opportunities` with `CG-Version: 0.5.0` | 200 in 0.5.0. The host's v2 and the protocol version are independent                                                    |
+| Custom route                             | `CG-Version: 0.5.0` on a route outside `/common-grants/`           | The header is ignored. No `CG-Version-Served` and no version errors                                                     |
+| Shared cache in front of the API         | Two clients request 0.4.0 and 0.5.0 for the same URL               | Each gets its own version, because `Vary: CG-Version` keeps the cached responses apart                                  |
+| Default is changing                      | No header, while the default moves from 0.4.0 to 0.5.0             | 200 in 0.4.0 with the `successor-version` link, and no `Deprecation` or `Sunset`                                        |
+| Version is retiring                      | `CG-Version: 0.3.0` before its sunset date                         | 200 in 0.3.0 with `Deprecation`, `Sunset`, and `Link` headers                                                           |
+| Version has been retired                 | `CG-Version: 0.3.0` after its sunset date                          | 406 `version.retired` with the sunset date, the supported versions, and the discovery URL. Later, `version.unsupported` |
 
 ### Discovering supported versions
 
@@ -662,13 +662,13 @@ Read `CG-Version-Served`. It reports the full version served, so it can differ f
 
 ##### What errors can I get, and how do I recover?
 
-| Case                                                   | `code`                                               | Status |
-| ------------------------------------------------------ | ---------------------------------------------------- | ------ |
-| Malformed version, such as `banana` or `0.5`           | `version.malformed`                                  | 400    |
-| Version this server doesn't serve                      | `version.unsupported`, scope `deployment`            | 406    |
-| Version this route doesn't serve                       | `version.unsupported`, scope `operation`             | 406    |
-| Version retired from this server or this route         | `version.retired`, scope `deployment` or `operation` | 406    |
-| More than one version value, even the same value twice | `version.conflict`                                   | 400    |
+| Case                                                                                                    | `code`                                               | Status |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
+| Malformed version, such as `banana` or `0.5`                                                            | `version.malformed`                                  | 400    |
+| Version this server doesn't serve                                                                       | `version.unsupported`, scope `deployment`            | 406    |
+| Version this route doesn't serve                                                                        | `version.unsupported`, scope `operation`             | 406    |
+| Version retired from this server or this route                                                          | `version.retired`, scope `deployment` or `operation` | 406    |
+| More than one version value, as two header lines or one comma-separated line, even the same value twice | `version.conflict`                                   | 400    |
 
 Details are entries in the existing error envelope. `supported` and `defaultVersion` always describe the route you called, so retry with a listed version:
 
@@ -697,7 +697,7 @@ Details are entries in the existing error envelope. `supported` and `defaultVers
 
 ##### How do I resolve the requested version?
 
-- Read `CG-Version` only on protocol routes under `/common-grants/`, never on custom routes or discovery. The name is case-insensitive. Trim surrounding whitespace, then match the format exactly.
+- Read `CG-Version` only on protocol routes under `/common-grants/`, never on custom routes or discovery. The name is case-insensitive. A proxy may fold two header lines into one comma-separated line ([RFC 9110 §5.3](https://www.rfc-editor.org/rfc/rfc9110#section-5.3)), so treat two lines or a comma in the value as more than one value, and check for that before the format. Trim surrounding whitespace, then match the format exactly.
 - Match on major and minor. Host one patch of each major and minor you serve, and report that full version everywhere you list or report it. A request for any patch of a served major and minor is served in the version you host.
 - Never serve a different major or minor version than the one requested, even if you serve only one version.
 - Never read the version from the URL path, the query string, `Accept`, or a vendor media type, and never fall back to one. A host API that versions its own routes by path keeps doing so; its path version and `CG-Version` are independent.
@@ -711,10 +711,10 @@ A version problem never returns 404 or 410: both can be cached by default, and c
 
 ##### Which headers must my responses carry?
 
-- `CG-Version-Served` on every response produced after a version is selected, including responses served by default and errors such as a missing record or a body validation error. It's optional on 401 and 403, because authentication can run before selection. Version errors never carry it.
-- `Vary: CG-Version` on every cacheable response that depends on `CG-Version`, including responses served by default.
-- Cross-origin servers allow `CG-Version` in `Access-Control-Allow-Headers`, and expose `CG-Version-Served`, `Deprecation`, `Sunset`, and `Link` in `Access-Control-Expose-Headers`.
-- No supported-versions header on ordinary responses.
+- Every response produced after a version is selected MUST carry `CG-Version-Served`, whatever version you serve, including responses served by default and errors such as a missing record or a body validation error. The header is declared in the 0.6.0 documents, but a negotiating server sends it on 0.5.0 and earlier responses too. Responses to 401 and 403 MAY omit it, because authentication can run before selection. Version errors MUST NOT carry it.
+- Every cacheable response that depends on `CG-Version` MUST carry `Vary: CG-Version`, including responses served by default.
+- Cross-origin servers MUST allow `CG-Version` in `Access-Control-Allow-Headers`, and MUST expose `CG-Version-Served`, `Deprecation`, `Sunset`, and `Link` in `Access-Control-Expose-Headers`.
+- Ordinary responses MUST NOT carry a supported-versions header.
 - Header names use hyphens and no `X-` prefix.
 
 ### Retiring a version
@@ -731,6 +731,7 @@ CG-Version: 0.3.0
 
 HTTP/1.1 200 OK
 CG-Version-Served: 0.3.0
+Vary: CG-Version
 Deprecation: @1796083200
 Sunset: Tue, 01 Jun 2027 00:00:00 GMT
 Link: <https://grants.example.org/docs/migrate>; rel="deprecation"
@@ -756,7 +757,7 @@ Link: <https://grants.example.org/common-grants/versions>; rel="version-history"
 
 ##### What happens after a version is retired?
 
-Requests for any patch of that major and minor get 406 `version.retired`, with the sunset date and the supported versions. If it was your default, the default has already moved to the next newer version.
+Requests for any patch of that major and minor get 406 `version.retired`, with the sunset date and the supported versions, for a period the server chooses. After that, the server may answer `version.unsupported` instead, so handle both the same way: retry with a version from `supported`. If it was your default, the default has already moved to the next newer version.
 
 #### Implementers
 
