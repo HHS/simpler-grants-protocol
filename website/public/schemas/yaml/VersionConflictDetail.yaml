@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionConflictDetail.yaml
+type: object
+properties:
+  code:
+    type: string
+    const: version.conflict
+    description: Stable error code that clients branch on
+required:
+  - code
+allOf:
+  - $ref: VersionErrorDetail.yaml
+unevaluatedProperties: {}
+description: The request sent more than one `CG-Version` value
