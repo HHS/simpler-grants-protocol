@@ -109,6 +109,13 @@ namespace Opportunities {
   op read is Router.read;
 
   @tag("optional")
+  @returnTypeChangedFrom(
+    CommonGrants.Versions.v0_6,
+    Responses.WithVersionErrors<Responses.FilteredT<
+      Models.OpportunityBase,
+      Models.OppFilters
+    >>
+  )
   op search is Router.search;
 }
 
@@ -131,6 +138,13 @@ namespace Awards {
 
   @added(Versions.v0_4)
   @tag("optional")
+  @returnTypeChangedFrom(
+    CommonGrants.Versions.v0_6,
+    Responses.WithVersionErrors<Responses.FilteredT<
+      Models.AwardBase,
+      Models.AwdFilters
+    >>
+  )
   op search is Router.search;
 }
 

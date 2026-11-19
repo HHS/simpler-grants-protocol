@@ -1107,12 +1107,12 @@ paths:
     post:
       operationId: Awards_search
       summary: Search awards
-      description: Search for awards based on the provided filters.
+      description: Search for awards based on the provided search term and filters.
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
-          description: A paginated list of typed items with a typed filter
+          description: A paginated list of typed items matching a search, with a typed filter
           headers:
             CG-Version-Served:
               required: true
@@ -1180,9 +1180,17 @@ paths:
                     required:
                       - filters
                     description: The filters applied to the response items
+                  searchInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Responses.SearchResultsInfo'
+                    description: |-
+                      The search term applied to the response items
+
+                      Omitted when the request had no search term. An empty or whitespace-only
+                      `search` value counts as no search term.
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A paginated list of typed items with a typed filter
+                description: A paginated list of typed items matching a search, with a typed filter
         '400':
           description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
           headers:
@@ -1907,12 +1915,12 @@ paths:
     post:
       operationId: Opportunities_search
       summary: Search opportunities
-      description: Search for opportunities based on the provided filters.
+      description: Search for opportunities based on the provided search term and filters.
       parameters:
         - $ref: '#/components/parameters/CommonGrants.Headers.VersionRequest'
       responses:
         '200':
-          description: A paginated list of typed items with a typed filter
+          description: A paginated list of typed items matching a search, with a typed filter
           headers:
             CG-Version-Served:
               required: true
@@ -1980,9 +1988,17 @@ paths:
                     required:
                       - filters
                     description: The filters applied to the response items
+                  searchInfo:
+                    allOf:
+                      - $ref: '#/components/schemas/CommonGrants.Responses.SearchResultsInfo'
+                    description: |-
+                      The search term applied to the response items
+
+                      Omitted when the request had no search term. An empty or whitespace-only
+                      `search` value counts as no search term.
                 allOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A paginated list of typed items with a typed filter
+                description: A paginated list of typed items matching a search, with a typed filter
         '400':
           description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
           headers:
@@ -8819,6 +8835,59 @@ components:
       allOf:
         - $ref: '#/components/schemas/CommonGrants.Responses.Success'
       description: A 200 response with a paginated list of items
+    CommonGrants.Responses.SearchResults:
+      type: object
+      required:
+        - items
+        - paginationInfo
+        - sortInfo
+        - filterInfo
+      properties:
+        items:
+          type: array
+          items: {}
+          description: Items from the current page
+        paginationInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Pagination.PaginatedResultsInfo'
+          description: Details about the paginated results
+        sortInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Sorting.SortedResultsInfo'
+          description: The sort order of the items
+        filterInfo:
+          type: object
+          properties:
+            filters: {}
+            errors:
+              type: array
+              items:
+                type: string
+              description: Non-fatal errors that occurred during filtering
+          required:
+            - filters
+          description: The filters applied to the response items
+        searchInfo:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Responses.SearchResultsInfo'
+          description: |-
+            The search term applied to the response items
+
+            Omitted when the request had no search term. An empty or whitespace-only
+            `search` value counts as no search term.
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A paginated list of items matching a search
+    CommonGrants.Responses.SearchResultsInfo:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The search term used to find the response items
+          example: Pre-school education
+      description: Details about the search term applied to the response items
     CommonGrants.Responses.Sorted:
       type: object
       required:
