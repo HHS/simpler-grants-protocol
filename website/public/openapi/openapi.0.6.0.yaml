@@ -126,13 +126,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -201,13 +233,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 201 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -339,13 +403,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -499,13 +595,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -592,13 +720,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -670,13 +830,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -863,13 +1055,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -962,13 +1186,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -1069,13 +1325,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -1190,13 +1478,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -1309,13 +1629,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -1389,13 +1741,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -1471,13 +1855,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -1570,13 +1986,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A paginated list of typed items with a typed filter
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '406':
           description: The requested version isn't served by this server or this route
           content:
@@ -1677,13 +2125,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '404':
           description: The server cannot find the requested resource.
           headers:
@@ -1810,13 +2290,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -1975,13 +2487,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2168,13 +2712,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2375,13 +2951,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 202 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2583,13 +3191,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with a paginated list of typed items
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2783,13 +3423,45 @@ paths:
                   - $ref: '#/components/schemas/CommonGrants.Responses.Success'
                 description: A 200 response with typed data
         '400':
-          description: The `CG-Version` value is malformed or was sent more than once
+          description: The request is invalid, or its `CG-Version` value is malformed or was sent more than once
+          headers:
+            CG-Version-Served:
+              required: false
+              description: |-
+                The full protocol version this response was served in, such as `0.5.1`
+
+                Sent on every 400 except the version errors.
+              schema:
+                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
+            Vary:
+              required: false
+              description: Request headers that caches must key this response on, such as `CG-Version`
+              schema:
+                type: string
+            Deprecation:
+              required: false
+              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
+              schema:
+                type: string
+                pattern: ^@-?[0-9]+$
+            Sunset:
+              required: false
+              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
+              schema:
+                type: string
+                format: http-date
+            Link:
+              required: false
+              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionMalformedError'
                   - $ref: '#/components/schemas/CommonGrants.Responses.VersionConflictError'
+                  - $ref: '#/components/schemas/CommonGrants.Responses.Error'
         '401':
           description: Access is unauthorized.
           headers:
@@ -2985,7 +3657,7 @@ components:
       in: header
       required: false
       description: |-
-        The protocol version the client wants, such as `0.5.0`
+        The protocol version the client wants, such as `0.6.0`
 
         Servers match on major and minor version. When absent, the server responds
         in its default version.
@@ -8716,10 +9388,10 @@ components:
       type: string
       pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$
       description: |-
-        A published CommonGrants protocol version, such as `0.5.0`
+        A published CommonGrants protocol version, such as `0.6.0`
 
         A full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros.
-      example: 0.5.0
+      example: 0.6.0
     CommonGrants.Types.samUEI:
       type: string
       pattern: ^[A-HJ-NP-Z0-9]{12}$
