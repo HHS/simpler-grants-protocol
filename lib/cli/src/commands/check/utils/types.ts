@@ -25,7 +25,7 @@ export interface SchemaContext {
 // Error types
 // #########################################################
 
-export type ErrorType = "MISSING_ROUTE" | "EXTRA_ROUTE" | "ROUTE_CONFLICT";
+export type ErrorType = "MISSING_ROUTE" | "EXTRA_ROUTE" | "ROUTE_CONFLICT" | "PATH_VERSIONING";
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
 export interface BaseError {

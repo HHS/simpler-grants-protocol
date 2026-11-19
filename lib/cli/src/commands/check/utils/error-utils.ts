@@ -142,6 +142,15 @@ export class ErrorFormatter {
     );
     sections.push("=================================");
 
+    // Format the protocol version found in a path
+    const pathVersioning = this.errors.filterByType("PATH_VERSIONING");
+    if (pathVersioning.getErrorCount() > 0) {
+      sections.push("Version in path");
+      for (const error of pathVersioning) {
+        sections.push(`  ${error.message}`);
+      }
+    }
+
     // Format missing routes
     const missingRoutes = this.errors.filterByType("MISSING_ROUTE");
     if (missingRoutes.getErrorCount() > 0) {

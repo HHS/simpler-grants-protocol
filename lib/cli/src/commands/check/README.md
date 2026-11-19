@@ -8,6 +8,8 @@ Outcomes below mean:
 
 ### Check Routes
 
+Before comparing routes, the checker looks for a protocol version in the path, such as `/v0.6/common-grants/opportunities` or `/common-grants/v0.6/opportunities`. CommonGrants APIs select the version with the `CG-Version` request header (ADR 0032), so if a route has a dotted version segment directly before or after `/common-grants/`, and removing it gives a base route, the run reports one error saying the version goes in the header and stops there, instead of listing every base route as missing. A versioned alias served alongside the unversioned route is left to the normal checks, and a host API's own path versioning, such as `/api/v2/common-grants/`, isn't flagged.
+
 - **Case 1:** Extra routes
   - **Case 1.1:** [Impl prefixed with `/common-grants/`](#route-case-11-extra-route-with-prefix) -> Error
   - **Case 1.2:** [Not prefixed with `/common-grants/`](#route-case-12-extra-route-without-prefix) -> Ignore

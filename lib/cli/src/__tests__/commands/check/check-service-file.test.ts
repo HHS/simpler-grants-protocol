@@ -120,6 +120,31 @@ describe("DefaultCheckService - Bundled Base Specs", () => {
     }
   });
 
+  it("should report one error when routes carry a version segment instead of listing missing routes", async () => {
+    const basePath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.6.0.yaml");
+    const impl = yaml.load(fs.readFileSync(basePath, "utf8")) as OpenAPIV3.Document;
+    impl.paths = Object.fromEntries(
+      Object.entries(impl.paths).map(([route, item]) => [`/v0.6${route}`, item])
+    ) as OpenAPIV3.PathsObject;
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-check-"));
+    const tmpPath = path.join(tmpDir, "impl.yaml");
+    fs.writeFileSync(tmpPath, yaml.dump(impl));
+
+    try {
+      // Act
+      const result = service.checkSpec(tmpPath, { protocolVersion: "0.6.0" });
+
+      // Assert - One error points at the CG-Version header; no per-route findings
+      await expect(result).rejects.toThrow("CG-Version");
+      await expect(result).rejects.toThrow("/v0.6/common-grants/");
+      await expect(result).rejects.toThrow("1 errors");
+      await expect(result).rejects.not.toThrow("Routes missing");
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it("should default to 0.6.0 when no protocol version is given", async () => {
     const implPath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.5.0.yaml");
 
