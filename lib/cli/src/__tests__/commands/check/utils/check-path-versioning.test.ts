@@ -7,6 +7,11 @@ const operation: OpenAPIV3.OperationObject = {
   },
 };
 
+const versionedOperation: OpenAPIV3.OperationObject = {
+  ...operation,
+  parameters: [{ name: "CG-Version", in: "header" }],
+};
+
 describe("checkPathVersioning", () => {
   // ############################################################
   // Flag version segments in the path
@@ -24,13 +29,13 @@ describe("checkPathVersioning", () => {
       itemPath: "/common-grants/v0.6/opportunities/{oppId}",
     },
   ])("should report one error when the version is a path $placement", ({ listPath, itemPath }) => {
-    // Arrange - Create base spec with unversioned routes
+    // Arrange - Create base spec with unversioned routes that take the version header
     const baseDoc: OpenAPIV3.Document = {
       openapi: "3.0.0",
       info: { title: "Base", version: "1.0.0" },
       paths: {
-        "/common-grants/opportunities": { get: operation },
-        "/common-grants/opportunities/{oppId}": { get: operation },
+        "/common-grants/opportunities": { get: versionedOperation },
+        "/common-grants/opportunities/{oppId}": { get: versionedOperation },
       },
     };
 
@@ -57,6 +62,35 @@ describe("checkPathVersioning", () => {
         message: expect.stringMatching(/CG-Version/),
       })
     );
+  });
+
+  it("should not mention the version header when the base spec has none", () => {
+    // Arrange - Create base spec from before the version header existed
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/common-grants/opportunities": { get: operation },
+      },
+    };
+
+    // Arrange - Create impl spec with a version segment in the route
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/v0.5/common-grants/opportunities": { get: operation },
+      },
+    };
+
+    // Act
+    const errors = checkPathVersioning(baseDoc, implDoc);
+    const message = errors.get(0)?.message;
+
+    // Assert - The error says where to serve routes, without the header advice
+    expect(errors.getErrorCount()).toBe(1);
+    expect(message).toMatch(/\/common-grants\//);
+    expect(message).not.toMatch(/CG-Version/);
   });
 
   // ############################################################

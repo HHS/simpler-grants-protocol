@@ -35,7 +35,8 @@ export function checkMatchingRoutes(
     const implPathObj = implPathItem as OpenAPIV3.PathItemObject;
 
     // For each method in the base path, check if it also exists in the impl path
-    for (const method of Object.keys(basePathObj) as OpenAPIV3.HttpMethods[]) {
+    // (a path item also holds fields like `parameters`, which aren't routes)
+    for (const method of Object.values(OpenAPIV3.HttpMethods)) {
       // Get base and impl operations (e.g. get, post, put, delete, etc.)
       const baseOp = basePathObj[method];
       const implOp = implPathObj[method];
@@ -44,12 +45,10 @@ export function checkMatchingRoutes(
       if (!baseOp) continue;
       if (!implOp) continue;
 
-      // If experimental, skip deeper checks
-      if (baseOp.tags?.includes("experimental")) continue;
-
-      // Both base and impl define this route => deeper checks:
+      // Headers are checked even on experimental routes, because the version
+      // headers are part of the protocol on every route
       errors.addErrors(
-        checkMatchingRoute(
+        checkRouteHeaders(
           basePathKey,
           method,
           baseOp,
@@ -58,6 +57,12 @@ export function checkMatchingRoutes(
           implPathObj.parameters
         ).getAllErrors()
       );
+
+      // If experimental, skip deeper checks
+      if (baseOp.tags?.includes("experimental")) continue;
+
+      // Both base and impl define this route => deeper checks:
+      errors.addErrors(checkMatchingRoute(basePathKey, method, baseOp, implOp).getAllErrors());
     }
   }
 
@@ -75,9 +80,7 @@ function checkMatchingRoute(
   path: string,
   method: string,
   baseOp: OpenAPIV3.OperationObject,
-  implOp: OpenAPIV3.OperationObject,
-  basePathParams: PathParameters,
-  implPathParams: PathParameters
+  implOp: OpenAPIV3.OperationObject
 ): ErrorCollection {
   const errors = new ErrorCollection();
   const endpoint = `${method.toUpperCase()} ${path}`;
@@ -94,17 +97,11 @@ function checkMatchingRoute(
       if (!implResp) continue; // Possibly flagged in checkStatusCodes
 
       errors.addErrors(checkResponseSchemas(endpoint, baseResp, implResp).getAllErrors());
-      errors.addErrors(
-        checkResponseHeaders(endpoint, statusCode, baseResp, implResp).getAllErrors()
-      );
     }
   }
 
   // 3) Check that query parameters and request body match
   errors.addErrors(checkQueryParameters(endpoint, baseOp, implOp).getAllErrors());
-  errors.addErrors(
-    checkHeaderParameters(endpoint, baseOp, implOp, basePathParams, implPathParams).getAllErrors()
-  );
   errors.addErrors(checkRequestBody(endpoint, baseOp, implOp).getAllErrors());
   return errors;
 }
@@ -207,8 +204,38 @@ function checkQueryParameters(
 }
 
 // ############################################################
-// Header parameter checks
+// Header checks
 // ############################################################
+
+/**
+ * Compare the request and response headers of a single route (defined in both base and impl).
+ */
+function checkRouteHeaders(
+  path: string,
+  method: string,
+  baseOp: OpenAPIV3.OperationObject,
+  implOp: OpenAPIV3.OperationObject,
+  basePathParams: PathParameters,
+  implPathParams: PathParameters
+): ErrorCollection {
+  const errors = new ErrorCollection();
+  const endpoint = `${method.toUpperCase()} ${path}`;
+
+  errors.addErrors(
+    checkHeaderParameters(endpoint, baseOp, implOp, basePathParams, implPathParams).getAllErrors()
+  );
+
+  for (const statusCode of Object.keys(baseOp.responses || {})) {
+    const baseResp = baseOp.responses[statusCode] as OpenAPIV3.ResponseObject;
+    const implResp = implOp.responses?.[statusCode] as OpenAPIV3.ResponseObject | undefined;
+
+    if (!implResp) continue; // A missing status code is left to checkStatusCodes
+
+    errors.addErrors(checkResponseHeaders(endpoint, statusCode, baseResp, implResp).getAllErrors());
+  }
+
+  return errors;
+}
 
 /**
  * Check that the implementation declares every header parameter in the base
@@ -255,24 +282,20 @@ function getHeaderParams(
   );
 }
 
-// ############################################################
-// Response header checks
-// ############################################################
-
 /**
  * Check that the implementation response declares every required base response header
  */
 function checkResponseHeaders(
   endpoint: string,
   statusCode: string,
-  baseResp: OpenAPIV3.ResponseObject | undefined,
+  baseResp: OpenAPIV3.ResponseObject,
   implResp: OpenAPIV3.ResponseObject
 ): ErrorCollection {
   const errors = new ErrorCollection();
   // HTTP header names are case-insensitive (RFC 9110)
   const implHeaderNames = new Set(Object.keys(implResp.headers || {}).map(n => n.toLowerCase()));
 
-  for (const [name, header] of Object.entries(baseResp?.headers || {})) {
+  for (const [name, header] of Object.entries(baseResp.headers || {})) {
     if (!("required" in header) || !header.required) continue;
 
     if (!implHeaderNames.has(name.toLowerCase())) {

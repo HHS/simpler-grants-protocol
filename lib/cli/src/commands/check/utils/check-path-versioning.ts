@@ -5,6 +5,8 @@ import { ErrorCollection } from "./error-utils";
 // File-scoped constants
 // ############################################################
 
+const VERSION_HEADER = "CG-Version";
+
 // A dotted protocol version such as `v0.6`, `0.6` or `v0.6.0`. A bare `v2` is
 // left alone, because a host API MAY version its own paths (ADR 0032).
 const VERSION_SEGMENT = String.raw`v?\d+\.\d+(?:\.\d+)?`;
@@ -38,14 +40,18 @@ export function checkPathVersioning(
   });
 
   if (versionedPath) {
+    // Base specs before 0.6.0 have no version header to point to
+    const headerAdvice = declaresVersionHeader(baseDoc)
+      ? ` and select the version with the '${VERSION_HEADER}' request header (ADR 0032)`
+      : "";
+
     errors.addError({
       type: "PATH_VERSIONING",
       level: "ERROR",
       endpoint: versionedPath,
       message:
         `Routes put the protocol version in the path, such as '${versionedPath}'. ` +
-        "Serve CommonGrants routes under '/common-grants/' and select the version " +
-        "with the 'CG-Version' request header (ADR 0032).",
+        `Serve CommonGrants routes under '/common-grants/' with no version segment${headerAdvice}.`,
     });
   }
 
@@ -55,6 +61,23 @@ export function checkPathVersioning(
 // ############################################################
 // Helper functions
 // ############################################################
+
+/**
+ * Whether any route in the spec takes the version request header
+ */
+function declaresVersionHeader(doc: OpenAPIV3.Document): boolean {
+  return Object.values(doc.paths || {}).some(pathItem => {
+    const operations = Object.values(OpenAPIV3.HttpMethods).map(method => pathItem?.[method]);
+    const parameters = [pathItem, ...operations].flatMap(holder => holder?.parameters || []);
+
+    return parameters.some(
+      param =>
+        "in" in param &&
+        param.in === "header" &&
+        param.name.toLowerCase() === VERSION_HEADER.toLowerCase()
+    );
+  });
+}
 
 /**
  * Remove a version segment next to `/common-grants/`, if there is one

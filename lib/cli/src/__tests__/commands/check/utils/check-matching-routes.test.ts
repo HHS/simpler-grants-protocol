@@ -371,6 +371,92 @@ describe("checkMatchingRoutes", () => {
     expect(errors.getErrorCount()).toBe(0);
   });
 
+  it("should not treat path-level parameters as a route", () => {
+    // Arrange - Create base spec with a header declared for the whole path
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo/{id}": {
+          parameters: [{ name: "CG-Version", in: "header" }],
+          get: {
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec with path-level parameters that lack the header
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo/{id}": {
+          parameters: [{ name: "id", in: "path", required: true }],
+          get: {
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+
+    // Assert - The missing header is reported once, for the real route
+    expect(errors.getErrorCount()).toBe(1);
+    expect(errors.get(0)).toEqual(expect.objectContaining({ endpoint: "GET /foo/{id}" }));
+  });
+
+  it("should still check headers on experimental routes", () => {
+    // Arrange - Create base spec with an experimental route that declares the version headers
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            tags: ["experimental"],
+            parameters: [{ name: "CG-Version", in: "header" }],
+            responses: {
+              "200": {
+                description: "OK",
+                headers: { "CG-Version-Served": { required: true, schema: { type: "string" } } },
+              },
+              "404": { description: "Not Found" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec missing both headers and the 404 response
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/foo": {
+          get: {
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkMatchingRoutes(baseDoc, implDoc);
+    const subTypes = errors.getAllErrors().map(error => "subType" in error && error.subType);
+
+    // Assert - Only the headers are reported, not the missing status code
+    expect(subTypes.sort()).toEqual(["MISSING_HEADER_PARAM", "MISSING_RESPONSE_HEADER"]);
+  });
+
   // ############################################################
   // Query parameter validation - missing query parameters
   // ############################################################

@@ -60,12 +60,43 @@ describe("DefaultCheckService - Circular References", () => {
 });
 
 describe("DefaultCheckService - Bundled Base Specs", () => {
+  const VERSION_PARAM_REF = "#/components/parameters/CommonGrants.Headers.VersionRequest";
   let service: DefaultCheckService;
+  let tmpDir: string;
 
   beforeEach(() => {
     service = new DefaultCheckService();
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-check-"));
     vi.clearAllMocks();
   });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  /** Load a base spec bundled with the CLI, to edit into an implementation spec */
+  function loadBundledSpec(version: string): OpenAPIV3.Document {
+    const specPath = path.resolve(__dirname, `../../../../lib/openapi/openapi.${version}.yaml`);
+    return yaml.load(fs.readFileSync(specPath, "utf8")) as OpenAPIV3.Document;
+  }
+
+  /** Write an implementation spec to a temp file and return its path */
+  function writeTempSpec(doc: OpenAPIV3.Document): string {
+    const specPath = path.join(tmpDir, "impl.yaml");
+    fs.writeFileSync(specPath, yaml.dump(doc));
+    return specPath;
+  }
+
+  function removeVersionParam(operation: OpenAPIV3.OperationObject): void {
+    operation.parameters = operation.parameters!.filter(
+      param => !("$ref" in param) || param.$ref !== VERSION_PARAM_REF
+    );
+  }
+
+  function prefixPaths(doc: OpenAPIV3.Document, prefix: string): OpenAPIV3.Document {
+    const paths = Object.entries(doc.paths).map(([route, item]) => [`${prefix}${route}`, item]);
+    return { ...doc, paths: Object.fromEntries(paths) };
+  }
 
   it("should use the bundled 0.6.0 base spec when protocolVersion is 0.6.0", async () => {
     // The 0.6.0 base is the simplest spec that is compliant with itself
@@ -93,56 +124,69 @@ describe("DefaultCheckService - Bundled Base Specs", () => {
   );
 
   it("should report operations missing the CG-Version parameter or CG-Version-Served header", async () => {
-    const basePath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.6.0.yaml");
-    const impl = yaml.load(fs.readFileSync(basePath, "utf8")) as OpenAPIV3.Document;
-    const list = impl.paths["/common-grants/opportunities"]!.get!;
-    list.parameters = list.parameters!.filter(
-      param =>
-        !("$ref" in param) ||
-        param.$ref !== "#/components/parameters/CommonGrants.Headers.VersionRequest"
-    );
+    const impl = loadBundledSpec("0.6.0");
+    removeVersionParam(impl.paths["/common-grants/opportunities"]!.get!);
     const read = impl.paths["/common-grants/opportunities/{oppId}"]!.get!;
     delete (read.responses["200"] as OpenAPIV3.ResponseObject).headers!["CG-Version-Served"];
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-check-"));
-    const tmpPath = path.join(tmpDir, "impl.yaml");
-    fs.writeFileSync(tmpPath, yaml.dump(impl));
+    // Act & Assert - Both operations should be reported end to end
+    const result = service.checkSpec(writeTempSpec(impl), { protocolVersion: "0.6.0" });
+    await expect(result).rejects.toThrow(/GET \/common-grants\/opportunities\b(?!\/)/);
+    await expect(result).rejects.toThrow("[CG-Version]");
+    await expect(result).rejects.toThrow("GET /common-grants/opportunities/{oppId}");
+    await expect(result).rejects.toThrow("CG-Version-Served");
+  });
 
-    try {
-      // Act & Assert - Both operations should be reported end to end
-      const result = service.checkSpec(tmpPath, { protocolVersion: "0.6.0" });
-      await expect(result).rejects.toThrow(/GET \/common-grants\/opportunities\b(?!\/)/);
-      await expect(result).rejects.toThrow("[CG-Version]");
-      await expect(result).rejects.toThrow("GET /common-grants/opportunities/{oppId}");
-      await expect(result).rejects.toThrow("CG-Version-Served");
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
+  it("should report missing version headers on an experimental route", async () => {
+    const impl = loadBundledSpec("0.6.0");
+    const list = impl.paths["/common-grants/forms"]!.get!;
+    expect(list.tags).toContain("experimental");
+    removeVersionParam(list);
+    delete (list.responses["200"] as OpenAPIV3.ResponseObject).headers;
+
+    // Act & Assert - Experimental routes skip the other checks but not the headers
+    const result = service.checkSpec(writeTempSpec(impl), { protocolVersion: "0.6.0" });
+    await expect(result).rejects.toThrow("GET /common-grants/forms");
+    await expect(result).rejects.toThrow("[CG-Version]");
+    await expect(result).rejects.toThrow("[CG-Version-Served]");
+  });
+
+  it("should accept the CG-Version parameter declared once on the path item", async () => {
+    const impl = loadBundledSpec("0.6.0");
+    const pathItem = impl.paths["/common-grants/opportunities"]!;
+    removeVersionParam(pathItem.get!);
+    pathItem.parameters = [{ $ref: VERSION_PARAM_REF }];
+
+    // Act & Assert - Neither a missing header nor an extra "PARAMETERS" route is reported
+    await service.checkSpec(writeTempSpec(impl), { protocolVersion: "0.6.0" });
+
+    // Verify success
+    expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
   });
 
   it("should report one error when routes carry a version segment instead of listing missing routes", async () => {
-    const basePath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.6.0.yaml");
-    const impl = yaml.load(fs.readFileSync(basePath, "utf8")) as OpenAPIV3.Document;
-    impl.paths = Object.fromEntries(
-      Object.entries(impl.paths).map(([route, item]) => [`/v0.6${route}`, item])
-    ) as OpenAPIV3.PathsObject;
+    const impl = prefixPaths(loadBundledSpec("0.6.0"), "/v0.6");
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-check-"));
-    const tmpPath = path.join(tmpDir, "impl.yaml");
-    fs.writeFileSync(tmpPath, yaml.dump(impl));
+    // Act
+    const result = service.checkSpec(writeTempSpec(impl), { protocolVersion: "0.6.0" });
 
-    try {
-      // Act
-      const result = service.checkSpec(tmpPath, { protocolVersion: "0.6.0" });
+    // Assert - One error points at the CG-Version header; no per-route findings
+    await expect(result).rejects.toThrow("CG-Version");
+    await expect(result).rejects.toThrow("/v0.6/common-grants/");
+    await expect(result).rejects.toThrow("1 errors");
+    await expect(result).rejects.not.toThrow("Routes missing");
+  });
 
-      // Assert - One error points at the CG-Version header; no per-route findings
-      await expect(result).rejects.toThrow("CG-Version");
-      await expect(result).rejects.toThrow("/v0.6/common-grants/");
-      await expect(result).rejects.toThrow("1 errors");
-      await expect(result).rejects.not.toThrow("Routes missing");
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
+  it("should not point at the CG-Version header when checking against a version without it", async () => {
+    const impl = prefixPaths(loadBundledSpec("0.5.0"), "/v0.5");
+
+    // Act
+    const result = service.checkSpec(writeTempSpec(impl), { protocolVersion: "0.5.0" });
+
+    // Assert - Still one error instead of the missing routes, without the header advice
+    await expect(result).rejects.toThrow("/v0.5/common-grants/");
+    await expect(result).rejects.toThrow("1 errors");
+    await expect(result).rejects.not.toThrow("CG-Version");
   });
 
   it("should default to 0.6.0 when no protocol version is given", async () => {

@@ -8,7 +8,7 @@ Outcomes below mean:
 
 ### Check Routes
 
-Before comparing routes, the checker looks for a protocol version in the path, such as `/v0.6/common-grants/opportunities` or `/common-grants/v0.6/opportunities`. CommonGrants APIs select the version with the `CG-Version` request header (ADR 0032), so if a route has a dotted version segment directly before or after `/common-grants/`, and removing it gives a base route, the run reports one error saying the version goes in the header and stops there, instead of listing every base route as missing. A versioned alias served alongside the unversioned route is left to the normal checks, and a host API's own path versioning, such as `/api/v2/common-grants/`, isn't flagged.
+Before comparing routes, the checker looks for a protocol version in the path, such as `/v0.6/common-grants/opportunities` or `/common-grants/v0.6/opportunities`. A route counts when it has a dotted version segment directly before or after `/common-grants/`, and removing that segment gives a base route. The run then reports one error and stops there, instead of listing every base route as missing. The error says to serve routes under `/common-grants/` with no version segment. When the base spec declares the `CG-Version` request header (protocol version 0.6.0 and later), it also says to select the version with that header (ADR 0032). A versioned alias served alongside the unversioned route is left to the normal checks, and a host API's own path versioning, such as `/api/v2/common-grants/`, isn't flagged.
 
 - **Case 1:** Extra routes
   - **Case 1.1:** [Impl prefixed with `/common-grants/`](#route-case-11-extra-route-with-prefix) -> Error
@@ -33,7 +33,7 @@ Before comparing routes, the checker looks for a protocol version in the path, s
 
 ### Check header params
 
-A header param counts whether it's declared on the operation or on its path item. Header names match case-insensitively. From protocol version 0.6.0, every base route declares the `CG-Version` request header (ADR 0032).
+A header param counts whether it's declared on the operation or on its path item. Header names match case-insensitively. From protocol version 0.6.0, every base route declares the `CG-Version` request header (ADR 0032). Header params and response headers are checked on every matching route, including routes the base spec tags `experimental`, which skip the other checks.
 
 - **Case 1:** Extra params -> Ignore
 - **Case 2:** [Missing params](#header-param-case-2-missing-param) -> Error, whether or not the base marks the param required
