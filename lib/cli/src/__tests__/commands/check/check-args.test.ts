@@ -92,7 +92,7 @@ describe("Check Args Validation", () => {
   // #########################################################
 
   describe("CheckSpecOptionsSchema", () => {
-    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"])(
+    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0", "0.6.0"])(
       "should accept valid protocolVersion %s",
       version => {
         const result = CheckSpecOptionsSchema.safeParse({
@@ -102,8 +102,9 @@ describe("Check Args Validation", () => {
       }
     );
 
-    it("should list 0.5.0 as the latest (default) protocolVersion", () => {
-      expect(availableVersions[0]).toBe("0.5.0");
+    it("should default to 0.6.0 when no protocolVersion flag is passed", () => {
+      // The newest bundled version is the default when no flag is passed
+      expect(availableVersions[0]).toBe("0.6.0");
     });
 
     it("should reject invalid protocolVersion", () => {

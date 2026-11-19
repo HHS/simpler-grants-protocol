@@ -2,22 +2,23 @@ import { vi } from "vitest";
 import { DefaultCheckService } from "../../../commands/check/check-service";
 import * as path from "path";
 
+const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
+const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+afterAll(() => {
+  mockConsoleLog.mockRestore();
+  mockConsoleWarn.mockRestore();
+  mockConsoleError.mockRestore();
+});
+
 // No mocks - we want to test the real behavior
 describe("DefaultCheckService - Circular References", () => {
   let service: DefaultCheckService;
-  const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
-  const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-  const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
   beforeEach(() => {
     service = new DefaultCheckService();
     vi.clearAllMocks();
-  });
-
-  afterAll(() => {
-    mockConsoleLog.mockRestore();
-    mockConsoleWarn.mockRestore();
-    mockConsoleError.mockRestore();
   });
 
   it("should handle circular references gracefully with the fix", async () => {
@@ -51,5 +52,25 @@ describe("DefaultCheckService - Circular References", () => {
     // Verify no errors or warnings were logged during circular reference handling
     expect(mockConsoleWarn).not.toHaveBeenCalled();
     expect(mockConsoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe("DefaultCheckService - Bundled Base Specs", () => {
+  let service: DefaultCheckService;
+
+  beforeEach(() => {
+    service = new DefaultCheckService();
+    vi.clearAllMocks();
+  });
+
+  it("should use the bundled 0.6.0 base spec when protocolVersion is 0.6.0", async () => {
+    // The 0.6.0 base is the simplest spec that is compliant with itself
+    const implPath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.6.0.yaml");
+
+    // Act & Assert - Should resolve without a "Base spec file not found" error
+    await service.checkSpec(implPath, { protocolVersion: "0.6.0" });
+
+    // Verify success
+    expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
   });
 });
