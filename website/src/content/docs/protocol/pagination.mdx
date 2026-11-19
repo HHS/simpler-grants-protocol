@@ -1,72 +1,6 @@
 ---
 title: Pagination
 description: Defines a set of parameters and patterns for paginated routes
-paginatedQueryParams:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PaginatedQueryParams.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PaginatedQueryParams.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/pagination.tsp"
-      startLine: 10
-      endLine: 24
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
-      startLine: 28
-      endLine: 29
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
-      startLine: 16
-      endLine: 22
-paginatedBodyParams:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PaginatedBodyParams.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PaginatedBodyParams.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/pagination.tsp"
-      startLine: 26
-      endLine: 38
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
-      startLine: 24
-      endLine: 25
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
-      startLine: 29
-      endLine: 35
-paginatedResultsInfo:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PaginatedResultsInfo.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/pagination.tsp"
-      startLine: 40
-      endLine: 60
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/pagination.py"
-      startLine: 32
-      endLine: 46
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/pagination.ts"
-      startLine: 42
-      endLine: 54
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -85,13 +19,7 @@ Query parameters for paginated routes. These parameters should be used on GET ro
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.paginatedQueryParams.example}
-  jsonSchema={frontmatter.paginatedQueryParams.jsonSchema}
-  typeSpec={frontmatter.paginatedQueryParams.typeSpec}
-  python={frontmatter.paginatedQueryParams.python}
-  typescript={frontmatter.paginatedQueryParams.typescript}
-/>
+<SchemaFormatTabs schema="PaginatedQueryParams" typeSpec python typescript />
 
 ### Changelog
 
@@ -110,13 +38,7 @@ Body parameters for paginated routes. These parameters should be used on POST an
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.paginatedBodyParams.example}
-  jsonSchema={frontmatter.paginatedBodyParams.jsonSchema}
-  typeSpec={frontmatter.paginatedBodyParams.typeSpec}
-  python={frontmatter.paginatedBodyParams.python}
-  typescript={frontmatter.paginatedBodyParams.typescript}
-/>
+<SchemaFormatTabs schema="PaginatedBodyParams" typeSpec python typescript />
 
 ### Changelog
 
@@ -137,13 +59,7 @@ Details about the paginated results. This model should included in the response 
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.paginatedResultsInfo.example}
-  jsonSchema={frontmatter.paginatedResultsInfo.jsonSchema}
-  typeSpec={frontmatter.paginatedResultsInfo.typeSpec}
-  python={frontmatter.paginatedResultsInfo.python}
-  typescript={frontmatter.paginatedResultsInfo.typescript}
-/>
+<SchemaFormatTabs schema="PaginatedResultsInfo" typeSpec python typescript />
 
 ### Changelog
 

@@ -1,24 +1,6 @@
 ---
 title: ExtensibleEnum
 description: A value from a predefined set of options, with support for custom values
-extensibleEnum:
-  example:
-    file:
-      path: "website/public/schemas/yaml/ExtensibleEnum.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ExtensibleEnum.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/extensible-enum.tsp"
-      startLine: 39
-      endLine: 47
-extensibleEnumT:
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/extensible-enum.tsp"
-      startLine: 7
-      endLine: 37
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -51,7 +33,7 @@ model OppStatus is Fields.ExtensibleEnumT<OppStatusOptions>;
 
 ### Formats
 
-<SchemaFormatTabs typeSpec={frontmatter.extensibleEnumT.typeSpec} />
+<SchemaFormatTabs typeSpec="ExtensibleEnumT" />
 
 ## ExtensibleEnum
 
@@ -68,11 +50,7 @@ The base model for this pattern, derived from the template with an unconstrained
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.extensibleEnum.example}
-  jsonSchema={frontmatter.extensibleEnum.jsonSchema}
-  typeSpec={frontmatter.extensibleEnum.typeSpec}
-/>
+<SchemaFormatTabs schema="ExtensibleEnum" typeSpec />
 
 ### Changelog
 

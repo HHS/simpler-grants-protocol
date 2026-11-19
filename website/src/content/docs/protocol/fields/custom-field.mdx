@@ -1,49 +1,9 @@
 ---
 title: CustomField
 description: A model for defining custom fields that are specific to a given implementation
-customField:
-  example:
-    file:
-      path: "website/public/schemas/yaml/CustomField.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CustomField.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/custom-field.tsp"
-      startLine: 47
-      endLine: 64
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/custom.py"
-      startLine: 23
-      endLine: 45
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 103
-      endLine: 118
 customFieldType:
   example:
     code: "string"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CustomFieldType.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/custom-field.tsp"
-      startLine: 7
-      endLine: 16
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/custom.py"
-      startLine: 12
-      endLine: 20
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 94
-      endLine: 101
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -65,13 +25,7 @@ A model for defining custom fields on a record.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.customField.example}
-  jsonSchema={frontmatter.customField.jsonSchema}
-  typeSpec={frontmatter.customField.typeSpec}
-  python={frontmatter.customField.python}
-  typescript={frontmatter.customField.typescript}
-/>
+<SchemaFormatTabs schema="CustomField" typeSpec python typescript />
 
 ### Changelog
 
@@ -95,11 +49,11 @@ The set of JSON schema types supported by a custom field.
 ### Formats
 
 <SchemaFormatTabs
+  schema="CustomFieldType"
   example={frontmatter.customFieldType.example}
-  jsonSchema={frontmatter.customFieldType.jsonSchema}
-  typeSpec={frontmatter.customFieldType.typeSpec}
-  python={frontmatter.customFieldType.python}
-  typescript={frontmatter.customFieldType.typescript}
+  typeSpec
+  python
+  typescript="CustomFieldTypeEnum"
 />
 
 ### Changelog
