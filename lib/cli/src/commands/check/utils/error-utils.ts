@@ -229,6 +229,10 @@ export class ErrorFormatter {
         return "Extra query parameter";
       case "QUERY_PARAM_CONFLICT":
         return "Query parameter conflict";
+      case "MISSING_HEADER_PARAM":
+        return "Header parameter missing";
+      case "MISSING_RESPONSE_HEADER":
+        return "Response header missing";
       default:
         return subType;
     }

@@ -1,6 +1,10 @@
 import { vi } from "vitest";
 import { DefaultCheckService } from "../../../commands/check/check-service";
+import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import * as yaml from "js-yaml";
+import { OpenAPIV3 } from "openapi-types";
 
 const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
 const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -72,5 +76,54 @@ describe("DefaultCheckService - Bundled Base Specs", () => {
 
     // Verify success
     expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
+  });
+
+  it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"])(
+    "should leave the output unchanged when checking the bundled %s spec against itself",
+    async version => {
+      const implPath = path.resolve(__dirname, `../../../../lib/openapi/openapi.${version}.yaml`);
+
+      // Act & Assert - Pre-0.6.0 specs have no version headers and must be unaffected
+      await service.checkSpec(implPath, { protocolVersion: version });
+
+      // Verify the exact success output and no warnings
+      expect(mockConsoleLog).toHaveBeenCalledWith("Spec is valid and compliant with base spec");
+      expect(mockConsoleWarn).not.toHaveBeenCalled();
+    }
+  );
+
+  it("should report operations missing the CG-Version parameter or CG-Version-Served header", async () => {
+    const basePath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.6.0.yaml");
+    const impl = yaml.load(fs.readFileSync(basePath, "utf8")) as OpenAPIV3.Document;
+    const list = impl.paths["/common-grants/opportunities"]!.get!;
+    list.parameters = list.parameters!.filter(
+      param =>
+        !("$ref" in param) ||
+        param.$ref !== "#/components/parameters/CommonGrants.Headers.VersionRequest"
+    );
+    const read = impl.paths["/common-grants/opportunities/{oppId}"]!.get!;
+    delete (read.responses["200"] as OpenAPIV3.ResponseObject).headers!["CG-Version-Served"];
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "cg-check-"));
+    const tmpPath = path.join(tmpDir, "impl.yaml");
+    fs.writeFileSync(tmpPath, yaml.dump(impl));
+
+    try {
+      // Act & Assert - Both operations should be reported end to end
+      const result = service.checkSpec(tmpPath, { protocolVersion: "0.6.0" });
+      await expect(result).rejects.toThrow(/GET \/common-grants\/opportunities\b(?!\/)/);
+      await expect(result).rejects.toThrow("[CG-Version]");
+      await expect(result).rejects.toThrow("GET /common-grants/opportunities/{oppId}");
+      await expect(result).rejects.toThrow("CG-Version-Served");
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("should default to 0.6.0 when no protocol version is given", async () => {
+    const implPath = path.resolve(__dirname, "../../../../lib/openapi/openapi.0.5.0.yaml");
+
+    // Act & Assert - 0.5.0 has no version headers, so the 0.6.0 default must flag them
+    await expect(service.checkSpec(implPath, {})).rejects.toThrow("[CG-Version]");
   });
 });
