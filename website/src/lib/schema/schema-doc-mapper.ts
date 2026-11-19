@@ -1,7 +1,8 @@
-import { readdirSync, readFileSync } from "fs";
+import { readFileSync } from "fs";
 import * as path from "path";
 import yaml from "js-yaml";
 import { Paths } from "./paths";
+import { listFilesByExtension } from "./source-declarations";
 
 /** A `<SchemaTable>` or `<SchemaFormatTabs>` tag's `schema="Name"` attribute */
 const SCHEMA_ATTRIBUTE =
@@ -31,7 +32,7 @@ export function buildSchemaDocMap(
 ): Map<string, string> {
   const map = new Map<string, string>();
 
-  for (const file of listPages(protocolDocsDir)) {
+  for (const file of listFilesByExtension(protocolDocsDir, ".mdx")) {
     const content = readFileSync(file, "utf-8");
     const docPath =
       "/" +
@@ -80,23 +81,6 @@ function inlineSchemas(
     result.push([name, type]);
   }
   return result;
-}
-
-/** Lists the MDX pages under a directory, in a stable order. */
-function listPages(dir: string): string[] {
-  const files: string[] = [];
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-  );
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...listPages(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith(".mdx")) {
-      files.push(fullPath);
-    }
-  }
-  return files;
 }
 
 /**

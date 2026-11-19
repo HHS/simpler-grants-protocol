@@ -8,19 +8,24 @@ import { generateSchemaExample } from "../lib/schema/example-generator";
 import { schemaFilePath } from "../lib/schema/schema-files";
 import {
   findSnippet,
+  refreshDeclarationsForRender,
   sourceUrl,
   type SourceLanguage,
 } from "../lib/schema/source-declarations";
 
 /**
  * A literal code block, or a file to read whole. Pages give literal code for
- * hand-written examples and inline JSON Schemas; the custom field catalog
- * gives a file.
+ * hand-written examples and inline JSON Schemas.
  */
 interface CodeBlockConfig {
   /** A literal code block to display. If provided, file is ignored. */
   code?: string;
-  /** A file to display, by its path relative to the repository root */
+  /**
+   * A JSON Schema file to display, by its path relative to the repository
+   * root. Only `jsonSchema` reads it: the custom field catalog passes its
+   * extension schema this way. Examples are literal code or generated from
+   * `schema`.
+   */
   file?: {
     path: string;
   };
@@ -46,7 +51,7 @@ interface Props {
   /** The schema's name, which is also the name of its generated JSON Schema file */
   schema?: string;
   /** Example JSON: literal code overrides the example generated from the schema */
-  example?: CodeBlockConfig;
+  example?: Pick<CodeBlockConfig, "code">;
   /** JSON Schema: literal code for schemas with no generated file */
   jsonSchema?: CodeBlockConfig;
   /** TypeSpec tab */
@@ -72,16 +77,19 @@ if (!example && !jsonSchemaConfig && !typeSpec && !python && !typescript) {
 
 const exampleCode = example?.code
   ? example.code
-  : example?.file?.path
-    ? await generateSchemaExample(example.file.path)
-    : schemaPath
-      ? await generateSchemaExample(schemaPath)
-      : null;
+  : schemaPath
+    ? await generateSchemaExample(schemaPath)
+    : null;
 const jsonSchemaCode = jsonSchemaConfig ? extractCode(jsonSchemaConfig) : null;
 const jsonSchemaUrl = jsonSchemaConfig
   ? extractSchemaUrl(jsonSchemaConfig)
   : null;
 
+// In the dev server, re-read the sources once per page render so a source
+// edit shows on reload; a production build reads them once.
+if (import.meta.env.DEV) {
+  refreshDeclarationsForRender(Astro.locals);
+}
 const typeSpecSnippet = snippet("typeSpec", typeSpec);
 const pythonSnippet = snippet("python", python);
 const typescriptSnippet = snippet("typescript", typescript);

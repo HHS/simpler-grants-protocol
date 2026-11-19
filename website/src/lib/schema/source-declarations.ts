@@ -70,6 +70,21 @@ const SOURCES: Record<
 
 const indexes = new Map<SourceLanguage, Map<string, FoundDeclaration[]>>();
 
+/** The render the indexes were last read for, if any */
+let indexedForRender: object | undefined;
+
+/**
+ * Makes the next lookup re-read the sources, once per render. The dev server
+ * calls this with the request's `Astro.locals`, so a page reload shows a
+ * source edit while the several tabs on one page still share one read. A
+ * production build never calls it, so it reads the sources once per build.
+ */
+export function refreshDeclarationsForRender(render: object): void {
+  if (render === indexedForRender) return;
+  indexedForRender = render;
+  indexes.clear();
+}
+
 /**
  * TypeSpec namespaces whose declarations a bare name never refers to.
  * `CommonGrants.Patch` holds compile-time mirrors of the organization models
@@ -136,7 +151,7 @@ function matchDeclarations(
  * its Zod schemas `<Name>Schema`. A page names the declaration explicitly
  * when an SDK doesn't follow this (its enums, for example, end in `Enum`).
  */
-export function conventionalName(
+function conventionalName(
   language: SourceLanguage,
   schemaName: string,
 ): string {
@@ -161,7 +176,8 @@ export function findSchemaDeclaration(
  * declaration's name, for an SDK that names it differently; or lists several
  * names, to show a template with the model built from it. Several
  * declarations must be in one file; each is shown whole, in the order listed,
- * separated by a blank line.
+ * separated by as many blank lines as the source has above each later one
+ * (two between Python classes, one in TypeSpec).
  *
  * @throws if a declaration can't be found
  */
@@ -183,7 +199,7 @@ export function findSnippet(
       path: found[0].path,
       startLine: Math.min(...found.map((d) => d.startLine)),
       endLine: Math.max(...found.map((d) => d.endLine)),
-      code: found.map((d) => d.code).join("\n\n"),
+      code: joinAsInSource(found),
     };
   }
   if (typeof requested === "string") {
@@ -195,6 +211,25 @@ export function findSnippet(
     );
   }
   return findSchemaDeclaration(language, schemaName);
+}
+
+/** Joins declarations from one file with the blank lines above each in the source. */
+function joinAsInSource(found: FoundDeclaration[]): string {
+  const lines = readFileSync(
+    path.join(Paths.REPO_ROOT, found[0].path),
+    "utf-8",
+  ).split("\n");
+  return found
+    .map((declaration, i) => {
+      if (i === 0) return declaration.code;
+      let blanks = 0;
+      for (let line = declaration.startLine - 2; line >= 0; line--) {
+        if (lines[line].trim() !== "") break;
+        blanks++;
+      }
+      return "\n".repeat(Math.max(blanks, 1)) + declaration.code;
+    })
+    .join("\n");
 }
 
 /**
@@ -210,7 +245,7 @@ export function sourceUrl(
   return `https://github.com/HHS/simpler-grants-protocol/tree/main//${filePath}${lines}`;
 }
 
-/** Lists every declaration in a language's source, by name, once per build. */
+/** Lists every declaration in a language's source, by name, until the next refresh. */
 function getIndex(language: SourceLanguage): Map<string, FoundDeclaration[]> {
   const cached = indexes.get(language);
   if (cached) return cached;
@@ -218,7 +253,7 @@ function getIndex(language: SourceLanguage): Map<string, FoundDeclaration[]> {
   const { dir, extension, list } = SOURCES[language];
   const index = new Map<string, FoundDeclaration[]>();
 
-  for (const file of listFiles(dir, extension)) {
+  for (const file of listFilesByExtension(dir, extension)) {
     const relativePath = path
       .relative(Paths.REPO_ROOT, file)
       .split(path.sep)
@@ -242,46 +277,20 @@ function getIndex(language: SourceLanguage): Map<string, FoundDeclaration[]> {
   return index;
 }
 
-/** Lists files with an extension under a directory, in a stable order. */
-function listFiles(dir: string, extension: string): string[] {
-  const files: string[] = [];
-  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...listFiles(fullPath, extension));
-    } else if (entry.isFile() && entry.name.endsWith(extension)) {
-      files.push(fullPath);
-    }
-  }
-  return files;
+/**
+ * Lists the files with an extension under a directory, recursively, sorted by
+ * path in code-point order so the result is the same on every machine.
+ */
+export function listFilesByExtension(dir: string, extension: string): string[] {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(extension))
+    .map((entry) => path.join(entry.parentPath, entry.name))
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
 // ############################################################################
 // Shared helpers
 // ############################################################################
-
-/** Converts a character offset to a 1-based line number. */
-function lineAt(lineStarts: number[], offset: number): number {
-  let low = 0;
-  let high = lineStarts.length - 1;
-  while (low < high) {
-    const mid = Math.ceil((low + high) / 2);
-    if (lineStarts[mid] <= offset) low = mid;
-    else high = mid - 1;
-  }
-  return low + 1;
-}
-
-function getLineStarts(source: string): number[] {
-  const starts = [0];
-  for (let i = 0; i < source.length; i++) {
-    if (source[i] === "\n") starts.push(i + 1);
-  }
-  return starts;
-}
 
 /** Builds a declaration from whole lines of the source. */
 function fromLines(
@@ -330,7 +339,8 @@ export function listTypeSpecDeclarations(source: string): Declaration[] {
     throw new Error(`TypeSpec source doesn't parse: ${messages}`);
   }
 
-  const lineStarts = getLineStarts(source);
+  const lineOf = (offset: number) =>
+    ast.file.getLineAndCharacterOfPosition(offset).line + 1;
   const lines = source.split("\n");
   const declarations: Declaration[] = [];
 
@@ -364,8 +374,8 @@ export function listTypeSpecDeclarations(source: string): Declaration[] {
         ...fromLines(
           lines,
           name,
-          lineAt(lineStarts, statement.pos),
-          lineAt(lineStarts, statement.end - 1),
+          lineOf(statement.pos),
+          lineOf(statement.end - 1),
         ),
         namespace: current.join(".") || undefined,
       });
@@ -530,9 +540,4 @@ export function listPythonDeclarations(source: string): Declaration[] {
   }
 
   return declarations;
-}
-
-/** Clears the cached source indexes (for tests). */
-export function clearDeclarationCache(): void {
-  indexes.clear();
 }

@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "fs";
+import * as path from "path";
 import {
   listTypeSpecDeclarations,
   listPythonDeclarations,
@@ -6,9 +8,13 @@ import {
   findDeclaration,
   findSchemaDeclaration,
   findSnippet,
+  refreshDeclarationsForRender,
   sourceUrl,
   type Declaration,
 } from "@/lib/schema/source-declarations";
+import { Paths } from "@/lib/schema/paths";
+
+const REPO_ROOT = Paths.REPO_ROOT;
 
 /** Picks one declaration out of a listing by name. */
 function pick(declarations: Declaration[], name: string): Declaration {
@@ -505,6 +511,30 @@ describe("findSnippet", () => {
     expect(snippet.endLine).toBe(model.endLine);
   });
 
+  it("separates declarations shown together by the blank lines the source has above the later one", () => {
+    // Python classes sit two blank lines apart (PEP 8); FilterInfo is directly
+    // above Filtered, so the tab is an exact excerpt of the source.
+    const snippet = findSnippet("python", ["FilterInfo", "Filtered"]);
+    const source = readFileSync(path.join(REPO_ROOT, snippet.path), "utf-8")
+      .split("\n")
+      .slice(snippet.startLine - 1, snippet.endLine)
+      .join("\n");
+    expect(snippet.code).toBe(source);
+    expect(snippet.code).toMatch(/\n\n\nclass Filtered\(/);
+  });
+
+  it("uses the later declaration's own spacing when other code sits between them", () => {
+    // PaginatedBodyParams sits between PaginatedBase and PaginatedQueryParams.
+    const snippet = findSnippet("python", [
+      "PaginatedBase",
+      "PaginatedQueryParams",
+    ]);
+    const base = findDeclaration("python", "PaginatedBase");
+    const params = findDeclaration("python", "PaginatedQueryParams");
+    expect(snippet.code).toBe(`${base.code}\n\n\n${params.code}`);
+    expect(snippet.code).not.toMatch(/PaginatedBodyParams/);
+  });
+
   it("fails when declarations shown together are in different files", () => {
     expect(() => findSnippet("typeSpec", ["Money", "AwardBase"])).toThrow(
       /must be in one file/,
@@ -515,6 +545,26 @@ describe("findSnippet", () => {
     expect(() => findSnippet("python", true)).toThrow(
       /Python tab needs a declaration name/,
     );
+  });
+});
+
+describe("refreshDeclarationsForRender", () => {
+  it("re-reads the sources once for each new render, and not again within it", () => {
+    const first = findDeclaration("python", "Money");
+    expect(findDeclaration("python", "Money")).toBe(first);
+
+    const render = {};
+    refreshDeclarationsForRender(render);
+    const reread = findDeclaration("python", "Money");
+    expect(reread).not.toBe(first);
+    expect(reread).toEqual(first);
+
+    // Further components on the same page reuse what that render read.
+    refreshDeclarationsForRender(render);
+    expect(findDeclaration("python", "Money")).toBe(reread);
+
+    refreshDeclarationsForRender({});
+    expect(findDeclaration("python", "Money")).not.toBe(reread);
   });
 });
 
