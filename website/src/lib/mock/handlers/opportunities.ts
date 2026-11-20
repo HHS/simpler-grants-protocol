@@ -114,7 +114,7 @@ function sortKey(opp: WireOpportunity, sortBy: string): string | number {
 }
 
 /**
- * `GET /v{version}/common-grants/opportunities` — the paginated list, ordered
+ * `GET /common-grants/opportunities` — the paginated list, ordered
  * newest-modified first.
  */
 export function listOpportunities(
@@ -144,7 +144,7 @@ export function listOpportunities(
 }
 
 /**
- * `GET /v{version}/common-grants/opportunities/{oppId}` — a single record. The
+ * `GET /common-grants/opportunities/{oppId}` — a single record. The
  * id is validated here, not in the router, so a malformed id answers 400
  * rather than a route miss.
  */
@@ -168,7 +168,7 @@ export function getOpportunity(oppId: string, version: Version): Response {
 }
 
 /**
- * `POST /v{version}/common-grants/opportunities/search` — filtered, sorted,
+ * `POST /common-grants/opportunities/search` — filtered, sorted,
  * paginated search over the same fixture set.
  */
 export async function searchOpportunities(

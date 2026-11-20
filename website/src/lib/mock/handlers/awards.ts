@@ -117,7 +117,7 @@ function moneyFilterValue(award: Award): Money | undefined {
 }
 
 /**
- * `GET /v{version}/common-grants/awards` — the paginated list, ordered
+ * `GET /common-grants/awards` — the paginated list, ordered
  * newest-modified first.
  */
 export function listAwards(request: Request, version: Version): Response {
@@ -146,7 +146,7 @@ export function listAwards(request: Request, version: Version): Response {
 }
 
 /**
- * `GET /v{version}/common-grants/awards/{awdId}` — a single record. A
+ * `GET /common-grants/awards/{awdId}` — a single record. A
  * malformed id answers 400, not a route miss.
  */
 export function getAward(awdId: string, version: Version): Response {
@@ -167,7 +167,7 @@ export function getAward(awdId: string, version: Version): Response {
 }
 
 /**
- * `POST /v{version}/common-grants/awards/search` — filtered, sorted, paginated
+ * `POST /common-grants/awards/search` — filtered, sorted, paginated
  * search over the same fixture set.
  */
 export async function searchAwards(

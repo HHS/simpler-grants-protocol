@@ -3,6 +3,10 @@ title: Mock API hosting
 description: Records the decision to serve the fixture-backed mock CommonGrants API from the docs website itself, so the browser, curl, and the SDK all hit the same endpoint and see the same data.
 ---
 
+:::note
+The path version in this record (`/api/v{version}`) is superseded by [ADR 0032](https://commongrants.org/governance/adr/0032-api-version-negotiation/). The mock now serves every route under `/api/common-grants` and selects the protocol version with the `CG-Version` request header.
+:::
+
 We want visitors to test the CommonGrants API against a mock for every published spec version (v0.1.0 to v0.4.0). We're turning Swagger UI's "Try it out" back on in the browser, but our core goal is **determinism**. A user should be able to try a request in the browser, copy the `curl` command and run it in their terminal, point the SDK at the same URL, and get the **same data** every time. The mock also gives the quickstart a sandbox: a new SDK user can fetch realistic grant data with no local setup.
 
 So the mock has three consumers:
