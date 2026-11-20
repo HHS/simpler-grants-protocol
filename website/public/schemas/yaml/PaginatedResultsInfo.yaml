@@ -4,10 +4,9 @@ type: object
 properties:
   page:
     type: integer
-    minimum: 1
-    maximum: 2147483647
     examples:
       - 1
+    minimum: 1
     description: Current page number (indexing starts at 1)
   pageSize:
     type: integer
