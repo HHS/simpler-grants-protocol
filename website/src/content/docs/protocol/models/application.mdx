@@ -28,26 +28,6 @@ applicationBase:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ApplicationBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 20
-      endLine: 51
-appRef:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AppRef.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AppRef.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 3
-      endLine: 18
 appStatus:
   example:
     code: |
@@ -55,25 +35,9 @@ appStatus:
         "value": "submitted",
         "description": "Application has been submitted."
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AppStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 57
-      endLine: 60
 appStatusOptions:
   example:
     code: '"submitted"'
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AppStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 66
-      endLine: 80
 appFormResponse:
   example:
     code: |
@@ -101,14 +65,6 @@ appFormResponse:
         "createdAt": "2024-01-01T00:00:00Z",
         "lastModifiedAt": "2024-01-01T00:00:00Z"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AppFormResponse.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/application.tsp"
-      startLine: 86
-      endLine: 95
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -121,14 +77,14 @@ Base model for an application to a funding opportunity.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.applicationBase.jsonSchema.file.path} />
+<SchemaTable schema="ApplicationBase" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ApplicationBase"
   example={frontmatter.applicationBase.example}
-  jsonSchema={frontmatter.applicationBase.jsonSchema}
-  typeSpec={frontmatter.applicationBase.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -141,15 +97,11 @@ A reference to an application, previewing the key fields a consumer needs to ide
 
 ### Table
 
-<SchemaTable filePath={frontmatter.appRef.jsonSchema.file.path} />
+<SchemaTable schema="AppRef" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.appRef.example}
-  jsonSchema={frontmatter.appRef.jsonSchema}
-  typeSpec={frontmatter.appRef.typeSpec}
-/>
+<SchemaFormatTabs schema="AppRef" typeSpec />
 
 ### Changelog
 
@@ -161,14 +113,14 @@ The status of an application.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.appStatus.jsonSchema.file.path} />
+<SchemaTable schema="AppStatus" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="AppStatus"
   example={frontmatter.appStatus.example}
-  jsonSchema={frontmatter.appStatus.jsonSchema}
-  typeSpec={frontmatter.appStatus.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -181,14 +133,14 @@ The default set of values accepted for application status.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.appStatusOptions.jsonSchema.file.path} />
+<SchemaTable schema="AppStatusOptions" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="AppStatusOptions"
   example={frontmatter.appStatusOptions.example}
-  jsonSchema={frontmatter.appStatusOptions.jsonSchema}
-  typeSpec={frontmatter.appStatusOptions.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -201,14 +153,14 @@ A form response associated with an application.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.appFormResponse.jsonSchema.file.path} />
+<SchemaTable schema="AppFormResponse" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="AppFormResponse"
   example={frontmatter.appFormResponse.example}
-  jsonSchema={frontmatter.appFormResponse.jsonSchema}
-  typeSpec={frontmatter.appFormResponse.typeSpec}
+  typeSpec
 />
 
 ### Changelog

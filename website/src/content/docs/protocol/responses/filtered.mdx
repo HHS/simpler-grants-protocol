@@ -45,24 +45,6 @@ filtered:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Filtered.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 177
-      endLine: 198
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
-      startLine: 57
-      endLine: 78
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
-      startLine: 126
-      endLine: 140
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -86,11 +68,11 @@ A 200 response with a paginated list of filtered items.
 ### Formats
 
 <SchemaFormatTabs
+  schema="Filtered"
   example={frontmatter.filtered.example}
-  jsonSchema={frontmatter.filtered.jsonSchema}
-  typeSpec={frontmatter.filtered.typeSpec}
-  python={frontmatter.filtered.python}
-  typescript={frontmatter.filtered.typescript}
+  typeSpec={["FilteredBase", "Filtered"]}
+  python={["FilterInfo", "Filtered"]}
+  typescript
 />
 
 ### Usage

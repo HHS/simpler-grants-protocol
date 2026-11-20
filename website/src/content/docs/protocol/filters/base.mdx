@@ -1,138 +1,6 @@
 ---
 title: Base filters
 description: Base models used to build field-specific filters.
-defaultFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/DefaultFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/DefaultFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 75
-      endLine: 89
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 57
-      endLine: 70
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 30
-      endLine: 33
-equivalenceOperators:
-  example:
-    file:
-      path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/EquivalenceOperators.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 7
-      endLine: 15
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 15
-      endLine: 19
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 13
-      endLine: 13
-comparisonOperators:
-  example:
-    file:
-      path: "website/public/schemas/yaml/ComparisonOperators.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ComparisonOperators.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 17
-      endLine: 30
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 22
-      endLine: 28
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 14
-      endLine: 14
-stringOperators:
-  example:
-    file:
-      path: "website/public/schemas/yaml/StringOperators.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/StringOperators.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 43
-      endLine: 50
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 38
-      endLine: 42
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 16
-      endLine: 16
-arrayOperators:
-  example:
-    file:
-      path: "website/public/schemas/yaml/ArrayOperators.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ArrayOperators.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 33
-      endLine: 41
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 31
-      endLine: 35
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 15
-      endLine: 15
-rangeOperators:
-  example:
-    file:
-      path: "website/public/schemas/yaml/RangeOperators.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/RangeOperators.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/base.tsp"
-      startLine: 52
-      endLine: 59
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/base.py"
-      startLine: 45
-      endLine: 49
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 17
-      endLine: 17
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -151,13 +19,7 @@ The default filter model is a base model that can be used to create more specifi
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.defaultFilter.example}
-  jsonSchema={frontmatter.defaultFilter.jsonSchema}
-  typeSpec={frontmatter.defaultFilter.typeSpec}
-  python={frontmatter.defaultFilter.python}
-  typescript={frontmatter.defaultFilter.typescript}
-/>
+<SchemaFormatTabs schema="DefaultFilter" typeSpec python typescript />
 
 ## EquivalenceOperators
 
@@ -179,11 +41,10 @@ Operators that filter a field based on an exact match to a value. Supported valu
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.equivalenceOperators.example}
-  jsonSchema={frontmatter.equivalenceOperators.jsonSchema}
-  typeSpec={frontmatter.equivalenceOperators.typeSpec}
-  python={frontmatter.equivalenceOperators.python}
-  typescript={frontmatter.equivalenceOperators.typescript}
+  schema="EquivalenceOperators"
+  typeSpec
+  python="EquivalenceOperator"
+  typescript="EquivalenceOperatorsEnum"
 />
 
 ## ComparisonOperators
@@ -206,11 +67,10 @@ Operators that filter a field based on a comparison to a value. Supported value 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.comparisonOperators.example}
-  jsonSchema={frontmatter.comparisonOperators.jsonSchema}
-  typeSpec={frontmatter.comparisonOperators.typeSpec}
-  python={frontmatter.comparisonOperators.python}
-  typescript={frontmatter.comparisonOperators.typescript}
+  schema="ComparisonOperators"
+  typeSpec
+  python="ComparisonOperator"
+  typescript="ComparisonOperatorsEnum"
 />
 
 ## StringOperators
@@ -227,11 +87,10 @@ Operators that filter a field based on a string value.
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.stringOperators.example}
-  jsonSchema={frontmatter.stringOperators.jsonSchema}
-  typeSpec={frontmatter.stringOperators.typeSpec}
-  python={frontmatter.stringOperators.python}
-  typescript={frontmatter.stringOperators.typescript}
+  schema="StringOperators"
+  typeSpec
+  python="StringOperator"
+  typescript="StringOperatorsEnum"
 />
 
 ## ArrayOperators
@@ -251,11 +110,10 @@ Operators that filter a field based on an array of values. Supported value types
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.arrayOperators.example}
-  jsonSchema={frontmatter.arrayOperators.jsonSchema}
-  typeSpec={frontmatter.arrayOperators.typeSpec}
-  python={frontmatter.arrayOperators.python}
-  typescript={frontmatter.arrayOperators.typescript}
+  schema="ArrayOperators"
+  typeSpec
+  python="ArrayOperator"
+  typescript="ArrayOperatorsEnum"
 />
 
 ## RangeOperators
@@ -276,9 +134,8 @@ Operators that filter a field based on a range of values. Supported value types 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.rangeOperators.example}
-  jsonSchema={frontmatter.rangeOperators.jsonSchema}
-  typeSpec={frontmatter.rangeOperators.typeSpec}
-  python={frontmatter.rangeOperators.python}
-  typescript={frontmatter.rangeOperators.typescript}
+  schema="RangeOperators"
+  typeSpec
+  python="RangeOperator"
+  typescript="RangeOperatorsEnum"
 />

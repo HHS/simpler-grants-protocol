@@ -1,28 +1,6 @@
 ---
 title: SystemMetadata
 description: System-managed metadata for records
-systemMetadata:
-  example:
-    file:
-      path: "website/public/schemas/yaml/SystemMetadata.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/SystemMetadata.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/metadata.tsp"
-      startLine: 21
-      endLine: 31
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/metadata.py"
-      startLine: 10
-      endLine: 22
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 124
-      endLine: 130
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -33,17 +11,11 @@ System-managed metadata that is automatically added to records.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.systemMetadata.jsonSchema.file.path} />
+<SchemaTable schema="SystemMetadata" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.systemMetadata.example}
-  jsonSchema={frontmatter.systemMetadata.jsonSchema}
-  typeSpec={frontmatter.systemMetadata.typeSpec}
-  python={frontmatter.systemMetadata.python}
-  typescript={frontmatter.systemMetadata.typescript}
-/>
+<SchemaFormatTabs schema="SystemMetadata" typeSpec python typescript />
 
 ### Changelog
 
