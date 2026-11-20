@@ -193,6 +193,10 @@ export default defineConfig({
               label: "Authentication and scopes",
               link: "protocol/auth",
             },
+            {
+              label: "Versioning",
+              link: "protocol/versioning",
+            },
           ],
         },
         {
