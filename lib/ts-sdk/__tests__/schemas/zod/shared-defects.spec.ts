@@ -149,7 +149,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
         jsonSchemaId,
         [
           { label: "valid pagination input", value: baseline },
-          // Both sides accept any integer page since #1196 widened Core's int32.
+          // Both sides accept a page above the int32 range since #1196 widened Core's int32.
           { label: "page above the int32 range", value: { ...baseline, page: 2_147_483_648 } },
           {
             // `.nullish()` accepts null; the protocol integer does not.
