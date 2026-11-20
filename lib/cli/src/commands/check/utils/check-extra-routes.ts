@@ -119,7 +119,10 @@ function createExtraRouteError(method: HttpMethod, path: string): RouteError {
 
 /**
  * Gets all HTTP methods from a path item object
+ *
+ * A path item also holds fields like `parameters` and `summary`, which aren't routes.
  */
 function getPathMethods(pathItem: PathItem): HttpMethod[] {
-  return Object.keys(pathItem) as HttpMethod[];
+  const httpMethods = Object.values(OpenAPIV3.HttpMethods);
+  return httpMethods.filter(method => method in pathItem);
 }

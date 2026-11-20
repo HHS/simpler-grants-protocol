@@ -3,6 +3,8 @@ import { checkSchemaCompatibility } from "./check-schema-compatibility";
 import { deepFlattenAllOf } from "./flatten-schemas";
 import { ErrorCollection } from "./error-utils";
 
+type PathParameters = OpenAPIV3.PathItemObject["parameters"];
+
 // ############################################################
 // Top-level checks
 // ############################################################
@@ -33,7 +35,8 @@ export function checkMatchingRoutes(
     const implPathObj = implPathItem as OpenAPIV3.PathItemObject;
 
     // For each method in the base path, check if it also exists in the impl path
-    for (const method of Object.keys(basePathObj) as OpenAPIV3.HttpMethods[]) {
+    // (a path item also holds fields like `parameters`, which aren't routes)
+    for (const method of Object.values(OpenAPIV3.HttpMethods)) {
       // Get base and impl operations (e.g. get, post, put, delete, etc.)
       const baseOp = basePathObj[method];
       const implOp = implPathObj[method];
@@ -41,6 +44,19 @@ export function checkMatchingRoutes(
       // If missing, already flagged in either checkMissingRequiredRoutes or checkExtraRoutes
       if (!baseOp) continue;
       if (!implOp) continue;
+
+      // Headers are checked even on experimental routes, because the version
+      // headers are part of the protocol on every route
+      errors.addErrors(
+        checkRouteHeaders(
+          basePathKey,
+          method,
+          baseOp,
+          implOp,
+          basePathObj.parameters,
+          implPathObj.parameters
+        ).getAllErrors()
+      );
 
       // If experimental, skip deeper checks
       if (baseOp.tags?.includes("experimental")) continue;
@@ -181,6 +197,116 @@ function checkQueryParameters(
           endpoint,
         }).getAllErrors()
       );
+    }
+  }
+
+  return errors;
+}
+
+// ############################################################
+// Header checks
+// ############################################################
+
+/**
+ * Compare the request and response headers of a single route (defined in both base and impl).
+ */
+function checkRouteHeaders(
+  path: string,
+  method: string,
+  baseOp: OpenAPIV3.OperationObject,
+  implOp: OpenAPIV3.OperationObject,
+  basePathParams: PathParameters,
+  implPathParams: PathParameters
+): ErrorCollection {
+  const errors = new ErrorCollection();
+  const endpoint = `${method.toUpperCase()} ${path}`;
+
+  errors.addErrors(
+    checkHeaderParameters(endpoint, baseOp, implOp, basePathParams, implPathParams).getAllErrors()
+  );
+
+  for (const statusCode of Object.keys(baseOp.responses || {})) {
+    const baseResp = baseOp.responses[statusCode] as OpenAPIV3.ResponseObject;
+    const implResp = implOp.responses?.[statusCode] as OpenAPIV3.ResponseObject | undefined;
+
+    if (!implResp) continue; // A missing status code is left to checkStatusCodes
+
+    errors.addErrors(checkResponseHeaders(endpoint, statusCode, baseResp, implResp).getAllErrors());
+  }
+
+  return errors;
+}
+
+/**
+ * Check that the implementation declares every header parameter in the base
+ *
+ * A base header is flagged even when it isn't required, because `required`
+ * describes the client: a client MAY omit `CG-Version`, but a server MUST accept it.
+ */
+function checkHeaderParameters(
+  endpoint: string,
+  baseOp: OpenAPIV3.OperationObject,
+  implOp: OpenAPIV3.OperationObject,
+  basePathParams: PathParameters,
+  implPathParams: PathParameters
+): ErrorCollection {
+  const errors = new ErrorCollection();
+  const baseParams = getHeaderParams(baseOp, basePathParams);
+  const implParams = getHeaderParams(implOp, implPathParams);
+
+  for (const baseParam of baseParams) {
+    // HTTP header names are case-insensitive (RFC 9110)
+    if (!implParams.some(p => p.name.toLowerCase() === baseParam.name.toLowerCase())) {
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "MISSING_HEADER_PARAM",
+        level: "ERROR",
+        endpoint,
+        message: `Missing header parameter [${baseParam.name}]`,
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Header params on an operation, including any declared once on its path item
+ */
+function getHeaderParams(
+  op: OpenAPIV3.OperationObject,
+  pathParams: PathParameters
+): OpenAPIV3.ParameterObject[] {
+  return [...(pathParams || []), ...(op.parameters || [])].filter(
+    (p): p is OpenAPIV3.ParameterObject => "in" in p && p.in === "header"
+  );
+}
+
+/**
+ * Check that the implementation response declares every required base response header
+ */
+function checkResponseHeaders(
+  endpoint: string,
+  statusCode: string,
+  baseResp: OpenAPIV3.ResponseObject,
+  implResp: OpenAPIV3.ResponseObject
+): ErrorCollection {
+  const errors = new ErrorCollection();
+  // HTTP header names are case-insensitive (RFC 9110)
+  const implHeaderNames = new Set(Object.keys(implResp.headers || {}).map(n => n.toLowerCase()));
+
+  for (const [name, header] of Object.entries(baseResp.headers || {})) {
+    if (!("required" in header) || !header.required) continue;
+
+    if (!implHeaderNames.has(name.toLowerCase())) {
+      errors.addError({
+        type: "ROUTE_CONFLICT",
+        subType: "MISSING_RESPONSE_HEADER",
+        level: "ERROR",
+        endpoint,
+        statusCode,
+        message: `Missing response header [${name}] for status code [${statusCode}]`,
+      });
     }
   }
 
