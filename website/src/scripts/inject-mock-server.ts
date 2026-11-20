@@ -7,7 +7,7 @@ import {
 } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
-import { MOCK_SPEC_DIR_NAME, serverUrlFor } from "../lib/mock/docs-wiring";
+import { MOCK_SERVER_URL, MOCK_SPEC_DIR_NAME } from "../lib/mock/docs-wiring";
 import {
   SUPPORTED_VERSIONS,
   isSupportedVersion,
@@ -78,7 +78,7 @@ export function assertMockServesVersion(
   if (isSupportedVersion(version)) return;
 
   throw new Error(
-    `${filename} would advertise ${serverUrlFor(version)}, which the mock router does not serve ` +
+    `${filename} would advertise the mock for v${version}, which the mock router does not serve ` +
       `(it serves ${SUPPORTED_VERSIONS.join(", ")}). Teach src/lib/mock/data/fixtures.ts to shape ` +
       `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before emitting a spec for it.`,
   );
@@ -116,14 +116,13 @@ class MockServerInjector {
 
       assertMockServesVersion(version, filename);
 
-      const serverUrl = serverUrlFor(version);
       const source = join(Paths.OPENAPI_DIR, filename);
 
       planned.push({
         filename,
-        updated: injectServers(readFileSync(source, "utf-8"), serverUrl),
+        updated: injectServers(readFileSync(source, "utf-8"), MOCK_SERVER_URL),
       });
-      console.log(`  ${filename} -> ${serverUrl}`);
+      console.log(`  ${filename} -> ${MOCK_SERVER_URL}`);
     }
 
     if (planned.length === 0) {

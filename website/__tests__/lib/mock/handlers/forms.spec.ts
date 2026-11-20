@@ -12,12 +12,13 @@ import {
 import { listForms, getForm } from "@/lib/mock/handlers/forms";
 import { RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 import type { Version } from "@/lib/mock/data/fixtures";
+import { mockUrl } from "../__fixtures__/mock-request";
 
 const VERSION: Version = "0.4.0";
 
 /** Builds a request URL; the host/base path are placeholders. */
 function formsUrl(suffix = ""): string {
-  return `https://docs.example/api/v${VERSION}/common-grants/forms${suffix}`;
+  return mockUrl(`/forms${suffix}`);
 }
 
 describe("FORM_FIXTURES", () => {
@@ -45,7 +46,7 @@ describe("FORM_FIXTURES", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/forms (list)", () => {
+describe("GET /common-grants/forms (list)", () => {
   it("returns a 200 with the protocol paginated envelope, ordered by lastModifiedAt descending by default", async () => {
     const response = listForms(new Request(formsUrl()), VERSION);
 
@@ -148,7 +149,7 @@ describe("GET /v{version}/common-grants/forms (list)", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/forms/{formId} (detail)", () => {
+describe("GET /common-grants/forms/{formId} (detail)", () => {
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getForm(CANONICAL_FORM_ID, VERSION);
 
@@ -215,10 +216,7 @@ describe("forms per protocol version", () => {
   const pristine = structuredClone(FORM_FIXTURES);
 
   async function listAt(version: Version) {
-    const response = listForms(
-      new Request(`https://docs.example/api/v${version}/common-grants/forms`),
-      version,
-    );
+    const response = listForms(new Request(mockUrl("/forms")), version);
     expect(response.status).toBe(200);
     return ((await response.json()) as { items: Record<string, unknown>[] })
       .items;

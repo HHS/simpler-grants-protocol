@@ -1,12 +1,14 @@
 ---
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import "swagger-ui-dist/swagger-ui.css";
-import { SPEC_DIR_URL } from "@/lib/mock/docs-wiring";
+import { MOCK_SERVER_URL, SPEC_DIR_URL } from "@/lib/mock/docs-wiring";
 import { SUPPORTED_METHODS } from "@/lib/mock/http/methods";
+import { VERSION_HEADER } from "@/lib/mock/http/version";
 
 // Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
 const availableVersions = [
-  { version: "0.5.0", label: "v0.5.0 (Latest)" },
+  { version: "0.6.0", label: "v0.6.0 (Latest)" },
+  { version: "0.5.0", label: "v0.5.0" },
   { version: "0.4.0", label: "v0.4.0" },
   { version: "0.3.0", label: "v0.3.0" },
   { version: "0.2.0", label: "v0.2.0" },
@@ -31,6 +33,8 @@ const availableVersions = [
   <div
     id="swagger-ui"
     data-spec-dir={SPEC_DIR_URL}
+    data-mock-base={MOCK_SERVER_URL}
+    data-version-header={VERSION_HEADER}
     data-submit-methods={SUPPORTED_METHODS.join(",").toLowerCase()}
   >
   </div>
@@ -87,7 +91,7 @@ const availableVersions = [
 
 <script>
   import { SwaggerUIBundle } from "swagger-ui-dist";
-  import { resolveVersion } from "@/lib/api-docs-version";
+  import { resolveVersion, withVersionHeader } from "@/lib/api-docs-version";
 
   // Via a data attribute, not an import: client scripts can't read frontmatter,
   // and importing `docs-wiring` would drag the mock router into this bundle.
@@ -98,6 +102,8 @@ const availableVersions = [
   const submitMethods = (mount?.dataset.submitMethods ?? "")
     .split(",")
     .filter(Boolean);
+  const mockBase = mount?.dataset.mockBase ?? "/api";
+  const versionHeader = mount?.dataset.versionHeader ?? "CG-Version";
 
   const render = (version: string): void => {
     SwaggerUIBundle({
@@ -106,6 +112,14 @@ const availableVersions = [
       // From the router's own `SUPPORTED_METHODS`; Swagger UI would otherwise
       // offer Execute on DELETE and friends, which the mock never serves.
       supportedSubmitMethods: submitMethods,
+      // The mock picks its version from this header, not the URL.
+      requestInterceptor: (request) =>
+        withVersionHeader(request, {
+          version,
+          basePath: mockBase,
+          header: versionHeader,
+          origin: window.location.origin,
+        }),
       deepLinking: true,
     });
   };

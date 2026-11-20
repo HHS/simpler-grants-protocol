@@ -25,6 +25,12 @@ export interface MatrixCase {
    * do). The spec re-inserts the `/api` base into the golden text for those.
    */
   pathEchoing?: boolean;
+  /**
+   * Set when this site answers differently on purpose: the Worker's 404 for a
+   * bad path version became a version error under ADR 0032 (#1393). The golden
+   * spec checks the status instead of the bytes; the Worker capture ignores it.
+   */
+  siteStatus?: number;
 }
 
 /** `/v{version}/common-grants/opportunities` + optional suffix. */
@@ -187,11 +193,13 @@ const edgeCases: MatrixCase[] = [
     name: "version-unsupported",
     method: "GET",
     path: opportunities("9.9.9"),
+    siteStatus: 406,
   },
   {
     name: "version-malformed",
     method: "GET",
     path: "/vabc/common-grants/opportunities",
+    siteStatus: 400,
   },
 
   // --- route misses (these quote the request path back; see `pathEchoing`) ---
