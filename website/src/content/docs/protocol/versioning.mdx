@@ -261,11 +261,15 @@ The fields every version error entry carries, describing the route that was call
 
 #### VersionMalformedDetail
 
+The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version.
+
 <SchemaTable schema="VersionMalformedDetail" />
 
 <SchemaFormatTabs schema="VersionMalformedDetail" typeSpec />
 
 #### VersionConflictDetail
+
+The request sent more than one `CG-Version` value.
 
 <SchemaTable schema="VersionConflictDetail" />
 
@@ -273,11 +277,15 @@ The fields every version error entry carries, describing the route that was call
 
 #### VersionUnsupportedDetail
 
+The requested version isn't served by this server or this route.
+
 <SchemaTable schema="VersionUnsupportedDetail" />
 
 <SchemaFormatTabs schema="VersionUnsupportedDetail" typeSpec />
 
 #### VersionRetiredDetail
+
+The requested version was retired from this server or this route.
 
 <SchemaTable schema="VersionRetiredDetail" />
 
@@ -287,6 +295,9 @@ The fields every version error entry carries, describing the route that was call
 
 Whether a version is unavailable on the whole server or only on the route called.
 
-<SchemaTable schema="VersionErrorScope" />
+| Value      | Description                                          |
+| ---------- | ---------------------------------------------------- |
+| deployment | The server doesn't serve the version on any route    |
+| operation  | The server serves the version, but not on this route |
 
 <SchemaFormatTabs schema="VersionErrorScope" typeSpec />
