@@ -23,7 +23,7 @@ import "./types.tsp";
  * op listOpportunities(
  *   ...Pagination.PaginatedQueryParams,
  *   ...Headers.VersionRequest,
- * ): Responses.PaginatedT<Models.OpportunityBase>;
+ * ): Responses.WithVersionErrors<Responses.PaginatedT<Models.OpportunityBase>>;
  * ```
  */
 namespace CommonGrants.Headers;

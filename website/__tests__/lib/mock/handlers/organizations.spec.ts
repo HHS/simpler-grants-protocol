@@ -24,15 +24,16 @@ import {
 } from "@/lib/mock/data/organizations";
 import { RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 import type { Version } from "@/lib/mock/data/fixtures";
+import { mockUrl } from "../__fixtures__/mock-request";
 
 const VERSION: Version = "0.4.0";
 
 /** Builds a request URL; the host/base path are placeholders. */
 function orgsUrl(suffix = ""): string {
-  return `https://docs.example/api/v${VERSION}/common-grants/orgs${suffix}`;
+  return mockUrl(`/orgs${suffix}`);
 }
 
-describe("GET /v{version}/common-grants/orgs (list)", () => {
+describe("GET /common-grants/orgs (list)", () => {
   it("returns a 200 with the protocol paginated envelope, ordered by name ascending", async () => {
     const response = listOrganizations(new Request(orgsUrl()), VERSION);
 
@@ -172,7 +173,7 @@ describe("GET /v{version}/common-grants/orgs (list)", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/orgs/{orgId} (read)", () => {
+describe("GET /common-grants/orgs/{orgId} (read)", () => {
   it("returns 200 for the id Swagger UI pre-fills", async () => {
     const response = getOrganization(
       CANONICAL_ORGANIZATION_ID,
@@ -281,7 +282,7 @@ describe("GET /v{version}/common-grants/orgs/{orgId} (read)", () => {
   });
 });
 
-describe("PATCH /v{version}/common-grants/orgs/{orgId} (update)", () => {
+describe("PATCH /common-grants/orgs/{orgId} (update)", () => {
   async function runUpdate(orgId: string, body: unknown) {
     return updateOrganization(
       orgId,
@@ -492,7 +493,7 @@ describe("PATCH /v{version}/common-grants/orgs/{orgId} (update)", () => {
   });
 });
 
-describe("POST /v{version}/common-grants/orgs/{orgId}/changes (submit)", () => {
+describe("POST /common-grants/orgs/{orgId}/changes (submit)", () => {
   it("returns 202 with a pending revision and a Location header pointing at the new change", async () => {
     const response = await submitOrgChange(
       CANONICAL_ORGANIZATION_ID,
@@ -585,7 +586,7 @@ describe("POST /v{version}/common-grants/orgs/{orgId}/changes (submit)", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/orgs/{orgId}/changes (list changes)", () => {
+describe("GET /common-grants/orgs/{orgId}/changes (list changes)", () => {
   it("returns a 200 paginated envelope of the org's revisions, newest createdAt first", async () => {
     const expected = revisionsForOrg(CANONICAL_ORGANIZATION_ID);
 
@@ -642,7 +643,7 @@ describe("GET /v{version}/common-grants/orgs/{orgId}/changes (list changes)", ()
   });
 });
 
-describe("GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId} (view change)", () => {
+describe("GET /common-grants/orgs/{orgId}/changes/{changeId} (view change)", () => {
   it("returns 200 echoing the id Swagger UI pre-fills into both path parameter boxes", async () => {
     const response = getOrgChange(
       CANONICAL_ORGANIZATION_ID,

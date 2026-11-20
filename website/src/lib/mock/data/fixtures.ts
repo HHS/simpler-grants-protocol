@@ -53,6 +53,18 @@ export function isSupportedVersion(value: string): value is Version {
   return (SUPPORTED_VERSIONS as readonly string[]).includes(value);
 }
 
+/**
+ * The hosted version sharing `requested`'s major and minor, if any: a request
+ * for `0.5.1` is served by `0.5.0`. Expects a well-formed `MAJOR.MINOR.PATCH`.
+ */
+export function hostedVersionFor(requested: string): Version | undefined {
+  const [major, minor] = requested.split(".");
+  return SUPPORTED_VERSIONS.find((version) => {
+    const [hostedMajor, hostedMinor] = version.split(".");
+    return hostedMajor === major && hostedMinor === minor;
+  });
+}
+
 /** Which endpoint shape to project: the list returns `OpportunityBase`, the
  * single-item read returns `OpportunityDetails` (v0.2+). */
 export type ShapeVariant = "list" | "detail";

@@ -32,7 +32,9 @@ interface Competitions {
     @path compId: Types.uuid,
 
     ...Headers.VersionRequest,
-  ): Responses.OkT<Models.CompetitionBase> | Responses.NotFound;
+  ): Responses.WithVersionErrors<
+    | Responses.OkT<Models.CompetitionBase>
+    | Responses.NotFound>;
 
   // ###############################
   // Apply to a competition
@@ -50,8 +52,8 @@ interface Competitions {
     @body application: Models.ApplicationBase,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.CreatedT<Models.ApplicationBase>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized>;
 }

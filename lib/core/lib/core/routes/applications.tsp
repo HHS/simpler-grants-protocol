@@ -35,7 +35,9 @@ interface Applications {
     title: string,
 
     ...Headers.VersionRequest,
-  ): Responses.CreatedT<Models.ApplicationBase> | Responses.Unauthorized;
+  ): Responses.WithVersionErrors<
+    | Responses.CreatedT<Models.ApplicationBase>
+    | Responses.Unauthorized>;
 
   // ###############################
   // Get an application
@@ -50,10 +52,10 @@ interface Applications {
     @path appId: Types.uuid,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.OkT<Models.ApplicationBase>
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized>;
 
   // ###############################
   // Submit an application
@@ -68,11 +70,11 @@ interface Applications {
     @path appId: Types.uuid,
 
     ...Headers.VersionRequest,
-  ):
+  ): Responses.WithVersionErrors<
     | Responses.OkT<unknown>
     | ApplicationSubmissionErrorResponse
     | Responses.NotFound
-    | Responses.Unauthorized;
+    | Responses.Unauthorized>;
 
   // ###############################
   // Search applications
@@ -90,7 +92,10 @@ interface Applications {
     @query sorting: Models.AppSorting,
 
     ...Headers.VersionRequest,
-  ): Responses.FilteredT<Models.ApplicationBase, Models.AppFilters>;
+  ): Responses.WithVersionErrors<Responses.FilteredT<
+    Models.ApplicationBase,
+    Models.AppFilters
+  >>;
 }
 
 // Lives here, not in `Responses`, so the headers stay out of the JSON Schemas

@@ -11,20 +11,14 @@ import {
   RESERVED_MISSING_OPPORTUNITY_ID,
   type Version,
 } from "@/lib/mock/data/fixtures";
+import { opportunitiesRequest } from "../__fixtures__/mock-request";
 
 const VERSIONS: Version[] = ["0.1.0", "0.2.0", "0.3.0", "0.4.0"];
 
-/** Builds `https://docs.example/api/v{version}/common-grants/opportunities{suffix}`. */
-function opportunitiesUrl(version: string, suffix = ""): string {
-  return `https://docs.example/api/v${version}/common-grants/opportunities${suffix}`;
-}
-
 describe("opportunities routes", () => {
-  describe("GET /v{version}/common-grants/opportunities (list)", () => {
+  describe("GET /common-grants/opportunities (list)", () => {
     it("returns a 200 with all fixtures sorted by lastModifiedAt descending and default pagination", async () => {
-      const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0")),
-      );
+      const response = await handleMockRequest(opportunitiesRequest("0.3.0"));
 
       expect(response.status).toBe(200);
 
@@ -64,7 +58,7 @@ describe("opportunities routes", () => {
 
     it("returns an empty items array with valid paginationInfo when page is past the end", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "?page=999")),
+        opportunitiesRequest("0.3.0", "?page=999"),
       );
 
       expect(response.status).toBe(200);
@@ -92,7 +86,7 @@ describe("opportunities routes", () => {
 
     it("honors a pageSize above the default, since the spec declares no maximum", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "?pageSize=9999")),
+        opportunitiesRequest("0.3.0", "?pageSize=9999"),
       );
 
       expect(response.status).toBe(200);
@@ -113,7 +107,7 @@ describe("opportunities routes", () => {
       "returns 400 with the protocol Error shape when %s=%s falls below the spec minimum",
       async (param, value) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl("0.3.0", `?${param}=${value}`)),
+          opportunitiesRequest("0.3.0", `?${param}=${value}`),
         );
 
         expect(response.status).toBe(400);
@@ -134,7 +128,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 when a pagination param is present but not an integer", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "?pageSize=abc")),
+        opportunitiesRequest("0.3.0", "?pageSize=abc"),
       );
 
       expect(response.status).toBe(400);
@@ -149,9 +143,7 @@ describe("opportunities routes", () => {
     });
 
     it("applies both spec defaults when the pagination params are omitted entirely", async () => {
-      const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0")),
-      );
+      const response = await handleMockRequest(opportunitiesRequest("0.3.0"));
 
       expect(response.status).toBe(200);
 
@@ -164,7 +156,7 @@ describe("opportunities routes", () => {
     });
   });
 
-  describe("GET /v{version}/common-grants/opportunities/{oppId} (detail)", () => {
+  describe("GET /common-grants/opportunities/{oppId} (detail)", () => {
     // A fixture that carries `competitions` (detail-only field), so the
     // list/detail shape tests can't pass by accident.
     const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
@@ -175,9 +167,7 @@ describe("opportunities routes", () => {
       "answers 200 for the id Swagger UI pre-fills, for v%s",
       async (version) => {
         const response = await handleMockRequest(
-          new Request(
-            opportunitiesUrl(version, `/${CANONICAL_OPPORTUNITY_ID}`),
-          ),
+          opportunitiesRequest(version, `/${CANONICAL_OPPORTUNITY_ID}`),
         );
 
         expect(response.status).toBe(200);
@@ -196,11 +186,9 @@ describe("opportunities routes", () => {
     // regard to case, so the uppercase form must reach the same record.
     it("answers 200 for the uppercase form of a stored id", async () => {
       const response = await handleMockRequest(
-        new Request(
-          opportunitiesUrl(
-            "0.3.0",
-            `/${CANONICAL_OPPORTUNITY_ID.toUpperCase()}`,
-          ),
+        opportunitiesRequest(
+          "0.3.0",
+          `/${CANONICAL_OPPORTUNITY_ID.toUpperCase()}`,
         ),
       );
 
@@ -213,7 +201,7 @@ describe("opportunities routes", () => {
 
     it("echoes the requested oppId and matches the list item's shared fields, while adding the detail-only competitions field", async () => {
       const listResponse = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0")),
+        opportunitiesRequest("0.3.0"),
       );
 
       const listBody = (await listResponse.json()) as {
@@ -225,7 +213,7 @@ describe("opportunities routes", () => {
       expect(listItem).not.toHaveProperty("competitions");
 
       const detailResponse = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", `/${STEM_ID}`)),
+        opportunitiesRequest("0.3.0", `/${STEM_ID}`),
       );
 
       expect(detailResponse.status).toBe(200);
@@ -249,9 +237,7 @@ describe("opportunities routes", () => {
       "returns 404 with the protocol Error shape for a well-formed but unknown UUID, for v%s",
       async (version) => {
         const response = await handleMockRequest(
-          new Request(
-            opportunitiesUrl(version, `/${RESERVED_MISSING_OPPORTUNITY_ID}`),
-          ),
+          opportunitiesRequest(version, `/${RESERVED_MISSING_OPPORTUNITY_ID}`),
         );
 
         expect(response.status).toBe(404);
@@ -274,7 +260,7 @@ describe("opportunities routes", () => {
       "returns 400 with a field-level validation error for a malformed (non-UUID) oppId, for v%s",
       async (version) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl(version, "/not-a-uuid")),
+          opportunitiesRequest(version, "/not-a-uuid"),
         );
 
         expect(response.status).toBe(400);
@@ -300,7 +286,7 @@ describe("opportunities routes", () => {
 
     it("omits competitions and acceptedApplicantTypes from a v0.1 detail response", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.1.0", `/${STEM_ID}`)),
+        opportunitiesRequest("0.1.0", `/${STEM_ID}`),
       );
 
       expect(response.status).toBe(200);
@@ -319,7 +305,7 @@ describe("opportunities routes", () => {
     // #1220-T4: `OpportunityBase.funders` is `@added(v0_5)`.
     it("includes funders in the 0.5.0 list and detail responses for a record known to have it, and omits it at 0.4.0", async () => {
       const listResponse050 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.5.0")),
+        opportunitiesRequest("0.5.0"),
       );
       const listBody050 = (await listResponse050.json()) as {
         items: Array<Record<string, unknown> & { id: string }>;
@@ -331,7 +317,7 @@ describe("opportunities routes", () => {
       expect(listItem050).toHaveProperty("funders");
 
       const detailResponse050 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`),
       );
       const detailBody050 = (await detailResponse050.json()) as {
         data: Record<string, unknown> & { id: string };
@@ -339,7 +325,7 @@ describe("opportunities routes", () => {
       expect(detailBody050.data).toHaveProperty("funders");
 
       const listResponse040 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.4.0")),
+        opportunitiesRequest("0.4.0"),
       );
       const listBody040 = (await listResponse040.json()) as {
         items: Array<Record<string, unknown> & { id: string }>;
@@ -351,7 +337,7 @@ describe("opportunities routes", () => {
       expect(listItem040).not.toHaveProperty("funders");
 
       const detailResponse040 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`),
       );
       const detailBody040 = (await detailResponse040.json()) as {
         data: Record<string, unknown> & { id: string };
@@ -363,7 +349,7 @@ describe("opportunities routes", () => {
     // and `@added(v0_5)` (like `funders`).
     it("includes awards in the 0.5.0 detail response only, omitting it from the 0.5.0 list and from 0.4.0 entirely", async () => {
       const detailResponse050 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest("0.5.0", `/${CANONICAL_OPPORTUNITY_ID}`),
       );
       const detailBody050 = (await detailResponse050.json()) as {
         data: Record<string, unknown> & { id: string };
@@ -371,7 +357,7 @@ describe("opportunities routes", () => {
       expect(detailBody050.data).toHaveProperty("awards");
 
       const listResponse050 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.5.0")),
+        opportunitiesRequest("0.5.0"),
       );
       const listBody050 = (await listResponse050.json()) as {
         items: Array<Record<string, unknown> & { id: string }>;
@@ -386,7 +372,7 @@ describe("opportunities routes", () => {
       // Search shapes through the same list variant today, so this pins that
       // a future handler cannot shape it independently and regress.
       const searchResponse050 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.5.0", "/search"), {
+        opportunitiesRequest("0.5.0", "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: { "Content-Type": "application/json" },
@@ -402,7 +388,7 @@ describe("opportunities routes", () => {
       expect(searchItem050).not.toHaveProperty("awards");
 
       const detailResponse040 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest("0.4.0", `/${CANONICAL_OPPORTUNITY_ID}`),
       );
       const detailBody040 = (await detailResponse040.json()) as {
         data: Record<string, unknown> & { id: string };
@@ -410,7 +396,7 @@ describe("opportunities routes", () => {
       expect(detailBody040.data).not.toHaveProperty("awards");
 
       const listResponse040 = await handleMockRequest(
-        new Request(opportunitiesUrl("0.4.0")),
+        opportunitiesRequest("0.4.0"),
       );
       const listBody040 = (await listResponse040.json()) as {
         items: Array<Record<string, unknown> & { id: string }>;
@@ -428,10 +414,10 @@ describe("opportunities routes", () => {
       "returns identical bodies across two calls to the list endpoint for v%s",
       async (version) => {
         const responseA = await handleMockRequest(
-          new Request(opportunitiesUrl(version)),
+          opportunitiesRequest(version),
         );
         const responseB = await handleMockRequest(
-          new Request(opportunitiesUrl(version)),
+          opportunitiesRequest(version),
         );
 
         const bodyA = await responseA.json();
@@ -447,10 +433,10 @@ describe("opportunities routes", () => {
         const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
 
         const responseA = await handleMockRequest(
-          new Request(opportunitiesUrl(version, `/${STEM_ID}`)),
+          opportunitiesRequest(version, `/${STEM_ID}`),
         );
         const responseB = await handleMockRequest(
-          new Request(opportunitiesUrl(version, `/${STEM_ID}`)),
+          opportunitiesRequest(version, `/${STEM_ID}`),
         );
 
         const bodyA = await responseA.json();
@@ -466,7 +452,7 @@ describe("opportunities routes", () => {
         const STEM_ID = "573525f2-8e15-4405-83fb-e6523511d893";
 
         const listResponse = await handleMockRequest(
-          new Request(opportunitiesUrl(version)),
+          opportunitiesRequest(version),
         );
 
         const listBody = (await listResponse.json()) as {
@@ -476,7 +462,7 @@ describe("opportunities routes", () => {
         expect(listItem).toBeDefined();
 
         const detailResponse = await handleMockRequest(
-          new Request(opportunitiesUrl(version, `/${STEM_ID}`)),
+          opportunitiesRequest(version, `/${STEM_ID}`),
         );
 
         expect(detailResponse.status).toBe(200);
@@ -497,10 +483,10 @@ describe("opportunities routes", () => {
     );
   });
 
-  describe("POST /v{version}/common-grants/opportunities/search", () => {
+  describe("POST /common-grants/opportunities/search", () => {
     async function runSearch(version: string, body: unknown) {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl(version, "/search"), {
+        opportunitiesRequest(version, "/search", {
           method: "POST",
           body: JSON.stringify(body),
           headers: { "Content-Type": "application/json" },
@@ -576,7 +562,7 @@ describe("opportunities routes", () => {
       "returns 400 with the protocol Error shape for an unknown sortBy value, for v%s",
       async (version) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl(version, "/search"), {
+          opportunitiesRequest(version, "/search", {
             method: "POST",
             body: JSON.stringify({
               sorting: { sortBy: "not_a_real_sort_field" },
@@ -630,7 +616,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 with the protocol Error shape for a malformed JSON body", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: "{not valid json",
           headers: { "Content-Type": "application/json" },
@@ -658,7 +644,7 @@ describe("opportunities routes", () => {
       "returns 400 with the protocol Error shape for the valid-JSON-but-not-an-object body %s",
       async (rawBody) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl("0.3.0", "/search"), {
+          opportunitiesRequest("0.3.0", "/search", {
             method: "POST",
             body: rawBody,
             headers: { "Content-Type": "application/json" },
@@ -690,7 +676,7 @@ describe("opportunities routes", () => {
       "returns 400 with the protocol Error shape when search is %s",
       async (_label, search) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl("0.3.0", "/search"), {
+          opportunitiesRequest("0.3.0", "/search", {
             method: "POST",
             body: JSON.stringify({ search }),
             headers: { "Content-Type": "application/json" },
@@ -713,7 +699,7 @@ describe("opportunities routes", () => {
     // "search" as a non-UUID oppId — same as the #1049 spike.
     it("answers GET on the search path with the detail handler's 400, as the spike's :oppId pattern did", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search")),
+        opportunitiesRequest("0.3.0", "/search"),
       );
 
       expect(response.status).toBe(400);
@@ -840,7 +826,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 with the protocol Error shape for an unknown filter operator", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({
             filters: { status: { operator: "contains", value: ["open"] } },
@@ -866,7 +852,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 with the protocol Error shape for a status filter whose value is not an array", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({
             filters: { status: { operator: "in", value: 5 } },
@@ -892,7 +878,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 with the protocol Error shape for a range filter with no value", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({
             filters: { closeDateRange: { operator: "between" } },
@@ -975,7 +961,7 @@ describe("opportunities routes", () => {
       "returns 400 rather than silently dropping a malformed %s bound",
       async (field, filter, expectedErrorField) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl("0.3.0", "/search"), {
+          opportunitiesRequest("0.3.0", "/search", {
             method: "POST",
             body: JSON.stringify({ filters: { [field]: filter } }),
             headers: { "Content-Type": "application/json" },
@@ -1028,7 +1014,7 @@ describe("opportunities routes", () => {
 
     it("returns 400 for a body pagination value below the spec minimum", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({ pagination: { page: 0, pageSize: -1 } }),
           headers: { "Content-Type": "application/json" },
@@ -1049,22 +1035,22 @@ describe("opportunities routes", () => {
   });
 });
 
-describe("version path prefix", () => {
+describe("CG-Version header", () => {
   it.each(VERSIONS)(
     "resolves the list, detail, and search routes for v%s",
     async (version) => {
       const listResponse = await handleMockRequest(
-        new Request(opportunitiesUrl(version)),
+        opportunitiesRequest(version),
       );
       expect(listResponse.status).toBe(200);
 
       const detailResponse = await handleMockRequest(
-        new Request(opportunitiesUrl(version, `/${CANONICAL_OPPORTUNITY_ID}`)),
+        opportunitiesRequest(version, `/${CANONICAL_OPPORTUNITY_ID}`),
       );
       expect(detailResponse.status).toBe(200);
 
       const searchResponse = await handleMockRequest(
-        new Request(opportunitiesUrl(version, "/search"), {
+        opportunitiesRequest(version, "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: { "Content-Type": "application/json" },
@@ -1074,59 +1060,32 @@ describe("version path prefix", () => {
     },
   );
 
-  it("returns 404 with the protocol error envelope for an unsupported version prefix", async () => {
-    const response = await handleMockRequest(
-      new Request(
-        "https://docs.example/api/v9.9.9/common-grants/opportunities",
-      ),
-    );
+  it("serves the default version when no CG-Version header is sent", async () => {
+    const response = await handleMockRequest(opportunitiesRequest(undefined));
 
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      status: number;
-      message: string;
-      errors: unknown[];
-    };
-
-    expect(body.status).toBe(404);
-    expect(typeof body.message).toBe("string");
-    expect(Array.isArray(body.errors)).toBe(true);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("CG-Version-Served")).toBe("0.6.0");
   });
 
-  it("returns 404 with the protocol error envelope when the version prefix is missing entirely", async () => {
-    const response = await handleMockRequest(
-      new Request("https://docs.example/api/common-grants/opportunities"),
-    );
+  it.each([
+    ["9.9.9", 406],
+    ["abc", 400],
+  ])(
+    "returns a protocol error envelope for the CG-Version value %j (status %i)",
+    async (version, status) => {
+      const response = await handleMockRequest(opportunitiesRequest(version));
 
-    expect(response.status).toBe(404);
+      expect(response.status).toBe(status);
 
-    const body = (await response.json()) as {
-      status: number;
-      message: string;
-      errors: unknown[];
-    };
+      const body = (await response.json()) as {
+        status: number;
+        message: string;
+        errors: unknown[];
+      };
 
-    expect(body.status).toBe(404);
-    expect(typeof body.message).toBe("string");
-    expect(Array.isArray(body.errors)).toBe(true);
-  });
-
-  it("returns 404 with the protocol error envelope for a malformed version prefix", async () => {
-    const response = await handleMockRequest(
-      new Request("https://docs.example/api/vabc/common-grants/opportunities"),
-    );
-
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      status: number;
-      message: string;
-      errors: unknown[];
-    };
-
-    expect(body.status).toBe(404);
-    expect(typeof body.message).toBe("string");
-    expect(Array.isArray(body.errors)).toBe(true);
-  });
+      expect(body.status).toBe(status);
+      expect(typeof body.message).toBe("string");
+      expect(Array.isArray(body.errors)).toBe(true);
+    },
+  );
 });

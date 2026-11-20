@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionErrorDetail.yaml
+type: object
+properties:
+  field:
+    type: string
+    const: CG-Version
+    description: The request header the error is about
+  message:
+    type: string
+    description: Human-readable description of the problem
+  supported:
+    type: array
+    items:
+      $ref: protocolVersion.yaml
+    minItems: 1
+    description: The versions this route serves
+  defaultVersion:
+    $ref: protocolVersion.yaml
+    description: The version this route serves when a request doesn't name one
+  discovery:
+    type: string
+    format: uri
+    description: |-
+      The server's version discovery URL
+
+      Omitted by servers that serve one version and don't publish discovery.
+required:
+  - field
+  - message
+  - supported
+  - defaultVersion
+description: Details shared by every version error, describing the route that was called
