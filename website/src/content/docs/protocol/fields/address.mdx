@@ -1,30 +1,6 @@
 ---
 title: Address
 description: Data model for an address
-address:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Address.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Address.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/address.tsp"
-      startLine: 3
-      endLine: 33
-addressCollection:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AddressCollection.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AddressCollection.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/address.tsp"
-      startLine: 35
-      endLine: 45
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -35,15 +11,11 @@ An address is a physical location.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.address.jsonSchema.file.path} />
+<SchemaTable schema="Address" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.address.example}
-  jsonSchema={frontmatter.address.jsonSchema}
-  typeSpec={frontmatter.address.typeSpec}
-/>
+<SchemaFormatTabs schema="Address" typeSpec />
 
 ### Changelog
 
@@ -55,15 +27,11 @@ A collection of addresses for a person or organization.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.addressCollection.jsonSchema.file.path} />
+<SchemaTable schema="AddressCollection" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.addressCollection.example}
-  jsonSchema={frontmatter.addressCollection.jsonSchema}
-  typeSpec={frontmatter.addressCollection.typeSpec}
-/>
+<SchemaFormatTabs schema="AddressCollection" typeSpec />
 
 ### Changelog
 

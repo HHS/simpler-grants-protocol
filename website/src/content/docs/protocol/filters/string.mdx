@@ -1,50 +1,6 @@
 ---
 title: String filters
 description: Filters that can be applied to string or enum fields.
-stringComparisonFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/StringComparisonFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/StringComparisonFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/string.tsp"
-      startLine: 9
-      endLine: 18
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
-      startLine: 31
-      endLine: 49
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 39
-      endLine: 42
-stringArrayFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/StringArrayFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/StringArrayFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/string.tsp"
-      startLine: 24
-      endLine: 33
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/string.py"
-      startLine: 13
-      endLine: 28
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 44
-      endLine: 47
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -63,13 +19,7 @@ A filter that applies a comparison to a string value.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.stringComparisonFilter.example}
-  jsonSchema={frontmatter.stringComparisonFilter.jsonSchema}
-  typeSpec={frontmatter.stringComparisonFilter.typeSpec}
-  python={frontmatter.stringComparisonFilter.python}
-  typescript={frontmatter.stringComparisonFilter.typescript}
-/>
+<SchemaFormatTabs schema="StringComparisonFilter" typeSpec python typescript />
 
 ### Changelog
 
@@ -88,13 +38,7 @@ A filter that applies a comparison to an array of string values.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.stringArrayFilter.example}
-  jsonSchema={frontmatter.stringArrayFilter.jsonSchema}
-  typeSpec={frontmatter.stringArrayFilter.typeSpec}
-  python={frontmatter.stringArrayFilter.python}
-  typescript={frontmatter.stringArrayFilter.typescript}
-/>
+<SchemaFormatTabs schema="StringArrayFilter" typeSpec python typescript />
 
 ### Changelog
 
