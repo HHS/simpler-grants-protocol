@@ -61,6 +61,7 @@ export default defineConfig({
       routeMiddleware: "./src/routeData.ts",
       components: {
         Header: "./src/components/starlight-overrides/Header.astro",
+        SkipLink: "./src/components/starlight-overrides/SkipLink.astro",
       },
       plugins: [
         // Generate the OpenAPI documentation pages.
