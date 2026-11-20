@@ -21,9 +21,8 @@
  *      where the protocol describes a plain (absent-or-value) property.
  *   2. The objects are never sealed, so the SDK accepts unknown keys the
  *      protocol's `unevaluatedProperties: { not: {} }` rejects.
- *   3. Numeric fields omit the protocol's bounds (`page`/`pageSize` have no
- *      `.max()`; `pageSize` on results info allows `0` below the protocol's
- *      minimum of `1`).
+ *   3. `pageSize` on results info allows `0` below the protocol's minimum of
+ *      `1`.
  *
  * All are shared-model concerns owned by #1192, not this assignment. These
  * cases isolate each divergence against the real shared schema so award work
@@ -144,23 +143,18 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
   ] as const)("%s vs %s", (_name, schema, jsonSchemaId) => {
     const baseline = { page: 1, pageSize: 100 };
 
-    it("accepts null, an out-of-range page, and an unknown key the protocol rejects", async () => {
+    it("accepts null and an unknown key the protocol rejects", async () => {
       await expectZodMatchesJsonSchema(
         schema,
         jsonSchemaId,
         [
           { label: "valid pagination input", value: baseline },
+          // Both sides accept any integer page since #1196 widened Core's int32.
+          { label: "page above the int32 range", value: { ...baseline, page: 2_147_483_648 } },
           {
             // `.nullish()` accepts null; the protocol integer does not.
             label: "null page",
             value: { ...baseline, page: null },
-            expect: "divergent",
-            issue: SHARED_MODELS_ISSUE,
-          },
-          {
-            // No `.max()`; the protocol caps page at int32.
-            label: "page above int32 maximum",
-            value: { ...baseline, page: 2_147_483_648 },
             expect: "divergent",
             issue: SHARED_MODELS_ISSUE,
           },
@@ -171,7 +165,7 @@ describe("shared pagination and sorting schemas forked by the award routes (owne
             issue: SHARED_MODELS_ISSUE,
           },
         ],
-        3,
+        2,
         true
       );
     });

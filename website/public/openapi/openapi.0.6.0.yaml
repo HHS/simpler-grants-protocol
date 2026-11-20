@@ -3605,7 +3605,6 @@ components:
       description: The page to return
       schema:
         type: integer
-        format: int32
         minimum: 1
         default: 1
       explode: false
@@ -3616,7 +3615,6 @@ components:
       description: The number of items to return per page
       schema:
         type: integer
-        format: int32
         minimum: 1
         default: 100
       explode: false
@@ -8107,13 +8105,11 @@ components:
       properties:
         page:
           type: integer
-          format: int32
           minimum: 1
           description: The page to return
           default: 1
         pageSize:
           type: integer
-          format: int32
           minimum: 1
           description: The number of items to return per page
           default: 100
@@ -8126,7 +8122,6 @@ components:
       properties:
         page:
           type: integer
-          format: int32
           minimum: 1
           description: Current page number (indexing starts at 1)
           example: 1
