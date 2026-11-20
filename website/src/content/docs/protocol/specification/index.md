@@ -160,8 +160,9 @@ After a version's sunset date, requests for it get `version.retired`, as describ
 - It returns the standard success envelope. In `data`, `versions` and `defaultVersion` are the baseline, which applies to every route without an entry in `operations`. A route whose versions differ from the baseline has an entry in `operations`, keyed by its HTTP method and its path as published in the protocol, such as `GET /common-grants/forms/{formId}`. Path parameter names are ignored when matching a key to a route. A server whose routes all serve the baseline omits `operations`.
 - A route serves a version only if that version of the protocol defines the route.
 - Every route a baseline version requires serves that version, so the baseline is a compliance claim: the server is compliant with every version in it. Supporting a version doesn't mean implementing that version's optional or experimental routes.
-- A default is always one of the versions it applies to.
+- A default is always one of the versions it applies to, and `upcomingDefault.version` MUST be one of the `versions` it applies to.
 - The optional `upcomingDefault` and `deprecated` fields appear only while a change is pending: at the top level for the baseline, or in a route's entry for that route only. Their dates use RFC 3339.
+- Each key in `deprecated` MUST be a version from the `versions` beside it, written exactly as it appears there. A client finds the entry for the version it requested by comparing only the major and minor: a client requesting `0.3.0` from a server that lists `0.3.1` finds its entry under `0.3.1`.
 - Fields are only ever added to the discovery response. Clients MUST ignore fields they don't recognize, and accept version values published after they were built.
 
 A client that gets 404 from the discovery route treats the server as serving one version that it doesn't advertise.

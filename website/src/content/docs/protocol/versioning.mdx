@@ -130,7 +130,7 @@ Link: <https://grants.example.org/docs/migrate>; rel="sunset"
 Link: <https://grants.example.org/common-grants/versions>; rel="version-history"
 ```
 
-The three dates use three formats: `Deprecation` uses the `@<unix-timestamp>` form from [RFC 9745](https://www.rfc-editor.org/rfc/rfc9745), `Sunset` uses an HTTP-date as in [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594), and discovery uses RFC 3339.
+The three dates use three formats: `Deprecation` uses the `@<unix-timestamp>` form from [RFC 9745](https://www.rfc-editor.org/rfc/rfc9745), `Sunset` uses an HTTP-date as in [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594), and discovery uses RFC 3339. Discovery keys `deprecated` by the exact versions it lists, so look up the version you requested by its major and minor alone: a request for `0.3.0` served as `0.3.1` finds its entry under `0.3.1`.
 
 After the sunset date, requests for any patch of that major and minor version get 406 `version.retired`, with the sunset date and the supported versions, for a period the server chooses. After that, the server may answer `version.unsupported` instead, so handle both the same way: retry with a version from `supported`. If the retired version was your default, the default has already moved to the next newer version.
 
