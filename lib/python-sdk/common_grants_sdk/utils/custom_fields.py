@@ -146,7 +146,6 @@ def create_custom_field_schema(
             value_type = field.value
         else:
             value_type = FIELD_TYPE_MAP.get(field.field_type, Any)
-        # Built at runtime, so pyright can't read it as a static type form.
         optional_value_type: Any = Optional[value_type]
 
         CustomFieldForAttr = create_model(
