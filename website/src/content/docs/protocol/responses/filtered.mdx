@@ -75,6 +75,10 @@ A 200 response with a paginated list of filtered items.
   typescript
 />
 
+### Version headers
+
+From v0.6.0, the typed `FilteredT<ItemsT, FilterT>` response carries the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
+
 ### Usage
 
 Use the `FilteredT<ItemsT, FilterT>` template to define a 200 response with a paginated list of filtered, typed items within an API operation:
@@ -84,6 +88,7 @@ import "@common-grants/core";
 import "@typespec/http";
 
 using TypeSpec.Http;
+using CommonGrants;
 using CommonGrants.Pagination;
 using CommonGrants.Responses;
 

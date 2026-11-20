@@ -79,3 +79,9 @@ A Data Universal Numbering System (DUNS) number.
 A string with at least one character, added in v0.5.0. Used for an organization's [`aliases`](/protocol/models/organization#organizationbase).
 
 <SchemaFormatTabs schema="nonEmptyString" typeSpec />
+
+## protocolVersion
+
+A published CommonGrants protocol version, such as `0.6.0`, added in v0.6.0. It is a full `MAJOR.MINOR.PATCH` version with no `v` prefix and no leading zeros. Used for the values of the `CG-Version` request header and the `CG-Version-Served` response header, and for the versions listed by the [discovery schemas](/protocol/versioning#discovery-schemas). See [Versioning](/protocol/versioning) for how clients and servers use it.
+
+<SchemaFormatTabs schema="protocolVersion" typeSpec />

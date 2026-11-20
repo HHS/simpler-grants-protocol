@@ -45,6 +45,10 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 
 Base model for all successful responses.
 
+### Version headers
+
+From v0.6.0, the typed `OkT<T>`, `CreatedT<T>` and `AcceptedT<T>` responses carry the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification. The [`VersionDiscoveryResponse`](#versiondiscoveryresponse) carries none of them.
+
 ### Table
 
 | Parameter | Type                                       | Description           |
@@ -101,6 +105,28 @@ op getTest(): OkT<TestModel>;
 ### Changelog
 
 <SchemaChangelog schema="Ok" />
+
+## VersionDiscoveryResponse
+
+A 200 response listing the protocol versions an API serves, returned by the version discovery route, `GET /common-grants/versions`. Added in v0.6.0.
+
+Discovery sits outside version selection, so unlike the other success responses this response carries no version headers: neither `CG-Version-Served` nor `Vary`. See [Finding the supported versions](/protocol/versioning#finding-the-supported-versions) for how clients use it.
+
+### Table
+
+| Parameter | Type                                                      | Description                          |
+| --------- | --------------------------------------------------------- | ------------------------------------ |
+| status    | [integer](/protocol/types/numeric#integer)                | The HTTP status code                 |
+| message   | [string](/protocol/types/string#string)                   | The message to return                |
+| data      | [VersionDiscovery](/protocol/versioning#versiondiscovery) | The protocol versions the API serves |
+
+### Formats
+
+<SchemaFormatTabs schema="VersionDiscoveryResponse" typeSpec />
+
+### Changelog
+
+<SchemaChangelog schema="VersionDiscoveryResponse" />
 
 ## Created
 

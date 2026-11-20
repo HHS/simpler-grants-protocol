@@ -54,6 +54,10 @@ A 200 response with a paginated list of items.
   typescript
 />
 
+### Version headers
+
+From v0.6.0, the typed `PaginatedT<T>` response carries the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
+
 ### Usage
 
 Use the `PaginatedT<T>` template to define a 200 response with a paginated list of typed items within an API operation:
