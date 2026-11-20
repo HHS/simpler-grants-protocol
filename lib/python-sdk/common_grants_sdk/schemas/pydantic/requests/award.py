@@ -1,7 +1,7 @@
 """Request models for the Core award routes.
 
-Award routes use Core's pagination contract directly (default page size 100, no upper
-bound) rather than the shared pagination helpers, which opportunity routes still use.
+Award routes use Core's pagination contract directly (default page size 100) rather than
+the shared pagination helpers, which opportunity routes still use.
 """
 
 from typing import Annotated, Optional
