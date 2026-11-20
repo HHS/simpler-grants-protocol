@@ -143,8 +143,8 @@ response templates (`responses.ts`) or the shared `PaginatedQueryParamsSchema`/
 `PaginatedBodyParamsSchema` (`pagination.ts`). Those generics reuse the shared
 pagination and sorting schemas, which diverge from the protocol (see
 Unresolved), so building on them would carry the divergence into the award
-routes. The local copies pin `status: 200`, seal every level, bound page and
-page size at int32, and drop `null` where the protocol is non-nullable; they
+routes. The local copies pin `status: 200`, seal every level, and drop `null`
+where the protocol is non-nullable; they
 collapse back onto the generics once #1192 fixes the shared schemas. Parity is
 asserted two-sided (Zod and AJV) against the emitted route schemas in
 `award-routes.spec.ts`.
