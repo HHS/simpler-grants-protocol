@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionMalformedDetail.yaml
+type: object
+properties:
+  code:
+    type: string
+    const: version.malformed
+    description: Stable error code that clients branch on
+  requested:
+    type: string
+    description: The value received, as sent
+required:
+  - code
+  - requested
+allOf:
+  - $ref: VersionErrorDetail.yaml
+unevaluatedProperties: {}
+description: The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version

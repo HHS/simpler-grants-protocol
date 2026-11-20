@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionRetiredError.yaml
+type: object
+properties:
+  status:
+    type: number
+    const: 406
+    examples:
+      - 406
+  errors:
+    type: array
+    items:
+      $ref: VersionRetiredDetail.yaml
+    minItems: 1
+required:
+  - status
+  - errors
+allOf:
+  - $ref: Error.yaml
+unevaluatedProperties:
+  not: {}
+examples:
+  - status: 406
+    message: The requested CommonGrants version has been retired
+    errors:
+      - field: CG-Version
+        code: version.retired
+        message: "Version 0.3.0 was retired on 2027-06-01. Supported versions: 0.4.0, 0.5.0, 0.6.0"
+        requested: 0.3.0
+        supported:
+          - 0.4.0
+          - 0.5.0
+          - 0.6.0
+        scope: deployment
+        defaultVersion: 0.4.0
+        discovery: https://grants.example.org/common-grants/versions
+        sunset: 2027-06-01T00:00:00Z
+description: A requested version that was retired from this server or route

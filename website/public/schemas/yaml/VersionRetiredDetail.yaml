@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionRetiredDetail.yaml
+type: object
+properties:
+  code:
+    type: string
+    const: version.retired
+    description: Stable error code that clients branch on
+  requested:
+    $ref: protocolVersion.yaml
+    description: The version requested
+  scope:
+    $ref: VersionErrorScope.yaml
+    description: Whether the server or only this route doesn't serve the version
+  sunset:
+    type: string
+    format: date-time
+    description: When the version stopped being served
+required:
+  - code
+  - requested
+  - scope
+  - sunset
+allOf:
+  - $ref: VersionErrorDetail.yaml
+unevaluatedProperties: {}
+description: The requested version was retired from this server or this route
