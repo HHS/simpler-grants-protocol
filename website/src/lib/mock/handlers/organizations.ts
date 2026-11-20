@@ -126,7 +126,7 @@ function lookupOrg(orgId: string): OrgLookup {
 }
 
 /**
- * `GET /v{version}/common-grants/orgs` — the paginated list, ordered by name
+ * `GET /common-grants/orgs` — the paginated list, ordered by name
  * (`OrganizationBase` has no `lastModifiedAt`). `registry` + `id` filter by
  * external identifier as a pair; one without the other is a 400.
  */
@@ -182,7 +182,7 @@ export function listOrganizations(
 }
 
 /**
- * `GET /v{version}/common-grants/orgs/{orgId}` — a single profile. `?at` is
+ * `GET /common-grants/orgs/{orgId}` — a single profile. `?at` is
  * accepted and validated but does not change the response — the fixtures hold
  * one current profile per org, not a history.
  */
@@ -252,7 +252,7 @@ function echoedRevision(
 }
 
 /**
- * `PATCH /v{version}/common-grants/orgs/{orgId}` — answers 200 with an
+ * `PATCH /common-grants/orgs/{orgId}` — answers 200 with an
  * `accepted` revision whose `snapshot` is the fixture with the merge patch
  * applied. Nothing is retained.
  */
@@ -281,7 +281,7 @@ export async function updateOrganization(
 }
 
 /**
- * `POST /v{version}/common-grants/orgs/{orgId}/changes` — answers 202 with a
+ * `POST /common-grants/orgs/{orgId}/changes` — answers 202 with a
  * `pending` revision and a `Location` header. Nothing is stored, so polling
  * that URL answers 404; the header's shape is still part of the contract.
  */
@@ -316,7 +316,7 @@ export async function submitOrgChange(
 }
 
 /**
- * `GET /v{version}/common-grants/orgs/{orgId}/changes` — the fixture change
+ * `GET /common-grants/orgs/{orgId}/changes` — the fixture change
  * history, newest first. Echoed writes never appear here.
  */
 export function listOrgChanges(
@@ -350,7 +350,7 @@ export function listOrgChanges(
 }
 
 /**
- * `GET /v{version}/common-grants/orgs/{orgId}/changes/{changeId}` — one
+ * `GET /common-grants/orgs/{orgId}/changes/{changeId}` — one
  * change, scoped to the org: a change id that belongs to a different
  * organization answers 404.
  */

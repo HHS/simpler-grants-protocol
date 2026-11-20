@@ -8,16 +8,12 @@ import { describe, it, expect } from "vitest";
 import type { APIContext } from "astro";
 import { handleMockRequest, MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { SUPPORTED_METHODS } from "@/lib/mock/http/methods";
-import { CANONICAL_OPPORTUNITY_ID } from "@/lib/mock/data/fixtures";
+import { VERSION_SERVED_HEADER } from "@/lib/mock/http/version";
 import { CANONICAL_APPLICATION_ID } from "@/lib/mock/data/applications";
 import { CANONICAL_FORM_ID } from "@/lib/mock/data/forms";
 import { CANONICAL_ORGANIZATION_ID } from "@/lib/mock/data/organizations";
 import * as apiRoute from "@/pages/api/[...path]";
-
-/** Builds `https://docs.example/api/v{version}/common-grants/opportunities{suffix}`. */
-function opportunitiesUrl(version: string, suffix = ""): string {
-  return `https://docs.example/api/v${version}/common-grants/opportunities${suffix}`;
-}
+import { mockRequest, opportunitiesRequest } from "./__fixtures__/mock-request";
 
 describe("MOCK_API_BASE_PATH", () => {
   it("is the fixed base the router strips off the pathname before matching the Worker's route regex", () => {
@@ -33,13 +29,11 @@ describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
   it("delegates ALL to handleMockRequest untouched, for a real opportunities request", async () => {
     // The ALL handler only needs `request`; the rest of APIContext is cast away.
     const context = {
-      request: new Request(opportunitiesUrl("0.3.0")),
+      request: opportunitiesRequest("0.3.0"),
     } as unknown as APIContext;
 
     const routed = await apiRoute.ALL(context);
-    const direct = await handleMockRequest(
-      new Request(opportunitiesUrl("0.3.0")),
-    );
+    const direct = await handleMockRequest(opportunitiesRequest("0.3.0"));
 
     expect(routed.status).toBe(direct.status);
     expect(await routed.json()).toEqual(await direct.json());
@@ -47,8 +41,7 @@ describe("Astro route wiring (src/pages/api/[...path].ts)", () => {
 });
 
 describe("method allowlist", () => {
-  const V = "0.4.0";
-  const ORG = `/api/v${V}/common-grants/orgs/${CANONICAL_ORGANIZATION_ID}`;
+  const ORG = `/api/common-grants/orgs/${CANONICAL_ORGANIZATION_ID}`;
 
   /**
    * One route per supported verb, each chosen because it actually serves that
@@ -58,8 +51,8 @@ describe("method allowlist", () => {
    */
   const ROUTE_SERVING: Record<string, string> = {
     GET: ORG,
-    POST: `/api/v${V}/common-grants/opportunities/search`,
-    PUT: `/api/v${V}/common-grants/applications/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
+    POST: "/api/common-grants/opportunities/search",
+    PUT: `/api/common-grants/applications/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
     PATCH: ORG,
   };
 
@@ -119,6 +112,8 @@ describe("method allowlist", () => {
       const response = await call(method, ROUTE_SERVING[method]);
 
       expect(response.status).not.toBe(404);
+      // Proves dispatch ran rather than a version error answering first.
+      expect(response.headers.get(VERSION_SERVED_HEADER)).not.toBeNull();
     },
   );
 
@@ -162,7 +157,7 @@ describe("base-path handling (new in the website port, no Worker analogue)", () 
 
   it("treats a path missing the /api base as a route miss, not the opportunities list", async () => {
     const response = await handleMockRequest(
-      new Request("https://docs.example/v0.3.0/common-grants/opportunities"),
+      new Request("https://docs.example/common-grants/opportunities"),
     );
 
     expect(response.status).toBe(404);
@@ -177,7 +172,7 @@ describe("base-path handling (new in the website port, no Worker analogue)", () 
   // alternative — not re-decided here.
   it("treats a trailing slash on an opportunities path as a route miss, same as the Worker", async () => {
     const response = await handleMockRequest(
-      new Request(opportunitiesUrl("0.3.0", "/")),
+      opportunitiesRequest("0.3.0", "/"),
     );
 
     expect(response.status).toBe(404);
@@ -189,73 +184,12 @@ describe("base-path handling (new in the website port, no Worker analogue)", () 
   });
 });
 
-describe("the requested version actually reaches the handler, not merely 200", () => {
-  it("omits acceptedApplicantTypes from the v0.1.0 list record that carries it in v0.3.0", async () => {
-    const v01Response = await handleMockRequest(
-      new Request(opportunitiesUrl("0.1.0")),
-    );
-    const v03Response = await handleMockRequest(
-      new Request(opportunitiesUrl("0.3.0")),
-    );
-
-    expect(v01Response.status).toBe(200);
-    expect(v03Response.status).toBe(200);
-
-    const v01Body = (await v01Response.json()) as {
-      items: Array<Record<string, unknown> & { id: string }>;
-    };
-    const v03Body = (await v03Response.json()) as {
-      items: Array<Record<string, unknown> & { id: string }>;
-    };
-
-    const v01Item = v01Body.items.find(
-      (item) => item.id === CANONICAL_OPPORTUNITY_ID,
-    );
-    const v03Item = v03Body.items.find(
-      (item) => item.id === CANONICAL_OPPORTUNITY_ID,
-    );
-
-    expect(v01Item).toBeDefined();
-    expect(v03Item).toBeDefined();
-    // If the router dropped `version` and always shaped for one of them,
-    // this pair would collapse.
-    expect(v01Item).not.toHaveProperty("acceptedApplicantTypes");
-    expect(v03Item).toHaveProperty("acceptedApplicantTypes");
-  });
-});
-
 describe("404 discrimination the ported handler/CORS specs leave at status-level only", () => {
-  it("flags an unsupported version prefix with field: 'version'", async () => {
-    const response = await handleMockRequest(
-      new Request(opportunitiesUrl("9.9.9")),
-    );
-
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      errors: Array<{ field: string; message: string }>;
-    };
-    expect(body.errors[0].field).toBe("version");
-  });
-
-  it("flags a malformed version prefix with field: 'version' too", async () => {
-    const response = await handleMockRequest(
-      new Request(opportunitiesUrl("abc")),
-    );
-
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      errors: Array<{ field: string; message: string }>;
-    };
-    expect(body.errors[0].field).toBe("version");
-  });
-
   // `field: "path"` lets a caller tell "this is not a route" from "this
   // record does not exist".
   it("flags a path outside the served surface with field: 'path'", async () => {
     const response = await handleMockRequest(
-      new Request("https://docs.example/api/v0.4.0/common-grants/proposals"),
+      new Request("https://docs.example/api/common-grants/proposals"),
     );
 
     expect(response.status).toBe(404);
@@ -267,43 +201,30 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     expect(body.errors[0].message).toContain("No route matches");
   });
 
-  it("names the adding version for a resource absent from the requested version", async () => {
-    const response = await handleMockRequest(
-      new Request("https://docs.example/api/v0.2.0/common-grants/awards"),
-    );
-
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      errors: Array<{ field: string; message: string }>;
-    };
-    expect(body.errors[0].field).toBe("path");
-    expect(body.errors[0].message).toContain("added in v0.4.0");
-  });
-
-  // The gate is driven by the RESOURCE_MIN_VERSION table, so every entry
-  // should behave alike; only awards was covered.
+  // Driven by the RESOURCE_MIN_VERSION table, so every entry should behave alike.
   it.each([
+    { resource: "awards", version: "0.2.0", addedIn: "0.4.0" },
     { resource: "orgs", version: "0.3.0", addedIn: "0.4.0" },
     { resource: "competitions", version: "0.1.0", addedIn: "0.2.0" },
     { resource: "applications", version: "0.1.0", addedIn: "0.2.0" },
     { resource: "forms", version: "0.1.0", addedIn: "0.2.0" },
   ])(
-    "404s $resource at v$version, naming v$addedIn as the version that added it",
+    "answers $resource at v$version with an operation-scope version.unsupported listing v$addedIn first",
     async ({ resource, version, addedIn }) => {
       const response = await handleMockRequest(
-        new Request(
-          `https://docs.example/api/v${version}/common-grants/${resource}`,
-        ),
+        mockRequest(`/${resource}`, version),
       );
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(406);
 
       const body = (await response.json()) as {
-        errors: Array<{ field: string; message: string }>;
+        errors: Array<{ code: string; scope: string; supported: string[] }>;
       };
-      expect(body.errors[0].field).toBe("path");
-      expect(body.errors[0].message).toContain(`added in v${addedIn}`);
+      expect(body.errors[0]).toMatchObject({
+        code: "version.unsupported",
+        scope: "operation",
+      });
+      expect(body.errors[0].supported[0]).toBe(addedIn);
     },
   );
 
@@ -320,9 +241,7 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
     "answers a bare trailing slash on /%s with a route miss, not a 400",
     async (resource) => {
       const response = await handleMockRequest(
-        new Request(
-          `https://docs.example/api/v0.4.0/common-grants/${resource}/`,
-        ),
+        new Request(`https://docs.example/api/common-grants/${resource}/`),
       );
 
       expect(response.status).toBe(404);
@@ -337,7 +256,7 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
   it("answers a path nested deeper than any route with a route miss", async () => {
     const response = await handleMockRequest(
       new Request(
-        "https://docs.example/api/v0.4.0/common-grants/opportunities/foo/bar",
+        "https://docs.example/api/common-grants/opportunities/foo/bar",
       ),
     );
 
@@ -351,7 +270,7 @@ describe("404 discrimination the ported handler/CORS specs leave at status-level
 
   it("flags an unsupported method on an otherwise-valid path with field: 'path'", async () => {
     const response = await handleMockRequest(
-      new Request(opportunitiesUrl("0.3.0"), { method: "PUT" }),
+      mockRequest("/opportunities", "0.3.0", { method: "PUT" }),
     );
 
     expect(response.status).toBe(404);

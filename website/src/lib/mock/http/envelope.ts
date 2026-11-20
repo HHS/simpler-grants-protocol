@@ -4,6 +4,8 @@
  * into the body's `status` field, as `Responses.Success` declares.
  */
 
+import type { VersionError } from "./version";
+
 /** A single `{field, message}` validation error carried in the `errors` array. */
 export interface FieldError {
   field: string;
@@ -44,6 +46,19 @@ export function acceptedResponse(data: unknown, location?: string): Response {
       headers: location === undefined ? undefined : { Location: location },
     },
   );
+}
+
+/**
+ * Builds a 0.6.0 version error (`version.malformed`, `.unsupported`,
+ * `.conflict`). `discovery` is the absolute discovery URL, omitted when unset.
+ */
+export function versionErrorResponse(
+  error: VersionError,
+  discovery?: string,
+): Response {
+  const detail =
+    discovery === undefined ? error.detail : { ...error.detail, discovery };
+  return errorResponse(error.status, error.message, [detail]);
 }
 
 /**

@@ -8,16 +8,12 @@
 import { describe, it, expect } from "vitest";
 import { handleMockRequest } from "@/lib/mock/router";
 import { OPPORTUNITY_FIXTURES } from "@/lib/mock/data/fixtures";
-
-/** Builds `https://docs.example/api/v{version}/common-grants/opportunities{suffix}`. */
-function opportunitiesUrl(version: string, suffix = ""): string {
-  return `https://docs.example/api/v${version}/common-grants/opportunities${suffix}`;
-}
+import { opportunitiesRequest } from "../__fixtures__/mock-request";
 
 /** Runs a search POST and returns the parsed envelope, asserting a 200 first. */
 async function runSearch(body: unknown) {
   const response = await handleMockRequest(
-    new Request(opportunitiesUrl("0.3.0", "/search"), {
+    opportunitiesRequest("0.3.0", "/search", {
       method: "POST",
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
@@ -141,7 +137,7 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
       "derives totalPages via Math.ceil(totalItems / pageSize) for pageSize=%i",
       async (pageSize) => {
         const response = await handleMockRequest(
-          new Request(opportunitiesUrl("0.3.0", `?pageSize=${pageSize}`)),
+          opportunitiesRequest("0.3.0", `?pageSize=${pageSize}`),
         );
 
         expect(response.status).toBe(200);
@@ -171,7 +167,7 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
   describe("top-level envelope key sets", () => {
     it("search envelope carries exactly status/message/items/paginationInfo/sortInfo/filterInfo", async () => {
       const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0", "/search"), {
+        opportunitiesRequest("0.3.0", "/search", {
           method: "POST",
           body: JSON.stringify({}),
           headers: { "Content-Type": "application/json" },
@@ -195,9 +191,7 @@ describe("search/list envelope shapes the TS SDK's strict zod schemas depend on"
     });
 
     it("list envelope carries exactly status/message/items/paginationInfo", async () => {
-      const response = await handleMockRequest(
-        new Request(opportunitiesUrl("0.3.0")),
-      );
+      const response = await handleMockRequest(opportunitiesRequest("0.3.0"));
 
       expect(response.status).toBe(200);
 

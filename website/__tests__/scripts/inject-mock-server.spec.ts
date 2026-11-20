@@ -13,7 +13,7 @@ import {
   versionFromSpecFilename,
   MockServerInjector,
 } from "@/scripts/inject-mock-server";
-import { MOCK_SPEC_DIR_NAME, serverUrlFor } from "@/lib/mock/docs-wiring";
+import { MOCK_SERVER_URL, MOCK_SPEC_DIR_NAME } from "@/lib/mock/docs-wiring";
 import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { SUPPORTED_VERSIONS } from "@/lib/mock/data/fixtures";
 import { Paths } from "@/lib/schema/paths";
@@ -37,9 +37,9 @@ paths:
           - url: https://not-a-real-top-level-key.example.com
 `;
 
-describe("serverUrlFor", () => {
-  it("builds the version-prefixed server URL relative to MOCK_API_BASE_PATH", () => {
-    expect(serverUrlFor("0.4.0")).toBe(`${MOCK_API_BASE_PATH}/v0.4.0`);
+describe("MOCK_SERVER_URL", () => {
+  it("equals MOCK_API_BASE_PATH, since the version rides in the CG-Version header", () => {
+    expect(MOCK_SERVER_URL).toBe(MOCK_API_BASE_PATH);
   });
 });
 
@@ -56,7 +56,7 @@ describe("versionFromSpecFilename", () => {
 });
 
 describe("injectServers", () => {
-  const serverUrl = `${MOCK_API_BASE_PATH}/v0.4.0`;
+  const serverUrl = MOCK_SERVER_URL;
 
   it("inserts a top-level servers block immediately before the top-level paths line", () => {
     const result = injectServers(FIXTURE_YAML, serverUrl);
@@ -93,7 +93,7 @@ describe("injectServers", () => {
 
   it("is idempotent: replaces an existing top-level servers block rather than duplicating it", () => {
     const firstPass = injectServers(FIXTURE_YAML, serverUrl);
-    const newerServerUrl = `${MOCK_API_BASE_PATH}/v0.5.0`;
+    const newerServerUrl = "/other-api";
     const secondPass = injectServers(firstPass, newerServerUrl);
 
     const topLevelServersMatches = secondPass.match(/^servers:/gm) ?? [];
@@ -121,6 +121,12 @@ describe("assertMockServesVersion", () => {
       assertMockServesVersion("0.7.0", "openapi.0.7.0.yaml"),
     ).toThrow(/openapi\.0\.7\.0\.yaml.*does not serve/s);
   });
+
+  it("names the unserved version in the error", () => {
+    expect(() =>
+      assertMockServesVersion("9.9.9", "openapi.9.9.9.yaml"),
+    ).toThrow(/v9\.9\.9/);
+  });
 });
 
 describe("MockServerInjector", () => {
@@ -138,16 +144,17 @@ describe("MockServerInjector", () => {
     expect(written).toEqual(emittedSpecs.map(({ filename }) => filename));
   });
 
-  it("points each copy's servers block at that spec's version of the mock", () => {
+  it("points each copy's servers block at the unversioned mock base path", () => {
     MockServerInjector.inject();
 
-    for (const { filename, version } of emittedSpecs) {
+    for (const { filename } of emittedSpecs) {
       const copy = readFileSync(
         join(Paths.PUBLIC_DIR, MOCK_SPEC_DIR_NAME, filename),
         "utf-8",
       );
 
-      expect(copy).toContain(`servers:\n  - url: ${serverUrlFor(version)}`);
+      expect(copy).toContain(`servers:\n  - url: ${MOCK_SERVER_URL}`);
+      expect(copy).not.toMatch(/servers:\n\s+- url: \/api\/v/);
     }
   });
 });

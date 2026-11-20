@@ -53,9 +53,14 @@ export function isAtLeastVersion(
   return versionIndex(version) >= versionIndex(minVersion);
 }
 
+/** Every supported version at or after `minVersion`. */
+export function versionsFrom(minVersion: Version): Version[] {
+  return SUPPORTED_VERSIONS.filter(
+    (version) => versionIndex(version) >= versionIndex(minVersion),
+  );
+}
+
 /** Every supported version in which `resource` is served. */
 export function versionsServing(resource: ResourceName): Version[] {
-  return SUPPORTED_VERSIONS.filter((version) =>
-    isResourceAvailable(resource, version),
-  );
+  return versionsFrom(RESOURCE_MIN_VERSION[resource]);
 }
