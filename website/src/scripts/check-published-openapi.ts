@@ -1,12 +1,5 @@
 import { execFileSync } from "child_process";
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "fs";
-import { tmpdir } from "os";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 
 /**
@@ -238,47 +231,42 @@ function git(repoRoot: string, args: string[]): string {
   });
 }
 
-/** Unified diff of base vs current text, labelled with the document path. */
+/**
+ * Unified diff of the base ref's copy against the working-tree file, with
+ * `a/<path>` and `b/<path>` labels. The flags and `-c` settings pin the
+ * output so local git config (external diff tools, textconv, prefixes,
+ * context size, algorithm) can't change it.
+ */
 function unifiedDiff(
+  repoRoot: string,
+  baseRef: string,
   docPath: string,
-  base: string,
-  current: string | null,
 ): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "published-openapi-"));
-  try {
-    const basePath = path.join(dir, "base");
-    const currentPath = path.join(dir, "current");
-    writeFileSync(basePath, base);
-    writeFileSync(currentPath, current ?? "");
-    try {
-      execFileSync(
-        "diff",
-        [
-          "-u",
-          "--label",
-          `a/${docPath}`,
-          "--label",
-          current === null ? "/dev/null" : `b/${docPath}`,
-          basePath,
-          currentPath,
-        ],
-        { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
-      );
-      return "";
-    } catch (error) {
-      const { status, stdout } = error as { status?: number; stdout?: string };
-      if (status === 1 && typeof stdout === "string") return stdout;
-      throw error;
-    }
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  return git(repoRoot, [
+    "-c",
+    "diff.suppressBlankEmpty=false",
+    "diff",
+    "--no-color",
+    "--no-ext-diff",
+    "--no-textconv",
+    "--no-relative",
+    "--src-prefix=a/",
+    "--dst-prefix=b/",
+    "--unified=3",
+    "--inter-hunk-context=0",
+    "--diff-algorithm=myers",
+    "--indent-heuristic",
+    baseRef,
+    "--",
+    docPath,
+  ]);
 }
 
 function checkPhase(
   repoRoot: string,
   phase: Phase,
   docs: PublishedDocument[],
+  baseRef: string,
   baseTexts: Map<string, string>,
 ): DocumentResult[] {
   const results: DocumentResult[] = [];
@@ -293,7 +281,7 @@ function checkPhase(
       phase,
       change,
       // A deletion is named in the heading; its diff would only repeat the whole file.
-      diff: current === null ? "" : unifiedDiff(doc.path, base, current),
+      diff: current === null ? "" : unifiedDiff(repoRoot, baseRef, doc.path),
     });
   }
   return results;
@@ -329,14 +317,22 @@ function main(): void {
     `Base ${baseRef}: core ${coreVersion}; published versions ${published.map((d) => d.version).join(", ") || "none"}`,
   );
 
-  const results = checkPhase(repoRoot, "committed", published, baseTexts);
+  const results = checkPhase(
+    repoRoot,
+    "committed",
+    published,
+    baseRef,
+    baseTexts,
+  );
   if (regenerate) {
     console.log("Regenerating with `pnpm run typespec`...");
     execFileSync("pnpm", ["run", "typespec"], {
       cwd: path.join(repoRoot, "website"),
       stdio: "inherit",
     });
-    results.push(...checkPhase(repoRoot, "regenerated", published, baseTexts));
+    results.push(
+      ...checkPhase(repoRoot, "regenerated", published, baseRef, baseTexts),
+    );
   }
 
   const outcome = { baseRef, published, results, overrideAllowed };

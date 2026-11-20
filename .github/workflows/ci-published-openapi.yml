@@ -15,6 +15,8 @@ on:
       - website/src/scripts/prune-openapi-tags.ts
       - website/src/scripts/check-published-openapi.ts
       - website/package.json
+      # Holds the openapi3 emitter options, so a change rewrites every document
+      - website/tspconfig.yaml
       # A TypeSpec compiler bump can change the generated documents
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
@@ -29,16 +31,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # The default pull_request checkout is the merge commit, so the check
-      # compares the merged result with the base branch tip.
+      # The default pull_request checkout is the merge commit. Its first parent
+      # (HEAD^1) is the base branch tip the PR was merged against, so the check
+      # compares the merged result with that exact commit. fetch-depth 2 brings
+      # that parent along.
       - name: Checkout code
         uses: actions/checkout@v7
-
-      - name: Fetch base branch
-        working-directory: .
-        run: git fetch --no-tags --depth=1 origin "$BASE_REF"
-        env:
-          BASE_REF: ${{ github.base_ref }}
+        with:
+          fetch-depth: 2
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -56,7 +56,6 @@ jobs:
       # Checks the committed documents, regenerates them with
       # `pnpm run typespec`, then checks again.
       - name: Check published OpenAPI documents
-        run: pnpm run check:published-openapi --base "origin/$BASE_REF"
+        run: pnpm run check:published-openapi --base HEAD^1
         env:
-          BASE_REF: ${{ github.base_ref }}
           PUBLISHED_OPENAPI_CHANGE_ALLOWED: ${{ contains(github.event.pull_request.labels.*.name, 'published-openapi-change') }}
