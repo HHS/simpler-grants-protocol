@@ -33,7 +33,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v9
+        uses: Gr1N/setup-poetry@v10
 
       - name: Install Node
         uses: actions/setup-node@v7
