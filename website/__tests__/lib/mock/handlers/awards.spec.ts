@@ -13,13 +13,14 @@ import {
 import { listAwards, getAward, searchAwards } from "@/lib/mock/handlers/awards";
 import { CANONICAL_RECORD_ID, RESERVED_MISSING_ID } from "@/lib/mock/data/ids";
 import { OPPORTUNITY_FIXTURES } from "@/lib/mock/data/fixtures";
+import { mockUrl } from "../__fixtures__/mock-request";
 
 const VERSION = "0.4.0";
 const STATUS_VALUES = ["awarded", "completed", "cancelled", "custom"];
 
 /** Builds a request URL; the host/base path are placeholders. */
 function awardsUrl(suffix = ""): string {
-  return `https://docs.example/api/v${VERSION}/common-grants/awards${suffix}`;
+  return mockUrl(`/awards${suffix}`);
 }
 
 describe("AWARD_FIXTURES", () => {
@@ -85,7 +86,7 @@ describe("getAwardById", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/awards (list)", () => {
+describe("GET /common-grants/awards (list)", () => {
   it("returns a 200 with the protocol paginated envelope, ordered by lastModifiedAt descending by default", async () => {
     const response = listAwards(new Request(awardsUrl()), VERSION);
 
@@ -153,7 +154,7 @@ describe("GET /v{version}/common-grants/awards (list)", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/awards/{awdId} (detail)", () => {
+describe("GET /common-grants/awards/{awdId} (detail)", () => {
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getAward(CANONICAL_AWARD_ID, VERSION);
 
@@ -233,7 +234,7 @@ describe("GET /v{version}/common-grants/awards/{awdId} (detail)", () => {
   });
 });
 
-describe("POST /v{version}/common-grants/awards/search", () => {
+describe("POST /common-grants/awards/search", () => {
   async function runSearch(body: unknown) {
     const response = await searchAwards(
       new Request(awardsUrl("/search"), {

@@ -2,21 +2,23 @@
  * Routes mock API requests to the fixture-backed resource handlers. Mounted
  * under `/api` by the Astro endpoint (`src/pages/api/[...path].ts`).
  *
- * Opportunities keep the 3A Worker's regex verbatim and are matched first, so
- * the golden byte-identity corpus (`golden-envelopes.spec.ts`) stays pinned.
- * Version gating lives in `data/availability.ts`.
+ * The protocol version comes from the `CG-Version` header, never the path
+ * (ADR 0032). A request is matched to a route first, then its version is
+ * resolved against the versions that route serves (`data/availability.ts`),
+ * then it is dispatched. The discovery route (`/common-grants/versions`)
+ * skips version resolution.
+ *
+ * The opportunity routes keep the behavior the golden byte-identity corpus
+ * (`golden-envelopes.spec.ts`) pins.
  */
 
 import {
-  isResourceAvailable,
-  RESOURCE_MIN_VERSION,
+  APPLICATION_SEARCH_MIN_VERSION,
+  versionsFrom,
+  versionsServing,
   type ResourceName,
 } from "./data/availability";
-import {
-  SUPPORTED_VERSIONS,
-  isSupportedVersion,
-  type Version,
-} from "./data/fixtures";
+import { SUPPORTED_VERSIONS, type Version } from "./data/fixtures";
 import {
   getApplication,
   readFormResponse,
@@ -41,8 +43,24 @@ import {
   submitOrgChange,
   updateOrganization,
 } from "./handlers/organizations";
+import {
+  discoveryUrl,
+  getVersionDiscovery,
+  VERSIONS_PATH,
+} from "./handlers/versions";
 import { preflightResponse, withCors } from "./http/cors";
-import { errorResponse, withErrorBoundary } from "./http/envelope";
+import {
+  errorResponse,
+  versionErrorResponse,
+  withErrorBoundary,
+} from "./http/envelope";
+import {
+  DEFAULT_VERSION,
+  VERSION_HEADER,
+  resolveRequestedVersion,
+  withVaryVersion,
+  withVersionHeaders,
+} from "./http/version";
 
 const SERVICE_NAME = "CommonGrants mock API";
 
@@ -53,20 +71,12 @@ const SERVICE_NAME = "CommonGrants mock API";
 export const MOCK_API_BASE_PATH = "/api";
 
 /**
- * `/v{version}/common-grants/opportunities` with an optional trailing segment.
- * Verbatim from the Worker so the corpus-pinned surface matches identically;
- * `version` is captured loosely and narrowed by `isSupportedVersion`.
+ * Resource segment for every route; the remainder is matched per resource
+ * below. Segments use `[^/]+`, never `[^/]*`, so a trailing slash
+ * is a route-miss 404 rather than a 400 from an empty id — matching what
+ * `/opportunities/` has always answered.
  */
-const OPPORTUNITIES_ROUTE =
-  /^\/v([^/]+)\/common-grants\/opportunities(?:\/([^/]+))?$/;
-
-/**
- * Version prefix + resource segment for every non-opportunity route; the
- * remainder is matched per resource below. Segments use `[^/]+`, never
- * `[^/]*`, so a trailing slash is a route-miss 404 rather than a 400 from an
- * empty id — matching what `/opportunities/` has always answered.
- */
-const RESOURCE_ROUTE = /^\/v([^/]+)\/common-grants\/([^/]+)((?:\/[^/]+)*)$/;
+const RESOURCE_ROUTE = /^\/common-grants\/([^/]+)((?:\/[^/]+)*)$/;
 
 /** `/{id}`, `/{id}/changes`, and `/{id}/changes/{changeId}` for the org routes. */
 const ORG_CHANGES_ROUTE = /^\/([^/]+)\/changes(?:\/([^/]+))?$/;
@@ -106,32 +116,6 @@ function routeMissResponse(method: string, pathname: string): Response {
 }
 
 /**
- * 404 for a resource added after the requested version. Deliberately distinct
- * from a plain route miss — it tells the caller what to change.
- */
-function resourceNotInVersionResponse(
-  resource: ResourceName,
-  version: string,
-): Response {
-  return errorResponse(404, "Not found", [
-    {
-      field: "path",
-      message: `The ${resource} endpoints were added in v${RESOURCE_MIN_VERSION[resource]} and are not served by v${version}`,
-    },
-  ]);
-}
-
-/** Protocol-shaped 404 for a version this mock does not serve at all. */
-function unsupportedVersionResponse(version: string): Response {
-  return errorResponse(404, "Unsupported protocol version", [
-    {
-      field: "version",
-      message: `Version ${version} is not served by this mock; supported versions are ${SUPPORTED_VERSIONS.join(", ")}`,
-    },
-  ]);
-}
-
-/**
  * Reduces a docs-origin pathname to the path the Worker would have seen, or
  * `undefined` when the request isn't the mock's. `/api` and `/api/` are both
  * the health route; deeper trailing slashes are judged by the resource regexes.
@@ -144,15 +128,15 @@ function stripBasePath(pathname: string): string | undefined {
   return undefined;
 }
 
-/**
- * Dispatches the opportunity endpoints — matched before anything else so the
- * corpus-pinned surface is unaffected by the routing added around it.
- */
+/** Dispatches the opportunity endpoints, whose behavior the golden corpus pins. */
 async function routeOpportunities(
   request: Request,
   version: Version,
-  segment: string | undefined,
+  remainder: string,
 ): Promise<Response | undefined> {
+  const segment = remainder === "" ? undefined : remainder.slice(1);
+  if (segment !== undefined && segment.includes("/")) return undefined;
+
   // `GET .../search` falls through to the detail handler and answers 400
   // "Must be a valid UUID", as the Worker does — only POST serves `/search`.
   if (request.method === "GET") {
@@ -286,8 +270,61 @@ async function routeCompetitions(
   return compId.includes("/") ? undefined : getCompetition(compId, version);
 }
 
+/**
+ * Resolves the version for a matched route, then dispatches. A version error
+ * carries `Vary` but no `CG-Version-Served`; every response after selection
+ * carries both, including a route miss inside a known resource.
+ */
+async function serveVersioned(
+  request: Request,
+  { origin, pathname }: URL,
+  path: string,
+  versions: readonly Version[],
+  dispatchRoute: (version: Version) => Promise<Response | undefined>,
+): Promise<Response> {
+  const resolution = resolveRequestedVersion(
+    request.headers.get(VERSION_HEADER),
+    {
+      label: `${request.method} ${path}`,
+      versions,
+      defaultVersion: DEFAULT_VERSION,
+    },
+  );
+  if ("error" in resolution) {
+    return withVaryVersion(
+      versionErrorResponse(
+        resolution.error,
+        discoveryUrl(origin, MOCK_API_BASE_PATH),
+      ),
+    );
+  }
+
+  const response = await dispatchRoute(resolution.version);
+  return withVersionHeaders(
+    response ?? routeMissResponse(request.method, pathname),
+    resolution.version,
+  );
+}
+
+/** `POST /applications/search` is served from `APPLICATION_SEARCH_MIN_VERSION`. */
+function versionsForRoute(
+  resource: ResourceName,
+  method: string,
+  remainder: string,
+): readonly Version[] {
+  if (
+    resource === "applications" &&
+    method === "POST" &&
+    remainder === "/search"
+  ) {
+    return versionsFrom(APPLICATION_SEARCH_MIN_VERSION);
+  }
+  return versionsServing(resource);
+}
+
 async function route(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url);
+  const url = new URL(request.url);
+  const { pathname } = url;
   const path = stripBasePath(pathname);
 
   if (path === undefined) {
@@ -299,15 +336,11 @@ async function route(request: Request): Promise<Response> {
     return healthResponse();
   }
 
-  // Opportunities get their own regex and the first look (see module doc).
-  const opportunityMatch = OPPORTUNITIES_ROUTE.exec(path);
-  if (opportunityMatch) {
-    const [, version, segment] = opportunityMatch;
-    if (!isSupportedVersion(version)) {
-      return unsupportedVersionResponse(version);
-    }
-    const response = await routeOpportunities(request, version, segment);
-    return response ?? routeMissResponse(request.method, pathname);
+  // Discovery sits outside version selection, so it never resolves a version.
+  if (path === VERSIONS_PATH) {
+    return request.method === "GET"
+      ? getVersionDiscovery()
+      : routeMissResponse(request.method, pathname);
   }
 
   const match = RESOURCE_ROUTE.exec(path);
@@ -315,21 +348,19 @@ async function route(request: Request): Promise<Response> {
     return routeMissResponse(request.method, pathname);
   }
 
-  const [, version, segment, remainder] = match;
-  if (!isSupportedVersion(version)) {
-    return unsupportedVersionResponse(version);
-  }
-
+  const [, segment, remainder] = match;
   const resource = RESOURCE_BY_SEGMENT[segment];
   if (resource === undefined) {
     return routeMissResponse(request.method, pathname);
   }
-  if (!isResourceAvailable(resource, version)) {
-    return resourceNotInVersionResponse(resource, version);
-  }
 
-  const response = await dispatch(request, version, resource, remainder);
-  return response ?? routeMissResponse(request.method, pathname);
+  return serveVersioned(
+    request,
+    url,
+    path,
+    versionsForRoute(resource, request.method, remainder),
+    (version) => dispatch(request, version, resource, remainder),
+  );
 }
 
 /** Hands a matched resource to its own router. */
@@ -340,6 +371,8 @@ function dispatch(
   remainder: string,
 ): Promise<Response | undefined> {
   switch (resource) {
+    case "opportunities":
+      return routeOpportunities(request, version, remainder);
     case "awards":
       return routeAwards(request, version, remainder);
     case "orgs":
@@ -350,10 +383,6 @@ function dispatch(
       return routeForms(request, version, remainder);
     case "competitions":
       return routeCompetitions(request, version, remainder);
-    case "opportunities":
-      // Reachable when a path like `/opportunities/foo/bar` fails the stricter
-      // OPPORTUNITIES_ROUTE; `undefined` makes it the route miss it should be.
-      return Promise.resolve(undefined);
   }
 }
 
@@ -364,6 +393,6 @@ export async function handleMockRequest(request: Request): Promise<Response> {
   }
 
   // Every non-preflight response passes through CORS and the error boundary;
-  // `preflightResponse()` sets the same headers itself.
+  // `preflightResponse()` sets the same `Allow-*` headers itself.
   return withCors(await withErrorBoundary(() => route(request)));
 }

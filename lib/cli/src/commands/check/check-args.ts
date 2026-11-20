@@ -1,10 +1,11 @@
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
+import * as semver from "semver";
 
 /**
  * Dynamically get available base spec versions from the openapi directory
- * Returns versions sorted in reverse order (latest first)
+ * Returns versions sorted by version number, latest first
  */
 function getAvailableBaseVersions(): string[] {
   const openapiDir = path.resolve(__dirname, "../../../lib/openapi");
@@ -12,18 +13,25 @@ function getAvailableBaseVersions(): string[] {
     return [];
   }
 
-  const files = fs.readdirSync(openapiDir);
+  return parseBaseVersions(fs.readdirSync(openapiDir));
+}
+
+/**
+ * Extract the versions from base spec file names like `openapi.0.5.0.yaml`
+ * Returns versions sorted by version number, latest first, so 0.10.0 comes before 0.9.0
+ */
+export function parseBaseVersions(fileNames: string[]): string[] {
   const versions: string[] = [];
 
-  for (const file of files) {
-    const match = file.match(/^openapi\.(.+)\.yaml$/);
-    if (match) {
+  for (const fileName of fileNames) {
+    const match = fileName.match(/^openapi\.(.+)\.yaml$/);
+    // semver.valid("v0.5.0") returns "0.5.0", so compare to reject a leading "v"
+    if (match && semver.valid(match[1]) === match[1]) {
       versions.push(match[1]);
     }
   }
 
-  // Sort in reverse order so latest version comes first
-  return versions.sort().reverse();
+  return versions.sort(semver.rcompare);
 }
 
 export const availableVersions = getAvailableBaseVersions();

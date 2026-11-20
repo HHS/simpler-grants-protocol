@@ -50,7 +50,7 @@ describe("COMPETITION_FIXTURES", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/competitions/{compId} (detail)", () => {
+describe("GET /common-grants/competitions/{compId} (detail)", () => {
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getCompetition(CANONICAL_COMPETITION_ID, VERSION);
 

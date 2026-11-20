@@ -65,6 +65,22 @@ model OkT<T> extends Success {
 }
 
 // ############################################################################
+// 200 version discovery response
+// ############################################################################
+
+/** A 200 response listing the protocol versions an API serves
+ *
+ * Discovery sits outside version selection, so unlike `OkT<T>` this response
+ * carries no version headers: neither `CG-Version-Served` nor `Vary`.
+ */
+@doc("A 200 response listing the protocol versions an API serves")
+@Versioning.added(CommonGrants.Versions.v0_6)
+model VersionDiscoveryResponse extends Success {
+  /** The protocol versions the API serves */
+  data: Models.VersionDiscovery;
+}
+
+// ############################################################################
 // 200 paginated response
 // ############################################################################
 

@@ -8,6 +8,8 @@ Outcomes below mean:
 
 ### Check Routes
 
+Before comparing routes, the checker looks for a protocol version in the path, such as `/v0.6/common-grants/opportunities` or `/common-grants/v0.6/opportunities`. A route counts when it has a dotted version segment directly before or after `/common-grants/`, and removing that segment gives a base route. The run then reports one error and stops there, instead of listing every base route as missing. The error says to serve routes under `/common-grants/` with no version segment. When the base spec declares the `CG-Version` request header (protocol version 0.6.0 and later), it also says to select the version with that header (ADR 0032). A versioned alias served alongside the unversioned route is left to the normal checks, and a host API's own path versioning, such as `/api/v2/common-grants/`, isn't flagged.
+
 - **Case 1:** Extra routes
   - **Case 1.1:** [Impl prefixed with `/common-grants/`](#route-case-11-extra-route-with-prefix) -> Error
   - **Case 1.2:** [Not prefixed with `/common-grants/`](#route-case-12-extra-route-without-prefix) -> Ignore
@@ -16,8 +18,10 @@ Outcomes below mean:
   - **Case 2.2:** [Optional in base spec](#route-case-22-missing-optional-route) -> Warning
 - **Case 3:** Matching routes
   - Check query params -> [Check query params](#check-query-params)
+  - Check header params -> [Check header params](#check-header-params)
   - Check request body -> [Check mime types](#check-mime-types)
   - Check response body -> [Check status codes](#check-status-codes)
+  - Check response headers -> [Check response headers](#check-response-headers)
 
 ### Check query params
 
@@ -26,6 +30,22 @@ Outcomes below mean:
   - **Case 2.1:** [Required in base spec](#query-param-case-21-missing-required-param) -> Error
   - **Case 2.2:** [Optional in base spec](#query-param-case-22-missing-optional-param) -> Error
 - **Param case 3:** Matching params -> [Check schemas](#check-schemas)
+
+### Check header params
+
+A header param counts whether it's declared on the operation or on its path item. Header names match case-insensitively. From protocol version 0.6.0, every base route declares the `CG-Version` request header (ADR 0032). Header params and response headers are checked on every matching route, including routes the base spec tags `experimental`, which skip the other checks.
+
+- **Case 1:** Extra params -> Ignore
+- **Case 2:** [Missing params](#header-param-case-2-missing-param) -> Error, whether or not the base marks the param required
+
+### Check response headers
+
+For each status code in both specs. Header names match case-insensitively. From protocol version 0.6.0, base responses declare the `CG-Version-Served` response header (ADR 0032).
+
+- **Case 1:** Extra headers -> Ignore
+- **Case 2:** Missing headers
+  - **Case 2.1:** [Required in base spec](#response-header-case-21-missing-required-header) -> Error
+  - **Case 2.2:** Optional in base spec (such as `Vary` or `Sunset`) -> Ignore
 
 ### Check status codes
 
@@ -424,6 +444,106 @@ paths:
       responses:
         "200":
           description: OK
+```
+
+</details>
+
+### Header param checking cases
+
+#### Header param case 2: Missing param
+
+- **Scenario:** A header parameter from the base spec is missing in the implementation spec.
+- **Outcome:** Error
+- **Reason:** `required: false` on a header means a client MAY omit it, but the server MUST still accept it. A server that doesn't declare `CG-Version` can't show it supports version negotiation.
+
+<details>
+<summary>Base spec example</summary>
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Base spec
+  version: 1.0.0
+paths:
+  /common-grants/test:
+    get:
+      parameters:
+        - name: CG-Version
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+```
+
+</details>
+
+<details>
+<summary>Implementation spec example</summary>
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Implementation spec
+  version: 1.0.0
+paths:
+  /common-grants/test:
+    get:
+      parameters: [] # missing CG-Version header, will error
+      responses:
+        "200":
+          description: OK
+```
+
+</details>
+
+### Response header checking cases
+
+#### Response header case 2.1: Missing required header
+
+- **Scenario:** A response header marked `required: true` in the base spec is missing from the matching status code in the implementation spec.
+- **Outcome:** Error
+- **Reason:** Required response headers, such as `CG-Version-Served`, tell clients which protocol version a response was served in.
+
+<details>
+<summary>Base spec example</summary>
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Base spec
+  version: 1.0.0
+paths:
+  /common-grants/test:
+    get:
+      responses:
+        "200":
+          description: OK
+          headers:
+            CG-Version-Served:
+              required: true
+              schema:
+                type: string
+```
+
+</details>
+
+<details>
+<summary>Implementation spec example</summary>
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Implementation spec
+  version: 1.0.0
+paths:
+  /common-grants/test:
+    get:
+      responses:
+        "200":
+          description: OK # missing CG-Version-Served header, will error
 ```
 
 </details>
