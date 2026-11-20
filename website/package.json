@@ -30,6 +30,7 @@
     "check:a11y": "tsx src/scripts/a11y-scan.ts",
     "check:quickstarts": "tsx src/scripts/check-quickstarts.ts",
     "check:types": "tsc --noEmit",
+    "check:published-openapi": "tsx src/scripts/check-published-openapi.ts",
     "checks": "pnpm check:lint && pnpm check:format && pnpm check:types && pnpm check:astro && pnpm check:spelling",
     "ci": "pnpm run build && pnpm run checks && pnpm run test",
     "audit:moderate": "pnpm audit --audit-level=moderate",
