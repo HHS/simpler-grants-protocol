@@ -164,7 +164,7 @@ After a version's sunset date, a server answers requests for it with `version.re
 - The optional `upcomingDefault` and `deprecated` fields appear only while a change is pending: at the top level for the baseline, or in a route's entry for that route only. Their dates use RFC 3339.
 - Fields are only ever added to the discovery response. Clients MUST ignore fields they don't recognize, and accept version values published after they were built.
 
-If the discovery route returns 404, the server serves one version that it doesn't advertise.
+A client that gets 404 from the discovery route treats the server as serving one version that it doesn't advertise.
 
 #### Retiring a version
 
