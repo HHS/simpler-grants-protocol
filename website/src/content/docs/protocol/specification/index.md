@@ -118,13 +118,13 @@ It is RECOMMENDED that a server move all its routes to a new version at the same
 
 - A client selects a version only with the `CG-Version` request header. Servers MUST NOT read a version from the URL path, the query string, the `Accept` header, or a vendor media type, and MUST NOT fall back to one.
 - `CG-Version` applies only to protocol routes under `/common-grants/`, relative to the API's base URL. Servers MUST ignore it on custom routes and on the discovery route. A host API MAY mount the protocol routes under its own path, such as `/api/v2/common-grants/`; the host's path version and `CG-Version` are independent.
-- The value MUST be a full published protocol version: three dot-separated numbers with no leading zeros, such as `0.5.0`. A `v` prefix, a short form such as `0.5`, ranges, and aliases are malformed. The header name is case-insensitive, and servers trim surrounding whitespace before matching the format.
+- The value MUST be a full published protocol version: three dot-separated numbers with no leading zeros, such as `0.5.0`. A `v` prefix, a short form such as `0.5`, ranges, and aliases are malformed. The header name is case-insensitive, and servers MUST trim surrounding whitespace before matching the format.
 - A request MUST carry at most one value. Because a proxy may fold two header lines into one comma-separated line ([RFC 9110 §5.3](https://www.rfc-editor.org/rfc/rfc9110#section-5.3)), servers MUST treat two header lines, or a comma in the value, as more than one value, and MUST check for that before checking the format.
-- Servers match the requested version on major and minor. A server hosts one patch of each major and minor version it serves, reports that full version wherever it lists or reports it, and serves a request for any patch of that major and minor in the version it hosts. For example, a request for `0.5.0` is served by a server hosting `0.5.1`.
+- Servers MUST match the requested version on major and minor. A server MUST host one patch of each major and minor version it serves and MUST report that full version wherever it lists or reports it. It serves a request for any patch of that major and minor in the version it hosts. For example, a request for `0.5.0` is served by a server hosting `0.5.1`.
 - A server MUST NOT serve a different major or minor version than the one requested, even if it serves only one version.
 - A request without `CG-Version` is served in the server's default version: the baseline default, or the route's own default when discovery lists the route. A server adopting version negotiation MUST set its default to the version it already serves, and adding versions MUST NOT change the default. A default changes only as described in [Changing the default version](#changing-the-default-version).
 - One request is served in one version. The whole response, including nested objects, MUST follow that version's schemas, and the request body MUST be validated against them.
-- A server matches the route, then resolves the version, then validates the request body, all before any side effect. A route the server doesn't implement returns an ordinary 404. A rejected write changes nothing.
+- A server MUST match the route, then resolve the version, then validate the request body, all before any side effect. A route the server doesn't implement returns an ordinary 404. A rejected write MUST change nothing.
 
 #### Version response headers
 
@@ -149,11 +149,11 @@ A version problem returns one of the following errors. It MUST NOT return 404 or
 
 Each error uses the standard [error response](/protocol/responses/error) envelope, with one entry in `errors` whose `field` is `CG-Version` and whose `code` is one of the values above. Every entry carries `supported` and `defaultVersion`, which describe the route that was called, and the server's discovery URL in `discovery` when it publishes one. `version.unsupported` and `version.retired` also carry the `requested` version and a `scope` of `deployment` (the whole server) or `operation` (only this route). `version.retired` also carries the `sunset` date in RFC 3339 format. `version.malformed` carries the `requested` value as sent, and `version.conflict` omits `requested`. `code` values are stable, so clients branch on them. The [Versioning](/protocol/versioning#version-error-schemas) page shows the full schemas.
 
-After a version's sunset date, a server answers requests for it with `version.retired` for a period it chooses, and MAY answer `version.unsupported` after that.
+After a version's sunset date, requests for it get `version.retired`, as described in [Retiring a version](#retiring-a-version).
 
 #### Discovering supported versions
 
-`GET /common-grants/versions` lists the protocol versions a server serves. The route is OPTIONAL, but a server that serves more than one protocol version MUST implement it. The route status in the [routes tables](#version-routes) is optional, because a route status can't express this condition.
+`GET /common-grants/versions` lists the protocol versions a server serves. The route is OPTIONAL, but a server that serves more than one protocol version MUST implement it (see [Version routes](#version-routes)).
 
 - The route MUST NOT require stronger authentication than the API's required routes, and SHOULD be readable without authentication.
 - It takes no request parameters, ignores `CG-Version`, and never returns a version error. Its responses carry neither `CG-Version-Served` nor `Vary: CG-Version`.
@@ -173,7 +173,7 @@ A server retires a version the same way whether the version is leaving the whole
 - On every response served in that version on the affected routes, the server MUST send the `Deprecation` header ([RFC 9745](https://www.rfc-editor.org/rfc/rfc9745)), and, once a date is set, the `Sunset` header ([RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)). `Deprecation` uses the `@<unix-timestamp>` form, such as `@1796083200`, and `Sunset` uses an HTTP-date, such as `Tue, 01 Jun 2027 00:00:00 GMT`. Both headers keep their standard meaning and always describe the version the response was served in.
 - Alongside them, the server MUST send `Link` headers ([RFC 8288](https://www.rfc-editor.org/rfc/rfc8288)) with `rel="deprecation"` and `rel="sunset"` pointing to migration documentation, and with `rel="version-history"` pointing to the discovery route.
 - Discovery MUST list the version under `deprecated` with its `deprecation` date and, once set, its `sunset` date: at the top level when the version is leaving the whole server, or in the route's entry when it's leaving one route.
-- After the sunset date, the server answers requests for the version with `version.retired`, as described in [Version errors](#version-errors).
+- After the sunset date, the server MUST answer requests for the version with `version.retired`, as described in [Version errors](#version-errors), for a period it chooses, and MAY answer `version.unsupported` after that.
 - If the version is a default, the server MUST move that default forward to the next newer version no later than the sunset date, announcing the change as described in [Changing the default version](#changing-the-default-version). Responses served by default then carry both the retirement headers and the `successor-version` link. A server can't retire a default unless it serves a newer version for the default to move to.
 - A required route can't drop a baseline version that requires the route, so retiring that version from the route means retiring it from the baseline.
 - Experimental routes MAY drop a version without notice.
@@ -198,8 +198,8 @@ v0.6.0 adds version negotiation and is purely additive: nothing changes for exis
 
 ##### Version negotiation
 
-- Every protocol route declares the optional `CG-Version` request header, and its responses declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. 401 and 403 responses declare `CG-Version-Served` as optional. See [Version response headers](#version-response-headers).
-- Every protocol route declares the version errors: 400 `version.malformed` and `version.conflict`, and 406 `version.unsupported` and `version.retired`. See [Version errors](#version-errors).
+- Every protocol route except `GET /versions` declares the optional `CG-Version` request header, and its responses declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. 401 and 403 responses declare `CG-Version-Served` as optional. See [Version response headers](#version-response-headers).
+- Every protocol route except `GET /versions` declares the version errors: 400 `version.malformed` and `version.conflict`, and 406 `version.unsupported` and `version.retired`. See [Version errors](#version-errors).
 - The new optional `GET /versions` route lists the versions a server serves. A server that serves more than one version MUST implement it. See [Discovering supported versions](#discovering-supported-versions).
 - A new `protocolVersion` scalar describes a full `MAJOR.MINOR.PATCH` protocol version, such as `0.6.0`.
 

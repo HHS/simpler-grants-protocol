@@ -8,7 +8,7 @@ sidebar:
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import SchemaTable from "@/components/SchemaTable.astro";
 
-A CommonGrants API can serve more than one protocol version. A client asks for the version it was built for with the CommonGrants version request header, `CG-Version`, and every response reports the version it was served in with the CommonGrants served-version response header, `CG-Version-Served`. A server lists the versions it serves at a discovery route, and announces retirement with the standard `Deprecation`, `Sunset`, and `Link` headers.
+A CommonGrants API can serve more than one protocol version. A client asks for the version it was built for with the CommonGrants version request header, `CG-Version`, and every response produced after a version is selected reports the version it was served in with the CommonGrants served-version response header, `CG-Version-Served`. A server lists the versions it serves at a discovery route, and announces retirement with the standard `Deprecation`, `Sunset`, and `Link` headers.
 
 This page summarizes the model for clients and implementers. The normative rules are in the [Versions](/protocol/specification#versions) section of the specification, and the rationale and the options considered are in [ADR 0032](/governance/adr/0032-api-version-negotiation/). Version negotiation was added in protocol version v0.6.0.
 
@@ -62,9 +62,11 @@ Send one value per request. The value is three dot-separated numbers with no lea
 
 Servers match on major and minor version, so a request for `0.5.0` is served by a server hosting `0.5.1`. A server never substitutes a different major or minor version, even if it serves only one.
 
+The value is always a CommonGrants protocol version, never a plugin's package version ([ADR 0022](/governance/adr/0022-plugin-framework/)).
+
 ### If you don't ask
 
-You're served in the server's default: the baseline default, or the route's own default when the route has an entry in discovery. The default doesn't change when the server adds versions. It changes only after an announced default change (see [Learning that the default is changing](#learning-that-the-default-is-changing)). If you need a fixed contract, send a version.
+You're served in the server's default: the baseline default, or the route's own default when the route has an entry in discovery. The default doesn't change when the server adds versions. It changes only after an announced default change (see [Learning that the default is changing](#learning-that-the-default-is-changing)). If you need a fixed contract, send a version. Before 1.0, a new default may not be compatible with the old one.
 
 ### Confirming the version you got
 
@@ -80,10 +82,10 @@ Browser clients on another origin can read `CG-Version-Served`, because cross-or
 | Case                                                                                                    | `code`                                               | Status |
 | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
 | Malformed version, such as `banana` or `0.5`                                                            | `version.malformed`                                  | 400    |
+| More than one version value, as two header lines or one comma-separated line, even the same value twice | `version.conflict`                                   | 400    |
 | Version this server doesn't serve                                                                       | `version.unsupported`, scope `deployment`            | 406    |
 | Version this route doesn't serve                                                                        | `version.unsupported`, scope `operation`             | 406    |
 | Version retired from this server or this route                                                          | `version.retired`, scope `deployment` or `operation` | 406    |
-| More than one version value, as two header lines or one comma-separated line, even the same value twice | `version.conflict`                                   | 400    |
 
 Details are entries in the standard [error response](/protocol/responses/error) envelope. `supported` and `defaultVersion` always describe the route you called, so retry with a listed version:
 
