@@ -33,6 +33,8 @@ import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
  * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which
  * `shapeOpportunityForVersion` strips for every earlier version, and replaces
  * each nested competition's `opportunityId` with an `opportunity` reference.
+ * v0.6.0 adds only the version negotiation headers, so it shapes identically
+ * to v0.5.0.
  */
 export const SUPPORTED_VERSIONS = [
   "0.1.0",
@@ -40,6 +42,7 @@ export const SUPPORTED_VERSIONS = [
   "0.3.0",
   "0.4.0",
   "0.5.0",
+  "0.6.0",
 ] as const;
 
 /** A protocol version the opportunity handlers can shape responses for. */

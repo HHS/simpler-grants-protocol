@@ -1,3 +1,4 @@
+import "../headers.tsp";
 import "../pagination.tsp";
 import "../sorting.tsp";
 import "@typespec/http";
@@ -57,8 +58,26 @@ model OkT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  ...Headers.VersionResponse;
+
   /** Response data */
   data: T;
+}
+
+// ############################################################################
+// 200 version discovery response
+// ############################################################################
+
+/** A 200 response listing the protocol versions an API serves
+ *
+ * Discovery sits outside version selection, so unlike `OkT<T>` this response
+ * carries no version headers: neither `CG-Version-Served` nor `Vary`.
+ */
+@doc("A 200 response listing the protocol versions an API serves")
+@Versioning.added(CommonGrants.Versions.v0_6)
+model VersionDiscoveryResponse extends Success {
+  /** The protocol versions the API serves */
+  data: Models.VersionDiscovery;
 }
 
 // ############################################################################
@@ -111,6 +130,7 @@ model PaginatedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  ...Headers.VersionResponse;
   ...PaginatedBase<T>;
 }
 
@@ -162,6 +182,7 @@ model SortedT<T> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  ...Headers.VersionResponse;
   ...SortedBase<T>;
 }
 
@@ -225,6 +246,7 @@ model FilteredT<ItemsT, FilterT> extends Success {
   // Inherit the 200 status code
   ...Http.OkResponse;
 
+  ...Headers.VersionResponse;
   ...FilteredBase<ItemsT, FilterT>;
 }
 
@@ -252,6 +274,8 @@ model Created extends Success {
 model CreatedT<T> extends Success {
   // Inherit the 201 status code
   ...Http.CreatedResponse;
+
+  ...Headers.VersionResponse;
 
   /** Response data */
   data: T;
@@ -285,6 +309,8 @@ model Accepted extends Success {
 model AcceptedT<T> extends Success {
   // Inherit the 202 status code
   ...Http.AcceptedResponse;
+
+  ...Headers.VersionResponse;
 
   /** URL where the accepted resource can be retrieved */
   @Http.header("Location")

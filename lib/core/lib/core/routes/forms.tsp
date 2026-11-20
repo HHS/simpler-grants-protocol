@@ -24,7 +24,8 @@ interface Forms {
   @get
   list(
     ...Pagination.PaginatedQueryParams,
-  ): Responses.PaginatedT<Models.FormBase>;
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.PaginatedT<Models.FormBase>>;
 
   // ###############################
   // View form details
@@ -36,5 +37,7 @@ interface Forms {
   read(
     /** The ID of the form to view */
     @path formId: Types.uuid,
-  ): Responses.OkT<Models.FormBase>;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.OkT<Models.FormBase>>;
 }

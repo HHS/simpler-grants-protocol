@@ -115,6 +115,7 @@ describe("shaped applications against the per-version OpenAPI documents", () => 
       "0.3.0": "name",
       "0.4.0": "title",
       "0.5.0": "title",
+      "0.6.0": "title",
     });
 
     const hasOpportunityId = Object.fromEntries(
@@ -132,6 +133,7 @@ describe("shaped applications against the per-version OpenAPI documents", () => 
       "0.3.0": true,
       "0.4.0": true,
       "0.5.0": true,
+      "0.6.0": true,
     });
   });
 });
