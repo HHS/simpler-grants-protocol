@@ -74,7 +74,7 @@ A failure to submit an application due to validation errors.
 
 ## Common Error Types
 
-The following error types are commonly used. From v0.6.0 each one also carries version response headers, declared in `Headers.VersionResponse` or `Headers.VersionResponseAuth`. `CG-Version-Served` reports the full protocol version the response was served in. It is optional on 401 and 403 responses, because authentication can run before a version is selected, and on `BadRequest`, because the version errors share its status. The optional `Vary`, `Deprecation`, `Sunset` and `Link` headers come from `Headers.VersionLifecycle`. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
+The following error types are commonly used. From v0.6.0 each one also carries version response headers, declared in `Headers.VersionResponse` or `Headers.VersionResponseAuth`, or, for `BadRequest`, inline with `Headers.VersionLifecycle`. `CG-Version-Served` reports the full protocol version the response was served in. It is optional on 401 and 403 responses, because authentication can run before a version is selected, and on `BadRequest`, because the version errors share its status. The optional `Vary`, `Deprecation`, `Sunset` and `Link` headers come from `Headers.VersionLifecycle`. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
 
 ```typespec
 alias Unauthorized = Error &
