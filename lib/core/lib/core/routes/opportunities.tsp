@@ -89,7 +89,7 @@ interface Opportunities {
    * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("Search opportunities")
-  @doc("Search for opportunities based on the provided filters.")
+  @doc("Search for opportunities based on the provided search term and filters.")
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(
@@ -111,5 +111,8 @@ interface Opportunities {
     pagination?: Pagination.PaginatedBodyParams,
 
     ...Headers.VersionRequest,
-  ): Responses.WithVersionErrors<Responses.FilteredT<T, Models.OppFilters>>;
+  ): Responses.WithVersionErrors<Responses.SearchResultsT<
+    T,
+    Models.OppFilters
+  >>;
 }
