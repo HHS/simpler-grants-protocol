@@ -13,13 +13,15 @@ properties:
     description: The version every route without an `operations` entry serves when a request doesn't name one, one of `versions`
   upcomingDefault:
     $ref: UpcomingDefault.yaml
-    description: A scheduled change to the API-wide default version, if any
+    description: A scheduled change to the API-wide default version, if any. Its `version` is one of `versions`
   deprecated:
     $ref: "#/$defs/RecordVersionRetirement"
     description: |-
       Deprecated versions, keyed by version, with their retirement schedule
 
       Each key is a full protocol version listed in `versions`, matched on major and minor.
+    propertyNames:
+      $ref: protocolVersion.yaml
   operations:
     $ref: "#/$defs/RecordOperationVersions"
     description: |-

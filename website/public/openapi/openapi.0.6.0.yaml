@@ -6323,7 +6323,7 @@ components:
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
-          description: A scheduled change to this route's default version, if any
+          description: A scheduled change to this route's default version, if any. Its `version` is one of `versions`
         deprecated:
           type: object
           additionalProperties:
@@ -8192,7 +8192,7 @@ components:
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
-          description: A scheduled change to the API-wide default version, if any
+          description: A scheduled change to the API-wide default version, if any. Its `version` is one of `versions`
         deprecated:
           type: object
           additionalProperties:

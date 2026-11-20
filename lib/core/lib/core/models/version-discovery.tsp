@@ -49,13 +49,17 @@ model OperationVersions {
   /** The version this route serves when a request doesn't name one, one of `versions` */
   defaultVersion: Types.protocolVersion;
 
-  /** A scheduled change to this route's default version, if any */
+  /** A scheduled change to this route's default version, if any. Its `version` is one of `versions` */
   upcomingDefault?: UpcomingDefault;
 
   /** Deprecated versions of this route, keyed by version, with their retirement schedule
    *
    * Each key is a full protocol version listed in `versions`, matched on major and minor.
    */
+  @TypeSpec.JsonSchema.extension(
+    "propertyNames",
+    #{ $ref: "protocolVersion.yaml" }
+  )
   deprecated?: Record<VersionRetirement>;
 
   ...Record<unknown>;
@@ -89,13 +93,17 @@ model VersionDiscovery {
   /** The version every route without an `operations` entry serves when a request doesn't name one, one of `versions` */
   defaultVersion: Types.protocolVersion;
 
-  /** A scheduled change to the API-wide default version, if any */
+  /** A scheduled change to the API-wide default version, if any. Its `version` is one of `versions` */
   upcomingDefault?: UpcomingDefault;
 
   /** Deprecated versions, keyed by version, with their retirement schedule
    *
    * Each key is a full protocol version listed in `versions`, matched on major and minor.
    */
+  @TypeSpec.JsonSchema.extension(
+    "propertyNames",
+    #{ $ref: "protocolVersion.yaml" }
+  )
   deprecated?: Record<VersionRetirement>;
 
   /** Routes whose versions differ from the API-wide values
