@@ -2,16 +2,17 @@
 import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 import "swagger-ui-dist/swagger-ui.css";
 import { SPEC_DIR_URL } from "@/lib/mock/docs-wiring";
+import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { SUPPORTED_METHODS } from "@/lib/mock/http/methods";
+import { apiDocsVersions } from "@/lib/openapi-versions";
+import { Paths } from "@/lib/schema/paths";
 
-// Available OpenAPI versions (mirror of the emitted specs in public/openapi/)
-const availableVersions = [
-  { version: "0.5.0", label: "v0.5.0 (Latest)" },
-  { version: "0.4.0", label: "v0.4.0" },
-  { version: "0.3.0", label: "v0.3.0" },
-  { version: "0.2.0", label: "v0.2.0" },
-  { version: "0.1.0", label: "v0.1.0" },
-];
+// Built from the emitted specs in public/openapi/, newest first; the newest is
+// labelled "(Latest)" and is the default. Fails the build when none are found.
+const availableVersions = apiDocsVersions(Paths.OPENAPI_DIR);
+
+// The request header that selects a protocol version (ADR 0032).
+const VERSION_HEADER = "CG-Version";
 ---
 
 <StarlightPage frontmatter={{ title: "OpenAPI docs", tableOfContents: false }}>
@@ -31,6 +32,8 @@ const availableVersions = [
   <div
     id="swagger-ui"
     data-spec-dir={SPEC_DIR_URL}
+    data-mock-base={MOCK_API_BASE_PATH}
+    data-version-header={VERSION_HEADER}
     data-submit-methods={SUPPORTED_METHODS.join(",").toLowerCase()}
   >
   </div>
@@ -87,7 +90,7 @@ const availableVersions = [
 
 <script>
   import { SwaggerUIBundle } from "swagger-ui-dist";
-  import { resolveVersion } from "@/lib/api-docs-version";
+  import { resolveVersion, withVersionHeader } from "@/lib/api-docs-version";
 
   // Via a data attribute, not an import: client scripts can't read frontmatter,
   // and importing `docs-wiring` would drag the mock router into this bundle.
@@ -98,6 +101,8 @@ const availableVersions = [
   const submitMethods = (mount?.dataset.submitMethods ?? "")
     .split(",")
     .filter(Boolean);
+  const mockBase = mount?.dataset.mockBase ?? "/api";
+  const versionHeader = mount?.dataset.versionHeader ?? "CG-Version";
 
   const render = (version: string): void => {
     SwaggerUIBundle({
@@ -106,6 +111,14 @@ const availableVersions = [
       // From the router's own `SUPPORTED_METHODS`; Swagger UI would otherwise
       // offer Execute on DELETE and friends, which the mock never serves.
       supportedSubmitMethods: submitMethods,
+      // Sends the selected version as `CG-Version` on calls to the mock.
+      requestInterceptor: (request) =>
+        withVersionHeader(request, {
+          version,
+          basePath: mockBase,
+          header: versionHeader,
+          origin: window.location.origin,
+        }),
       deepLinking: true,
     });
   };
