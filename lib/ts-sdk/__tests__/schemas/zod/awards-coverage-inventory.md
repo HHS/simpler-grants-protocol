@@ -163,7 +163,7 @@ models), not #1156.
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | optional metadata is `.nullish()` (accepts `null`); objects are not sealed (accept unknown keys)  | blocks `AwdTimeline` parity (T4)                  |
 | `CustomField` (`CustomFieldSchema`)                       | `schema`/`description` are `.nullish()` (accept `null`); object not sealed (accepts unknown keys) | blocks `AwdRecipientIndividual.customFields` (T4) |
-| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()` and unbounded (no int32 `.max()`); objects are not sealed      | forked as `RoutePaginationInputSchema` (T6)       |
+| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()`; objects are not sealed                                        | forked as `RoutePaginationInputSchema` (T6)       |
 | `PaginatedResultsInfo` (`PaginatedResultsInfoSchema`)     | `pageSize` allows `0` (protocol minimum is `1`); totals are `.nullish()`; object not sealed       | forked as `AwardPaginationInfoSchema` (T6)        |
 | `SortedResultsInfo` (`SortedResultsInfoSchema`)           | `customSortBy`/`errors` are `.nullish()` (accept `null`); object not sealed                       | forked as `AwardSortInfoSchema` (T6)              |
 
