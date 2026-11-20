@@ -10,16 +10,24 @@ properties:
     description: The versions every route without an `operations` entry serves
   defaultVersion:
     $ref: protocolVersion.yaml
-    description: The version every route without an `operations` entry serves when a request doesn't name one
+    description: The version every route without an `operations` entry serves when a request doesn't name one, one of `versions`
   upcomingDefault:
     $ref: UpcomingDefault.yaml
-    description: A scheduled change to the API-wide default version, if any
+    description: A scheduled change to the API-wide default version, if any. Its `version` is one of `versions`
   deprecated:
     $ref: "#/$defs/RecordVersionRetirement"
     description: |-
       Deprecated versions, keyed by version, with their retirement schedule
 
-      Each key is a full protocol version listed in `versions`, matched on major and minor.
+      Each key is a version from `versions`, written exactly as it appears
+      there. A server hosting `0.3.1` lists `0.3.1` in `versions` and uses
+      `0.3.1` as the key here.
+
+      To check whether the version you request is deprecated, compare only
+      the major and minor. A client requesting `0.3.0` is served `0.3.1`, so
+      its entry is under `0.3.1`.
+    propertyNames:
+      $ref: protocolVersion.yaml
   operations:
     $ref: "#/$defs/RecordOperationVersions"
     description: |-

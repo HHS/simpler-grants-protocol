@@ -12,7 +12,7 @@ using TypeSpec.Versioning;
 /** A re-usable interface for the versions discovery router
  *
  * Unlike the other routers, `read` is deliberately not templated: adopters
- * don't extend the discovery response. Routes that differ from the API-wide
+ * don't type-parameterize the discovery response. Routes that differ from the API-wide
  * versions are described in the response's `operations` field instead.
  *
  * @example Declaring the versions discovery route:
@@ -41,9 +41,10 @@ interface ProtocolVersions {
     
     This route is optional, but a server that serves more than one protocol version MUST implement it.
     It ignores the `CG-Version` request header, because clients call it before they know which version to request.
-    It SHOULD be readable without authentication.
-    Fields are only ever added to the response; clients ignore fields they don't recognize.
+    Its responses carry neither `CG-Version-Served` nor `Vary: CG-Version`.
+    It requires no stronger authentication than the API's required routes, and SHOULD be readable without authentication.
+    Fields are only ever added to `data`; clients ignore fields they don't recognize.
     """)
   @get
-  read(): Responses.OkT<Models.VersionDiscovery>;
+  read(): Responses.VersionDiscoveryResponse;
 }

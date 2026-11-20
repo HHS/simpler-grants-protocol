@@ -3596,57 +3596,17 @@ paths:
 
         This route is optional, but a server that serves more than one protocol version MUST implement it.
         It ignores the `CG-Version` request header, because clients call it before they know which version to request.
-        It SHOULD be readable without authentication.
-        Fields are only ever added to the response; clients ignore fields they don't recognize.
+        Its responses carry neither `CG-Version-Served` nor `Vary: CG-Version`.
+        It requires no stronger authentication than the API's required routes, and SHOULD be readable without authentication.
+        Fields are only ever added to `data`; clients ignore fields they don't recognize.
       parameters: []
       responses:
         '200':
-          description: A 200 response with typed data
-          headers:
-            CG-Version-Served:
-              required: true
-              description: |-
-                The full protocol version this response was served in, such as `0.5.1`
-
-                Can differ from the requested version in the patch number only.
-              schema:
-                $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-            Vary:
-              required: false
-              description: Request headers that caches must key this response on, such as `CG-Version`
-              schema:
-                type: string
-            Deprecation:
-              required: false
-              description: When the served version was or will be deprecated (RFC 9745), such as `@1796083200`
-              schema:
-                type: string
-                pattern: ^@-?[0-9]+$
-            Sunset:
-              required: false
-              description: When the served version stops responding (RFC 8594), such as `Tue, 01 Jun 2027 00:00:00 GMT`
-              schema:
-                type: string
-                format: http-date
-            Link:
-              required: false
-              description: Links about the served version's lifecycle (RFC 8288), such as `rel="sunset"`
-              schema:
-                type: string
+          description: The request has succeeded.
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    allOf:
-                      - $ref: '#/components/schemas/CommonGrants.Models.VersionDiscovery'
-                    description: Response data
-                allOf:
-                  - $ref: '#/components/schemas/CommonGrants.Responses.Success'
-                description: A 200 response with typed data
+                $ref: '#/components/schemas/CommonGrants.Responses.VersionDiscoveryResponse'
       tags:
         - Versions
         - optional
@@ -6359,11 +6319,11 @@ components:
         defaultVersion:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The version this route serves when a request doesn't name one
+          description: The version this route serves when a request doesn't name one, one of `versions`
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
-          description: A scheduled change to this route's default version, if any
+          description: A scheduled change to this route's default version, if any. Its `version` is one of `versions`
         deprecated:
           type: object
           additionalProperties:
@@ -6371,7 +6331,13 @@ components:
           description: |-
             Deprecated versions of this route, keyed by version, with their retirement schedule
 
-            Each key is a full protocol version listed in `versions`, matched on major and minor.
+            Each key is a version from `versions`, written exactly as it appears
+            there. A server hosting `0.3.1` lists `0.3.1` in `versions` and uses
+            `0.3.1` as the key here.
+
+            To check whether the version you request is deprecated, compare only
+            the major and minor. A client requesting `0.3.0` is served `0.3.1`, so
+            its entry is under `0.3.1`.
       additionalProperties: {}
       description: The versions a single route serves, when they differ from the API-wide values
     CommonGrants.Models.OppDefaultFilters:
@@ -8228,11 +8194,11 @@ components:
         defaultVersion:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Types.protocolVersion'
-          description: The version every route without an `operations` entry serves when a request doesn't name one
+          description: The version every route without an `operations` entry serves when a request doesn't name one, one of `versions`
         upcomingDefault:
           allOf:
             - $ref: '#/components/schemas/CommonGrants.Models.UpcomingDefault'
-          description: A scheduled change to the API-wide default version, if any
+          description: A scheduled change to the API-wide default version, if any. Its `version` is one of `versions`
         deprecated:
           type: object
           additionalProperties:
@@ -8240,7 +8206,13 @@ components:
           description: |-
             Deprecated versions, keyed by version, with their retirement schedule
 
-            Each key is a full protocol version listed in `versions`, matched on major and minor.
+            Each key is a version from `versions`, written exactly as it appears
+            there. A server hosting `0.3.1` lists `0.3.1` in `versions` and uses
+            `0.3.1` as the key here.
+
+            To check whether the version you request is deprecated, compare only
+            the major and minor. A client requesting `0.3.0` is served `0.3.1`, so
+            its entry is under `0.3.1`.
         operations:
           type: object
           additionalProperties:
@@ -9085,6 +9057,18 @@ components:
               - 0.6.0
             defaultVersion: 0.5.0
             discovery: https://grants.example.org/common-grants/versions
+    CommonGrants.Responses.VersionDiscoveryResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/CommonGrants.Models.VersionDiscovery'
+          description: The protocol versions the API serves
+      allOf:
+        - $ref: '#/components/schemas/CommonGrants.Responses.Success'
+      description: A 200 response listing the protocol versions an API serves
     CommonGrants.Responses.VersionErrorDetail:
       type: object
       required:
