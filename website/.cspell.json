@@ -127,6 +127,8 @@
     "commongrants",
     "employertaxid",
     "samuei",
+    "protocolversion",
+    "versiondiscoveryresponse",
     "duns",
     "uischema",
     "jsonforms",

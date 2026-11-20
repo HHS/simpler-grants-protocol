@@ -14,14 +14,6 @@ ok:
           "name": "Test 1"
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Ok.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 31
-      endLine: 36
 created:
   example:
     code: |
@@ -33,14 +25,6 @@ created:
           "name": "Test 1"
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Created.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 239
-      endLine: 244
 accepted:
   example:
     code: |
@@ -52,36 +36,6 @@ accepted:
           "name": "Test 1"
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Accepted.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 268
-      endLine: 273
-success:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Success.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Success.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 14
-      endLine: 21
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/success.py"
-      startLine: 17
-      endLine: 29
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
-      startLine: 19
-      endLine: 25
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -90,6 +44,10 @@ import SchemaChangelog from "@/components/SchemaChangelog.astro";
 ## Success
 
 Base model for all successful responses.
+
+### Version headers
+
+From v0.6.0, the typed `OkT<T>`, `CreatedT<T>` and `AcceptedT<T>` responses carry the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification. The [`VersionDiscoveryResponse`](#versiondiscoveryresponse) carries none of them.
 
 ### Table
 
@@ -100,13 +58,7 @@ Base model for all successful responses.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.success.example}
-  jsonSchema={frontmatter.success.jsonSchema}
-  typeSpec={frontmatter.success.typeSpec}
-  python={frontmatter.success.python}
-  typescript={frontmatter.success.typescript}
-/>
+<SchemaFormatTabs schema="Success" typeSpec python typescript />
 
 ### Changelog
 
@@ -126,13 +78,7 @@ A 200 response with data.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.ok.example}
-  jsonSchema={frontmatter.ok.jsonSchema}
-  typeSpec={frontmatter.ok.typeSpec}
-  python={frontmatter.ok.python}
-  typescript={frontmatter.ok.typescript}
-/>
+<SchemaFormatTabs schema="Ok" example={frontmatter.ok.example} typeSpec />
 
 ### Usage
 
@@ -160,6 +106,28 @@ op getTest(): OkT<TestModel>;
 
 <SchemaChangelog schema="Ok" />
 
+## VersionDiscoveryResponse
+
+A 200 response listing the protocol versions an API serves, returned by the version discovery route, `GET /common-grants/versions`. Added in v0.6.0.
+
+Discovery sits outside version selection, so unlike the other success responses this response carries no version headers: neither `CG-Version-Served` nor `Vary`. See [Finding the supported versions](/protocol/versioning#finding-the-supported-versions) for how clients use it.
+
+### Table
+
+| Parameter | Type                                                      | Description                          |
+| --------- | --------------------------------------------------------- | ------------------------------------ |
+| status    | [integer](/protocol/types/numeric#integer)                | The HTTP status code                 |
+| message   | [string](/protocol/types/string#string)                   | The message to return                |
+| data      | [VersionDiscovery](/protocol/versioning#versiondiscovery) | The protocol versions the API serves |
+
+### Formats
+
+<SchemaFormatTabs schema="VersionDiscoveryResponse" typeSpec />
+
+### Changelog
+
+<SchemaChangelog schema="VersionDiscoveryResponse" />
+
 ## Created
 
 A 201 response with data.
@@ -175,9 +143,9 @@ A 201 response with data.
 ### Formats
 
 <SchemaFormatTabs
+  schema="Created"
   example={frontmatter.created.example}
-  jsonSchema={frontmatter.created.jsonSchema}
-  typeSpec={frontmatter.created.typeSpec}
+  typeSpec
 />
 
 ### Usage
@@ -223,9 +191,9 @@ Returned when a request is accepted for processing but may not be applied immedi
 ### Formats
 
 <SchemaFormatTabs
+  schema="Accepted"
   example={frontmatter.accepted.example}
-  jsonSchema={frontmatter.accepted.jsonSchema}
-  typeSpec={frontmatter.accepted.typeSpec}
+  typeSpec
 />
 
 ### Usage

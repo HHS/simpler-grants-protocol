@@ -3,45 +3,6 @@ title: Errors
 description: A standard error response schema, used to create custom error responses
 sidebar:
   order: 5
-error:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Error.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Error.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/error.tsp"
-      startLine: 15
-      endLine: 27
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/responses/error.py"
-      startLine: 10
-      endLine: 26
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
-      startLine: 170
-      endLine: 179
-applicationSubmissionError:
-  example:
-    file:
-      path: "website/public/schemas/yaml/ApplicationSubmissionError.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ApplicationSubmissionError.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/error.tsp"
-      startLine: 32
-      endLine: 43
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/responses.ts"
-      startLine: 192
-      endLine: 194
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -63,13 +24,7 @@ Default response schema for 4xx and 5xx HTTP status codes.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.error.example}
-  jsonSchema={frontmatter.error.jsonSchema}
-  typeSpec={frontmatter.error.typeSpec}
-  python={frontmatter.error.python}
-  typescript={frontmatter.error.typescript}
-/>
+<SchemaFormatTabs schema="Error" typeSpec python typescript />
 
 ### Usage
 
@@ -81,6 +36,11 @@ import "@typespec/http";
 
 using TypeSpec.Http;
 using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
 
 @summary("Get test")
 @doc("Get a test model")
@@ -106,12 +66,7 @@ A failure to submit an application due to validation errors.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.applicationSubmissionError.example}
-  jsonSchema={frontmatter.applicationSubmissionError.jsonSchema}
-  typeSpec={frontmatter.applicationSubmissionError.typeSpec}
-  typescript={frontmatter.applicationSubmissionError.typescript}
-/>
+<SchemaFormatTabs schema="ApplicationSubmissionError" typeSpec typescript />
 
 ### Changelog
 
@@ -119,22 +74,57 @@ A failure to submit an application due to validation errors.
 
 ## Common Error Types
 
-The following error types are commonly used:
+The following error types are commonly used. From v0.6.0 each one also carries version response headers, declared in `Headers.VersionResponse` or `Headers.VersionResponseAuth`, or, for `BadRequest`, inline with `Headers.VersionLifecycle`. `CG-Version-Served` reports the full protocol version the response was served in. It is optional on 401 and 403 responses, because authentication can run before a version is selected, and on `BadRequest`, because the version errors share its status. The optional `Vary`, `Deprecation`, `Sunset` and `Link` headers come from `Headers.VersionLifecycle`. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
 
 ```typespec
-// 401 Unauthorized
-// User is not authorized to access the resource
-alias Unauthorized = Error & Http.UnauthorizedResponse;
+alias Unauthorized = Error &
+  Http.UnauthorizedResponse &
+  Headers.VersionResponseAuth;
+alias Forbidden = Error & Http.ForbiddenResponse & Headers.VersionResponseAuth;
+alias NotFound = Error & Http.NotFoundResponse & Headers.VersionResponse;
 
-// 404 Not Found
-// The resource was not found
-alias NotFound = Error & Http.NotFoundResponse;
+// Any other 400, such as a body that fails validation in the requested version.
+// The served version is optional because version errors share this status.
+alias BadRequest = Error &
+  Http.BadRequestResponse & {
+    /** The full protocol version this response was served in, such as `0.5.1`
+     *
+     * Sent on every 400 except the version errors.
+     */
+    @Http.header("CG-Version-Served")
+    cgVersionServed?: Types.protocolVersion;
 
-// 400 Bad Request
-// The request was invalid
-alias BadRequest = Error & Http.BadRequestResponse;
+    ...Headers.VersionLifecycle;
+  };
+```
 
-// 403 Forbidden
-// The action is forbidden
-alias Forbidden = Error & Http.ForbiddenResponse;
+### Version errors
+
+From v0.6.0, a request whose `CG-Version` value can't be served gets one of four version errors. They carry no version response headers. Their schemas are on the [Versioning](/protocol/versioning#version-error-schemas) page.
+
+```typespec
+// Status codes live on these aliases, not the models, so they stay out of the
+// JSON Schemas. Version errors carry no version response headers (ADR 0032).
+alias VersionMalformed = VersionMalformedError & Http.BadRequestResponse;
+alias VersionConflict = VersionConflictError & Http.BadRequestResponse;
+alias VersionUnsupported = VersionUnsupportedError & Http.Response<406>;
+alias VersionRetired = VersionRetiredError & Http.Response<406>;
+```
+
+Use `WithVersionErrors<R>` to add the version errors, and `BadRequest`, to a route's responses:
+
+```typespec
+// Adds the version errors to a route's responses from protocol version 0.6.0.
+// Docs go on the variants: a union-level doc would replace every response description.
+union WithVersionErrors<R> {
+  response: R,
+
+  /** The request is invalid, or its `CG-Version` value is malformed or was sent more than once */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  badRequest: VersionMalformed | VersionConflict | BadRequest,
+
+  /** The requested version isn't served by this server or this route */
+  @Versioning.added(CommonGrants.Versions.v0_6)
+  notAcceptable: VersionUnsupported | VersionRetired,
+}
 ```

@@ -3,40 +3,6 @@ title: Date and time types
 description: Date and time types used throughout the protocol.
 sidebar:
   order: 3
-isoDate:
-  example:
-    file:
-      path: "website/public/schemas/yaml/isoDate.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/isoDate.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 88
-      endLine: 91
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/types.ts"
-      startLine: 49
-      endLine: 52
-isoTime:
-  example:
-    file:
-      path: "website/public/schemas/yaml/isoTime.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/isoTime.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 83
-      endLine: 86
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/types.ts"
-      startLine: 55
-      endLine: 62
 utcDateTime:
   example:
     code: '"2024-02-28T17:00:00Z"'
@@ -47,11 +13,6 @@ utcDateTime:
       type: string
       format: date-time
       description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/types.ts"
-      startLine: 46
-      endLine: 46
 offsetDateTime:
   example:
     code: '"2024-02-28T17:00:00+01:00"'
@@ -62,23 +23,6 @@ offsetDateTime:
       type: string
       format: date-time
       description: A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/types.ts"
-      startLine: 65
-      endLine: 68
-calendarYear:
-  example:
-    file:
-      path: "website/public/schemas/yaml/calendarYear.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/calendarYear.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 93
-      endLine: 97
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -87,12 +31,7 @@ import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 
 A date on a calendar in ISO 8601 format YYYY-MM-DD.
 
-<SchemaFormatTabs
-  example={frontmatter.isoDate.example}
-  jsonSchema={frontmatter.isoDate.jsonSchema}
-  typeSpec={frontmatter.isoDate.typeSpec}
-  typescript={frontmatter.isoDate.typescript}
-/>
+<SchemaFormatTabs schema="isoDate" typeSpec typescript="ISODateSchema" />
 
 ## isoTime
 
@@ -102,12 +41,7 @@ A time on a clock, without a timezone, in ISO 8601 format HH:mm:ss.
 The `isoTime` type does not include timezone information. When representing a time in a specific timezone, use `utcDateTime` or `offsetDateTime` instead.
 :::
 
-<SchemaFormatTabs
-  example={frontmatter.isoTime.example}
-  jsonSchema={frontmatter.isoTime.jsonSchema}
-  typeSpec={frontmatter.isoTime.typeSpec}
-  typescript={frontmatter.isoTime.typescript}
-/>
+<SchemaFormatTabs schema="isoTime" typeSpec typescript="ISOTimeSchema" />
 
 ## utcDateTime
 
@@ -116,7 +50,7 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ssZ.
 <SchemaFormatTabs
   example={frontmatter.utcDateTime.example}
   jsonSchema={frontmatter.utcDateTime.jsonSchema}
-  typescript={frontmatter.utcDateTime.typescript}
+  typescript="UTCDateTimeSchema"
 />
 
 ## offsetDateTime
@@ -126,15 +60,11 @@ A date and time with timezone in ISO 8601 format YYYY-MM-DDThh:mm:ss±hh:mm.
 <SchemaFormatTabs
   example={frontmatter.offsetDateTime.example}
   jsonSchema={frontmatter.offsetDateTime.jsonSchema}
-  typescript={frontmatter.offsetDateTime.typescript}
+  typescript="OffsetDateTimeSchema"
 />
 
 ## calendarYear
 
 A calendar year in the format YYYY.
 
-<SchemaFormatTabs
-  example={frontmatter.calendarYear.example}
-  jsonSchema={frontmatter.calendarYear.jsonSchema}
-  typeSpec={frontmatter.calendarYear.typeSpec}
-/>
+<SchemaFormatTabs schema="calendarYear" typeSpec />

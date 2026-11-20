@@ -7,6 +7,7 @@ import {
 } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
+import { versionFromSpecFilename } from "../lib/openapi-versions";
 import { MOCK_SERVER_URL, MOCK_SPEC_DIR_NAME } from "../lib/mock/docs-wiring";
 import {
   SUPPORTED_VERSIONS,
@@ -25,9 +26,6 @@ import {
  * artifacts that must never be committed.
  */
 
-/** `openapi.0.4.0.yaml` — the emitted per-version spec files. */
-const SPEC_FILENAME = /^openapi\.(\d+\.\d+\.\d+)\.yaml$/;
-
 /**
  * A top-level `servers:` key and its indented body. Anchored to line start so
  * a nested `servers:` never matches.
@@ -36,14 +34,6 @@ const TOP_LEVEL_SERVERS = /^servers:[^\n]*\n(?:[ \t][^\n]*\n|-[^\n]*\n)*/m;
 
 /** Anchor for insertion: the specs' first top-level `paths:` key. */
 const TOP_LEVEL_PATHS = /^paths:/m;
-
-/**
- * Extracts the protocol version from a spec filename
- * (`openapi.0.4.0.yaml` → `"0.4.0"`), or null.
- */
-export function versionFromSpecFilename(filename: string): string | null {
-  return SPEC_FILENAME.exec(filename)?.[1] ?? null;
-}
 
 /**
  * Inserts a `servers:` block immediately before the spec's top-level `paths:`
@@ -156,4 +146,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }
 
-export { MockServerInjector };
+export { MockServerInjector, versionFromSpecFilename };

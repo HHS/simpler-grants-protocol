@@ -4,26 +4,6 @@ description: Data model for an email address
 email:
   example:
     code: '"john.doe@example.com"'
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/email.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/email.tsp"
-      startLine: 5
-      endLine: 6
-emailCollection:
-  example:
-    file:
-      path: "website/public/schemas/yaml/EmailCollection.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/EmailCollection.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/email.tsp"
-      startLine: 8
-      endLine: 17
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -35,9 +15,9 @@ An email address. Alias for the [email](/protocol/types/string#email) type.
 ### Formats
 
 <SchemaFormatTabs
+  schema="email"
   example={frontmatter.email.example}
-  jsonSchema={frontmatter.email.jsonSchema}
-  typeSpec={frontmatter.email.typeSpec}
+  typeSpec="Email"
 />
 
 ## EmailCollection
@@ -46,15 +26,11 @@ A collection of email addresses for a person or organization.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.emailCollection.jsonSchema.file.path} />
+<SchemaTable schema="EmailCollection" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.emailCollection.example}
-  jsonSchema={frontmatter.emailCollection.jsonSchema}
-  typeSpec={frontmatter.emailCollection.typeSpec}
-/>
+<SchemaFormatTabs schema="EmailCollection" typeSpec />
 
 ### Changelog
 

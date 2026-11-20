@@ -3,114 +3,6 @@ title: Award
 description: The data models for a grant award
 sidebar:
   order: 11
-awardBase:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwardBase.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwardBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 155
-      endLine: 204
-awdRef:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdRef.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdRef.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 114
-      endLine: 132
-awdStatus:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdStatus.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 32
-      endLine: 45
-awdStatusOptions:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdStatusOptions.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 18
-      endLine: 30
-awdFunding:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdFunding.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdFunding.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 51
-      endLine: 66
-awdTimeline:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdTimeline.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdTimeline.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 72
-      endLine: 87
-awdRecipientIndividual:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdRecipientIndividual.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdRecipientIndividual.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 138
-      endLine: 149
-awdIds:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdIds.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdIds.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 98
-      endLine: 108
-awdIdFain:
-  example:
-    file:
-      path: "website/public/schemas/yaml/AwdIdFain.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/AwdIdFain.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/award.tsp"
-      startLine: 93
-      endLine: 96
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -123,15 +15,11 @@ A grant award, tracking the funder, recipient, and financial details of a grant 
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awardBase.jsonSchema.file.path} />
+<SchemaTable schema="AwardBase" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awardBase.example}
-  jsonSchema={frontmatter.awardBase.jsonSchema}
-  typeSpec={frontmatter.awardBase.typeSpec}
-/>
+<SchemaFormatTabs schema="AwardBase" typeSpec />
 
 ### Changelog
 
@@ -143,15 +31,11 @@ A reference to an award, previewing the key fields a consumer needs to identify 
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdRef.jsonSchema.file.path} />
+<SchemaTable schema="AwdRef" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdRef.example}
-  jsonSchema={frontmatter.awdRef.jsonSchema}
-  typeSpec={frontmatter.awdRef.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdRef" typeSpec />
 
 ### Changelog
 
@@ -163,15 +47,11 @@ The lifecycle status of an award, such as whether it has been awarded or complet
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdStatus.jsonSchema.file.path} />
+<SchemaTable schema="AwdStatus" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdStatus.example}
-  jsonSchema={frontmatter.awdStatus.jsonSchema}
-  typeSpec={frontmatter.awdStatus.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdStatus" typeSpec />
 
 ### Changelog
 
@@ -183,15 +63,11 @@ The set of values accepted for award status.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdStatusOptions.jsonSchema.file.path} />
+<SchemaTable schema="AwdStatusOptions" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdStatusOptions.example}
-  jsonSchema={frontmatter.awdStatusOptions.jsonSchema}
-  typeSpec={frontmatter.awdStatusOptions.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdStatusOptions" typeSpec />
 
 ### Changelog
 
@@ -203,15 +79,11 @@ Financial details about the award, including the requested, awarded, and disburs
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdFunding.jsonSchema.file.path} />
+<SchemaTable schema="AwdFunding" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdFunding.example}
-  jsonSchema={frontmatter.awdFunding.jsonSchema}
-  typeSpec={frontmatter.awdFunding.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdFunding" typeSpec />
 
 ### Changelog
 
@@ -223,15 +95,11 @@ Key dates in the award's timeline, such as the award date and period of performa
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdTimeline.jsonSchema.file.path} />
+<SchemaTable schema="AwdTimeline" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdTimeline.example}
-  jsonSchema={frontmatter.awdTimeline.jsonSchema}
-  typeSpec={frontmatter.awdTimeline.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdTimeline" typeSpec />
 
 ### Changelog
 
@@ -243,17 +111,11 @@ An individual who received an award, when the recipient is a person rather than 
 
 ### Table
 
-<SchemaTable
-  filePath={frontmatter.awdRecipientIndividual.jsonSchema.file.path}
-/>
+<SchemaTable schema="AwdRecipientIndividual" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdRecipientIndividual.example}
-  jsonSchema={frontmatter.awdRecipientIndividual.jsonSchema}
-  typeSpec={frontmatter.awdRecipientIndividual.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdRecipientIndividual" typeSpec />
 
 ### Changelog
 
@@ -265,15 +127,11 @@ System and registry-specific identifiers for an award, such as its FAIN.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdIds.jsonSchema.file.path} />
+<SchemaTable schema="AwdIds" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdIds.example}
-  jsonSchema={frontmatter.awdIds.jsonSchema}
-  typeSpec={frontmatter.awdIds.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdIds" typeSpec />
 
 ### Changelog
 
@@ -285,15 +143,11 @@ An award's Federal Award Identification Number (FAIN), assigned by the awarding 
 
 ### Table
 
-<SchemaTable filePath={frontmatter.awdIdFain.jsonSchema.file.path} />
+<SchemaTable schema="AwdIdFain" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.awdIdFain.example}
-  jsonSchema={frontmatter.awdIdFain.jsonSchema}
-  typeSpec={frontmatter.awdIdFain.typeSpec}
-/>
+<SchemaFormatTabs schema="AwdIdFain" typeSpec />
 
 ### Changelog
 

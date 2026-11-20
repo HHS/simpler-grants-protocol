@@ -1,50 +1,6 @@
 ---
 title: Date filters
 description: Filters applied to date fields.
-dateRangeFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/DateRangeFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/DateRangeFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/date.tsp"
-      startLine: 24
-      endLine: 39
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/date.py"
-      startLine: 37
-      endLine: 52
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 85
-      endLine: 91
-dateComparisonFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/DateComparisonFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/DateComparisonFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/date.tsp"
-      startLine: 10
-      endLine: 20
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/date.py"
-      startLine: 55
-      endLine: 78
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 80
-      endLine: 83
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -72,13 +28,7 @@ Filters by comparing a field to a range of date values.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.dateRangeFilter.example}
-  jsonSchema={frontmatter.dateRangeFilter.jsonSchema}
-  typeSpec={frontmatter.dateRangeFilter.typeSpec}
-  python={frontmatter.dateRangeFilter.python}
-  typescript={frontmatter.dateRangeFilter.typescript}
-/>
+<SchemaFormatTabs schema="DateRangeFilter" typeSpec python typescript />
 
 ### Changelog
 
@@ -97,13 +47,7 @@ Filters by comparing a field to a date value.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.dateComparisonFilter.example}
-  jsonSchema={frontmatter.dateComparisonFilter.jsonSchema}
-  typeSpec={frontmatter.dateComparisonFilter.typeSpec}
-  python={frontmatter.dateComparisonFilter.python}
-  typescript={frontmatter.dateComparisonFilter.typescript}
-/>
+<SchemaFormatTabs schema="DateComparisonFilter" typeSpec python typescript />
 
 ### Changelog
 
