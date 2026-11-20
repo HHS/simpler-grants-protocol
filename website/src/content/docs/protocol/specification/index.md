@@ -124,7 +124,7 @@ It is RECOMMENDED that a server move all its routes to a new version at the same
 - A server MUST NOT serve a different major or minor version than the one requested, even if it serves only one version.
 - A request without `CG-Version` is served in the server's default version: the baseline default, or the route's own default when discovery lists the route. A server adopting version negotiation MUST set its default to the version it already serves, and adding versions MUST NOT change the default. A default changes only as described in [Changing the default version](#changing-the-default-version).
 - One request is served in one version. The whole response, including nested objects, MUST follow that version's schemas, and the request body MUST be validated against them.
-- A server MUST match the route, then resolve the version, then validate the request body, all before any side effect. A route the server doesn't implement returns an ordinary 404. A rejected write MUST change nothing.
+- A server MUST match the route, then resolve the version, then validate the request body, all before any side effect. A route the server doesn't implement returns an ordinary 404. A rejected write MUST change nothing and MUST NOT be retried under another version.
 
 #### Version response headers
 
