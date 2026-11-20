@@ -54,7 +54,13 @@ model OperationVersions {
 
   /** Deprecated versions of this route, keyed by version, with their retirement schedule
    *
-   * Each key is a full protocol version listed in `versions`, matched on major and minor.
+   * Each key is a version from `versions`, written exactly as it appears
+   * there. A server hosting `0.3.1` lists `0.3.1` in `versions` and uses
+   * `0.3.1` as the key here.
+   *
+   * To check whether the version you request is deprecated, compare only
+   * the major and minor. A client requesting `0.3.0` is served `0.3.1`, so
+   * its entry is under `0.3.1`.
    */
   @TypeSpec.JsonSchema.extension(
     "propertyNames",
@@ -98,7 +104,13 @@ model VersionDiscovery {
 
   /** Deprecated versions, keyed by version, with their retirement schedule
    *
-   * Each key is a full protocol version listed in `versions`, matched on major and minor.
+   * Each key is a version from `versions`, written exactly as it appears
+   * there. A server hosting `0.3.1` lists `0.3.1` in `versions` and uses
+   * `0.3.1` as the key here.
+   *
+   * To check whether the version you request is deprecated, compare only
+   * the major and minor. A client requesting `0.3.0` is served `0.3.1`, so
+   * its entry is under `0.3.1`.
    */
   @TypeSpec.JsonSchema.extension(
     "propertyNames",
