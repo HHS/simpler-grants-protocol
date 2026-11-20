@@ -95,6 +95,7 @@ The rules:
 - **What goes into the hold branch:** `feat` and breaking (`!`) work for that release, and fixes to that unreleased work.
 - **What goes straight to `main`:** `fix` PRs for code already released on `main`, Dependabot and security updates, and docs-only changes. Docs for unreleased work, like migration notes, go in the hold branch with that work.
 - **Releases are always cut from `main`.**
+- **Released OpenAPI documents stay fixed.** CI fails a PR, into `main` or a hold branch, that changes the website's OpenAPI document for any already released core version. The new version's document can change freely until its release. A deliberate edit needs the `published-openapi-change` label and a note in the PR saying why. See [core's development checklist](core/DEVELOPMENT.md#development-checklist).
 - **Hold branches aren't for blocked work.** A PR waiting on a review, a decision or another PR stays open against its usual base. The hold branch is for next-release work clustered in planning. Work continues on it normally.
 - **Keep it current with `main`.** Merge `main` into the hold branch at least weekly (**Update branch** on the staging PR does this). Rebasing works too.
 - **Open the staging PR early.** Open the staging PR as a draft early on. CI and the website preview then run on all the release's changes together, and the PR updates as each PR lands. "This branch is out-of-date with the base branch" is normal. A real merge conflict stops CI and the preview, so resolve it right away.

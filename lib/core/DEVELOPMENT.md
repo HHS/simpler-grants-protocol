@@ -39,6 +39,7 @@ Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Befo
   - [ ] An early PR into the hold branch adds the new version to the `Versions` enum in [`main.tsp`](lib/main.tsp)
   - [ ] Every PR decorates what it changes with the matching [versioning decorators](https://typespec.io/docs/libraries/versioning/reference/decorators/#@TypeSpec.Versioning.removed)
 - [ ] Every core PR runs `pnpm --filter website run typespec` and commits the regenerated files in [`website/public/openapi/`](../../website/public/openapi/) and [`website/public/schemas/yaml/`](../../website/public/schemas/yaml/)
+- [ ] Published OpenAPI documents don't change. CI (`ci-published-openapi.yml`) fails a PR that changes any document whose version is at or below core's released version, whether by hand or through regeneration. If the change is deliberate, such as a description or example fix, add the `published-openapi-change` label and say why in the PR. Run it locally with `pnpm --filter website run check:published-openapi --base origin/<base>`.
 
 ### Release review checklist
 
@@ -47,7 +48,7 @@ Run this on the hold branch before merging the staging PR, and note the results 
 - [ ] Regenerated specs match the committed files: after `pnpm --filter website run typespec`, `git status` shows no changes
 - [ ] Older versions are unchanged except for intended edits:
   - [ ] `git fetch origin` and `git diff origin/main...origin/<hold-branch> -- website/public/openapi/` have been run
-  - [ ] The diff adds `openapi.<new-version>.yaml`, and older versions show only edits you meant to make, such as a description or example fix
+  - [ ] The diff adds `openapi.<new-version>.yaml`, and older versions show only edits you meant to make, such as a description or example fix. CI already fails on any other change to a released version unless the PR has the `published-openapi-change` label; check that each labelled PR says why.
   - Comparing against `main` is what confirms the versioning decorators. Don't diff `lib/core/tsp-output/` against `website/public/openapi/`: the website build prunes unused tags (`website/src/scripts/prune-openapi-tags.ts`), so older versions always differ.
 - [ ] The new version has been reviewed in Swagger with `cg preview`:
   - [ ] From the repo root: `node lib/cli/dist/index.js preview website/public/openapi/openapi.<new-version>.yaml` (`pnpm install` builds the CLI), or `pnpm dlx @common-grants/cli preview <spec>`
