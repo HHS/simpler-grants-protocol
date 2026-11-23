@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SearchResultsInfo.yaml
+type: object
+properties:
+  query:
+    type: string
+    examples:
+      - Pre-school education
+    description: The search term used to find the response items
+required:
+  - query
+unevaluatedProperties:
+  not: {}
+description: Details about the search term applied to the response items

@@ -361,7 +361,7 @@ paths:
     post:
       operationId: Awards_search
       summary: Search awards
-      description: Search for awards based on the provided filters.
+      description: Search for awards based on the provided search term and filters.
       parameters: []
       responses:
         '200':
@@ -619,7 +619,7 @@ paths:
     post:
       operationId: Opportunities_search
       summary: Search opportunities
-      description: Search for opportunities based on the provided filters.
+      description: Search for opportunities based on the provided search term and filters.
       parameters: []
       responses:
         '200':

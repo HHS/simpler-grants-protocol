@@ -84,7 +84,7 @@ interface Awards {
    * Must be an extension of Models.AwardBase. Default is Models.AwardBase.
    */
   @summary("Search awards")
-  @doc("Search for awards based on the provided filters.")
+  @doc("Search for awards based on the provided search term and filters.")
   @post
   @route("/search")
   search<T extends Models.AwardBase = Models.AwardBase>(
@@ -106,5 +106,8 @@ interface Awards {
     pagination?: Pagination.PaginatedBodyParams,
 
     ...Headers.VersionRequest,
-  ): Responses.WithVersionErrors<Responses.FilteredT<T, Models.AwdFilters>>;
+  ): Responses.WithVersionErrors<Responses.SearchResultsT<
+    T,
+    Models.AwdFilters
+  >>;
 }
