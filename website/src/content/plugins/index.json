@@ -85,5 +85,39 @@
         }
       }
     }
+  },
+  "ts-cg-california": {
+    "label": "TypeScript California Grants Portal Plugin",
+    "description": "A TypeScript adapter that maps California Grants Portal records to and from CommonGrants.",
+    "system": "California Grants Portal",
+    "packageName": "@common-grants/cg-california",
+    "packageUrl": "https://www.npmjs.com/package/@common-grants/cg-california",
+    "repoUrl": "https://github.com/common-grants/ts-cg-california",
+    "fields": {
+      "Opportunity": [
+        "agency",
+        "contactInfo",
+        "additionalInfo",
+        "costSharing"
+      ]
+    },
+    "filters": {
+      "opportunities": {
+        "search": {
+          "agency": {
+            "filterType": "stringArray",
+            "description": "Filter by issuing agency department."
+          },
+          "categories": {
+            "filterType": "stringArray",
+            "description": "Filter by California Grants Portal category."
+          },
+          "applicantType": {
+            "filterType": "stringArray",
+            "description": "Filter by eligible applicant type, as labeled by the source."
+          }
+        }
+      }
+    }
   }
 }
