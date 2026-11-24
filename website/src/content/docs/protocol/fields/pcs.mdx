@@ -1,90 +1,6 @@
 ---
 title: PCS term
 description: A Philanthropy Classification System (PCS) term.
-pcsTerm:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSTerm.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSTerm.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 15
-      endLine: 32
-pcsClass:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSClass.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSClass.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 37
-      endLine: 46
-pcsOrgType:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSOrgType.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSOrgType.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 51
-      endLine: 59
-pcsSubject:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSSubject.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSSubject.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 61
-      endLine: 69
-pcsPopulation:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSPopulation.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSPopulation.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 71
-      endLine: 79
-pcsSupportStrategy:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSSupportStrategy.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSSupportStrategy.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 81
-      endLine: 89
-pcsTransactionType:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PCSTransactionType.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PCSTransactionType.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/pcs.tsp"
-      startLine: 91
-      endLine: 99
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -107,11 +23,7 @@ Visit [taxonomy.candid.org](https://taxonomy.candid.org/) for more information.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.pcsTerm.example}
-  jsonSchema={frontmatter.pcsTerm.jsonSchema}
-  typeSpec={frontmatter.pcsTerm.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSTerm" typeSpec />
 
 ### Changelog
 
@@ -133,11 +45,7 @@ The class to which the PCS term belongs.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.pcsClass.example}
-  jsonSchema={frontmatter.pcsClass.jsonSchema}
-  typeSpec={frontmatter.pcsClass.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSClass" typeSpec />
 
 ## Sub-types
 
@@ -155,11 +63,7 @@ A [PCSTerm](#pcsterm) where the `class` is `"Organization types"`. Categorizes t
 
 See [PCS organization types](https://taxonomy.candid.org/organization-type) for more information.
 
-<SchemaFormatTabs
-  example={frontmatter.pcsOrgType.example}
-  jsonSchema={frontmatter.pcsOrgType.jsonSchema}
-  typeSpec={frontmatter.pcsOrgType.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSOrgType" typeSpec />
 
 ### PCSSubject
 
@@ -167,11 +71,7 @@ A [PCSTerm](#pcsterm) where the `class` is `"Subjects"`. Categorizes the subject
 
 See [PCS subjects](https://taxonomy.candid.org/subject) for more information.
 
-<SchemaFormatTabs
-  example={frontmatter.pcsSubject.example}
-  jsonSchema={frontmatter.pcsSubject.jsonSchema}
-  typeSpec={frontmatter.pcsSubject.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSSubject" typeSpec />
 
 ### PCSPopulation
 
@@ -179,11 +79,7 @@ A [PCSTerm](#pcsterm) where the `class` is `"Population groups"`. Categorizes th
 
 See [PCS population groups](https://taxonomy.candid.org/population-group) for more information.
 
-<SchemaFormatTabs
-  example={frontmatter.pcsPopulation.example}
-  jsonSchema={frontmatter.pcsPopulation.jsonSchema}
-  typeSpec={frontmatter.pcsPopulation.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSPopulation" typeSpec />
 
 ### PCSSupportStrategy
 
@@ -191,11 +87,7 @@ A [PCSTerm](#pcsterm) where the `class` is `"Support strategies"`. Categorizes t
 
 See [PCS support strategies](https://taxonomy.candid.org/support-strategy) for more information.
 
-<SchemaFormatTabs
-  example={frontmatter.pcsSupportStrategy.example}
-  jsonSchema={frontmatter.pcsSupportStrategy.jsonSchema}
-  typeSpec={frontmatter.pcsSupportStrategy.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSSupportStrategy" typeSpec />
 
 ### PCSTransactionType
 
@@ -203,8 +95,4 @@ A [PCSTerm](#pcsterm) where the `class` is `"Transaction types"`. Categorizes th
 
 See [PCS transaction types](https://taxonomy.candid.org/transaction-type) for more information.
 
-<SchemaFormatTabs
-  example={frontmatter.pcsTransactionType.example}
-  jsonSchema={frontmatter.pcsTransactionType.jsonSchema}
-  typeSpec={frontmatter.pcsTransactionType.typeSpec}
-/>
+<SchemaFormatTabs schema="PCSTransactionType" typeSpec />

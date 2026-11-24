@@ -3,28 +3,6 @@ title: Opportunity
 description: The data models for a funding opportunity
 sidebar:
   order: 1
-opportunityBase:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OpportunityBase.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OpportunityBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 45
-      endLine: 80
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_base.py"
-      startLine: 15
-      endLine: 42
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 115
-      endLine: 162
 opportunityDetails:
   example:
     code: |
@@ -226,150 +204,6 @@ opportunityDetails:
         "createdAt": "2019-08-24T14:15:22Z",
         "lastModifiedAt": "2019-08-24T14:15:22Z"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OpportunityDetails.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 140
-      endLine: 162
-oppRef:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppRef.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppRef.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 115
-      endLine: 134
-oppIds:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppIds.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppIds.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 96
-      endLine: 109
-oppIdFon:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppIdFon.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppIdFon.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 86
-      endLine: 89
-oppIdAln:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppIdAln.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppIdAln.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/base.tsp"
-      startLine: 91
-      endLine: 94
-oppStatus:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppStatus.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/status.tsp"
-      startLine: 25
-      endLine: 29
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_status.py"
-      startLine: 30
-      endLine: 45
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 17
-      endLine: 26
-oppStatusOptions:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppStatusOptions.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/status.tsp"
-      startLine: 7
-      endLine: 19
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_status.py"
-      startLine: 11
-      endLine: 27
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 15
-      endLine: 15
-oppFunding:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppFunding.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppFunding.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/funding.tsp"
-      startLine: 12
-      endLine: 44
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_funding.py"
-      startLine: 11
-      endLine: 47
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 73
-      endLine: 96
-oppTimeline:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OppTimeline.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OppTimeline.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/opportunity/timeline.tsp"
-      startLine: 13
-      endLine: 28
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/models/opp_timeline.py"
-      startLine: 11
-      endLine: 28
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/models.ts"
-      startLine: 102
-      endLine: 113
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -382,17 +216,11 @@ A funding opportunity, such as a grant or loan. It shares its identity fields wi
 
 ### Table
 
-<SchemaTable filePath={frontmatter.opportunityBase.jsonSchema.file.path} />
+<SchemaTable schema="OpportunityBase" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.opportunityBase.example}
-  jsonSchema={frontmatter.opportunityBase.jsonSchema}
-  typeSpec={frontmatter.opportunityBase.typeSpec}
-  python={frontmatter.opportunityBase.python}
-  typescript={frontmatter.opportunityBase.typescript}
-/>
+<SchemaFormatTabs schema="OpportunityBase" typeSpec python typescript />
 
 ### Changelog
 
@@ -406,15 +234,14 @@ An entry is a reference, not the award record: `GET /awards/<id>` is the canonic
 
 ### Table
 
-<SchemaTable filePath={frontmatter.opportunityDetails.jsonSchema.file.path} />
+<SchemaTable schema="OpportunityDetails" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="OpportunityDetails"
   example={frontmatter.opportunityDetails.example}
-  jsonSchema={frontmatter.opportunityDetails.jsonSchema}
-  typeSpec={frontmatter.opportunityDetails.typeSpec}
-  python={frontmatter.opportunityDetails.python}
+  typeSpec
 />
 
 ### Changelog
@@ -427,15 +254,11 @@ A reference to an opportunity, previewing the key fields a consumer needs to ide
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppRef.jsonSchema.file.path} />
+<SchemaTable schema="OppRef" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppRef.example}
-  jsonSchema={frontmatter.oppRef.jsonSchema}
-  typeSpec={frontmatter.oppRef.typeSpec}
-/>
+<SchemaFormatTabs schema="OppRef" typeSpec />
 
 ### Changelog
 
@@ -447,15 +270,11 @@ A collection of identifiers associated with an opportunity, keyed by registry co
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppIds.jsonSchema.file.path} />
+<SchemaTable schema="OppIds" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppIds.example}
-  jsonSchema={frontmatter.oppIds.jsonSchema}
-  typeSpec={frontmatter.oppIds.typeSpec}
-/>
+<SchemaFormatTabs schema="OppIds" typeSpec />
 
 ### Changelog
 
@@ -467,15 +286,11 @@ An opportunity's Federal Opportunity Number (FON), assigned by the awarding agen
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppIdFon.jsonSchema.file.path} />
+<SchemaTable schema="OppIdFon" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppIdFon.example}
-  jsonSchema={frontmatter.oppIdFon.jsonSchema}
-  typeSpec={frontmatter.oppIdFon.typeSpec}
-/>
+<SchemaFormatTabs schema="OppIdFon" typeSpec />
 
 ### Changelog
 
@@ -487,15 +302,11 @@ An opportunity's Assistance Listing Number (ALN), formerly the CFDA number, whic
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppIdAln.jsonSchema.file.path} />
+<SchemaTable schema="OppIdAln" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppIdAln.example}
-  jsonSchema={frontmatter.oppIdAln.jsonSchema}
-  typeSpec={frontmatter.oppIdAln.typeSpec}
-/>
+<SchemaFormatTabs schema="OppIdAln" typeSpec />
 
 ### Changelog
 
@@ -507,17 +318,11 @@ The status of an opportunity, such as whether it is accepting applications.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppStatus.jsonSchema.file.path} />
+<SchemaTable schema="OppStatus" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppStatus.example}
-  jsonSchema={frontmatter.oppStatus.jsonSchema}
-  typeSpec={frontmatter.oppStatus.typeSpec}
-  python={frontmatter.oppStatus.python}
-  typescript={frontmatter.oppStatus.typescript}
-/>
+<SchemaFormatTabs schema="OppStatus" typeSpec python typescript />
 
 ### Changelog
 
@@ -529,16 +334,15 @@ The set of values accepted for opportunity status.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppStatusOptions.jsonSchema.file.path} />
+<SchemaTable schema="OppStatusOptions" />
 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.oppStatusOptions.example}
-  jsonSchema={frontmatter.oppStatusOptions.jsonSchema}
-  typeSpec={frontmatter.oppStatusOptions.typeSpec}
-  python={frontmatter.oppStatusOptions.python}
-  typescript={frontmatter.oppStatusOptions.typescript}
+  schema="OppStatusOptions"
+  typeSpec
+  python
+  typescript="OppStatusOptionsEnum"
 />
 
 ### Changelog
@@ -551,17 +355,11 @@ Details about the funding available for an opportunity.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppFunding.jsonSchema.file.path} />
+<SchemaTable schema="OppFunding" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppFunding.example}
-  jsonSchema={frontmatter.oppFunding.jsonSchema}
-  typeSpec={frontmatter.oppFunding.typeSpec}
-  python={frontmatter.oppFunding.python}
-  typescript={frontmatter.oppFunding.typescript}
-/>
+<SchemaFormatTabs schema="OppFunding" typeSpec python typescript />
 
 ### Changelog
 
@@ -573,17 +371,11 @@ Key dates in the opportunity's timeline, such as when the application opens and 
 
 ### Table
 
-<SchemaTable filePath={frontmatter.oppTimeline.jsonSchema.file.path} />
+<SchemaTable schema="OppTimeline" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.oppTimeline.example}
-  jsonSchema={frontmatter.oppTimeline.jsonSchema}
-  typeSpec={frontmatter.oppTimeline.typeSpec}
-  python={frontmatter.oppTimeline.python}
-  typescript={frontmatter.oppTimeline.typescript}
-/>
+<SchemaFormatTabs schema="OppTimeline" typeSpec python typescript />
 
 ### Changelog
 
