@@ -1,30 +1,6 @@
 ---
 title: Phone
 description: A model for representing a phone number
-phone:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Phone.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Phone.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/phone.tsp"
-      startLine: 3
-      endLine: 20
-phoneCollection:
-  example:
-    file:
-      path: "website/public/schemas/yaml/PhoneCollection.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PhoneCollection.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/phone.tsp"
-      startLine: 26
-      endLine: 39
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -35,15 +11,11 @@ A phone number.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.phone.jsonSchema.file.path} />
+<SchemaTable schema="Phone" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.phone.example}
-  jsonSchema={frontmatter.phone.jsonSchema}
-  typeSpec={frontmatter.phone.typeSpec}
-/>
+<SchemaFormatTabs schema="Phone" typeSpec />
 
 ### Changelog
 
@@ -55,15 +27,11 @@ A collection of phone numbers for a person or organization.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.phoneCollection.jsonSchema.file.path} />
+<SchemaTable schema="PhoneCollection" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.phoneCollection.example}
-  jsonSchema={frontmatter.phoneCollection.jsonSchema}
-  typeSpec={frontmatter.phoneCollection.typeSpec}
-/>
+<SchemaFormatTabs schema="PhoneCollection" typeSpec />
 
 ### Changelog
 

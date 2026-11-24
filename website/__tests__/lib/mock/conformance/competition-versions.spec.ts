@@ -19,6 +19,7 @@ import { describe, it, expect } from "vitest";
 import yaml from "js-yaml";
 import type { Version } from "@/lib/mock/data/fixtures";
 import { resolveSchemaRefs } from "@/lib/schema/ref-resolver";
+import { schemaFilePath } from "@/lib/schema/schema-files";
 import { getValidator } from "./schema-validator";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -319,19 +320,46 @@ describe("the unversioned CompetitionBase authoring schema", () => {
 // authoring schema, whose references resolve where it is served.
 describe("the Form and Competition docs pages", () => {
   const REPO_ROOT = path.resolve(HERE, "../../../../..");
-  const page = readFileSync(
-    path.join(REPO_ROOT, "website/src/content/docs/protocol/models/form.mdx"),
-    "utf-8",
-  );
+  const readPage = (model: string) =>
+    readFileSync(
+      path.join(
+        REPO_ROOT,
+        `website/src/content/docs/protocol/models/${model}.mdx`,
+      ),
+      "utf-8",
+    );
+  const page = readPage("form");
   const { form } = yaml.load(page.split("---")[1]) as {
-    form: {
-      example: { code: string };
-      table: { file: { path: string } };
-      jsonSchema: { file: { path: string } };
-    };
+    form: { example: { code: string } };
   };
   const load = (repoPath: string) =>
     yaml.load(readFileSync(path.join(REPO_ROOT, repoPath), "utf-8")) as Schema;
+
+  /**
+   * The files a page's table and JSON Schema tab read for a schema. A
+   * `<SchemaTable>` with a `version` reads that version's copy; the
+   * `<SchemaFormatTabs>` JSON Schema tab reads the unversioned file.
+   */
+  const filesFor = (pageText: string, schema: string) => {
+    const tag = (component: string) =>
+      pageText.match(
+        new RegExp(`<${component}\\b[^>]*\\bschema="${schema}"[^>]*>`),
+      )?.[0];
+    const table = tag("SchemaTable");
+    const tabs = tag("SchemaFormatTabs");
+    expect(table, `a SchemaTable for ${schema}`).toBeDefined();
+    expect(tabs, `a SchemaFormatTabs for ${schema}`).toBeDefined();
+    expect(
+      tabs,
+      "the tabs take their JSON Schema from the schema file",
+    ).not.toMatch(/\bjsonSchema=/);
+    const version = table!.match(/\bversion="([^"]+)"/)?.[1];
+    return {
+      table: version ? schemaFilePath(schema, version) : schemaFilePath(schema),
+      jsonSchema: schemaFilePath(schema),
+    };
+  };
+  const formFiles = filesFor(page, "FormBase");
 
   it("shows exactly the v0.5 FormBase example", () => {
     expect(JSON.parse(form.example.code)).toEqual(
@@ -340,58 +368,37 @@ describe("the Form and Competition docs pages", () => {
   });
 
   it("renders the table from the v0.5 schema, which requires title alone", () => {
-    expect(page).toContain(
-      "<SchemaTable filePath={frontmatter.form.table.file.path} />",
-    );
-    expect(form.table.file.path).toBe(
+    expect(formFiles.table).toBe(
       "website/public/schemas/yaml/versions/v0.5.0/FormBase.yaml",
     );
-    const table = load(form.table.file.path);
+    const table = load(formFiles.table);
     expect(table.required).toContain("title");
     expect(table.required).not.toContain("name");
   });
 
   it("renders the Competition table from the v0.5 schema, which requires opportunity alone", () => {
-    const competitionPage = readFileSync(
-      path.join(
-        REPO_ROOT,
-        "website/src/content/docs/protocol/models/competition.mdx",
-      ),
-      "utf-8",
-    );
-    const { competition } = yaml.load(competitionPage.split("---")[1]) as {
-      competition: { table: { file: { path: string } } };
-    };
-    expect(competitionPage).toContain(
-      "<SchemaTable filePath={frontmatter.competition.table.file.path} />",
-    );
-    expect(competition.table.file.path).toBe(
+    const competition = filesFor(readPage("competition"), "CompetitionBase");
+    expect(competition.table).toBe(
       "website/public/schemas/yaml/versions/v0.5.0/CompetitionBase.yaml",
     );
-    const table = load(competition.table.file.path);
+    const table = load(competition.table);
     expect(table.required).toContain("opportunity");
     expect(table.required).not.toContain("opportunityId");
   });
 
   it("keeps the JSON Schema tab on the unversioned authoring schema", () => {
-    expect(form.jsonSchema.file.path).toBe(
+    expect(formFiles.jsonSchema).toBe(
       "website/public/schemas/yaml/FormBase.yaml",
     );
-    expect(form.jsonSchema.file.path).not.toBe(form.table.file.path);
-    expect(load(form.jsonSchema.file.path).required).toEqual(
+    expect(formFiles.jsonSchema).not.toBe(formFiles.table);
+    expect(load(formFiles.jsonSchema).required).toEqual(
       expect.arrayContaining(["name", "title"]),
     );
   });
 
   /** The served file a model page tells readers to validate payloads with. */
   const validationTarget = (model: string) => {
-    const text = readFileSync(
-      path.join(
-        REPO_ROOT,
-        `website/src/content/docs/protocol/models/${model}.mdx`,
-      ),
-      "utf-8",
-    );
+    const text = readPage(model);
     const target = text.match(
       /To validate a payload, use [^`]*`(\/[^`]+)`/,
     )?.[1];
@@ -401,7 +408,7 @@ describe("the Form and Competition docs pages", () => {
 
   it("links and recommends only files a normal resolver can follow", async () => {
     for (const download of [
-      form.jsonSchema.file.path,
+      formFiles.jsonSchema,
       validationTarget("form"),
       validationTarget("competition"),
     ]) {

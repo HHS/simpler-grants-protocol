@@ -3,18 +3,27 @@ import { SchemaLoader } from "../lib/schema/schema-loader";
 import type { JsonSchema } from "../lib/schema/schema-loader";
 import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
 import { TableGenerator } from "../lib/schema/table-generator";
+import { schemaFilePath } from "../lib/schema/schema-files";
 import type { PropertyRow, EnumRow } from "../lib/schema/table-generator";
 
-const { filePath, code } = Astro.props;
+const { schema, version, code } = Astro.props;
 
 /**
  * Props for the SchemaTable component.
  */
 interface Props {
-  /** Path to the schema file relative to the repository root */
-  filePath?: string;
+  /** The schema's name, which is also the name of its generated JSON Schema file */
+  schema?: string;
+  /** Read the schema's copy for one protocol version (e.g. "v0.5.0") instead */
+  version?: string;
   /** Inline schema code (YAML string) */
   code?: string;
+}
+
+// In the dev server, re-read the protocol pages once per page render so a
+// schema newly named on another page links on reload; a build reads them once.
+if (import.meta.env.DEV) {
+  SchemaDocMapper.refreshForRender(Astro.locals);
 }
 
 // Schema documentation path getter
@@ -29,12 +38,12 @@ const getSchemaDocPath = (schemaName: string): string | undefined => {
 // Load and parse the schema
 let schemaData: JsonSchema;
 try {
-  if (filePath) {
-    schemaData = SchemaLoader.loadSchema(filePath);
+  if (schema) {
+    schemaData = SchemaLoader.loadSchema(schemaFilePath(schema, version));
   } else if (code) {
     schemaData = SchemaLoader.loadInlineSchema(code);
   } else {
-    throw new Error("Either filePath or code must be provided");
+    throw new Error("Either schema or code must be provided");
   }
 } catch (error) {
   console.error(`Loading schema:`, error);

@@ -108,14 +108,6 @@ proposalBase:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ProposalBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/proposal.tsp"
-      startLine: 7
-      endLine: 34
 proposalOpportunity:
   example:
     code: |
@@ -132,14 +124,6 @@ proposalOpportunity:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ProposalOpportunity.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/proposal.tsp"
-      startLine: 40
-      endLine: 51
 projectTimeline:
   example:
     code: |
@@ -165,14 +149,6 @@ projectTimeline:
         },
         "timelineDetails": "The project will be conducted over 12 months with quarterly milestones."
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ProjectTimeline.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/proposal.tsp"
-      startLine: 57
-      endLine: 71
 proposalContacts:
   example:
     code: |
@@ -209,14 +185,6 @@ proposalContacts:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ProposalContacts.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/proposal.tsp"
-      startLine: 77
-      endLine: 85
 proposalOrgs:
   example:
     code: |
@@ -239,14 +207,6 @@ proposalOrgs:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/ProposalOrgs.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/proposal.tsp"
-      startLine: 91
-      endLine: 99
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -259,14 +219,14 @@ A proposal for funding.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.proposalBase.jsonSchema.file.path} />
+<SchemaTable schema="ProposalBase" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ProposalBase"
   example={frontmatter.proposalBase.example}
-  jsonSchema={frontmatter.proposalBase.jsonSchema}
-  typeSpec={frontmatter.proposalBase.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -279,14 +239,14 @@ The opportunity to which this proposal is related.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.proposalOpportunity.jsonSchema.file.path} />
+<SchemaTable schema="ProposalOpportunity" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ProposalOpportunity"
   example={frontmatter.proposalOpportunity.example}
-  jsonSchema={frontmatter.proposalOpportunity.jsonSchema}
-  typeSpec={frontmatter.proposalOpportunity.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -299,14 +259,14 @@ The key dates for the project.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.projectTimeline.jsonSchema.file.path} />
+<SchemaTable schema="ProjectTimeline" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ProjectTimeline"
   example={frontmatter.projectTimeline.example}
-  jsonSchema={frontmatter.projectTimeline.jsonSchema}
-  typeSpec={frontmatter.projectTimeline.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -319,14 +279,14 @@ The point of contact for the project.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.proposalContacts.jsonSchema.file.path} />
+<SchemaTable schema="ProposalContacts" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ProposalContacts"
   example={frontmatter.proposalContacts.example}
-  jsonSchema={frontmatter.proposalContacts.jsonSchema}
-  typeSpec={frontmatter.proposalContacts.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -339,14 +299,14 @@ The organization that is requesting funding.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.proposalOrgs.jsonSchema.file.path} />
+<SchemaTable schema="ProposalOrgs" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="ProposalOrgs"
   example={frontmatter.proposalOrgs.example}
-  jsonSchema={frontmatter.proposalOrgs.jsonSchema}
-  typeSpec={frontmatter.proposalOrgs.typeSpec}
+  typeSpec
 />
 
 ### Changelog
