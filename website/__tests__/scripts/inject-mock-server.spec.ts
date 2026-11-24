@@ -10,9 +10,9 @@ import { describe, it, expect } from "vitest";
 import {
   assertMockServesVersion,
   injectServers,
-  versionFromSpecFilename,
   MockServerInjector,
 } from "@/scripts/inject-mock-server";
+import { versionFromSpecFilename } from "@/lib/openapi-versions";
 import { MOCK_SERVER_URL, MOCK_SPEC_DIR_NAME } from "@/lib/mock/docs-wiring";
 import { MOCK_API_BASE_PATH } from "@/lib/mock/router";
 import { SUPPORTED_VERSIONS } from "@/lib/mock/data/fixtures";
@@ -40,18 +40,6 @@ paths:
 describe("MOCK_SERVER_URL", () => {
   it("equals MOCK_API_BASE_PATH, since the version rides in the CG-Version header", () => {
     expect(MOCK_SERVER_URL).toBe(MOCK_API_BASE_PATH);
-  });
-});
-
-describe("versionFromSpecFilename", () => {
-  it("extracts the version from a versioned spec filename", () => {
-    expect(versionFromSpecFilename("openapi.0.4.0.yaml")).toBe("0.4.0");
-    expect(versionFromSpecFilename("openapi.0.1.0.yaml")).toBe("0.1.0");
-  });
-
-  it("returns null for filenames that are not versioned specs", () => {
-    expect(versionFromSpecFilename("README.md")).toBeNull();
-    expect(versionFromSpecFilename("openapi.yaml")).toBeNull();
   });
 });
 

@@ -78,6 +78,10 @@ A 200 response with a paginated list of items matching a search term and filters
   typeSpec={["SearchResultsBase", "SearchResults"]}
 />
 
+### Version headers
+
+The typed `SearchResultsT<ItemsT, FilterT>` response carries the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
+
 ### Usage
 
 Use the `SearchResultsT<ItemsT, FilterT>` template to define a 200 response with a paginated list of typed items matching a search within an API operation:

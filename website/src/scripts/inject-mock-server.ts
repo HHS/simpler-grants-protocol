@@ -146,4 +146,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }
 
-export { MockServerInjector, versionFromSpecFilename };
+export { MockServerInjector };
