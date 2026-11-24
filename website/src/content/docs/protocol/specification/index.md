@@ -199,7 +199,7 @@ v0.6.0 adds version negotiation and is purely additive: nothing changes for exis
 
 ##### Version negotiation
 
-- Every protocol route except `GET /versions` declares the optional `CG-Version` request header, and its responses declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. 401 and 403 responses declare `CG-Version-Served` as optional. See [Version response headers](#version-response-headers).
+- Every protocol route except `GET /versions` declares the optional `CG-Version` request header, and its responses, except the 406 version errors, declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. 400, 401 and 403 responses declare `CG-Version-Served` as optional. See [Version response headers](#version-response-headers).
 - Every protocol route except `GET /versions` declares the version errors: 400 `version.malformed` and `version.conflict`, and 406 `version.unsupported` and `version.retired`. See [Version errors](#version-errors).
 - The new optional `GET /versions` route lists the versions a server serves. A server that serves more than one version MUST implement it. See [Discovering supported versions](#discovering-supported-versions).
 - A new `protocolVersion` scalar describes a full `MAJOR.MINOR.PATCH` protocol version, such as `0.6.0`.
