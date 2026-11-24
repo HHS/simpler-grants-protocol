@@ -72,7 +72,7 @@ const indexes = new Map<SourceLanguage, Map<string, FoundDeclaration[]>>();
 
 /**
  * Makes the next lookup re-read the sources. The dev server clears the
- * indexes once per page render through `refreshSchemaSourcesForRender`.
+ * indexes once per page render (see `SchemaDocMapper.refreshForRender`).
  */
 export function clearDeclarationIndexes(): void {
   indexes.clear();

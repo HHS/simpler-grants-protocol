@@ -3,7 +3,6 @@ import type { CustomField } from "@/lib/custom-fields";
 import { LinkButton, CardGrid, Aside } from "@astrojs/starlight/components";
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
 import { SchemaDocMapper } from "@/lib/schema/schema-doc-mapper";
-import { refreshSchemaSourcesForRender } from "@/lib/schema/dev-refresh";
 import { Paths } from "@/lib/schema/paths";
 import { loadAllPlugins } from "@/lib/plugins";
 import PluginCatalogCard from "@/components/plugins/PluginCatalogCard.astro";
@@ -30,7 +29,7 @@ function formatDate(dateStr: string): string {
 // In the dev server, re-read the protocol pages once per page render so a
 // schema newly named on a page links on reload; a build reads them once.
 if (import.meta.env.DEV) {
-  refreshSchemaSourcesForRender(Astro.locals);
+  SchemaDocMapper.refreshForRender(Astro.locals);
 }
 
 // Get documentation path for a schema name

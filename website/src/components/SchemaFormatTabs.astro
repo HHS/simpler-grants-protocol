@@ -6,7 +6,7 @@ import { join } from "path";
 import { Paths } from "../lib/schema/paths";
 import { generateSchemaExample } from "../lib/schema/example-generator";
 import { schemaFilePath } from "../lib/schema/schema-files";
-import { refreshSchemaSourcesForRender } from "../lib/schema/dev-refresh";
+import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
 import {
   findSnippet,
   sourceUrl,
@@ -88,7 +88,7 @@ const jsonSchemaUrl = jsonSchemaConfig
 // In the dev server, re-read the sources and pages once per page render so an
 // edit shows on reload; a production build reads them once.
 if (import.meta.env.DEV) {
-  refreshSchemaSourcesForRender(Astro.locals);
+  SchemaDocMapper.refreshForRender(Astro.locals);
 }
 const typeSpecSnippet = snippet("typeSpec", typeSpec);
 const pythonSnippet = snippet("python", python);
