@@ -212,6 +212,48 @@ describe("award route schemas", () => {
     }
   });
 
+  it("agrees with Core on pages above the int32 range", () => {
+    const aboveInt32 = 2_147_483_648;
+    const cases = [
+      {
+        name: "list request page",
+        schema: AwardRouteSchemas.AwardsListRequestSchema,
+        jsonSchemaId: "AwardsListRequest.yaml",
+        value: { page: aboveInt32, pageSize: 20 },
+      },
+      {
+        name: "list request page size",
+        schema: AwardRouteSchemas.AwardsListRequestSchema,
+        jsonSchemaId: "AwardsListRequest.yaml",
+        value: { page: 1, pageSize: aboveInt32 },
+      },
+      {
+        name: "search request pagination",
+        schema: AwardRouteSchemas.AwdSearchRequestSchema,
+        jsonSchemaId: "AwdSearchRequest.yaml",
+        value: { pagination: { page: aboveInt32, pageSize: aboveInt32 } },
+      },
+      {
+        name: "list response pagination info",
+        schema: AwardRouteSchemas.AwardsListResponseSchema,
+        jsonSchemaId: "AwardsListResponse.yaml",
+        value: {
+          status: 200,
+          message: "Success",
+          items: [award],
+          paginationInfo: { page: aboveInt32, pageSize: aboveInt32 },
+        },
+      },
+    ];
+
+    for (const { name, schema, jsonSchemaId, value } of cases) {
+      expect(schema.safeParse(value).success, `${name} should satisfy its runtime schema`).toBe(
+        true
+      );
+      expect(validate(ajv, jsonSchemaId, value).isValid, `${name} should match Core`).toBe(true);
+    }
+  });
+
   it("rejects malformed responses and preserves protocol-valid serialized output", () => {
     const nestedAward = {
       ...award,

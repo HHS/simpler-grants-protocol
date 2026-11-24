@@ -70,18 +70,11 @@ const SOURCES: Record<
 
 const indexes = new Map<SourceLanguage, Map<string, FoundDeclaration[]>>();
 
-/** The render the indexes were last read for, if any */
-let indexedForRender: object | undefined;
-
 /**
- * Makes the next lookup re-read the sources, once per render. The dev server
- * calls this with the request's `Astro.locals`, so a page reload shows a
- * source edit while the several tabs on one page still share one read. A
- * production build never calls it, so it reads the sources once per build.
+ * Makes the next lookup re-read the sources. The dev server clears the
+ * indexes once per page render (see `SchemaDocMapper.refreshForRender`).
  */
-export function refreshDeclarationsForRender(render: object): void {
-  if (render === indexedForRender) return;
-  indexedForRender = render;
+export function clearDeclarationIndexes(): void {
   indexes.clear();
 }
 
@@ -392,8 +385,10 @@ export function listTypeSpecDeclarations(source: string): Declaration[] {
 
 /**
  * Lists the top-level declarations in a TypeScript source. Each one starts at
- * its declaration keyword, not at the comment above it, and runs to the end
- * of its statement.
+ * the JSDoc comment attached to it, if it has one, or else at its declaration
+ * keyword, and runs to the end of its statement. Line comments and section
+ * banners above a declaration are left out, and of several JSDoc comments
+ * above it only the last, attached one is included.
  */
 export function listTypeScriptDeclarations(source: string): Declaration[] {
   const file = ts.createSourceFile(
@@ -408,7 +403,7 @@ export function listTypeScriptDeclarations(source: string): Declaration[] {
 
   const add = (name: string, statement: ts.Statement) => {
     const startLine =
-      file.getLineAndCharacterOfPosition(statement.getStart(file)).line + 1;
+      file.getLineAndCharacterOfPosition(declarationStart(statement)).line + 1;
     const endLine = file.getLineAndCharacterOfPosition(statement.end).line + 1;
     declarations.push(fromLines(lines, name, startLine, endLine));
   };
@@ -433,6 +428,23 @@ export function listTypeScriptDeclarations(source: string): Declaration[] {
   }
 
   return declarations;
+
+  /**
+   * Where a statement starts, counting the JSDoc comment the compiler
+   * attaches to it. Only the last JSDoc comment counts, and only when nothing
+   * but whitespace separates it from the statement's keyword.
+   */
+  function declarationStart(statement: ts.Statement): number {
+    const keyword = statement.getStart(file);
+    const jsDoc = ts
+      .getJSDocCommentsAndTags(statement)
+      .filter(ts.isJSDoc)
+      .at(-1);
+    if (jsDoc && source.slice(jsDoc.end, keyword).trim() === "") {
+      return jsDoc.getStart(file);
+    }
+    return keyword;
+  }
 }
 
 // ############################################################################
@@ -494,7 +506,10 @@ function scanPythonLines(source: string): PythonLine[] {
 /**
  * Lists the module-level classes, functions and assignments in a Python
  * source. Each one starts at its first decorator, or at its own line, and
- * runs to the last non-blank line of its body.
+ * runs to the last non-blank line of its body. A comment at column 0 inside
+ * the body, such as a commented-out field, doesn't end it; one followed only
+ * by blank lines, comments and the next module-level statement does, and is
+ * left out.
  */
 export function listPythonDeclarations(source: string): Declaration[] {
   const lines = scanPythonLines(source);
@@ -504,6 +519,11 @@ export function listPythonDeclarations(source: string): Declaration[] {
   /** A line that begins a new module-level statement */
   const startsStatement = (line: PythonLine) =>
     !line.continues && /^[^\s#]/.test(line.text);
+  /** A line holding only a comment, at any indentation */
+  const isComment = (line: PythonLine) =>
+    !line.continues && /^\s*#/.test(line.text);
+  const isBlankOrComment = (line: PythonLine) =>
+    isComment(line) || (!line.continues && line.text.trim() === "");
 
   let i = 0;
   while (i < lines.length) {
@@ -520,13 +540,17 @@ export function listPythonDeclarations(source: string): Declaration[] {
     }
     const header = lines[i]?.text ?? "";
 
-    // The statement runs until the next line that starts a statement or is
-    // a comment at column 0.
+    // The statement runs until the next line that starts a statement, or a
+    // comment at column 0 that comes before one (a section banner). A
+    // column-0 comment with more of the body after it is part of the body.
     let end = i;
     for (let j = i + 1; j < lines.length; j++) {
       const line = lines[j];
       if (startsStatement(line)) break;
-      if (!line.continues && /^#/.test(line.text)) break;
+      if (isComment(line) && /^#/.test(line.text)) {
+        const next = lines.slice(j + 1).find((l) => !isBlankOrComment(l));
+        if (!next || startsStatement(next)) break;
+      }
       if (line.text.trim() !== "") end = j;
     }
 

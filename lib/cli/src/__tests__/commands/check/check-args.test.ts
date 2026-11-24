@@ -3,6 +3,7 @@ import {
   CheckSpecArgsSchema,
   CheckSpecOptionsSchema,
   availableVersions,
+  parseBaseVersions,
 } from "../../../commands/check/check-args";
 
 describe("Check Args Validation", () => {
@@ -91,7 +92,7 @@ describe("Check Args Validation", () => {
   // #########################################################
 
   describe("CheckSpecOptionsSchema", () => {
-    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0"])(
+    it.each(["0.1.0", "0.2.0", "0.3.0", "0.4.0", "0.5.0", "0.6.0"])(
       "should accept valid protocolVersion %s",
       version => {
         const result = CheckSpecOptionsSchema.safeParse({
@@ -101,8 +102,9 @@ describe("Check Args Validation", () => {
       }
     );
 
-    it("should list 0.5.0 as the latest (default) protocolVersion", () => {
-      expect(availableVersions[0]).toBe("0.5.0");
+    it("should default to 0.6.0 when no protocolVersion flag is passed", () => {
+      // The newest bundled version is the default when no flag is passed
+      expect(availableVersions[0]).toBe("0.6.0");
     });
 
     it("should reject invalid protocolVersion", () => {
@@ -123,6 +125,39 @@ describe("Check Args Validation", () => {
     it("should accept empty options", () => {
       const result = CheckSpecOptionsSchema.safeParse({});
       expect(result.success).toBe(true);
+    });
+  });
+
+  // #########################################################
+  // # Parse Base Versions
+  // #########################################################
+
+  describe("parseBaseVersions", () => {
+    it("should sort versions newest first by version number, not by string", () => {
+      // Arrange
+      const fileNames = ["openapi.0.9.0.yaml", "openapi.0.10.0.yaml", "openapi.0.2.0.yaml"];
+
+      // Act
+      const versions = parseBaseVersions(fileNames);
+
+      // Assert
+      expect(versions).toEqual(["0.10.0", "0.9.0", "0.2.0"]);
+    });
+
+    it("should ignore files whose name does not match openapi.<semver>.yaml", () => {
+      // Arrange
+      const fileNames = [
+        "openapi.0.5.0.yaml",
+        "openapi.latest.yaml",
+        "README.md",
+        "openapi.0.10.0.yaml",
+      ];
+
+      // Act
+      const versions = parseBaseVersions(fileNames);
+
+      // Assert
+      expect(versions).toEqual(["0.10.0", "0.5.0"]);
     });
   });
 });

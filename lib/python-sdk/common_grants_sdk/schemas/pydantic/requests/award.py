@@ -1,7 +1,7 @@
 """Request models for the Core award routes.
 
-Award routes use Core's pagination contract directly (default page size 100, int32
-bounds) rather than the shared pagination helpers, which opportunity routes still use.
+Award routes use Core's pagination contract directly (default page size 100) rather than
+the shared pagination helpers, which opportunity routes still use.
 """
 
 from typing import Annotated, Optional
@@ -13,8 +13,7 @@ from .._contract import SealedModel
 from ..filters.award import AwdFilters
 from ..sorting import AwdSorting
 
-_INT32_MAX = 2_147_483_647
-_Page = Annotated[int, Field(ge=1, le=_INT32_MAX)]
+_Page = Annotated[int, Field(ge=1)]
 
 
 class _AwdPagination(SealedModel):

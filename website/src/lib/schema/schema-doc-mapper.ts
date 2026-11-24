@@ -2,7 +2,10 @@ import { readFileSync } from "fs";
 import * as path from "path";
 import yaml from "js-yaml";
 import { Paths } from "./paths";
-import { listFilesByExtension } from "./source-declarations";
+import {
+  clearDeclarationIndexes,
+  listFilesByExtension,
+} from "./source-declarations";
 
 /** A `<SchemaTable>` or `<SchemaFormatTabs>` tag's `schema="Name"` attribute */
 const SCHEMA_ATTRIBUTE =
@@ -85,10 +88,29 @@ function inlineSchemas(
 
 /**
  * Schema documentation mapping service. Builds the map from the protocol
- * pages the first time it's asked, once per build.
+ * pages the first time it's asked: once per build, or once per page render in
+ * the dev server (see `refreshForRender`).
  */
 export class SchemaDocMapper {
   private static cache: Map<string, string> | null = null;
+
+  /** The render the caches were last cleared for, if any */
+  private static refreshedForRender: object | undefined;
+
+  /**
+   * Makes the next lookups re-read the protocol pages and source files, once
+   * per render: the schema-to-page map and the declaration indexes. The dev
+   * server calls this from each component that reads them, with the
+   * request's `Astro.locals`, so a page reload shows a source or page edit
+   * while the components on one page still share one read. A production
+   * build never calls it, so it reads everything once per build.
+   */
+  static refreshForRender(render: object): void {
+    if (render === this.refreshedForRender) return;
+    this.refreshedForRender = render;
+    clearDeclarationIndexes();
+    this.clearCache();
+  }
 
   /** Gets the schema documentation mapping, building it on first use */
   static getSchemaDocMap(): Map<string, string> {
@@ -106,7 +128,7 @@ export class SchemaDocMapper {
     return this.getSchemaDocMap().get(schemaName);
   }
 
-  /** Clears the cache (useful for testing) */
+  /** Clears the cache, so the next lookup re-reads the protocol pages */
   static clearCache(): void {
     this.cache = null;
   }

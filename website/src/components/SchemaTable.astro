@@ -20,6 +20,12 @@ interface Props {
   code?: string;
 }
 
+// In the dev server, re-read the protocol pages once per page render so a
+// schema newly named on another page links on reload; a build reads them once.
+if (import.meta.env.DEV) {
+  SchemaDocMapper.refreshForRender(Astro.locals);
+}
+
 // Schema documentation path getter
 const getSchemaDocPath = (schemaName: string): string | undefined => {
   return SchemaDocMapper.getSchemaDocPath(schemaName);

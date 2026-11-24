@@ -143,8 +143,8 @@ response templates (`responses.ts`) or the shared `PaginatedQueryParamsSchema`/
 `PaginatedBodyParamsSchema` (`pagination.ts`). Those generics reuse the shared
 pagination and sorting schemas, which diverge from the protocol (see
 Unresolved), so building on them would carry the divergence into the award
-routes. The local copies pin `status: 200`, seal every level, bound page and
-page size at int32, and drop `null` where the protocol is non-nullable; they
+routes. The local copies pin `status: 200`, seal every level, and drop `null`
+where the protocol is non-nullable; they
 collapse back onto the generics once #1192 fixes the shared schemas. Parity is
 asserted two-sided (Zod and AJV) against the emitted route schemas in
 `award-routes.spec.ts`.
@@ -163,7 +163,7 @@ models), not #1156.
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | `SingleDateEvent` / `DateRange` / `Other` (`EventSchema`) | optional metadata is `.nullish()` (accepts `null`); objects are not sealed (accept unknown keys)  | blocks `AwdTimeline` parity (T4)                  |
 | `CustomField` (`CustomFieldSchema`)                       | `schema`/`description` are `.nullish()` (accept `null`); object not sealed (accepts unknown keys) | blocks `AwdRecipientIndividual.customFields` (T4) |
-| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()` and unbounded (no int32 `.max()`); objects are not sealed      | forked as `RoutePaginationInputSchema` (T6)       |
+| `PaginatedQueryParams` / `PaginatedBodyParams`            | `page`/`pageSize` are `.nullish()`; objects are not sealed                                        | forked as `RoutePaginationInputSchema` (T6)       |
 | `PaginatedResultsInfo` (`PaginatedResultsInfoSchema`)     | `pageSize` allows `0` (protocol minimum is `1`); totals are `.nullish()`; object not sealed       | forked as `AwardPaginationInfoSchema` (T6)        |
 | `SortedResultsInfo` (`SortedResultsInfoSchema`)           | `customSortBy`/`errors` are `.nullish()` (accept `null`); object not sealed                       | forked as `AwardSortInfoSchema` (T6)              |
 

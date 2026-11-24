@@ -1,0 +1,153 @@
+---
+title: Search results
+description: A paginated list of items matching a search.
+sidebar:
+  order: 5
+searchResults:
+  example:
+    code: |
+      {
+        "status": 200,
+        "message": "Success",
+        "items": [
+          {
+            "id": "123",
+            "name": "Test 1"
+          },
+          {
+            "id": "124",
+            "name": "Test 2"
+          }
+        ],
+        "paginationInfo": {
+          "page": 1,
+          "pageSize": 10,
+          "totalItems": 25,
+          "totalPages": 3
+        },
+        "sortInfo": {
+          "sortBy": "name",
+          "sortOrder": "asc"
+        },
+        "filterInfo": {
+          "filters": {
+            "lastModifiedAt": {
+              "operator": "gte",
+              "value": "2024-01-01T00:00:00Z"
+            }
+          }
+        },
+        "searchInfo": {
+          "query": "Pre-school education"
+        }
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/SearchResults.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 249
+      endLine: 274
+searchResultsInfo:
+  example:
+    code: |
+      {
+        "query": "Pre-school education"
+      }
+  jsonSchema:
+    file:
+      path: "website/public/schemas/yaml/SearchResultsInfo.yaml"
+  typeSpec:
+    file:
+      path: "lib/core/lib/core/responses/success.tsp"
+      startLine: 241
+      endLine: 247
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaChangelog from "@/components/SchemaChangelog.astro";
+
+## SearchResults
+
+A 200 response with a paginated list of items matching a search term and filters. It extends [Filtered](/protocol/responses/filtered) with a `searchInfo` property that confirms the search term the server used.
+
+`searchInfo` is omitted when the request had no search term. An empty or whitespace-only `search` value counts as no search term.
+
+### Table
+
+| Parameter      | Type                                                              | Description                                                    |
+| -------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| status         | [integer](/protocol/types/numeric#integer)                        | The HTTP status code                                           |
+| message        | [string](/protocol/types/string#string)                           | The message to return                                          |
+| items          | [Array](/protocol/types/other#array)                              | Items from the current page                                    |
+| paginationInfo | [PaginatedResultsInfo](/protocol/pagination#paginatedresultsinfo) | Details about the pagination                                   |
+| sortInfo       | [SortedResultsInfo](/protocol/sorting#sortedresultsinfo)          | The sort order of the items                                    |
+| filterInfo     | object                                                            | The filters applied to the response items                      |
+| searchInfo     | [SearchResultsInfo](#searchresultsinfo)                           | The search term applied to the response items, if one was sent |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.searchResults.example}
+  jsonSchema={frontmatter.searchResults.jsonSchema}
+  typeSpec="SearchResults"
+/>
+
+### Usage
+
+Use the `SearchResultsT<ItemsT, FilterT>` template to define a 200 response with a paginated list of typed items matching a search within an API operation:
+
+```typespec
+import "@common-grants/core";
+import "@typespec/http";
+
+using TypeSpec.Http;
+using CommonGrants;
+using CommonGrants.Pagination;
+using CommonGrants.Responses;
+
+model TestModel {
+  id: string;
+  name: string;
+}
+
+model TestFilter extends Record<Filters.DefaultFilter> {
+  lastModifiedAt: Filters.DateComparisonFilter;
+}
+
+@summary("Search test models")
+@doc("Get a paginated list of test models matching a search term and filter")
+@post
+op searchTest(
+  search?: string,
+  filters?: TestFilter,
+  pagination?: PaginatedBodyParams,
+): SearchResultsT<TestModel, TestFilter>;
+```
+
+### Changelog
+
+<SchemaChangelog schema="SearchResults" />
+
+## SearchResultsInfo
+
+Details about the search term applied to the response items.
+
+### Table
+
+| Parameter | Type                                    | Description                                     |
+| --------- | --------------------------------------- | ----------------------------------------------- |
+| query     | [string](/protocol/types/string#string) | The search term used to find the response items |
+
+### Formats
+
+<SchemaFormatTabs
+  example={frontmatter.searchResultsInfo.example}
+  jsonSchema={frontmatter.searchResultsInfo.jsonSchema}
+  typeSpec="SearchResultsInfo"
+/>
+
+### Changelog
+
+<SchemaChangelog schema="SearchResultsInfo" />
