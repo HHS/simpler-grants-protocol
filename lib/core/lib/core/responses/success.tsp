@@ -251,6 +251,77 @@ model FilteredT<ItemsT, FilterT> extends Success {
 }
 
 // ############################################################################
+// 200 search results response
+// ############################################################################
+
+/** Details about the search term applied to the response items */
+@Versioning.added(CommonGrants.Versions.v0_6)
+model SearchResultsInfo {
+  /** The search term used to find the response items */
+  @example("Pre-school education")
+  query: string;
+}
+
+/** Body properties shared by `SearchResults` and `SearchResultsT<ItemsT, FilterT>`
+ *
+ * @template ItemsT The schema for the value of the `"items"` property in this response
+ * @template FilterT The schema for the value of the `"filter"` property in this response
+ */
+@Versioning.added(CommonGrants.Versions.v0_6)
+model SearchResultsBase<ItemsT, FilterT> {
+  ...FilteredBase<ItemsT, FilterT>;
+
+  /** The search term applied to the response items
+   *
+   * Omitted when the request had no search term. An empty or whitespace-only
+   * `search` value counts as no search term.
+   */
+  searchInfo?: SearchResultsInfo;
+}
+
+/** A paginated list of items of an unspecified shape matching a search
+ *
+ * Routes use the typed `SearchResultsT<ItemsT, FilterT>` variant.
+ */
+@doc("A paginated list of items matching a search")
+@Versioning.added(CommonGrants.Versions.v0_6)
+model SearchResults extends Success {
+  ...SearchResultsBase<unknown, unknown>;
+}
+
+/** Template for a paginated list of typed items matching a search, with a typed filter
+ *
+ * @template ItemsT The schema for the value of the `"items"` property in this response
+ * @template FilterT The schema for the value of the `"filter"` property in this response
+ * @example How to specify a custom search results response model
+ *
+ * ```typespec
+ * // Define a model for the items in the response
+ * model CustomModel {
+ *   id: string;
+ *   description: string;
+ * }
+ *
+ * // Define a model for the filter in the response
+ * model CustomFilter extends Record<Filters.DefaultFilter> {
+ *   lastModifiedAt: Filters.DateComparisonFilter;
+ * }
+ *
+ * // Pass that model to the `SearchResultsT` template
+ * alias CustomModelSearchResponse = Responses.SearchResultsT<CustomModel, CustomFilter>;
+ * ```
+ */
+@doc("A paginated list of typed items matching a search, with a typed filter")
+@Versioning.added(CommonGrants.Versions.v0_6)
+model SearchResultsT<ItemsT, FilterT> extends Success {
+  // Inherit the 200 status code
+  ...Http.OkResponse;
+
+  ...Headers.VersionResponse;
+  ...SearchResultsBase<ItemsT, FilterT>;
+}
+
+// ############################################################################
 // 201 response
 // ############################################################################
 

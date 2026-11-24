@@ -26,8 +26,8 @@ filtered:
           "totalPages": 3
         },
         "sortInfo": {
-          "field": "name",
-          "direction": "asc"
+          "sortBy": "name",
+          "sortOrder": "asc"
         },
         "filterInfo": {
           "filters": {
@@ -84,6 +84,7 @@ import "@common-grants/core";
 import "@typespec/http";
 
 using TypeSpec.Http;
+using CommonGrants;
 using CommonGrants.Pagination;
 using CommonGrants.Responses;
 

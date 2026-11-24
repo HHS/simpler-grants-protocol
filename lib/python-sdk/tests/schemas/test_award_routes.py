@@ -35,7 +35,7 @@ from .award_fixtures import (
 )
 
 ROUTES = routes()
-INT32_MAX = 2_147_483_647
+ABOVE_INT32 = 2_147_483_648
 
 
 @pytest.mark.parametrize("case", ROUTES.values(), ids=ROUTES.keys())
@@ -63,8 +63,6 @@ def test_list_request_defaults_to_core_pagination_and_omits_it():
     [
         {"page": 0},
         {"pageSize": 0},
-        {"page": INT32_MAX + 1},
-        {"pageSize": INT32_MAX + 1},
         {"page": 1.5},
         {"page": 1, "unknown": 1},
     ],
@@ -72,6 +70,14 @@ def test_list_request_defaults_to_core_pagination_and_omits_it():
 def test_invalid_list_requests_are_rejected(payload):
     with pytest.raises(ValidationError):
         AwardsListRequest.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [{"page": ABOVE_INT32}, {"pageSize": ABOVE_INT32}],
+)
+def test_list_requests_accept_pages_above_int32(payload):
+    assert wire(AwardsListRequest.model_validate(payload)) == payload
 
 
 def test_list_request_reads_null_as_the_default():
@@ -224,8 +230,9 @@ def test_explicit_null_result_info_reads_as_omitted(model, payload, path):
     assert wire(response) == expected
 
 
-def test_page_size_has_no_upper_bound_in_results():
-    info = {**PAGINATION_INFO, "pageSize": INT32_MAX + 1}
+@pytest.mark.parametrize("key", ["page", "pageSize"])
+def test_pagination_info_has_no_upper_bound_in_results(key):
+    info = {**PAGINATION_INFO, key: ABOVE_INT32}
 
     response = AwardsListResponse.model_validate(
         {**LIST_RESPONSE, "paginationInfo": info}

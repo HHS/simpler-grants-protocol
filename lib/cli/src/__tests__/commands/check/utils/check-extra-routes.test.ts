@@ -186,4 +186,48 @@ describe("checkExtraRoutes", () => {
     // Assert - No errors
     expect(errors.getErrorCount()).toBe(0);
   });
+
+  // ############################################################
+  // Ignore path item fields that aren't operations
+  // ############################################################
+
+  it("should not flag path-level parameters or summary as extra routes", () => {
+    // Arrange - Create base spec with one route
+    const baseDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Base", version: "1.0.0" },
+      paths: {
+        "/common-grants/foo": {
+          get: {
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Arrange - Create impl spec that declares a header once for the whole path
+    const implDoc: OpenAPIV3.Document = {
+      openapi: "3.0.0",
+      info: { title: "Impl", version: "1.0.0" },
+      paths: {
+        "/common-grants/foo": {
+          summary: "Foo",
+          parameters: [{ name: "CG-Version", in: "header" }],
+          get: {
+            responses: {
+              "200": { description: "OK" },
+            },
+          },
+        },
+      },
+    };
+
+    // Act
+    const errors = checkExtraRoutes(baseDoc, implDoc);
+
+    // Assert - No errors
+    expect(errors.getErrorCount()).toBe(0);
+  });
 });

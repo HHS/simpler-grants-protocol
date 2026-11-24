@@ -2,11 +2,15 @@ name: "CD - Deploy Website"
 
 on:
   # Trigger the workflow every time we push to the `main` branch
-  # if it includes changes to the website/ directory
+  # if it includes changes to the website/ directory or to the protocol and
+  # SDK sources the docs pages read their code tabs from
   push:
     branches: [main]
     paths:
       - "website/**"
+      - "lib/core/**"
+      - "lib/ts-sdk/src/schemas/**"
+      - "lib/python-sdk/common_grants_sdk/schemas/**"
       - ".github/workflows/cd-deploy-website.yml"
   # Allows us to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
