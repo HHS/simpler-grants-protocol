@@ -19,14 +19,6 @@ mappingSchema:
           "amount": { "field": "summary.opportunity_amount" }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MappingSchema.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 54
-      endLine: 58
 mappingFunction:
   example:
     code: |
@@ -37,42 +29,18 @@ mappingFunction:
           "lastName": {"field": "last_name"},
         },
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MappingFunction.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 64
-      endLine: 73
 mappingConstantFunction:
   example:
     code: |
       {
         "const": "123",
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MappingConstantFunction.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 79
-      endLine: 84
 mappingFieldFunction:
   example:
     code: |
       {
         "field": "opportunity_status",
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MappingFieldFunction.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 90
-      endLine: 95
 mappingSwitchFunction:
   example:
     code: |
@@ -86,14 +54,6 @@ mappingSwitchFunction:
           "default": "custom"
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MappingSwitchFunction.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/mapping.tsp"
-      startLine: 101
-      endLine: 115
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -165,9 +125,9 @@ To the following output:
 ### Formats
 
 <SchemaFormatTabs
+  schema="MappingSchema"
   example={frontmatter.mappingSchema.example}
-  jsonSchema={frontmatter.mappingSchema.jsonSchema}
-  typeSpec={frontmatter.mappingSchema.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -189,9 +149,9 @@ A function for mapping data from one schema to another.
 ### Formats
 
 <SchemaFormatTabs
+  schema="MappingFunction"
   example={frontmatter.mappingFunction.example}
-  jsonSchema={frontmatter.mappingFunction.jsonSchema}
-  typeSpec={frontmatter.mappingFunction.typeSpec}
+  typeSpec
 />
 
 {/* TODO: Add changelog once unions are supported */}
@@ -202,16 +162,14 @@ Returns a constant value.
 
 ### Table
 
-<SchemaTable
-  filePath={frontmatter.mappingConstantFunction.jsonSchema.file.path}
-/>
+<SchemaTable schema="MappingConstantFunction" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="MappingConstantFunction"
   example={frontmatter.mappingConstantFunction.example}
-  jsonSchema={frontmatter.mappingConstantFunction.jsonSchema}
-  typeSpec={frontmatter.mappingConstantFunction.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -224,14 +182,14 @@ Returns the value of a field in the source data.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.mappingFieldFunction.jsonSchema.file.path} />
+<SchemaTable schema="MappingFieldFunction" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="MappingFieldFunction"
   example={frontmatter.mappingFieldFunction.example}
-  jsonSchema={frontmatter.mappingFieldFunction.jsonSchema}
-  typeSpec={frontmatter.mappingFieldFunction.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -244,16 +202,14 @@ Returns a new value based on the value of a field in the source data using a swi
 
 ### Table
 
-<SchemaTable
-  filePath={frontmatter.mappingSwitchFunction.jsonSchema.file.path}
-/>
+<SchemaTable schema="MappingSwitchFunction" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="MappingSwitchFunction"
   example={frontmatter.mappingSwitchFunction.example}
-  jsonSchema={frontmatter.mappingSwitchFunction.jsonSchema}
-  typeSpec={frontmatter.mappingSwitchFunction.typeSpec}
+  typeSpec
 />
 
 ### Changelog

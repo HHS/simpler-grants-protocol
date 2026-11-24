@@ -1,18 +1,6 @@
 ---
 title: File
 description: Data model for a file attachment.
-file:
-  example:
-    file:
-      path: "website/public/schemas/yaml/File.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/File.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/file.tsp"
-      startLine: 3
-      endLine: 25
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -23,15 +11,11 @@ A file attachment.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.file.jsonSchema.file.path} />
+<SchemaTable schema="File" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.file.example}
-  jsonSchema={frontmatter.file.jsonSchema}
-  typeSpec={frontmatter.file.typeSpec}
-/>
+<SchemaFormatTabs schema="File" typeSpec />
 
 ### Changelog
 

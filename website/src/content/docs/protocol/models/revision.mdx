@@ -3,54 +3,6 @@ title: Revision
 description: Data models for a record of a change to a resource
 sidebar:
   order: 13
-revision:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Revision.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Revision.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/revision.tsp"
-      startLine: 48
-      endLine: 98
-revisionStatus:
-  example:
-    file:
-      path: "website/public/schemas/yaml/RevisionStatus.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/RevisionStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/revision.tsp"
-      startLine: 36
-      endLine: 42
-revisionStatusOptions:
-  example:
-    file:
-      path: "website/public/schemas/yaml/RevisionStatusOptions.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/RevisionStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/revision.tsp"
-      startLine: 13
-      endLine: 34
-orgRevision:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OrgRevision.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OrgRevision.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/organization-sync.tsp"
-      startLine: 291
-      endLine: 298
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -67,15 +19,11 @@ The generic, untyped record of a change, where `patch` and `snapshot` are open o
 
 ### Table
 
-<SchemaTable filePath={frontmatter.revision.jsonSchema.file.path} />
+<SchemaTable schema="Revision" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.revision.example}
-  jsonSchema={frontmatter.revision.jsonSchema}
-  typeSpec={frontmatter.revision.typeSpec}
-/>
+<SchemaFormatTabs schema="Revision" typeSpec={["RevisionT", "Revision"]} />
 
 ### Changelog
 
@@ -99,15 +47,11 @@ How a receiver resolves a `pending` change (a human review, a policy engine, a b
 
 ### Table
 
-<SchemaTable filePath={frontmatter.revisionStatus.jsonSchema.file.path} />
+<SchemaTable schema="RevisionStatus" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.revisionStatus.example}
-  jsonSchema={frontmatter.revisionStatus.jsonSchema}
-  typeSpec={frontmatter.revisionStatus.typeSpec}
-/>
+<SchemaFormatTabs schema="RevisionStatus" typeSpec />
 
 ### Changelog
 
@@ -119,11 +63,7 @@ The fixed set of values a [RevisionStatus](#revisionstatus) can take: `pending`,
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.revisionStatusOptions.example}
-  jsonSchema={frontmatter.revisionStatusOptions.jsonSchema}
-  typeSpec={frontmatter.revisionStatusOptions.typeSpec}
-/>
+<SchemaFormatTabs schema="RevisionStatusOptions" typeSpec />
 
 ### Changelog
 
@@ -135,15 +75,11 @@ A [Revision](#revision) bound to organization profiles, where `patch` is an [Org
 
 ### Table
 
-<SchemaTable filePath={frontmatter.orgRevision.jsonSchema.file.path} />
+<SchemaTable schema="OrgRevision" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.orgRevision.example}
-  jsonSchema={frontmatter.orgRevision.jsonSchema}
-  typeSpec={frontmatter.orgRevision.typeSpec}
-/>
+<SchemaFormatTabs schema="OrgRevision" typeSpec />
 
 ### Changelog
 

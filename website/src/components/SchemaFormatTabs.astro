@@ -5,63 +5,110 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
 import { generateSchemaExample } from "../lib/schema/example-generator";
+import { schemaFilePath } from "../lib/schema/schema-files";
+import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
+import {
+  findSnippet,
+  sourceUrl,
+  type SourceLanguage,
+} from "../lib/schema/source-declarations";
 
 /**
- * Configuration for a code block to be displayed in a tab.
- * Either provide a literal code string or a file path with optional line range.
+ * A literal code block, or a file to read whole. Pages give literal code for
+ * hand-written examples and inline JSON Schemas.
  */
 interface CodeBlockConfig {
-  /** A literal code block to display. If provided, file properties are ignored. */
+  /** A literal code block to display. If provided, file is ignored. */
   code?: string;
-  /** Configuration for reading code from a file */
+  /**
+   * A JSON Schema file to display, by its path relative to the repository
+   * root. Only `jsonSchema` reads it: the custom field catalog passes its
+   * extension schema this way. Examples are literal code or generated from
+   * `schema`.
+   */
   file?: {
-    /** Path to the file relative to the repository root */
     path: string;
-    /** Starting line number (1-based) to extract code from */
-    startLine?: number;
-    /** Ending line number (1-based) to extract code from */
-    endLine?: number;
   };
 }
 
 /**
+ * A source code tab: `true` shows the declaration named after the schema
+ * (`Money` in TypeSpec and Python, `MoneySchema` in TypeScript); a string
+ * names the declaration to show, for code named differently from the schema;
+ * a list of names shows several declarations from one file, such as a
+ * template and the model built from it.
+ */
+type SourceTab = true | string | string[];
+
+/**
  * Props for the SchemaFormatTabs component.
- * Each prop represents a different tab that can be displayed.
+ *
+ * Name a schema with `schema` and the Example and JSON Schema tabs come from
+ * its generated JSON Schema file. Each source tab listed is found by name in
+ * the TypeSpec or SDK source; the build fails if it can't be found.
  */
 interface Props {
-  /** Example JSON code block to display in the "Example" tab */
-  example?: CodeBlockConfig;
-  /** JSON Schema code block to display in the "JSON Schema" tab */
+  /** The schema's name, which is also the name of its generated JSON Schema file */
+  schema?: string;
+  /** Example JSON: literal code overrides the example generated from the schema */
+  example?: Pick<CodeBlockConfig, "code">;
+  /** JSON Schema: literal code for schemas with no generated file */
   jsonSchema?: CodeBlockConfig;
-  /** TypeSpec code block to display in the "TypeSpec" tab */
-  typeSpec?: CodeBlockConfig;
-  /** Python code block to display in the "Python" tab */
-  python?: CodeBlockConfig;
-  /** TypeScript code block to display in the "TypeScript" tab */
-  typescript?: CodeBlockConfig;
+  /** TypeSpec tab */
+  typeSpec?: SourceTab;
+  /** Python tab */
+  python?: SourceTab;
+  /** TypeScript tab */
+  typescript?: SourceTab;
 }
 
-const { example, jsonSchema, typeSpec, python, typescript } = Astro.props;
+const { schema, example, jsonSchema, typeSpec, python, typescript } =
+  Astro.props;
+
+// The schema file the Example and JSON Schema tabs read, if the page named one
+const schemaPath = schema && !jsonSchema ? schemaFilePath(schema) : undefined;
+const jsonSchemaConfig: CodeBlockConfig | undefined =
+  jsonSchema ?? (schemaPath ? { file: { path: schemaPath } } : undefined);
 
 // Validate that at least one tab is provided
-if (!example && !jsonSchema && !typeSpec && !python) {
+if (!example && !jsonSchemaConfig && !typeSpec && !python && !typescript) {
   throw new Error("SchemaFormatTabs requires at least one tab to be provided");
 }
 
 const exampleCode = example?.code
   ? example.code
-  : example?.file?.path
-    ? await generateSchemaExample(example.file.path)
+  : schemaPath
+    ? await generateSchemaExample(schemaPath)
     : null;
-const jsonSchemaCode = jsonSchema ? extractCode(jsonSchema) : null;
-const typeSpecCode = typeSpec ? extractCode(typeSpec) : null;
-const pythonCode = python ? extractCode(python) : null;
-const typescriptCode = typescript ? extractCode(typescript) : null;
+const jsonSchemaCode = jsonSchemaConfig ? extractCode(jsonSchemaConfig) : null;
+const jsonSchemaUrl = jsonSchemaConfig
+  ? extractSchemaUrl(jsonSchemaConfig)
+  : null;
 
-const jsonSchemaUrl = jsonSchema ? extractSchemaUrl(jsonSchema) : null;
-const typeSpecUrl = typeSpec ? extractGithubUrl(typeSpec) : null;
-const pythonUrl = python ? extractGithubUrl(python) : null;
-const typescriptUrl = typescript ? extractGithubUrl(typescript) : null;
+// In the dev server, re-read the sources and pages once per page render so an
+// edit shows on reload; a production build reads them once.
+if (import.meta.env.DEV) {
+  SchemaDocMapper.refreshForRender(Astro.locals);
+}
+const typeSpecSnippet = snippet("typeSpec", typeSpec);
+const pythonSnippet = snippet("python", python);
+const typescriptSnippet = snippet("typescript", typescript);
+
+/**
+ * Finds the declaration a source tab shows.
+ * @returns The declaration's code and a link to it, or null if the tab isn't shown
+ * @throws Error if the declaration can't be found
+ */
+function snippet(
+  language: SourceLanguage,
+  requested: SourceTab | undefined,
+): { code: string; url: string } | null {
+  if (!requested) {
+    return null;
+  }
+  const declaration = findSnippet(language, requested, schema);
+  return { code: declaration.code, url: sourceUrl(declaration) };
+}
 
 /**
  * Constructs a schema URL from file path.
@@ -90,31 +137,6 @@ function extractSchemaUrl(props: CodeBlockConfig): string | null {
 }
 
 /**
- * Extracts a GitHub URL from file configuration.
- * @param props - The code block configuration
- * @returns The GitHub URL for the file, or null if no file is specified
- */
-function extractGithubUrl(props: CodeBlockConfig): string | null {
-  if (!props.file) {
-    return null;
-  }
-
-  const baseUrl = "https://github.com/HHS/simpler-grants-protocol/tree/main/";
-  let url = `${baseUrl}/${props.file.path}`;
-
-  if (props.file.startLine || props.file.endLine) {
-    const start = props.file.startLine || 1;
-    const end = props.file.endLine || start;
-    url += `#L${start}`;
-    if (end > start) {
-      url += `-L${end}`;
-    }
-  }
-
-  return url;
-}
-
-/**
  * Extracts code from either a literal string or a file.
  * @param props - The code block configuration
  * @returns The extracted code as a string
@@ -126,17 +148,7 @@ function extractCode(props: CodeBlockConfig): string {
   }
   if (props.file) {
     try {
-      const filePath = join(Paths.REPO_ROOT, props.file.path);
-      const content = readFileSync(filePath, "utf-8");
-
-      if (props.file.startLine || props.file.endLine) {
-        const lines = content.split("\n");
-        const start = props.file.startLine ? props.file.startLine - 1 : 0;
-        const end = props.file.endLine ? props.file.endLine : lines.length;
-        return lines.slice(start, end).join("\n");
-      }
-
-      return content;
+      return readFileSync(join(Paths.REPO_ROOT, props.file.path), "utf-8");
     } catch (error) {
       throw new Error(`Error reading file ${props.file.path}: ${error}`, {
         cause: error,
@@ -177,44 +189,52 @@ function extractCode(props: CodeBlockConfig): string {
     )
   }
   {
-    typeSpecCode && (
+    typeSpecSnippet && (
       <TabItem label="TypeSpec">
         <p>
           {"The "}
-          <a href={typeSpecUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            href={typeSpecSnippet.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             TypeSpec code
           </a>
           {" for this model."}
         </p>
-        <Code code={typeSpecCode} lang="typespec" />
+        <Code code={typeSpecSnippet.code} lang="typespec" />
       </TabItem>
     )
   }
   {
-    pythonCode && (
+    pythonSnippet && (
       <TabItem label="Python">
         <p>
           {"The "}
-          <a href={pythonUrl} target="_blank" rel="noopener noreferrer">
+          <a href={pythonSnippet.url} target="_blank" rel="noopener noreferrer">
             Python code
           </a>
           {" for this model."}
         </p>
-        <Code code={pythonCode} lang="python" />
+        <Code code={pythonSnippet.code} lang="python" />
       </TabItem>
     )
   }
   {
-    typescriptCode && (
+    typescriptSnippet && (
       <TabItem label="TypeScript">
         <p>
           {"The "}
-          <a href={typescriptUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            href={typescriptSnippet.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             TypeScript code
           </a>
           {" for this model."}
         </p>
-        <Code code={typescriptCode} lang="typescript" />
+        <Code code={typescriptSnippet.code} lang="typescript" />
       </TabItem>
     )
   }

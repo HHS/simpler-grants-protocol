@@ -1,50 +1,6 @@
 ---
 title: Money filters
 description: Filters applied to monetary values.
-moneyRangeFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/MoneyRangeFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MoneyRangeFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/money.tsp"
-      startLine: 25
-      endLine: 41
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/money.py"
-      startLine: 43
-      endLine: 50
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 102
-      endLine: 108
-moneyComparisonFilter:
-  example:
-    file:
-      path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/MoneyComparisonFilter.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/filters/money.tsp"
-      startLine: 10
-      endLine: 20
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/filters/money.py"
-      startLine: 72
-      endLine: 87
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/filters.ts"
-      startLine: 97
-      endLine: 100
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -72,13 +28,7 @@ Filters by comparing a field to a range of monetary values.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.moneyRangeFilter.example}
-  jsonSchema={frontmatter.moneyRangeFilter.jsonSchema}
-  typeSpec={frontmatter.moneyRangeFilter.typeSpec}
-  python={frontmatter.moneyRangeFilter.python}
-  typescript={frontmatter.moneyRangeFilter.typescript}
-/>
+<SchemaFormatTabs schema="MoneyRangeFilter" typeSpec python typescript />
 
 ### Changelog
 
@@ -97,13 +47,7 @@ Filters by comparing a field to a monetary value.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.moneyComparisonFilter.example}
-  jsonSchema={frontmatter.moneyComparisonFilter.jsonSchema}
-  typeSpec={frontmatter.moneyComparisonFilter.typeSpec}
-  python={frontmatter.moneyComparisonFilter.python}
-  typescript={frontmatter.moneyComparisonFilter.typescript}
-/>
+<SchemaFormatTabs schema="MoneyComparisonFilter" typeSpec python typescript />
 
 ### Changelog
 

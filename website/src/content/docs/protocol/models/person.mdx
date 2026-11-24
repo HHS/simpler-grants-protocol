@@ -56,14 +56,6 @@ personBase:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/PersonBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/person.tsp"
-      startLine: 6
-      endLine: 30
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -76,14 +68,14 @@ A person affiliated with an organization or grant application.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.personBase.jsonSchema.file.path} />
+<SchemaTable schema="PersonBase" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="PersonBase"
   example={frontmatter.personBase.example}
-  jsonSchema={frontmatter.personBase.jsonSchema}
-  typeSpec={frontmatter.personBase.typeSpec}
+  typeSpec
 />
 
 ### Changelog

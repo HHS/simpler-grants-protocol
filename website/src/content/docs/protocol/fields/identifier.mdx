@@ -1,42 +1,6 @@
 ---
 title: Identifier
 description: Models for representing registry-issued identifiers on a record
-identifier:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Identifier.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Identifier.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/identifier.tsp"
-      startLine: 17
-      endLine: 62
-systemId:
-  example:
-    file:
-      path: "website/public/schemas/yaml/SystemId.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/SystemId.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/identifier.tsp"
-      startLine: 64
-      endLine: 71
-identifierCollection:
-  example:
-    file:
-      path: "website/public/schemas/yaml/IdentifierCollection.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/IdentifierCollection.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/identifier.tsp"
-      startLine: 77
-      endLine: 88
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -55,14 +19,13 @@ Identifiers are keyed by their canonical CommonGrants registry code
 
 ### Table
 
-<SchemaTable filePath={frontmatter.identifier.jsonSchema.file.path} />
+<SchemaTable schema="Identifier" />
 
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.identifier.example}
-  jsonSchema={frontmatter.identifier.jsonSchema}
-  typeSpec={frontmatter.identifier.typeSpec}
+  schema="Identifier"
+  typeSpec={["IdentifierT", "Identifier"]}
 />
 
 ### Changelog
@@ -78,15 +41,11 @@ through their `systemId` field.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.systemId.jsonSchema.file.path} />
+<SchemaTable schema="SystemId" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.systemId.example}
-  jsonSchema={frontmatter.systemId.jsonSchema}
-  typeSpec={frontmatter.systemId.typeSpec}
-/>
+<SchemaFormatTabs schema="SystemId" typeSpec />
 
 ### Changelog
 
@@ -102,15 +61,11 @@ and [OppIds](/protocol/models/opportunity#oppids)) extend it with their base ide
 
 ### Table
 
-<SchemaTable filePath={frontmatter.identifierCollection.jsonSchema.file.path} />
+<SchemaTable schema="IdentifierCollection" />
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.identifierCollection.example}
-  jsonSchema={frontmatter.identifierCollection.jsonSchema}
-  typeSpec={frontmatter.identifierCollection.typeSpec}
-/>
+<SchemaFormatTabs schema="IdentifierCollection" typeSpec />
 
 ### Changelog
 
