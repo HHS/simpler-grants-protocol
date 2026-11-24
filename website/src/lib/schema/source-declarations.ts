@@ -510,7 +510,10 @@ function scanPythonLines(source: string): PythonLine[] {
 /**
  * Lists the module-level classes, functions and assignments in a Python
  * source. Each one starts at its first decorator, or at its own line, and
- * runs to the last non-blank line of its body.
+ * runs to the last non-blank line of its body. A comment at column 0 inside
+ * the body, such as a commented-out field, doesn't end it; one followed only
+ * by blank lines, comments and the next module-level statement does, and is
+ * left out.
  */
 export function listPythonDeclarations(source: string): Declaration[] {
   const lines = scanPythonLines(source);
@@ -520,6 +523,11 @@ export function listPythonDeclarations(source: string): Declaration[] {
   /** A line that begins a new module-level statement */
   const startsStatement = (line: PythonLine) =>
     !line.continues && /^[^\s#]/.test(line.text);
+  /** A line holding only a comment, at any indentation */
+  const isComment = (line: PythonLine) =>
+    !line.continues && /^\s*#/.test(line.text);
+  const isBlankOrComment = (line: PythonLine) =>
+    isComment(line) || (!line.continues && line.text.trim() === "");
 
   let i = 0;
   while (i < lines.length) {
@@ -536,13 +544,17 @@ export function listPythonDeclarations(source: string): Declaration[] {
     }
     const header = lines[i]?.text ?? "";
 
-    // The statement runs until the next line that starts a statement or is
-    // a comment at column 0.
+    // The statement runs until the next line that starts a statement, or a
+    // comment at column 0 that comes before one (a section banner). A
+    // column-0 comment with more of the body after it is part of the body.
     let end = i;
     for (let j = i + 1; j < lines.length; j++) {
       const line = lines[j];
       if (startsStatement(line)) break;
-      if (!line.continues && /^#/.test(line.text)) break;
+      if (isComment(line) && /^#/.test(line.text)) {
+        const next = lines.slice(j + 1).find((l) => !isBlankOrComment(l));
+        if (!next || startsStatement(next)) break;
+      }
       if (line.text.trim() !== "") end = j;
     }
 

@@ -246,6 +246,41 @@ describe("listPythonDeclarations", () => {
     });
   });
 
+  it("keeps a class whole when a commented-out line at column 0 sits in its body", () => {
+    const source = [
+      "class Money(SealedModel):",
+      "    amount: str",
+      "# currency: str",
+      "",
+      "    # An indented comment",
+      "    currency: str",
+      "",
+      "",
+      "# ###############",
+      "# Next section",
+      "# ###############",
+      "",
+      "",
+      "class Next:",
+      "    pass",
+      "# A trailing comment at the end of the file",
+      "",
+    ].join("\n");
+
+    const declarations = listPythonDeclarations(source);
+    expect(pick(declarations, "Money")).toMatchObject({
+      startLine: 1,
+      endLine: 6,
+    });
+    // The section banner is in neither class, and a trailing comment isn't
+    // part of the last one.
+    expect(pick(declarations, "Next")).toMatchObject({
+      startLine: 14,
+      endLine: 15,
+      code: "class Next:\n    pass",
+    });
+  });
+
   it("includes decorators and multi-line class headers", () => {
     const source = [
       "@dataclass(",
