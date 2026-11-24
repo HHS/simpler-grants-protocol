@@ -85,7 +85,8 @@ function inlineSchemas(
 
 /**
  * Schema documentation mapping service. Builds the map from the protocol
- * pages the first time it's asked, once per build.
+ * pages the first time it's asked: once per build, or once per page render in
+ * the dev server, which clears it through `refreshSchemaSourcesForRender`.
  */
 export class SchemaDocMapper {
   private static cache: Map<string, string> | null = null;
@@ -106,7 +107,7 @@ export class SchemaDocMapper {
     return this.getSchemaDocMap().get(schemaName);
   }
 
-  /** Clears the cache (useful for testing) */
+  /** Clears the cache, so the next lookup re-reads the protocol pages */
   static clearCache(): void {
     this.cache = null;
   }

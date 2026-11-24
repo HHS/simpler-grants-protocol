@@ -8,7 +8,6 @@ import {
   findDeclaration,
   findSchemaDeclaration,
   findSnippet,
-  refreshDeclarationsForRender,
   sourceUrl,
   type Declaration,
 } from "@/lib/schema/source-declarations";
@@ -632,26 +631,6 @@ describe("findSnippet", () => {
     expect(() => findSnippet("python", true)).toThrow(
       /Python tab needs a declaration name/,
     );
-  });
-});
-
-describe("refreshDeclarationsForRender", () => {
-  it("re-reads the sources once for each new render, and not again within it", () => {
-    const first = findDeclaration("python", "Money");
-    expect(findDeclaration("python", "Money")).toBe(first);
-
-    const render = {};
-    refreshDeclarationsForRender(render);
-    const reread = findDeclaration("python", "Money");
-    expect(reread).not.toBe(first);
-    expect(reread).toEqual(first);
-
-    // Further components on the same page reuse what that render read.
-    refreshDeclarationsForRender(render);
-    expect(findDeclaration("python", "Money")).toBe(reread);
-
-    refreshDeclarationsForRender({});
-    expect(findDeclaration("python", "Money")).not.toBe(reread);
   });
 });
 

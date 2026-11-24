@@ -2,6 +2,7 @@
 import { SchemaLoader } from "../lib/schema/schema-loader";
 import type { JsonSchema } from "../lib/schema/schema-loader";
 import { SchemaDocMapper } from "../lib/schema/schema-doc-mapper";
+import { refreshSchemaSourcesForRender } from "../lib/schema/dev-refresh";
 import { TableGenerator } from "../lib/schema/table-generator";
 import { schemaFilePath } from "../lib/schema/schema-files";
 import type { PropertyRow, EnumRow } from "../lib/schema/table-generator";
@@ -18,6 +19,12 @@ interface Props {
   version?: string;
   /** Inline schema code (YAML string) */
   code?: string;
+}
+
+// In the dev server, re-read the protocol pages once per page render so a
+// schema newly named on another page links on reload; a build reads them once.
+if (import.meta.env.DEV) {
+  refreshSchemaSourcesForRender(Astro.locals);
 }
 
 // Schema documentation path getter

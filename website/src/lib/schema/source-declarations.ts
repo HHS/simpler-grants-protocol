@@ -70,18 +70,11 @@ const SOURCES: Record<
 
 const indexes = new Map<SourceLanguage, Map<string, FoundDeclaration[]>>();
 
-/** The render the indexes were last read for, if any */
-let indexedForRender: object | undefined;
-
 /**
- * Makes the next lookup re-read the sources, once per render. The dev server
- * calls this with the request's `Astro.locals`, so a page reload shows a
- * source edit while the several tabs on one page still share one read. A
- * production build never calls it, so it reads the sources once per build.
+ * Makes the next lookup re-read the sources. The dev server clears the
+ * indexes once per page render through `refreshSchemaSourcesForRender`.
  */
-export function refreshDeclarationsForRender(render: object): void {
-  if (render === indexedForRender) return;
-  indexedForRender = render;
+export function clearDeclarationIndexes(): void {
   indexes.clear();
 }
 
