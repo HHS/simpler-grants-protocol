@@ -392,8 +392,10 @@ export function listTypeSpecDeclarations(source: string): Declaration[] {
 
 /**
  * Lists the top-level declarations in a TypeScript source. Each one starts at
- * its declaration keyword, not at the comment above it, and runs to the end
- * of its statement.
+ * the JSDoc comment attached to it, if it has one, or else at its declaration
+ * keyword, and runs to the end of its statement. Line comments and section
+ * banners above a declaration are left out, and of several JSDoc comments
+ * above it only the last, attached one is included.
  */
 export function listTypeScriptDeclarations(source: string): Declaration[] {
   const file = ts.createSourceFile(
@@ -408,7 +410,7 @@ export function listTypeScriptDeclarations(source: string): Declaration[] {
 
   const add = (name: string, statement: ts.Statement) => {
     const startLine =
-      file.getLineAndCharacterOfPosition(statement.getStart(file)).line + 1;
+      file.getLineAndCharacterOfPosition(declarationStart(statement)).line + 1;
     const endLine = file.getLineAndCharacterOfPosition(statement.end).line + 1;
     declarations.push(fromLines(lines, name, startLine, endLine));
   };
@@ -433,6 +435,20 @@ export function listTypeScriptDeclarations(source: string): Declaration[] {
   }
 
   return declarations;
+
+  /**
+   * Where a statement starts, counting the JSDoc comment the compiler
+   * attaches to it. Only the last JSDoc comment counts, and only when nothing
+   * but whitespace separates it from the statement's keyword.
+   */
+  function declarationStart(statement: ts.Statement): number {
+    const keyword = statement.getStart(file);
+    const jsDoc = ts.getJSDocCommentsAndTags(statement).filter(ts.isJSDoc).at(-1);
+    if (jsDoc && source.slice(jsDoc.end, keyword).trim() === "") {
+      return jsDoc.getStart(file);
+    }
+    return keyword;
+  }
 }
 
 // ############################################################################

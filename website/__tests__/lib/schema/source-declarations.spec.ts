@@ -324,7 +324,7 @@ describe("listPythonDeclarations", () => {
 // ############################################################################
 
 describe("listTypeScriptDeclarations", () => {
-  it("covers a whole statement, starting at the declaration rather than its comment", () => {
+  it("covers a whole statement, starting at the JSDoc comment attached to it", () => {
     const source = [
       'import { z } from "zod";',
       "",
@@ -342,13 +342,65 @@ describe("listTypeScriptDeclarations", () => {
 
     const declarations = listTypeScriptDeclarations(source);
     expect(pick(declarations, "PaginatedQueryParamsSchema")).toMatchObject({
-      startLine: 4,
+      startLine: 3,
       endLine: 7,
     });
-    // Unexported declarations count too.
+    expect(
+      pick(declarations, "PaginatedQueryParamsSchema").code.split("\n")[0],
+    ).toBe("/** Query parameters for paginated routes */");
+    // A line comment isn't a doc comment; unexported declarations count too.
     expect(pick(declarations, "EventBaseSchema")).toMatchObject({
       startLine: 10,
       endLine: 12,
+    });
+  });
+
+  it("includes a multi-line JSDoc comment but not the section banner above it", () => {
+    const source = [
+      "// ############################################################################",
+      "// Money schema",
+      "// ############################################################################",
+      "",
+      "/**",
+      " * A monetary amount",
+      " * @example { amount: \"1.00\" }",
+      " */",
+      "export const MoneySchema = z.object({ amount: z.string() });",
+    ].join("\n");
+
+    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+      startLine: 5,
+      endLine: 9,
+    });
+  });
+
+  it("starts at the keyword when only a banner sits above the declaration", () => {
+    const source = [
+      "// ############################################################################",
+      "// Money schema",
+      "// ############################################################################",
+      "",
+      "export const MoneySchema = z.object({ amount: z.string() });",
+    ].join("\n");
+
+    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+      startLine: 5,
+      endLine: 5,
+      code: "export const MoneySchema = z.object({ amount: z.string() });",
+    });
+  });
+
+  it("takes only the JSDoc comment directly above the declaration", () => {
+    const source = [
+      "/** A comment about the file */",
+      "",
+      "/** A monetary amount */",
+      "export const MoneySchema = z.object({ amount: z.string() });",
+    ].join("\n");
+
+    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+      startLine: 3,
+      endLine: 4,
     });
   });
 
