@@ -14,13 +14,15 @@ model PaginatedQueryParams {
   @query
   @pageIndex
   @minValue(1)
-  page?: int32 = 1;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_6, int32)
+  page?: integer = 1;
 
   /** The number of items to return per page */
   @query
   @pageSize
   @minValue(1)
-  pageSize?: int32 = 100;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_6, int32)
+  pageSize?: integer = 100;
 }
 
 /** Body parameters for paginated routes */
@@ -29,12 +31,14 @@ model PaginatedBodyParams {
   /** The page to return */
   @pageIndex
   @minValue(1)
-  page?: int32 = 1;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_6, int32)
+  page?: integer = 1;
 
   /** The number of items to return per page */
   @pageSize
   @minValue(1)
-  pageSize?: int32 = 100;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_6, int32)
+  pageSize?: integer = 100;
 }
 
 /** Details about the paginated results */
@@ -43,7 +47,8 @@ model PaginatedResultsInfo {
   /** Current page number (indexing starts at 1) */
   @example(1)
   @minValue(1)
-  page: int32;
+  @Versioning.typeChangedFrom(CommonGrants.Versions.v0_6, int32)
+  page: integer;
 
   /** Number of items per page */
   @example(20)

@@ -303,7 +303,7 @@ def routes() -> dict[str, tuple[type[BaseModel], str, dict[str, Any]]]:
         "list request, page": (
             AwardsListRequest,
             "AwardsListRequest.yaml",
-            {"page": 3, "pageSize": 2147483647},
+            {"page": 3, "pageSize": 2147483648},
         ),
         "get request": (AwardGetRequest, "AwardGetRequest.yaml", {"awdId": AWARD_ID}),
         "search request, empty": (AwdSearchRequest, "AwdSearchRequest.yaml", {}),
