@@ -17,11 +17,14 @@ import path from "path";
  * Regenerating overwrites `public/openapi/` in the working tree.
  *
  * Usage (from `website/`):
- *   tsx src/scripts/check-published-openapi.ts [--base <ref>] [--allow-changes]
+ *   tsx src/scripts/check-published-openapi.ts [--base <ref>] [--allow-changes] [--no-regenerate]
  *
  * `--allow-changes`, or `PUBLISHED_OPENAPI_CHANGE_ALLOWED=true`, still prints
  * every diff but exits 0. CI sets it when the PR has the
  * `published-openapi-change` label.
+ *
+ * `--no-regenerate` skips the regeneration pass and compares only the
+ * committed documents.
  */
 
 export const OVERRIDE_LABEL = "published-openapi-change";

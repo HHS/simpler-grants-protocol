@@ -49,6 +49,7 @@ Run this on the hold branch before merging the staging PR, and note the results 
 - [ ] Older versions are unchanged except for intended edits:
   - [ ] `git fetch origin` and `git diff origin/main...origin/<hold-branch> -- website/public/openapi/` have been run
   - [ ] The diff adds `openapi.<new-version>.yaml`, and older versions show only edits you meant to make, such as a description or example fix. CI already fails on any other change to a released version unless the PR has the `published-openapi-change` label; check that each labelled PR says why.
+  - [ ] If the hold branch carries labelled edits to released versions, the staging PR fails the same check. Add the `published-openapi-change` label to it and list those PRs in its description.
   - Comparing against `main` is what confirms the versioning decorators. Don't diff `lib/core/tsp-output/` against `website/public/openapi/`: the website build prunes unused tags (`website/src/scripts/prune-openapi-tags.ts`), so older versions always differ.
 - [ ] The new version has been reviewed in Swagger with `cg preview`:
   - [ ] From the repo root: `node lib/cli/dist/index.js preview website/public/openapi/openapi.<new-version>.yaml` (`pnpm install` builds the CLI), or `pnpm dlx @common-grants/cli preview <spec>`
