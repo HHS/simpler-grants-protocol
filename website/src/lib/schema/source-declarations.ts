@@ -436,7 +436,10 @@ export function listTypeScriptDeclarations(source: string): Declaration[] {
    */
   function declarationStart(statement: ts.Statement): number {
     const keyword = statement.getStart(file);
-    const jsDoc = ts.getJSDocCommentsAndTags(statement).filter(ts.isJSDoc).at(-1);
+    const jsDoc = ts
+      .getJSDocCommentsAndTags(statement)
+      .filter(ts.isJSDoc)
+      .at(-1);
     if (jsDoc && source.slice(jsDoc.end, keyword).trim() === "") {
       return jsDoc.getStart(file);
     }

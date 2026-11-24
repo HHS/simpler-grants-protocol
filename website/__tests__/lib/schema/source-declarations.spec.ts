@@ -397,12 +397,14 @@ describe("listTypeScriptDeclarations", () => {
       "",
       "/**",
       " * A monetary amount",
-      " * @example { amount: \"1.00\" }",
+      ' * @example { amount: "1.00" }',
       " */",
       "export const MoneySchema = z.object({ amount: z.string() });",
     ].join("\n");
 
-    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+    expect(
+      pick(listTypeScriptDeclarations(source), "MoneySchema"),
+    ).toMatchObject({
       startLine: 5,
       endLine: 9,
     });
@@ -417,7 +419,9 @@ describe("listTypeScriptDeclarations", () => {
       "export const MoneySchema = z.object({ amount: z.string() });",
     ].join("\n");
 
-    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+    expect(
+      pick(listTypeScriptDeclarations(source), "MoneySchema"),
+    ).toMatchObject({
       startLine: 5,
       endLine: 5,
       code: "export const MoneySchema = z.object({ amount: z.string() });",
@@ -432,7 +436,9 @@ describe("listTypeScriptDeclarations", () => {
       "export const MoneySchema = z.object({ amount: z.string() });",
     ].join("\n");
 
-    expect(pick(listTypeScriptDeclarations(source), "MoneySchema")).toMatchObject({
+    expect(
+      pick(listTypeScriptDeclarations(source), "MoneySchema"),
+    ).toMatchObject({
       startLine: 3,
       endLine: 4,
     });
