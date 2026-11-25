@@ -21,10 +21,7 @@ import {
   type Application,
   type AppFormResponse,
 } from "../data/applications";
-import {
-  APPLICATION_SEARCH_MIN_VERSION,
-  isAtLeastVersion,
-} from "../data/availability";
+import { isAtLeastVersion } from "../data/availability";
 import { getCompetitionById } from "../data/competitions";
 import type { Version } from "../data/fixtures";
 import { getFormById } from "../data/forms";
@@ -164,7 +161,7 @@ function titleFieldFor(version: Version): "name" | "title" {
 }
 
 /**
- * `POST /v{version}/common-grants/applications/start` — answers 201 with the
+ * `POST /common-grants/applications/start` — answers 201 with the
  * application the write would have created. Nothing is retained.
  */
 export async function startApplication(
@@ -244,7 +241,7 @@ export async function startApplication(
 }
 
 /**
- * `GET /v{version}/common-grants/applications/{appId}` — a single application,
+ * `GET /common-grants/applications/{appId}` — a single application,
  * with its form responses and validation errors.
  */
 export function getApplication(appId: string, version: Version): Response {
@@ -259,7 +256,7 @@ export function getApplication(appId: string, version: Version): Response {
 }
 
 /**
- * `PUT /v{version}/common-grants/applications/{appId}/submit`. Whether it
+ * `PUT /common-grants/applications/{appId}/submit`. Whether it
  * answers 200 or 400 is decided by the fixture's own `validationErrors`, so
  * both branches are reachable.
  *
@@ -382,23 +379,14 @@ async function readSearchRequest(
 }
 
 /**
- * `POST /v{version}/common-grants/applications/search`. Added in v0.3, so
- * v0.2 answers a protocol-shaped 404 — gated here, not in the router, because
- * the rest of `/applications` is served at v0.2.
+ * `POST /common-grants/applications/search`. Added in v0.3; the router rejects
+ * earlier versions before this runs, since the rest of `/applications` is
+ * served at v0.2.
  */
 export async function searchApplications(
   request: Request,
   version: Version,
 ): Promise<Response> {
-  if (!isAtLeastVersion(version, APPLICATION_SEARCH_MIN_VERSION)) {
-    return errorResponse(404, "Not found", [
-      {
-        field: "path",
-        message: `Application search was added in v${APPLICATION_SEARCH_MIN_VERSION} and is not served by v${version}`,
-      },
-    ]);
-  }
-
   const parsed = await readSearchRequest(request);
   if (!parsed.ok) {
     return parsed.response;
@@ -546,7 +534,7 @@ function lookupForm(
 }
 
 /**
- * `GET /v{version}/common-grants/applications/{appId}/forms/{formId}` — read
+ * `GET /common-grants/applications/{appId}/forms/{formId}` — read
  * one form response.
  */
 export function readFormResponse(
@@ -579,7 +567,7 @@ export function readFormResponse(
 }
 
 /**
- * `PUT /v{version}/common-grants/applications/{appId}/forms/{formId}` — echoes
+ * `PUT /common-grants/applications/{appId}/forms/{formId}` — echoes
  * the body back in an `AppFormResponse` envelope: `notStarted` for an empty
  * body, `complete` otherwise.
  */

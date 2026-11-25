@@ -50,7 +50,8 @@ interface Opportunities {
   @list
   list<T extends Models.OpportunityBase = Models.OpportunityBase>(
     ...Pagination.PaginatedQueryParams,
-  ): Responses.PaginatedT<T>;
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.PaginatedT<T>>;
 
   // ##############################
   // View an opportunity (v0.1.0)
@@ -74,7 +75,9 @@ interface Opportunities {
     @path
     @added(Versions.v0_2)
     oppId: Types.uuid,
-  ): Responses.OkT<T> | Responses.NotFound;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.OkT<T> | Responses.NotFound>;
 
   // ###############################
   // Search opportunities
@@ -86,7 +89,7 @@ interface Opportunities {
    * Must be an extension of Schemas.OpportunityBase. Default is Schemas.OpportunityBase.
    */
   @summary("Search opportunities")
-  @doc("Search for opportunities based on the provided filters.")
+  @doc("Search for opportunities based on the provided search term and filters.")
   @post
   @route("/search")
   search<T extends Models.OpportunityBase = Models.OpportunityBase>(
@@ -106,5 +109,10 @@ interface Opportunities {
 
     /** Pagination instructions for the results */
     pagination?: Pagination.PaginatedBodyParams,
-  ): Responses.FilteredT<T, Models.OppFilters>;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.SearchResultsT<
+    T,
+    Models.OppFilters
+  >>;
 }

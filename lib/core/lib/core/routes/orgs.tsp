@@ -61,7 +61,12 @@ interface Organizations {
 
     /** Identifier value within the given registry to filter by */
     @query id?: string,
-  ): Responses.PaginatedT<T> | Responses.Unauthorized | Responses.Forbidden;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
+    | Responses.PaginatedT<T>
+    | Responses.Unauthorized
+    | Responses.Forbidden>;
 
   // ##############################
   // View an organization
@@ -85,11 +90,13 @@ interface Organizations {
 
     /** Return the profile as of the given point in time */
     @query at?: utcDateTime,
-  ):
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
     | Responses.OkT<T>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // Update an organization
@@ -112,11 +119,13 @@ interface Organizations {
     /** JSON Merge Patch body for the organization profile */
     @body
     patch: Models.OrgPatchData,
-  ):
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // Submit a change
@@ -141,11 +150,13 @@ interface Organizations {
     /** JSON Merge Patch body for the organization profile */
     @body
     patch: Models.OrgPatchData,
-  ):
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
     | Responses.AcceptedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // List changes
@@ -168,11 +179,12 @@ interface Organizations {
     orgId: Types.uuid,
 
     ...Pagination.PaginatedQueryParams,
-  ):
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
     | Responses.PaginatedT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 
   // ###############################
   // View a change
@@ -197,9 +209,11 @@ interface Organizations {
     /** The id of the change to view */
     @path
     changeId: Types.uuid,
-  ):
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<
     | Responses.OkT<Models.OrgRevision>
     | Responses.NotFound
     | Responses.Unauthorized
-    | Responses.Forbidden;
+    | Responses.Forbidden>;
 }

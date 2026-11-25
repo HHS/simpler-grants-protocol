@@ -1,0 +1,7 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionErrorScope.yaml
+type: string
+enum:
+  - deployment
+  - operation
+description: Whether a version is unavailable on the whole server or only on the route called

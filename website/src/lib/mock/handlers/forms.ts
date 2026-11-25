@@ -16,7 +16,7 @@ import {
 } from "../http/query";
 
 /**
- * `GET /v{version}/common-grants/forms` — the paginated list, ordered
+ * `GET /common-grants/forms` — the paginated list, ordered
  * newest-modified first per the operation's `@doc`.
  */
 export function listForms(request: Request, version: Version): Response {
@@ -45,7 +45,7 @@ export function listForms(request: Request, version: Version): Response {
 }
 
 /**
- * `GET /v{version}/common-grants/forms/{formId}` — a single form. A malformed
+ * `GET /common-grants/forms/{formId}` — a single form. A malformed
  * id answers 400, not a route miss.
  */
 export function getForm(formId: string, version: Version): Response {

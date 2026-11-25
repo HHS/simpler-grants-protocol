@@ -2,6 +2,7 @@ import SwaggerParser from "@apidevtools/swagger-parser";
 import { checkExtraRoutes } from "./utils/check-extra-routes";
 import { checkMatchingRoutes } from "./utils/check-matching-routes";
 import { checkMissingRequiredRoutes } from "./utils/check-missing-routes";
+import { checkPathVersioning } from "./utils/check-path-versioning";
 import { Document } from "./utils/types";
 import { CheckApiOptions, CheckSpecOptions, availableVersions } from "./check-args";
 import { ErrorCollection, ErrorFormatter } from "./utils/error-utils";
@@ -22,9 +23,10 @@ export class DefaultCheckService {
    *
    * This involves:
    *   1) Fetching and parsing both specs
-   *   2) Checking for required routes that are missing
-   *   3) Checking for unexpected routes prefixed with /common-grants/
-   *   4) Checking that matching routes are compatible
+   *   2) Checking for routes that put the protocol version in the path
+   *   3) Checking for required routes that are missing
+   *   4) Checking for unexpected routes prefixed with /common-grants/
+   *   5) Checking that matching routes are compatible
    */
   async checkSpec(specPath: string, options: CheckSpecOptions): Promise<void> {
     // Get the base spec and implementation spec
@@ -66,11 +68,18 @@ export class DefaultCheckService {
  * Validate the specs against the base spec.
  *
  * This involves:
- *   1) Checking for required routes that are missing
- *   2) Checking for unexpected routes prefixed with /common-grants/
- *   3) Checking that matching routes are compatible
+ *   1) Checking for routes that put the protocol version in the path
+ *   2) Checking for required routes that are missing
+ *   3) Checking for unexpected routes prefixed with /common-grants/
+ *   4) Checking that matching routes are compatible
  */
 function validateSpecs(baseDoc: Document, implDoc: Document): ErrorCollection {
+  // A versioned path makes every base route look missing, so report only that
+  const pathVersioningErrors = checkPathVersioning(baseDoc, implDoc);
+  if (pathVersioningErrors.getErrorCount() > 0) {
+    return pathVersioningErrors;
+  }
+
   const errors: ErrorCollection = new ErrorCollection();
   errors.addErrors(checkMissingRequiredRoutes(baseDoc, implDoc).getAllErrors());
   errors.addErrors(checkExtraRoutes(baseDoc, implDoc).getAllErrors());

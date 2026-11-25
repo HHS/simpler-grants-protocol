@@ -7,7 +7,8 @@ import {
 } from "fs";
 import { join } from "path";
 import { Paths } from "../lib/schema/paths";
-import { MOCK_SPEC_DIR_NAME, serverUrlFor } from "../lib/mock/docs-wiring";
+import { versionFromSpecFilename } from "../lib/openapi-versions";
+import { MOCK_SERVER_URL, MOCK_SPEC_DIR_NAME } from "../lib/mock/docs-wiring";
 import {
   SUPPORTED_VERSIONS,
   isSupportedVersion,
@@ -25,9 +26,6 @@ import {
  * artifacts that must never be committed.
  */
 
-/** `openapi.0.4.0.yaml` — the emitted per-version spec files. */
-const SPEC_FILENAME = /^openapi\.(\d+\.\d+\.\d+)\.yaml$/;
-
 /**
  * A top-level `servers:` key and its indented body. Anchored to line start so
  * a nested `servers:` never matches.
@@ -36,14 +34,6 @@ const TOP_LEVEL_SERVERS = /^servers:[^\n]*\n(?:[ \t][^\n]*\n|-[^\n]*\n)*/m;
 
 /** Anchor for insertion: the specs' first top-level `paths:` key. */
 const TOP_LEVEL_PATHS = /^paths:/m;
-
-/**
- * Extracts the protocol version from a spec filename
- * (`openapi.0.4.0.yaml` → `"0.4.0"`), or null.
- */
-export function versionFromSpecFilename(filename: string): string | null {
-  return SPEC_FILENAME.exec(filename)?.[1] ?? null;
-}
 
 /**
  * Inserts a `servers:` block immediately before the spec's top-level `paths:`
@@ -78,7 +68,7 @@ export function assertMockServesVersion(
   if (isSupportedVersion(version)) return;
 
   throw new Error(
-    `${filename} would advertise ${serverUrlFor(version)}, which the mock router does not serve ` +
+    `${filename} would advertise the mock for v${version}, which the mock router does not serve ` +
       `(it serves ${SUPPORTED_VERSIONS.join(", ")}). Teach src/lib/mock/data/fixtures.ts to shape ` +
       `v${version} — SUPPORTED_VERSIONS and shapeOpportunityForVersion — before emitting a spec for it.`,
   );
@@ -116,14 +106,13 @@ class MockServerInjector {
 
       assertMockServesVersion(version, filename);
 
-      const serverUrl = serverUrlFor(version);
       const source = join(Paths.OPENAPI_DIR, filename);
 
       planned.push({
         filename,
-        updated: injectServers(readFileSync(source, "utf-8"), serverUrl),
+        updated: injectServers(readFileSync(source, "utf-8"), MOCK_SERVER_URL),
       });
-      console.log(`  ${filename} -> ${serverUrl}`);
+      console.log(`  ${filename} -> ${MOCK_SERVER_URL}`);
     }
 
     if (planned.length === 0) {

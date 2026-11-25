@@ -1,0 +1,305 @@
+---
+title: Versioning
+description: How clients find, request, and confirm a CommonGrants protocol version, and how they learn that a version is retiring or a default is changing.
+sidebar:
+  order: 7
+---
+
+import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
+import SchemaTable from "@/components/SchemaTable.astro";
+
+A CommonGrants API can serve more than one protocol version. A client asks for the version it was built for with the CommonGrants version request header, `CG-Version`, and every response produced after a version is selected reports the version it was served in with the CommonGrants served-version response header, `CG-Version-Served`. A server lists the versions it serves at a discovery route, and announces retirement with the standard `Deprecation`, `Sunset`, and `Link` headers.
+
+This page summarizes the model for clients and implementers. The normative rules are in the [Versions](/protocol/specification#versions) section of the specification, and the rationale and the options considered are in [ADR 0032](/governance/adr/0032-api-version-negotiation/). Version negotiation was added in protocol version v0.6.0.
+
+## Finding the supported versions
+
+Call `GET /common-grants/versions`, relative to the API's base URL. You don't need to send `CG-Version`, and the route never returns a version error. Here's a server whose baseline is 0.4.0, which also serves form detail in 0.5.0 and serves its form list only in 0.5.0:
+
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "data": {
+    "versions": ["0.4.0"],
+    "defaultVersion": "0.4.0",
+    "operations": {
+      "GET /common-grants/forms": {
+        "versions": ["0.5.0"],
+        "defaultVersion": "0.5.0"
+      },
+      "GET /common-grants/forms/{formId}": {
+        "versions": ["0.4.0", "0.5.0"],
+        "defaultVersion": "0.4.0"
+      }
+    }
+  }
+}
+```
+
+`versions` and `defaultVersion` are the baseline: every route without an entry under `operations` serves them. A route listed under `operations` uses its own entry instead. A route is identified by its HTTP method and its path as published in the protocol, and path parameter names are ignored when matching, so `{id}` and `{formId}` in the same position identify the same route.
+
+Version values are strings in the `0.5.0` format, not a closed list, so accept versions published after your client was built. Ignore fields you don't recognize: fields are only ever added to this response.
+
+If discovery returns 404, treat the server as serving one version it doesn't advertise. If its responses also lack `CG-Version-Served`, that version is unknown and every response is unconfirmed.
+
+The route is optional, but a server that serves more than one version must implement it. It should be readable without authentication.
+
+## Asking for a version
+
+Send the full version in the `CG-Version` request header:
+
+```http
+GET /common-grants/opportunities/123 HTTP/1.1
+CG-Version: 0.5.0
+
+HTTP/1.1 200 OK
+CG-Version-Served: 0.5.1
+Vary: CG-Version
+```
+
+Send one value per request. The value is three dot-separated numbers with no leading zeros. A `v` prefix, a short form such as `0.5`, ranges, and aliases are malformed. The header only means something on routes under `/common-grants/`, and a version in the path or query string is never read as a selector.
+
+Servers match on major and minor version, so a request for `0.5.0` is served by a server hosting `0.5.1`. A server never substitutes a different major or minor version, even if it serves only one.
+
+The value is always a CommonGrants protocol version, never a plugin's package version ([ADR 0022](/governance/adr/0022-plugin-framework/)).
+
+### If you don't ask
+
+You're served in the server's default: the baseline default, or the route's own default when the route has an entry in discovery. The default doesn't change when the server adds versions. It changes only after an announced default change (see [Learning that the default is changing](#learning-that-the-default-is-changing)). If you need a fixed contract, send a version. Before 1.0, a new default may not be compatible with the old one.
+
+### Confirming the version you got
+
+Read `CG-Version-Served`. It reports the full version served, so it can differ from your request in the patch number only.
+
+- A successful response without it is unconfirmed: the server may predate version negotiation, or something in between dropped your header. Don't read it as the version you asked for.
+- A served version whose major or minor number differs from the one you asked for wasn't served as requested. Don't treat it as your version.
+
+Browser clients on another origin can read `CG-Version-Served`, because cross-origin servers must expose it.
+
+## Version errors
+
+| Case                                                                                                    | `code`                                               | Status |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
+| Malformed version, such as `banana` or `0.5`                                                            | `version.malformed`                                  | 400    |
+| More than one version value, as two header lines or one comma-separated line, even the same value twice | `version.conflict`                                   | 400    |
+| Version this server doesn't serve                                                                       | `version.unsupported`, scope `deployment`            | 406    |
+| Version this route doesn't serve                                                                        | `version.unsupported`, scope `operation`             | 406    |
+| Version retired from this server or this route                                                          | `version.retired`, scope `deployment` or `operation` | 406    |
+
+Details are entries in the standard [error response](/protocol/responses/error) envelope. `supported` and `defaultVersion` always describe the route you called, so retry with a listed version:
+
+```json
+{
+  "status": 406,
+  "message": "The requested CommonGrants version is not available for this route",
+  "errors": [
+    {
+      "field": "CG-Version",
+      "code": "version.unsupported",
+      "message": "Version 0.4.0 is not served by GET /common-grants/forms. Supported versions: 0.5.0",
+      "requested": "0.4.0",
+      "supported": ["0.5.0"],
+      "scope": "operation",
+      "defaultVersion": "0.5.0",
+      "discovery": "https://grants.example.org/common-grants/versions"
+    }
+  ]
+}
+```
+
+`version.retired` also carries `sunset`, in RFC 3339 format. `version.conflict` omits `requested`, and its message names the values received. `code` values are stable; branch on them. A version problem never returns 404 or 410, so a 404 still means a missing route or record. Version errors don't carry `CG-Version-Served`, because no version was selected.
+
+A request body is validated against the version it's served in, so a 0.4.0 search that uses a filter that exists only in 0.5.0 gets an ordinary 400 validation error, with `CG-Version-Served: 0.4.0`. A rejected write changes nothing, and the server never retries it under another version.
+
+## Learning that a version is retiring
+
+Responses served in a retiring version carry `Deprecation`, then `Sunset` once a date is set, with `Link` headers to migration documentation and to discovery. These headers always describe the version you were served, and discovery lists the version under `deprecated` with its dates:
+
+```http
+GET /common-grants/opportunities/123 HTTP/1.1
+CG-Version: 0.3.0
+
+HTTP/1.1 200 OK
+CG-Version-Served: 0.3.0
+Vary: CG-Version
+Deprecation: @1796083200
+Sunset: Tue, 01 Jun 2027 00:00:00 GMT
+Link: <https://grants.example.org/docs/migrate>; rel="deprecation"
+Link: <https://grants.example.org/docs/migrate>; rel="sunset"
+Link: <https://grants.example.org/common-grants/versions>; rel="version-history"
+```
+
+The three dates use three formats: `Deprecation` uses the `@<unix-timestamp>` form from [RFC 9745](https://www.rfc-editor.org/rfc/rfc9745), `Sunset` uses an HTTP-date as in [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594), and discovery uses RFC 3339. Discovery keys `deprecated` by the exact versions it lists, so look up the version you requested by its major and minor alone: a request for `0.3.0` served as `0.3.1` finds its entry under `0.3.1`.
+
+After the sunset date, requests for any patch of that major and minor version get 406 `version.retired`, with the sunset date and the supported versions, for a period the server chooses. After that, the server may answer `version.unsupported` instead, so handle both the same way: retry with a version from `supported`. If the retired version was your default, the default has already moved to a newer version.
+
+A single route retires a version the same way as the whole server. Experimental routes may drop a version without notice.
+
+## Learning that the default is changing
+
+If you send no version, responses from routes whose default is changing carry a `Link` header with `rel="successor-version"`, and discovery shows `upcomingDefault` with the date the change takes effect. These responses carry no `Deprecation` or `Sunset` unless the default version is itself retiring. If you send a version, nothing changes for you.
+
+```http
+GET /common-grants/opportunities/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+CG-Version-Served: 0.4.0
+Vary: CG-Version
+Link: <https://grants.example.org/docs/versions/0.5.0>; rel="successor-version"
+Link: <https://grants.example.org/common-grants/versions>; rel="version-history"
+```
+
+Here's the `data` payload of discovery for a server moving its default to 0.5.0 and retiring 0.3.0:
+
+```json
+{
+  "versions": ["0.3.0", "0.4.0", "0.5.0"],
+  "defaultVersion": "0.4.0",
+  "upcomingDefault": {
+    "version": "0.5.0",
+    "date": "2027-03-01T00:00:00Z"
+  },
+  "deprecated": {
+    "0.3.0": {
+      "deprecation": "2026-12-01T00:00:00Z",
+      "sunset": "2027-06-01T00:00:00Z"
+    }
+  }
+}
+```
+
+## Implementing version negotiation
+
+A server that serves one version needs very little: it reads `CG-Version` on routes under `/common-grants/`, rejects other major and minor versions, and reports what it serves. A server that adopts negotiation sets its default to the version it already serves, so its existing clients see no change. The specification's [Versions](/protocol/specification#versions) section is the full set of rules. In summary:
+
+- **Resolve the version.** Match the route, then resolve the version, then validate the request body against that version's schemas, all before any side effect. Check for more than one value before checking the format. Never read the version from the path, the query string, `Accept`, or a media type.
+- **Send the version headers.** Send `CG-Version-Served` on every response produced after a version is selected, whatever version you serve, including errors such as a missing record. Responses to 401 and 403 may omit it, and version errors must not carry it. Send `Vary: CG-Version` on cacheable responses. Cross-origin servers allow `CG-Version` and expose `CG-Version-Served`, `Deprecation`, `Sunset`, and `Link`.
+- **Publish discovery** if you serve more than one version. List the baseline, and add an `operations` entry only for routes that differ from it. A version in the baseline is a compliance claim: every route that version requires serves it.
+- **Retire a version** by sending `Deprecation`, `Sunset`, and their `Link` headers on responses served in it, listing it under `deprecated` in discovery, and answering `version.retired` after the sunset.
+- **Change a default** by sending the `successor-version` and `version-history` links on responses served by default, and showing `upcomingDefault` in discovery. Don't send `Deprecation` or `Sunset` for a default change. A retiring default moves forward to a newer version no later than the sunset, so you can't retire a default without a newer version to move to.
+
+We recommend that servers move all their routes to a new version at the same time. A server can instead serve different versions on different routes and advertise those routes in discovery.
+
+## Schemas
+
+The SDKs don't declare the version negotiation schemas yet, so the formats below show the TypeSpec source only.
+
+### Discovery schemas
+
+#### VersionDiscovery
+
+The `data` payload of the `GET /versions` response.
+
+<SchemaTable schema="VersionDiscovery" />
+
+<SchemaFormatTabs schema="VersionDiscovery" typeSpec />
+
+#### OperationVersions
+
+The versions a single route serves, when they differ from the baseline.
+
+<SchemaTable schema="OperationVersions" />
+
+<SchemaFormatTabs schema="OperationVersions" typeSpec />
+
+#### UpcomingDefault
+
+A scheduled change to a default version.
+
+<SchemaTable schema="UpcomingDefault" />
+
+<SchemaFormatTabs schema="UpcomingDefault" typeSpec />
+
+#### VersionRetirement
+
+The retirement schedule for a deprecated version.
+
+<SchemaTable schema="VersionRetirement" />
+
+<SchemaFormatTabs schema="VersionRetirement" typeSpec />
+
+### Version error schemas
+
+#### VersionMalformedError
+
+A 400 response to a `CG-Version` value that isn't a full `MAJOR.MINOR.PATCH` version.
+
+<SchemaTable schema="VersionMalformedError" />
+
+<SchemaFormatTabs schema="VersionMalformedError" typeSpec />
+
+#### VersionConflictError
+
+A 400 response to a request that sent more than one `CG-Version` value.
+
+<SchemaTable schema="VersionConflictError" />
+
+<SchemaFormatTabs schema="VersionConflictError" typeSpec />
+
+#### VersionUnsupportedError
+
+A 406 response to a version this server or route doesn't serve.
+
+<SchemaTable schema="VersionUnsupportedError" />
+
+<SchemaFormatTabs schema="VersionUnsupportedError" typeSpec />
+
+#### VersionRetiredError
+
+A 406 response to a version that was retired from this server or route.
+
+<SchemaTable schema="VersionRetiredError" />
+
+<SchemaFormatTabs schema="VersionRetiredError" typeSpec />
+
+#### VersionErrorDetail
+
+The fields every version error entry carries, describing the route that was called.
+
+<SchemaTable schema="VersionErrorDetail" />
+
+<SchemaFormatTabs schema="VersionErrorDetail" typeSpec />
+
+#### VersionMalformedDetail
+
+The `CG-Version` value isn't a full `MAJOR.MINOR.PATCH` version.
+
+<SchemaTable schema="VersionMalformedDetail" />
+
+<SchemaFormatTabs schema="VersionMalformedDetail" typeSpec />
+
+#### VersionConflictDetail
+
+The request sent more than one `CG-Version` value.
+
+<SchemaTable schema="VersionConflictDetail" />
+
+<SchemaFormatTabs schema="VersionConflictDetail" typeSpec />
+
+#### VersionUnsupportedDetail
+
+The requested version isn't served by this server or this route.
+
+<SchemaTable schema="VersionUnsupportedDetail" />
+
+<SchemaFormatTabs schema="VersionUnsupportedDetail" typeSpec />
+
+#### VersionRetiredDetail
+
+The requested version was retired from this server or this route.
+
+<SchemaTable schema="VersionRetiredDetail" />
+
+<SchemaFormatTabs schema="VersionRetiredDetail" typeSpec />
+
+#### VersionErrorScope
+
+Whether a version is unavailable on the whole server or only on the route called.
+
+| Value      | Description                                          |
+| ---------- | ---------------------------------------------------- |
+| deployment | The server doesn't serve the version on any route    |
+| operation  | The server serves the version, but not on this route |
+
+<SchemaFormatTabs schema="VersionErrorScope" typeSpec />

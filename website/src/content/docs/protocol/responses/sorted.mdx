@@ -26,8 +26,8 @@ sorted:
           "totalPages": 3
         },
         "sortInfo": {
-          "field": "name",
-          "direction": "asc"
+          "sortBy": "name",
+          "sortOrder": "asc"
         }
       }
 ---
@@ -58,6 +58,10 @@ A 200 response with a paginated list of sorted items.
   python
   typescript
 />
+
+### Version headers
+
+From v0.6.0, the typed `SortedT<T>` response carries the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
 
 ### Usage
 

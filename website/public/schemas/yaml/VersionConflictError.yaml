@@ -1,0 +1,34 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionConflictError.yaml
+type: object
+properties:
+  status:
+    type: number
+    const: 400
+    examples:
+      - 400
+  errors:
+    type: array
+    items:
+      $ref: VersionConflictDetail.yaml
+    minItems: 1
+required:
+  - status
+  - errors
+allOf:
+  - $ref: Error.yaml
+unevaluatedProperties:
+  not: {}
+examples:
+  - status: 400
+    message: The request sent more than one CG-Version value
+    errors:
+      - field: CG-Version
+        code: version.conflict
+        message: Received CG-Version values 0.5.0 and 0.6.0
+        supported:
+          - 0.5.0
+          - 0.6.0
+        defaultVersion: 0.5.0
+        discovery: https://grants.example.org/common-grants/versions
+description: A request that sent more than one `CG-Version` value, even the same value twice

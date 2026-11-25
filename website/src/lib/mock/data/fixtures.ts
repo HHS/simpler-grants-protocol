@@ -33,6 +33,8 @@ import { orgRefCollection, HRSA_ORG_ID, NSF_ORG_ID } from "./organizations";
  * identically to v0.3.0. v0.5.0 adds `OppRef.identifiers`, which
  * `shapeOpportunityForVersion` strips for every earlier version, and replaces
  * each nested competition's `opportunityId` with an `opportunity` reference.
+ * v0.6.0 adds only the version negotiation headers, so it shapes identically
+ * to v0.5.0.
  */
 export const SUPPORTED_VERSIONS = [
   "0.1.0",
@@ -40,6 +42,7 @@ export const SUPPORTED_VERSIONS = [
   "0.3.0",
   "0.4.0",
   "0.5.0",
+  "0.6.0",
 ] as const;
 
 /** A protocol version the opportunity handlers can shape responses for. */
@@ -48,6 +51,18 @@ export type Version = (typeof SUPPORTED_VERSIONS)[number];
 /** Narrows an arbitrary version string to a `Version`. */
 export function isSupportedVersion(value: string): value is Version {
   return (SUPPORTED_VERSIONS as readonly string[]).includes(value);
+}
+
+/**
+ * The hosted version sharing `requested`'s major and minor, if any: a request
+ * for `0.5.1` is served by `0.5.0`. Expects a well-formed `MAJOR.MINOR.PATCH`.
+ */
+export function hostedVersionFor(requested: string): Version | undefined {
+  const [major, minor] = requested.split(".");
+  return SUPPORTED_VERSIONS.find((version) => {
+    const [hostedMajor, hostedMinor] = version.split(".");
+    return hostedMajor === major && hostedMinor === minor;
+  });
 }
 
 /** Which endpoint shape to project: the list returns `OpportunityBase`, the

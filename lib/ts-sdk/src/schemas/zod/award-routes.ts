@@ -10,15 +10,13 @@ import { SuccessSchema } from "./responses.js";
 import { SortOrderEnum } from "./sorting.js";
 import { UuidSchema } from "./types.js";
 
-const INT32_MAX = 2_147_483_647;
-
 const RoutePaginationInputSchema = z
   .object({
     /** The page to return. */
-    page: z.number().int().min(1).max(INT32_MAX).default(1),
+    page: z.number().int().min(1).default(1),
 
     /** The number of items to return per page. */
-    pageSize: z.number().int().min(1).max(INT32_MAX).default(100),
+    pageSize: z.number().int().min(1).default(100),
   })
   .strict();
 
@@ -29,7 +27,7 @@ const AwardSuccessSchema = SuccessSchema.extend({
 const AwardPaginationInfoSchema = z
   .object({
     /** Current page number. */
-    page: z.number().int().min(1).max(INT32_MAX),
+    page: z.number().int().min(1),
 
     /** Number of items on the current page. */
     pageSize: z.number().int().min(1),

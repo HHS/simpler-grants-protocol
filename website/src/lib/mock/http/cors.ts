@@ -5,18 +5,32 @@
  */
 
 import { SUPPORTED_METHODS } from "./methods";
+import { VERSION_HEADER, VERSION_SERVED_HEADER } from "./version";
 
 /**
  * `X-API-Key` and `Authorization` are listed because the TS SDK sends them
- * when auth is configured; a preflight must name non-simple headers. The
- * methods come from `SUPPORTED_METHODS` so they cannot drift from the router.
+ * when auth is configured, and `CG-Version` because clients select a version
+ * with it; a preflight must name non-simple headers. The methods come from
+ * `SUPPORTED_METHODS` so they cannot drift from the router.
  */
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": [...SUPPORTED_METHODS, "OPTIONS"].join(", "),
-  "Access-Control-Allow-Headers": "Content-Type, X-API-Key, Authorization",
+  "Access-Control-Allow-Headers": `Content-Type, X-API-Key, Authorization, ${VERSION_HEADER}`,
   "Access-Control-Max-Age": "86400",
 };
+
+/**
+ * The ADR 0032 response headers a browser client may read. The mock retires
+ * nothing, so it never sends `Deprecation`, `Sunset` or `Link`; they are listed
+ * to match the ADR.
+ */
+const EXPOSED_HEADERS = [
+  VERSION_SERVED_HEADER,
+  "Deprecation",
+  "Sunset",
+  "Link",
+].join(", ");
 
 /**
  * Answers 204 to an `OPTIONS` preflight for any path, matched or not — on
@@ -32,6 +46,7 @@ export function withCors(response: Response): Response {
   for (const [name, value] of Object.entries(CORS_HEADERS)) {
     headers.set(name, value);
   }
+  headers.set("Access-Control-Expose-Headers", EXPOSED_HEADERS);
 
   return new Response(response.body, {
     status: response.status,

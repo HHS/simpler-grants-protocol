@@ -4,7 +4,7 @@ description: Records the decision to serve the fixture-backed mock CommonGrants 
 ---
 
 :::caution[Partly superseded]
-[ADR 0032: API version negotiation](/governance/adr/0032-api-version-negotiation/) supersedes this ADR's version path prefix (`/api/v{version}/...`). The mock moves to the `CG-Version` request header. The rest of this decision, serving the mock from the docs website, still stands.
+[ADR 0032: API version negotiation](/governance/adr/0032-api-version-negotiation/) supersedes this ADR's version path prefix (`/api/v{version}/...`). The mock now serves every route under `/api/common-grants` and selects the protocol version with the `CG-Version` request header. The rest of this decision, serving the mock from the docs website, still stands.
 :::
 
 We want visitors to test the CommonGrants API against a mock for every published spec version (v0.1.0 to v0.4.0). We're turning Swagger UI's "Try it out" back on in the browser, but our core goal is **determinism**. A user should be able to try a request in the browser, copy the `curl` command and run it in their terminal, point the SDK at the same URL, and get the **same data** every time. The mock also gives the quickstart a sandbox: a new SDK user can fetch realistic grant data with no local setup.

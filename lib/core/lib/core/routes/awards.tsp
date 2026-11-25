@@ -51,7 +51,8 @@ interface Awards {
   @list
   list<T extends Models.AwardBase = Models.AwardBase>(
     ...Pagination.PaginatedQueryParams,
-  ): Responses.PaginatedT<T>;
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.PaginatedT<T>>;
 
   // ##############################
   // View an award
@@ -69,7 +70,9 @@ interface Awards {
     /** The ID of the award to view */
     @path
     awdId: Types.uuid,
-  ): Responses.OkT<T> | Responses.NotFound;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.OkT<T> | Responses.NotFound>;
 
   // ###############################
   // Search awards
@@ -81,7 +84,7 @@ interface Awards {
    * Must be an extension of Models.AwardBase. Default is Models.AwardBase.
    */
   @summary("Search awards")
-  @doc("Search for awards based on the provided filters.")
+  @doc("Search for awards based on the provided search term and filters.")
   @post
   @route("/search")
   search<T extends Models.AwardBase = Models.AwardBase>(
@@ -101,5 +104,10 @@ interface Awards {
 
     /** Pagination instructions for the results */
     pagination?: Pagination.PaginatedBodyParams,
-  ): Responses.FilteredT<T, Models.AwdFilters>;
+
+    ...Headers.VersionRequest,
+  ): Responses.WithVersionErrors<Responses.SearchResultsT<
+    T,
+    Models.AwdFilters
+  >>;
 }

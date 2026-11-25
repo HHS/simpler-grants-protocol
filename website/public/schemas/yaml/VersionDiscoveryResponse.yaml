@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: VersionDiscoveryResponse.yaml
+type: object
+properties:
+  data:
+    $ref: VersionDiscovery.yaml
+    description: The protocol versions the API serves
+required:
+  - data
+allOf:
+  - $ref: Success.yaml
+unevaluatedProperties:
+  not: {}
+description: A 200 response listing the protocol versions an API serves

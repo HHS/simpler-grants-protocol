@@ -31,18 +31,19 @@ import {
 } from "@/lib/mock/handlers/applications";
 import { getCompetition } from "@/lib/mock/handlers/competitions";
 import { getForm } from "@/lib/mock/handlers/forms";
+import { mockUrl } from "../__fixtures__/mock-request";
 
 const VERSION: Version = "0.4.0";
 
-/** Builds `https://docs.example/api/v{version}/common-grants/applications{suffix}`. */
-function applicationsUrl(version: string, suffix = ""): string {
-  return `https://docs.example/api/v${version}/common-grants/applications${suffix}`;
+/** Builds `https://docs.example/api/common-grants/applications{suffix}`. */
+function applicationsUrl(suffix = ""): string {
+  return mockUrl(`/applications${suffix}`);
 }
 
 /** POSTs a JSON body to `/applications/start` and returns the raw `Response`. */
 function runStart(version: Version, body: unknown): Promise<Response> {
   return startApplication(
-    new Request(applicationsUrl(version, "/start"), {
+    new Request(applicationsUrl("/start"), {
       method: "POST",
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
@@ -54,7 +55,7 @@ function runStart(version: Version, body: unknown): Promise<Response> {
 /** POSTs a JSON body to `/applications/search` and returns the parsed 200 body. */
 async function runSearchBody(version: Version, body: unknown) {
   const response = await searchApplications(
-    new Request(applicationsUrl(version, "/search"), {
+    new Request(applicationsUrl("/search"), {
       method: "POST",
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
@@ -80,7 +81,7 @@ async function runSearchBody(version: Version, body: unknown) {
   };
 }
 
-describe("POST /v{version}/common-grants/applications/start", () => {
+describe("POST /common-grants/applications/start", () => {
   it("returns 201 with the created application echoing the submitted competitionId, title, and the competition's own opportunityId", async () => {
     const competition = COMPETITION_FIXTURES.find(
       (c) => c.id === CANONICAL_COMPETITION_ID,
@@ -243,7 +244,7 @@ describe("POST /v{version}/common-grants/applications/start", () => {
 
   it("returns 400 'Malformed JSON body' for a malformed JSON body", async () => {
     const response = await startApplication(
-      new Request(applicationsUrl(VERSION, "/start"), {
+      new Request(applicationsUrl("/start"), {
         method: "POST",
         body: "{not valid json",
         headers: { "Content-Type": "application/json" },
@@ -259,7 +260,7 @@ describe("POST /v{version}/common-grants/applications/start", () => {
   });
 });
 
-describe("GET /v{version}/common-grants/applications/{appId} (detail)", () => {
+describe("GET /common-grants/applications/{appId} (detail)", () => {
   it("returns 200 for the id Swagger UI pre-fills into every path parameter box", async () => {
     const response = getApplication(CANONICAL_APPLICATION_ID, VERSION);
 
@@ -300,7 +301,7 @@ describe("GET /v{version}/common-grants/applications/{appId} (detail)", () => {
   });
 });
 
-describe("PUT /v{version}/common-grants/applications/{appId}/submit", () => {
+describe("PUT /common-grants/applications/{appId}/submit", () => {
   it("returns 200 for an application with no validation errors", async () => {
     const response = await submitApplication(CANONICAL_APPLICATION_ID, VERSION);
 
@@ -387,7 +388,7 @@ describe("PUT /v{version}/common-grants/applications/{appId}/submit", () => {
   });
 });
 
-describe("POST /v{version}/common-grants/applications/search", () => {
+describe("POST /common-grants/applications/search", () => {
   it("returns 200 with items, paginationInfo, sortInfo, and filterInfo for an empty body", async () => {
     const body = await runSearchBody(VERSION, {});
 
@@ -447,7 +448,7 @@ describe("POST /v{version}/common-grants/applications/search", () => {
 
   it("returns 400 with a sorting.sortBy field error for an unknown sortBy value", async () => {
     const response = await searchApplications(
-      new Request(applicationsUrl(VERSION, "/search"), {
+      new Request(applicationsUrl("/search"), {
         method: "POST",
         body: JSON.stringify({
           sorting: { sortBy: "not_a_real_sort_field" },
@@ -475,7 +476,6 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     const viaQueryResponse = await searchApplications(
       new Request(
         applicationsUrl(
-          VERSION,
           `/search?filters=${encodeURIComponent(JSON.stringify(filters))}`,
         ),
         { method: "POST" },
@@ -503,7 +503,7 @@ describe("POST /v{version}/common-grants/applications/search", () => {
     /** POSTs to `/search?{query}` with no body and returns the raw response. */
     function runSearchQuery(query: string): Promise<Response> {
       return searchApplications(
-        new Request(applicationsUrl(VERSION, `/search?${query}`), {
+        new Request(applicationsUrl(`/search?${query}`), {
           method: "POST",
         }),
         VERSION,
@@ -543,7 +543,6 @@ describe("POST /v{version}/common-grants/applications/search", () => {
       const response = await searchApplications(
         new Request(
           applicationsUrl(
-            VERSION,
             `/search?filters=${encodeURIComponent(JSON.stringify(fromQuery))}`,
           ),
           {
@@ -582,31 +581,9 @@ describe("POST /v{version}/common-grants/applications/search", () => {
       expect(body.items.length).toBeLessThan(APPLICATION_FIXTURES.length);
     });
   });
-
-  it("returns 404 with the protocol Error shape at v0.2, since searchApplications is v0.3+ while its siblings are v0.2+", async () => {
-    const response = await searchApplications(
-      new Request(applicationsUrl("0.2.0", "/search"), {
-        method: "POST",
-        body: JSON.stringify({}),
-        headers: { "Content-Type": "application/json" },
-      }),
-      "0.2.0",
-    );
-
-    expect(response.status).toBe(404);
-
-    const body = (await response.json()) as {
-      status: number;
-      message: string;
-      errors: unknown[];
-    };
-    expect(body.status).toBe(404);
-    expect(typeof body.message).toBe("string");
-    expect(Array.isArray(body.errors)).toBe(true);
-  });
 });
 
-describe("GET /v{version}/common-grants/applications/{appId}/forms/{formId} (read)", () => {
+describe("GET /common-grants/applications/{appId}/forms/{formId} (read)", () => {
   it("resolves the doubly pre-filled (appId, formId) pair Swagger UI arrives with", async () => {
     expect(canonicalPrefillResolves()).toBe(true);
 
@@ -697,7 +674,7 @@ describe("form answers across the v0.5 form title", () => {
   });
 });
 
-describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (write)", () => {
+describe("PUT /common-grants/applications/{appId}/forms/{formId} (write)", () => {
   it("echoes the submitted response body under data.response, with formId/applicationId set from the path", async () => {
     const responseBody = {
       name: { first: "Taylor", last: "Reyes" },
@@ -709,7 +686,6 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
       CANONICAL_FORM_ID,
       new Request(
         applicationsUrl(
-          VERSION,
           `/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
         ),
         {
@@ -745,7 +721,6 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
         CANONICAL_FORM_ID,
         new Request(
           applicationsUrl(
-            VERSION,
             `/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
           ),
           {
@@ -779,7 +754,6 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
     const buildRequest = () =>
       new Request(
         applicationsUrl(
-          VERSION,
           `/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
         ),
         {
@@ -815,7 +789,6 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
       CANONICAL_FORM_ID,
       new Request(
         applicationsUrl(
-          VERSION,
           `/${CANONICAL_APPLICATION_ID}/forms/${CANONICAL_FORM_ID}`,
         ),
         {
@@ -839,10 +812,7 @@ describe("PUT /v{version}/common-grants/applications/{appId}/forms/{formId} (wri
       RESERVED_MISSING_ID,
       CANONICAL_FORM_ID,
       new Request(
-        applicationsUrl(
-          VERSION,
-          `/${RESERVED_MISSING_ID}/forms/${CANONICAL_FORM_ID}`,
-        ),
+        applicationsUrl(`/${RESERVED_MISSING_ID}/forms/${CANONICAL_FORM_ID}`),
         {
           method: "PUT",
           body: JSON.stringify({}),
@@ -871,6 +841,7 @@ describe("per-version application response shape", () => {
     "0.3.0": "name",
     "0.4.0": "title",
     "0.5.0": "title",
+    "0.6.0": "title",
   };
 
   /** Versions whose `ApplicationBase` declares `opportunityId`. */
@@ -880,6 +851,7 @@ describe("per-version application response shape", () => {
     "0.3.0": true,
     "0.4.0": true,
     "0.5.0": true,
+    "0.6.0": true,
   };
 
   /** The applications routes start at v0.2; v0.1 never reaches a handler. */

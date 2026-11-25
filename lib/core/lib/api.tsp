@@ -30,6 +30,12 @@ using Versioning;
     description: "Endpoints that MUST be implemented by all CommonGrants APIs",
   }
 )
+@tagMetadata(
+  "Versions",
+  #{
+    description: "Endpoints related to discovering the protocol versions an API serves",
+  }
+)
 @tagMetadata("Forms", #{ description: "Endpoints related to forms" })
 @tagMetadata("Awards", #{ description: "Endpoints related to grant awards" })
 @tagMetadata(
@@ -109,6 +115,13 @@ namespace Opportunities {
   op read is Router.read;
 
   @tag("optional")
+  @returnTypeChangedFrom(
+    CommonGrants.Versions.v0_6,
+    Responses.WithVersionErrors<Responses.FilteredT<
+      Models.OpportunityBase,
+      Models.OppFilters
+    >>
+  )
   op search is Router.search;
 }
 
@@ -131,6 +144,13 @@ namespace Awards {
 
   @added(Versions.v0_4)
   @tag("optional")
+  @returnTypeChangedFrom(
+    CommonGrants.Versions.v0_6,
+    Responses.WithVersionErrors<Responses.FilteredT<
+      Models.AwardBase,
+      Models.AwdFilters
+    >>
+  )
   op search is Router.search;
 }
 
@@ -244,5 +264,19 @@ namespace Forms {
   op list is Router.list;
 
   @added(Versions.v0_2)
+  op read is Router.read;
+}
+
+// #########################################################
+// Versions
+// #########################################################
+
+@tag("Versions")
+@route("/versions")
+namespace ProtocolVersions {
+  alias Router = Routes.ProtocolVersions;
+
+  @added(Versions.v0_6)
+  @tag("optional")
   op read is Router.read;
 }
