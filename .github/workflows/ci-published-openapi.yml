@@ -1,0 +1,65 @@
+name: "CI - Website: Check Published OpenAPI Documents"
+
+# Fails a PR that changes a published OpenAPI document in
+# website/public/openapi/, by hand or through a TypeSpec change. The
+# `published-openapi-change` label allows a deliberate change; the diffs still
+# print. See lib/core/DEVELOPMENT.md.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    paths:
+      - lib/core/**
+      - website/public/openapi/**
+      - website/src/specs/**
+      - website/src/scripts/prune-openapi-tags.ts
+      - website/src/scripts/check-published-openapi.ts
+      - website/package.json
+      # Holds the openapi3 emitter options, so a change rewrites every document
+      - website/tspconfig.yaml
+      # A TypeSpec compiler bump can change the generated documents
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - .github/workflows/ci-published-openapi.yml
+
+concurrency:
+  group: published-openapi-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: ./website
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # The default pull_request checkout is the merge commit. Its first parent
+      # (HEAD^1) is the base branch tip the PR was merged against, so the check
+      # compares the merged result with that exact commit. fetch-depth 2 brings
+      # that parent along.
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+
+      - name: Install dependencies
+        working-directory: .
+        run: pnpm install --frozen-lockfile
+
+      # Checks the committed documents, regenerates them with
+      # `pnpm run typespec`, then checks again.
+      - name: Check published OpenAPI documents
+        run: pnpm run check:published-openapi --base HEAD^1
+        env:
+          PUBLISHED_OPENAPI_CHANGE_ALLOWED: ${{ contains(github.event.pull_request.labels.*.name, 'published-openapi-change') }}
