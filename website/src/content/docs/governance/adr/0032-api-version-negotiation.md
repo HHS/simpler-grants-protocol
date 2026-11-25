@@ -31,7 +31,7 @@ We recommend that servers move all their routes to a new version at the same tim
 - A server publishes `GET /common-grants/versions`: a baseline (the default version and the versions every route serves) plus entries for routes that differ, in the standard success envelope.
 - The route is optional, and required for servers that serve more than one version. It SHOULD be readable without authentication.
 - It takes no request parameters, ignores `CG-Version`, and never returns a version error.
-- Optional lifecycle fields appear while a change is pending: the upcoming default and its date, and deprecated versions with their deprecation and sunset dates. Dates use RFC 3339.
+- Optional lifecycle fields appear while a change is pending: the upcoming default and its date, and deprecated versions with their deprecation date and, once set, their sunset date. Dates use RFC 3339.
 - Fields are only ever added, and clients ignore fields they don't recognize.
 - Ordinary responses don't carry a supported-versions header. Discovery and unsupported-version errors carry the list.
 
