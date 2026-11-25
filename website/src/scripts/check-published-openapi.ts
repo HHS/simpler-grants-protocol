@@ -43,10 +43,16 @@ export function versionFromFilename(filename: string): string | null {
   return match ? `${match[1]}.${match[2]}.${match[3]}` : null;
 }
 
-/** Compares two `major.minor.patch` versions; pre-release suffixes are ignored. */
+/**
+ * Compares two `major.minor.patch` versions. A pre-release suffix sorts before
+ * its release (`0.6.0-rc.1 < 0.6.0`); build metadata (`+...`) is ignored.
+ */
 export function compareSemver(a: string, b: string): number {
-  const parse = (v: string): number[] => {
-    const core = v.trim().replace(/^v/, "").split(/[-+]/)[0];
+  const parse = (v: string) => {
+    const withoutBuild = v.trim().replace(/^v/, "").split("+")[0];
+    const dash = withoutBuild.indexOf("-");
+    const core = dash === -1 ? withoutBuild : withoutBuild.slice(0, dash);
+    const prerelease = dash === -1 ? null : withoutBuild.slice(dash + 1);
     const parts = core.split(".").map((p) => Number(p));
     if (
       parts.length !== 3 ||
@@ -54,13 +60,16 @@ export function compareSemver(a: string, b: string): number {
     ) {
       throw new Error(`Not a semver version: "${v}"`);
     }
-    return parts;
+    return { parts, prerelease };
   };
   const [pa, pb] = [parse(a), parse(b)];
   for (let i = 0; i < 3; i++) {
-    if (pa[i] !== pb[i]) return pa[i] - pb[i];
+    if (pa.parts[i] !== pb.parts[i]) return pa.parts[i] - pb.parts[i];
   }
-  return 0;
+  if (pa.prerelease === pb.prerelease) return 0;
+  if (pa.prerelease === null) return 1;
+  if (pb.prerelease === null) return -1;
+  return pa.prerelease < pb.prerelease ? -1 : 1;
 }
 
 export interface PublishedDocument {
@@ -106,22 +115,30 @@ export interface DocumentResult {
   change: Exclude<Change, "unchanged">;
   /** Unified diff against the base ref's copy. */
   diff: string;
+  /** Set by `dedupeResults` when regeneration produced the same result. */
+  alsoAfterRegeneration?: boolean;
 }
 
 /**
  * Drops a regenerated-phase result that repeats a committed-phase result for
- * the same document, so the same diff isn't printed twice.
+ * the same document, marking the kept committed result so the diff isn't
+ * printed twice.
  */
 export function dedupeResults(results: DocumentResult[]): DocumentResult[] {
+  const copies = results.map((r) => ({ ...r }));
   const committed = new Map(
-    results
+    copies
       .filter((r) => r.phase === "committed")
       .map((r) => [r.path, r] as const),
   );
-  return results.filter((r) => {
+  return copies.filter((r) => {
     if (r.phase !== "regenerated") return true;
     const earlier = committed.get(r.path);
-    return !(earlier && earlier.change === r.change && earlier.diff === r.diff);
+    if (earlier && earlier.change === r.change && earlier.diff === r.diff) {
+      earlier.alsoAfterRegeneration = true;
+      return false;
+    }
+    return true;
   });
 }
 
@@ -161,13 +178,7 @@ export function decideOutcome(args: {
   const changedPaths = [...new Set(results.map((r) => r.path))];
   const sections = results.map((r) => {
     const what = r.change === "deleted" ? "deleted" : "changed";
-    const both =
-      r.phase === "committed" &&
-      args.results.some(
-        (o) => o.path === r.path && o.phase === "regenerated",
-      ) &&
-      !results.some((o) => o.path === r.path && o.phase === "regenerated");
-    const phase = both
+    const phase = r.alsoAfterRegeneration
       ? `${PHASE_LABEL.committed}; same diff after regeneration`
       : PHASE_LABEL[r.phase];
     const body = r.diff

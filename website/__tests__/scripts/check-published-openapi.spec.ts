@@ -42,8 +42,11 @@ describe("compareSemver", () => {
     expect(compareSemver("0.5.0", "0.5.0")).toBe(0);
   });
 
-  it("ignores pre-release and build suffixes", () => {
-    expect(compareSemver("0.6.0-rc.1", "0.6.0")).toBe(0);
+  it("treats pre-releases as older than their release and ignores build metadata", () => {
+    expect(compareSemver("0.6.0-rc.1", "0.6.0")).toBeLessThan(0);
+    expect(compareSemver("0.6.0", "0.6.0-rc.1")).toBeGreaterThan(0);
+    expect(compareSemver("0.6.0-rc.1", "0.6.0-rc.2")).toBeLessThan(0);
+    expect(compareSemver("0.6.0+build.1", "0.6.0")).toBe(0);
   });
 
   it("rejects non-versions", () => {
@@ -72,6 +75,12 @@ describe("selectPublishedDocuments", () => {
     expect(
       selectPublishedDocuments(onHold, "0.5.0").map((d) => d.version),
     ).not.toContain("0.6.0");
+    expect(
+      selectPublishedDocuments(onHold, "0.6.0-rc.1").map((d) => d.version),
+    ).not.toContain("0.6.0");
+    expect(
+      selectPublishedDocuments(onHold, "0.6.0-rc.1").map((d) => d.version),
+    ).toContain("0.5.0");
     expect(
       selectPublishedDocuments(onHold, "0.6.0").map((d) => d.version),
     ).toContain("0.6.0");
@@ -108,7 +117,7 @@ const result = (
 });
 
 describe("dedupeResults", () => {
-  it("drops a regenerated diff that repeats the committed one", () => {
+  it("drops a regenerated diff that repeats the committed one and marks the kept result", () => {
     const path = `${dir}/openapi.0.3.0.yaml`;
     const deduped = dedupeResults([
       result({ path }),
@@ -116,6 +125,7 @@ describe("dedupeResults", () => {
     ]);
     expect(deduped).toHaveLength(1);
     expect(deduped[0].phase).toBe("committed");
+    expect(deduped[0].alsoAfterRegeneration).toBe(true);
   });
 
   it("keeps a regenerated diff that differs from the committed one", () => {
@@ -125,6 +135,7 @@ describe("dedupeResults", () => {
       result({ path, phase: "regenerated", diff: "other" }),
     ]);
     expect(deduped).toHaveLength(2);
+    expect(deduped[0].alsoAfterRegeneration).toBeUndefined();
   });
 });
 

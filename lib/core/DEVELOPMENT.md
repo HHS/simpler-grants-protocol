@@ -39,7 +39,7 @@ Patch releases skip the hold branch: `fix(core)` PRs go straight to `main`. Befo
   - [ ] An early PR into the hold branch adds the new version to the `Versions` enum in [`main.tsp`](lib/main.tsp)
   - [ ] Every PR decorates what it changes with the matching [versioning decorators](https://typespec.io/docs/libraries/versioning/reference/decorators/#@TypeSpec.Versioning.removed)
 - [ ] Every core PR runs `pnpm --filter website run typespec` and commits the regenerated files in [`website/public/openapi/`](../../website/public/openapi/) and [`website/public/schemas/yaml/`](../../website/public/schemas/yaml/)
-- [ ] Published OpenAPI documents don't change. CI (`ci-published-openapi.yml`) fails a PR that changes any document whose version is at or below core's released version, whether by hand or through regeneration. If the change is deliberate, such as a description or example fix, add the `published-openapi-change` label and say why in the PR. Run it locally with `pnpm --filter website run check:published-openapi --base origin/<base>`.
+- [ ] Published OpenAPI documents don't change. CI (`ci-published-openapi.yml`) fails a PR that changes any document whose version is at or below core's released version, whether by hand or through regeneration. If the change is deliberate, such as a description or example fix, add the `published-openapi-change` label and say why in the PR. Run it locally with `pnpm --filter website run check:published-openapi --base origin/<base>` (note that this regenerates `website/public/openapi/` and `website/public/schemas/yaml/` in place, overwriting uncommitted edits there; pass `--no-regenerate` to check the files as they are).
 
 ### Release review checklist
 

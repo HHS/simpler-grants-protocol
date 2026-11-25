@@ -22,6 +22,10 @@ on:
       - pnpm-workspace.yaml
       - .github/workflows/ci-published-openapi.yml
 
+concurrency:
+  group: published-openapi-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./website
