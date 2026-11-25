@@ -37,6 +37,11 @@ import "@typespec/http";
 using TypeSpec.Http;
 using CommonGrants.Responses;
 
+model TestModel {
+  id: string;
+  name: string;
+}
+
 @summary("Get test")
 @doc("Get a test model")
 @get
@@ -69,22 +74,25 @@ A failure to submit an application due to validation errors.
 
 ## Common Error Types
 
-The following error types are commonly used:
+The following error types are commonly used. From v0.6.0 each one also carries version response headers, declared in `Headers.VersionResponse` or `Headers.VersionResponseAuth`, or, for `BadRequest`, inline with `Headers.VersionLifecycle`. `CG-Version-Served` reports the full protocol version the response was served in. It is optional on 401 and 403 responses, because authentication can run before a version is selected, and on `BadRequest`, because the version errors share its status. The optional `Vary`, `Deprecation`, `Sunset` and `Link` headers come from `Headers.VersionLifecycle`. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
 
-```typespec
-// 401 Unauthorized
-// User is not authorized to access the resource
-alias Unauthorized = Error & Http.UnauthorizedResponse;
+<SchemaFormatTabs typeSpec={["Unauthorized", "Forbidden", "NotFound"]} />
 
-// 404 Not Found
-// The resource was not found
-alias NotFound = Error & Http.NotFoundResponse;
+<SchemaFormatTabs typeSpec="BadRequest" />
 
-// 400 Bad Request
-// The request was invalid
-alias BadRequest = Error & Http.BadRequestResponse;
+### Version errors
 
-// 403 Forbidden
-// The action is forbidden
-alias Forbidden = Error & Http.ForbiddenResponse;
-```
+From v0.6.0, a request whose `CG-Version` value can't be served gets one of four version errors. They carry no version response headers. Their schemas are on the [Versioning](/protocol/versioning#version-error-schemas) page.
+
+<SchemaFormatTabs
+  typeSpec={[
+    "VersionMalformed",
+    "VersionConflict",
+    "VersionUnsupported",
+    "VersionRetired",
+  ]}
+/>
+
+Use `WithVersionErrors<R>` to add the version errors, and `BadRequest`, to a route's responses:
+
+<SchemaFormatTabs typeSpec="WithVersionErrors" />

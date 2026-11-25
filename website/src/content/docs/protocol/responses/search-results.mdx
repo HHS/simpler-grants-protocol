@@ -41,28 +41,12 @@ searchResults:
           "query": "Pre-school education"
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/SearchResults.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 249
-      endLine: 274
 searchResultsInfo:
   example:
     code: |
       {
         "query": "Pre-school education"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/SearchResultsInfo.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/responses/success.tsp"
-      startLine: 241
-      endLine: 247
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -89,10 +73,14 @@ A 200 response with a paginated list of items matching a search term and filters
 ### Formats
 
 <SchemaFormatTabs
+  schema="SearchResults"
   example={frontmatter.searchResults.example}
-  jsonSchema={frontmatter.searchResults.jsonSchema}
-  typeSpec="SearchResults"
+  typeSpec={["SearchResultsBase", "SearchResults"]}
 />
+
+### Version headers
+
+The typed `SearchResultsT<ItemsT, FilterT>` response carries the version response headers declared in `Headers.VersionResponse`: `CG-Version-Served`, which reports the full protocol version the response was served in, and the optional `Vary`, `Deprecation`, `Sunset` and `Link` headers. See [Versioning](/protocol/versioning) and the [Versions](/protocol/specification#versions) section of the specification.
 
 ### Usage
 
@@ -143,9 +131,9 @@ Details about the search term applied to the response items.
 ### Formats
 
 <SchemaFormatTabs
+  schema="SearchResultsInfo"
   example={frontmatter.searchResultsInfo.example}
-  jsonSchema={frontmatter.searchResultsInfo.jsonSchema}
-  typeSpec="SearchResultsInfo"
+  typeSpec
 />
 
 ### Changelog
