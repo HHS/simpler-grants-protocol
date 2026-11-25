@@ -1,8 +1,9 @@
 {
   "name": "simpler-grants-protocol",
-  "version": "",
+  "version": "@common-grants/sdk@0.9.1",
   "description": "A common standard for sharing data in the grant ecosystem.",
   "longDescription": "",
+  "status": "",
   "permissions": {
     "licenses": [
       {
@@ -12,7 +13,8 @@
     ],
     "usageType": [
       "openSource"
-    ]
+    ],
+    "exemptionText": ""
   },
   "organization": "HHS",
   "repositoryURL": "https://github.com/HHS/simpler-grants-protocol",
@@ -23,7 +25,7 @@
   "disclaimerURL": "",
   "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 16525,
+  "laborHours": 18477,
   "reuseFrequency": {
     "forks": 13,
     "clones": 0
@@ -51,8 +53,8 @@
   "partners": [],
   "date": {
     "created": "2024-12-19T21:14:35Z",
-    "lastModified": "2026-09-24T18:58:13Z",
-    "metadataLastUpdated": "2026-10-01T00:03:17.009Z"
+    "lastModified": "2026-10-30T22:11:19Z",
+    "metadataLastUpdated": "2026-11-01T00:03:26.523Z"
   },
   "tags": [
     "api",
@@ -60,7 +62,8 @@
     "standards"
   ],
   "contact": {
-    "email": "simpler@grants.gov"
+    "email": "simpler@grants.gov",
+    "name": ""
   },
   "feedbackMechanism": "https://github.com/HHS/simpler-grants-protocol/issues",
   "AIUseCaseID": "0",
@@ -73,5 +76,5 @@
   "systems": [],
   "subsetInHealthcare": [],
   "userType": [],
-  "maturityModelTier": 0
+  "maturityModelTier": 3
 }
