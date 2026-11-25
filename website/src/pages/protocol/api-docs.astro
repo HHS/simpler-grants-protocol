@@ -99,6 +99,22 @@ const availableVersions = [
     .split(",")
     .filter(Boolean);
 
+  // Swagger replaces the panel on version changes. Label every new server
+  // selector, including selectors rendered later inside individual operations.
+  const labelServers = () => {
+    if (!mount) return;
+    for (const server of mount.querySelectorAll(".servers > label > select")) {
+      server.setAttribute("aria-label", "Server");
+    }
+  };
+  if (mount) {
+    new MutationObserver(labelServers).observe(mount, {
+      childList: true,
+      subtree: true,
+    });
+    labelServers();
+  }
+
   const render = (version: string): void => {
     SwaggerUIBundle({
       url: `${specDir}/openapi.${version}.yaml`,

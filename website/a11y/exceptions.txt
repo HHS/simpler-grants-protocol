@@ -18,6 +18,3 @@
 # Contrast and nested controls: https://github.com/HHS/simpler-grants-protocol/issues/1394
 /protocol/api-docs/ color-contrast
 /protocol/api-docs/ nested-interactive
-# The servers dropdown has no accessible name: being fixed in
-# https://github.com/HHS/simpler-grants-protocol/issues/355
-/protocol/api-docs/ select-name
