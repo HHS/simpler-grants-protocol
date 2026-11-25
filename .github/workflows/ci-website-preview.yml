@@ -6,6 +6,8 @@ on:
     paths:
       - website/**
       - lib/core/**
+      - lib/ts-sdk/src/schemas/**
+      - lib/python-sdk/common_grants_sdk/schemas/**
       - .github/workflows/ci-website-preview.yml
       - .github/scripts/upload-worker-preview.sh
       - pnpm-lock.yaml

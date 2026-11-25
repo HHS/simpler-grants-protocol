@@ -29,14 +29,6 @@ formResponse:
         "createdAt": "2024-01-01T00:00:00Z",
         "lastModifiedAt": "2024-01-01T00:00:00Z"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/FormResponseBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/form-response.tsp"
-      startLine: 3
-      endLine: 27
 formResponseStatus:
   example:
     code: |
@@ -44,25 +36,9 @@ formResponseStatus:
         "value": "complete",
         "description": "The form response is complete"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/FormResponseStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/form-response.tsp"
-      startLine: 33
-      endLine: 36
 formResponseStatusOptions:
   example:
     code: '"inProgress"'
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/FormResponseStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/form-response.tsp"
-      startLine: 42
-      endLine: 56
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -75,14 +51,14 @@ Base model for a form response.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.formResponse.jsonSchema.file.path} />
+<SchemaTable schema="FormResponseBase" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="FormResponseBase"
   example={frontmatter.formResponse.example}
-  jsonSchema={frontmatter.formResponse.jsonSchema}
-  typeSpec={frontmatter.formResponse.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -95,14 +71,14 @@ The status of a form response.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.formResponseStatus.jsonSchema.file.path} />
+<SchemaTable schema="FormResponseStatus" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="FormResponseStatus"
   example={frontmatter.formResponseStatus.example}
-  jsonSchema={frontmatter.formResponseStatus.jsonSchema}
-  typeSpec={frontmatter.formResponseStatus.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -115,16 +91,14 @@ The options for the status of a form response.
 
 ### Table
 
-<SchemaTable
-  filePath={frontmatter.formResponseStatusOptions.jsonSchema.file.path}
-/>
+<SchemaTable schema="FormResponseStatusOptions" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="FormResponseStatusOptions"
   example={frontmatter.formResponseStatusOptions.example}
-  jsonSchema={frontmatter.formResponseStatusOptions.jsonSchema}
-  typeSpec={frontmatter.formResponseStatusOptions.typeSpec}
+  typeSpec
 />
 
 ### Changelog

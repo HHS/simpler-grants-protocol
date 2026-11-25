@@ -1,138 +1,6 @@
 ---
 title: Event
 description: A comprehensive model for representing various types of events with dates, date ranges, and custom event types
-eventType:
-  example:
-    file:
-      path: "website/public/schemas/yaml/EventType.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/EventType.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 11
-      endLine: 27
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 13
-      endLine: 18
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 15
-      endLine: 15
-event:
-  example:
-    file:
-      path: "website/public/schemas/yaml/Event.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/Event.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 33
-      endLine: 45
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 104
-      endLine: 104
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 72
-      endLine: 76
-eventBase:
-  example:
-    file:
-      path: "website/public/schemas/yaml/EventBase.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/EventBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 51
-      endLine: 62
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 22
-      endLine: 38
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 18
-      endLine: 27
-singleDateEvent:
-  example:
-    file:
-      path: "website/public/schemas/yaml/SingleDateEvent.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/SingleDateEvent.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 68
-      endLine: 81
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 42
-      endLine: 56
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 30
-      endLine: 39
-dateRangeEvent:
-  example:
-    file:
-      path: "website/public/schemas/yaml/DateRangeEvent.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/DateRangeEvent.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 86
-      endLine: 106
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 60
-      endLine: 86
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 42
-      endLine: 57
-otherEvent:
-  example:
-    file:
-      path: "website/public/schemas/yaml/OtherEvent.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/OtherEvent.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/fields/event.tsp"
-      startLine: 112
-      endLine: 125
-  python:
-    file:
-      path: "lib/python-sdk/common_grants_sdk/schemas/pydantic/fields/event.py"
-      startLine: 90
-      endLine: 100
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/fields.ts"
-      startLine: 60
-      endLine: 69
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -155,11 +23,10 @@ Defines the different types of events that can be represented
 ### Formats
 
 <SchemaFormatTabs
-  example={frontmatter.eventType.example}
-  jsonSchema={frontmatter.eventType.jsonSchema}
-  typeSpec={frontmatter.eventType.typeSpec}
-  python={frontmatter.eventType.python}
-  typescript={frontmatter.eventType.typescript}
+  schema="EventType"
+  typeSpec
+  python
+  typescript="EventTypeEnum"
 />
 
 ### Changelog
@@ -180,13 +47,7 @@ The `Event` union represents all possible event types.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.event.example}
-  jsonSchema={frontmatter.event.jsonSchema}
-  typeSpec={frontmatter.event.typeSpec}
-  python={frontmatter.event.python}
-  typescript={frontmatter.event.typescript}
-/>
+<SchemaFormatTabs schema="Event" typeSpec python typescript />
 
 {/* TODO: Add changelog once unions are supported */}
 
@@ -204,13 +65,7 @@ Base model for all events with common properties
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.eventBase.example}
-  jsonSchema={frontmatter.eventBase.jsonSchema}
-  typeSpec={frontmatter.eventBase.typeSpec}
-  python={frontmatter.eventBase.python}
-  typescript={frontmatter.eventBase.typescript}
-/>
+<SchemaFormatTabs schema="EventBase" typeSpec python typescript />
 
 ### Changelog
 
@@ -232,13 +87,7 @@ Represents an event that has a specific date (and optional time) associated with
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.singleDateEvent.example}
-  jsonSchema={frontmatter.singleDateEvent.jsonSchema}
-  typeSpec={frontmatter.singleDateEvent.typeSpec}
-  python={frontmatter.singleDateEvent.python}
-  typescript={frontmatter.singleDateEvent.typescript}
-/>
+<SchemaFormatTabs schema="SingleDateEvent" typeSpec python typescript />
 
 ### Changelog
 
@@ -262,13 +111,7 @@ Represents an event that spans a period of time with start and end dates (and op
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.dateRangeEvent.example}
-  jsonSchema={frontmatter.dateRangeEvent.jsonSchema}
-  typeSpec={frontmatter.dateRangeEvent.typeSpec}
-  python={frontmatter.dateRangeEvent.python}
-  typescript={frontmatter.dateRangeEvent.typescript}
-/>
+<SchemaFormatTabs schema="DateRangeEvent" typeSpec python typescript />
 
 ### Changelog
 
@@ -289,13 +132,7 @@ Represents custom events that don't fit the single date or date range patterns.
 
 ### Formats
 
-<SchemaFormatTabs
-  example={frontmatter.otherEvent.example}
-  jsonSchema={frontmatter.otherEvent.jsonSchema}
-  typeSpec={frontmatter.otherEvent.typeSpec}
-  python={frontmatter.otherEvent.python}
-  typescript={frontmatter.otherEvent.typescript}
-/>
+<SchemaFormatTabs schema="OtherEvent" typeSpec python typescript />
 
 ### Changelog
 

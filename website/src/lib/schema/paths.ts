@@ -8,9 +8,7 @@ import * as path from "path";
  * Directory tree (relative to WEBSITE_ROOT unless noted):
  *
  *   cache/
- *     schema-docs-mapping.json
- *     schema-metadata.json
- *     type-formatting-cache.json
+ *     plugin-metadata.json
  *   public/
  *     openapi/
  *     schemas/
@@ -23,6 +21,8 @@ import * as path from "path";
  *
  * REPO_ROOT is the parent of WEBSITE_ROOT. Extension schemas are referenced
  * from repo root as website/.extension-schemas (EXTENSION_SCHEMAS_PATH_PREFIX).
+ * Docs pages find code snippets by name under TYPESPEC_SOURCE_DIR,
+ * PYTHON_SDK_SCHEMAS_DIR and TS_SDK_SCHEMAS_DIR.
  */
 export class Paths {
   /** Absolute path to the website directory (process.cwd() at build time) */
@@ -53,24 +53,27 @@ export class Paths {
     .join("/");
 
   // Generated cache files
-  static readonly SCHEMA_DOCS_MAPPING = path.join(
-    Paths.CACHE_DIR,
-    "schema-docs-mapping.json",
-  );
-  static readonly SCHEMA_METADATA = path.join(
-    Paths.CACHE_DIR,
-    "schema-metadata.json",
-  );
-  static readonly TYPE_FORMATTING_CACHE = path.join(
-    Paths.CACHE_DIR,
-    "type-formatting-cache.json",
-  );
   static readonly PLUGIN_METADATA = path.join(
     Paths.CACHE_DIR,
     "plugin-metadata.json",
   );
 
   // Source directories
+  /** Protocol TypeSpec source, searched for declarations by name */
+  static readonly TYPESPEC_SOURCE_DIR = path.join(
+    Paths.REPO_ROOT,
+    "lib/core/lib",
+  );
+  /** Python SDK schemas, searched for declarations by name */
+  static readonly PYTHON_SDK_SCHEMAS_DIR = path.join(
+    Paths.REPO_ROOT,
+    "lib/python-sdk/common_grants_sdk/schemas/pydantic",
+  );
+  /** TypeScript SDK schemas, searched for declarations by name */
+  static readonly TS_SDK_SCHEMAS_DIR = path.join(
+    Paths.REPO_ROOT,
+    "lib/ts-sdk/src/schemas/zod",
+  );
   static readonly CONTENT_DOCS_DIR = path.join(
     Paths.WEBSITE_ROOT,
     "src/content/docs",

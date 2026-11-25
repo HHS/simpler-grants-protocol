@@ -22,83 +22,6 @@ url:
       type: string
       format: uri
       description: A Uniform Resource Locator (URL)
-uuid:
-  example:
-    file:
-      path: "website/public/schemas/yaml/uuid.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/uuid.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 28
-      endLine: 32
-  typescript:
-    file:
-      path: "lib/ts-sdk/src/schemas/zod/types.ts"
-      startLine: 15
-      endLine: 15
-email:
-  example:
-    file:
-      path: "website/public/schemas/yaml/email.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/email.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 34
-      endLine: 38
-employerTaxId:
-  example:
-    file:
-      path: "website/public/schemas/yaml/employerTaxId.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/employerTaxId.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 40
-      endLine: 44
-samUEI:
-  example:
-    file:
-      path: "website/public/schemas/yaml/samUEI.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/samUEI.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 46
-      endLine: 50
-duns:
-  example:
-    file:
-      path: "website/public/schemas/yaml/duns.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/duns.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 52
-      endLine: 56
-nonEmptyString:
-  example:
-    file:
-      path: "website/public/schemas/yaml/nonEmptyString.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/nonEmptyString.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/types.tsp"
-      startLine: 58
-      endLine: 62
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -125,59 +48,34 @@ A Uniform Resource Locator (URL).
 
 A universally unique identifier.
 
-<SchemaFormatTabs
-  example={frontmatter.uuid.example}
-  jsonSchema={frontmatter.uuid.jsonSchema}
-  typeSpec={frontmatter.uuid.typeSpec}
-  typescript={frontmatter.uuid.typescript}
-/>
+<SchemaFormatTabs schema="uuid" typeSpec typescript="UuidSchema" />
 
 ## email
 
 An email address.
 
-<SchemaFormatTabs
-  example={frontmatter.email.example}
-  jsonSchema={frontmatter.email.jsonSchema}
-  typeSpec={frontmatter.email.typeSpec}
-/>
+<SchemaFormatTabs schema="email" typeSpec />
 
 ## employerTaxId
 
 An Employer Identification Number (EIN).
 
-<SchemaFormatTabs
-  example={frontmatter.employerTaxId.example}
-  jsonSchema={frontmatter.employerTaxId.jsonSchema}
-  typeSpec={frontmatter.employerTaxId.typeSpec}
-/>
+<SchemaFormatTabs schema="employerTaxId" typeSpec />
 
 ## samUEI
 
 A Unique Entity Identifier (UEI).
 
-<SchemaFormatTabs
-  example={frontmatter.samUEI.example}
-  jsonSchema={frontmatter.samUEI.jsonSchema}
-  typeSpec={frontmatter.samUEI.typeSpec}
-/>
+<SchemaFormatTabs schema="samUEI" typeSpec />
 
 ## duns
 
 A Data Universal Numbering System (DUNS) number.
 
-<SchemaFormatTabs
-  example={frontmatter.duns.example}
-  jsonSchema={frontmatter.duns.jsonSchema}
-  typeSpec={frontmatter.duns.typeSpec}
-/>
+<SchemaFormatTabs schema="duns" typeSpec />
 
 ## nonEmptyString
 
 A string with at least one character, added in v0.5.0. Used for an organization's [`aliases`](/protocol/models/organization#organizationbase).
 
-<SchemaFormatTabs
-  example={frontmatter.nonEmptyString.example}
-  jsonSchema={frontmatter.nonEmptyString.jsonSchema}
-  typeSpec={frontmatter.nonEmptyString.typeSpec}
-/>
+<SchemaFormatTabs schema="nonEmptyString" typeSpec />

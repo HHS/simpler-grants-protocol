@@ -26,6 +26,12 @@ function formatDate(dateStr: string): string {
   }
 }
 
+// In the dev server, re-read the protocol pages once per page render so a
+// schema newly named on a page links on reload; a build reads them once.
+if (import.meta.env.DEV) {
+  SchemaDocMapper.refreshForRender(Astro.locals);
+}
+
 // Get documentation path for a schema name
 function getSchemaDocPath(schemaName: string): string {
   const docPath = SchemaDocMapper.getSchemaDocPath(schemaName);

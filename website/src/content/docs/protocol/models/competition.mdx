@@ -61,17 +61,6 @@ competition:
         "createdAt": "2025-01-01T00:00:00Z",
         "lastModifiedAt": "2025-01-01T00:00:00Z"
       }
-  table:
-    file:
-      path: "website/public/schemas/yaml/versions/v0.5.0/CompetitionBase.yaml"
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CompetitionBase.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 3
-      endLine: 49
 competitionStatus:
   example:
     code: |
@@ -80,25 +69,9 @@ competitionStatus:
         "customValue": "canceled",
         "description": "Competition has been canceled"
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CompetitionStatus.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 55
-      endLine: 58
 competitionStatusOptions:
   example:
     code: '"open"'
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CompetitionStatusOptions.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 64
-      endLine: 74
 competitionForms:
   example:
     code: |
@@ -121,14 +94,6 @@ competitionForms:
           "required": ["formA"]
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CompetitionForms.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 80
-      endLine: 89
 competitionTimeline:
   example:
     code: |
@@ -152,14 +117,6 @@ competitionTimeline:
           }
         }
       }
-  jsonSchema:
-    file:
-      path: "website/public/schemas/yaml/CompetitionTimeline.yaml"
-  typeSpec:
-    file:
-      path: "lib/core/lib/core/models/competition.tsp"
-      startLine: 95
-      endLine: 107
 ---
 
 import SchemaFormatTabs from "@/components/SchemaFormatTabs.astro";
@@ -178,16 +135,16 @@ The table and the example below show the v0.5 payload. To validate a payload, us
 
 ### Table
 
-<SchemaTable filePath={frontmatter.competition.table.file.path} />
+<SchemaTable schema="CompetitionBase" version="v0.5.0" />
 
 ### Formats
 
 The JSON Schema tab shows the unversioned authoring schema, not a v0.5 payload schema. It combines every version's fields, so it requires both `opportunityId` and `opportunity`.
 
 <SchemaFormatTabs
+  schema="CompetitionBase"
   example={frontmatter.competition.example}
-  jsonSchema={frontmatter.competition.jsonSchema}
-  typeSpec={frontmatter.competition.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -244,14 +201,14 @@ The status of the competition.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.competitionStatus.jsonSchema.file.path} />
+<SchemaTable schema="CompetitionStatus" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="CompetitionStatus"
   example={frontmatter.competitionStatus.example}
-  jsonSchema={frontmatter.competitionStatus.jsonSchema}
-  typeSpec={frontmatter.competitionStatus.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -264,16 +221,14 @@ Enumeration of possible competition status values.
 
 ### Table
 
-<SchemaTable
-  filePath={frontmatter.competitionStatusOptions.jsonSchema.file.path}
-/>
+<SchemaTable schema="CompetitionStatusOptions" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="CompetitionStatusOptions"
   example={frontmatter.competitionStatusOptions.example}
-  jsonSchema={frontmatter.competitionStatusOptions.jsonSchema}
-  typeSpec={frontmatter.competitionStatusOptions.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -286,14 +241,14 @@ Set of forms that need to be completed to apply to the competition.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.competitionForms.jsonSchema.file.path} />
+<SchemaTable schema="CompetitionForms" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="CompetitionForms"
   example={frontmatter.competitionForms.example}
-  jsonSchema={frontmatter.competitionForms.jsonSchema}
-  typeSpec={frontmatter.competitionForms.typeSpec}
+  typeSpec
 />
 
 ### Changelog
@@ -306,14 +261,14 @@ The key dates in the competition's timeline.
 
 ### Table
 
-<SchemaTable filePath={frontmatter.competitionTimeline.jsonSchema.file.path} />
+<SchemaTable schema="CompetitionTimeline" />
 
 ### Formats
 
 <SchemaFormatTabs
+  schema="CompetitionTimeline"
   example={frontmatter.competitionTimeline.example}
-  jsonSchema={frontmatter.competitionTimeline.jsonSchema}
-  typeSpec={frontmatter.competitionTimeline.typeSpec}
+  typeSpec
 />
 
 ### Changelog
