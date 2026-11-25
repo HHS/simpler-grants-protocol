@@ -172,10 +172,10 @@ A client that gets 404 from the discovery route treats the server as serving one
 A server retires a version the same way whether the version is leaving the whole server or one route:
 
 - On every response served in that version on the affected routes, the server MUST send the `Deprecation` header ([RFC 9745](https://www.rfc-editor.org/rfc/rfc9745)), and, once a date is set, the `Sunset` header ([RFC 8594](https://www.rfc-editor.org/rfc/rfc8594)). `Deprecation` uses the `@<unix-timestamp>` form, such as `@1796083200`, and `Sunset` uses an HTTP-date, such as `Tue, 01 Jun 2027 00:00:00 GMT`. Both headers keep their standard meaning and always describe the version the response was served in.
-- Alongside them, the server MUST send `Link` headers ([RFC 8288](https://www.rfc-editor.org/rfc/rfc8288)) with `rel="deprecation"` and `rel="sunset"` pointing to migration documentation, and with `rel="version-history"` pointing to the discovery route.
+- Alongside them, the server MUST send `Link` headers ([RFC 8288](https://www.rfc-editor.org/rfc/rfc8288)) with `rel="deprecation"`, and with `rel="sunset"` once a sunset date is set, pointing to migration documentation, and with `rel="version-history"` pointing to the discovery route.
 - Discovery MUST list the version under `deprecated` with its `deprecation` date and, once set, its `sunset` date: at the top level when the version is leaving the whole server, or in the route's entry when it's leaving one route.
 - After the sunset date, the server MUST answer requests for the version with `version.retired`, as described in [Version errors](#version-errors), for a period it chooses, and MAY answer `version.unsupported` after that.
-- If the version is a default, the server MUST move that default forward to the next newer version no later than the sunset date, announcing the change as described in [Changing the default version](#changing-the-default-version). Responses served by default then carry both the retirement headers and the `successor-version` link. A server can't retire a default unless it serves a newer version for the default to move to.
+- If the version is a default, the server MUST move that default forward to a newer version no later than the sunset date, announcing the change as described in [Changing the default version](#changing-the-default-version). Responses served by default then carry both the retirement headers and the `successor-version` link. A server can't retire a default unless it serves a newer version for the default to move to.
 - A required route can't drop a baseline version that requires the route, so retiring that version from the route means retiring it from the baseline.
 - Experimental routes MAY drop a version without notice.
 
@@ -187,7 +187,7 @@ A server MAY change a default version whether or not it keeps serving the old on
 - Discovery MUST show `upcomingDefault` with the new default's `version` and the `date` it takes effect: at the top level for the baseline default, which also covers route entries whose default follows the baseline, or in a route's entry for that route's own default.
 - The server MUST NOT send `Deprecation` or `Sunset` for a default change. They appear on responses served by default only when the default version is itself retiring.
 
-Responses to requests that name a version don't change. At the announced date, the default moves to the next newer version it applies to.
+Responses to requests that name a version don't change. At the announced date, the default moves to the announced `upcomingDefault.version`.
 
 ### Migration notes
 
@@ -199,7 +199,7 @@ v0.6.0 adds version negotiation and is purely additive: nothing changes for exis
 
 ##### Version negotiation
 
-- Every protocol route except `GET /versions` declares the optional `CG-Version` request header, and its responses, except the 406 version errors, declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. 400, 401 and 403 responses declare `CG-Version-Served` as optional. See [Version response headers](#version-response-headers).
+- Every protocol route except `GET /versions` declares the optional `CG-Version` request header, and its responses, except the version errors, declare `CG-Version-Served`, `Vary`, `Deprecation`, `Sunset`, and `Link`. In the schema, 400 responses declare `CG-Version-Served` as optional because they share that status with the 400 version errors, and 401 and 403 responses declare it as optional because authentication can run before a version is selected. See [Version response headers](#version-response-headers).
 - Every protocol route except `GET /versions` declares the version errors: 400 `version.malformed` and `version.conflict`, and 406 `version.unsupported` and `version.retired`. See [Version errors](#version-errors).
 - The new optional `GET /versions` route lists the versions a server serves. A server that serves more than one version MUST implement it. See [Discovering supported versions](#discovering-supported-versions).
 - A new `protocolVersion` scalar describes a full `MAJOR.MINOR.PATCH` protocol version, such as `0.6.0`.

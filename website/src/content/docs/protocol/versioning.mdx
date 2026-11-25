@@ -132,7 +132,7 @@ Link: <https://grants.example.org/common-grants/versions>; rel="version-history"
 
 The three dates use three formats: `Deprecation` uses the `@<unix-timestamp>` form from [RFC 9745](https://www.rfc-editor.org/rfc/rfc9745), `Sunset` uses an HTTP-date as in [RFC 8594](https://www.rfc-editor.org/rfc/rfc8594), and discovery uses RFC 3339. Discovery keys `deprecated` by the exact versions it lists, so look up the version you requested by its major and minor alone: a request for `0.3.0` served as `0.3.1` finds its entry under `0.3.1`.
 
-After the sunset date, requests for any patch of that major and minor version get 406 `version.retired`, with the sunset date and the supported versions, for a period the server chooses. After that, the server may answer `version.unsupported` instead, so handle both the same way: retry with a version from `supported`. If the retired version was your default, the default has already moved to the next newer version.
+After the sunset date, requests for any patch of that major and minor version get 406 `version.retired`, with the sunset date and the supported versions, for a period the server chooses. After that, the server may answer `version.unsupported` instead, so handle both the same way: retry with a version from `supported`. If the retired version was your default, the default has already moved to a newer version.
 
 A single route retires a version the same way as the whole server. Experimental routes may drop a version without notice.
 
@@ -177,7 +177,7 @@ A server that serves one version needs very little: it reads `CG-Version` on rou
 - **Send the version headers.** Send `CG-Version-Served` on every response produced after a version is selected, whatever version you serve, including errors such as a missing record. Responses to 401 and 403 may omit it, and version errors must not carry it. Send `Vary: CG-Version` on cacheable responses. Cross-origin servers allow `CG-Version` and expose `CG-Version-Served`, `Deprecation`, `Sunset`, and `Link`.
 - **Publish discovery** if you serve more than one version. List the baseline, and add an `operations` entry only for routes that differ from it. A version in the baseline is a compliance claim: every route that version requires serves it.
 - **Retire a version** by sending `Deprecation`, `Sunset`, and their `Link` headers on responses served in it, listing it under `deprecated` in discovery, and answering `version.retired` after the sunset.
-- **Change a default** by sending the `successor-version` and `version-history` links on responses served by default, and showing `upcomingDefault` in discovery. Don't send `Deprecation` or `Sunset` for a default change. A retiring default moves forward to the next newer version no later than the sunset, so you can't retire a default without a newer version to move to.
+- **Change a default** by sending the `successor-version` and `version-history` links on responses served by default, and showing `upcomingDefault` in discovery. Don't send `Deprecation` or `Sunset` for a default change. A retiring default moves forward to a newer version no later than the sunset, so you can't retire a default without a newer version to move to.
 
 We recommend that servers move all their routes to a new version at the same time. A server can instead serve different versions on different routes and advertise those routes in discovery.
 
