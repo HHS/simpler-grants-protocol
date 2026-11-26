@@ -37,7 +37,7 @@
   --sl-content-width: 67.5rem;
 }
 @media (min-width: 50em) {
-  :root[data-has-hero] {
+  :root[data-has-hero][data-has-sidebar] {
     --sl-content-inline-start: 0rem;
     --__sidebar-pad: 0rem;
   }
